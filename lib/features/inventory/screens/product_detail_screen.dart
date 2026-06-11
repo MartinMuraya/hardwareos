@@ -34,8 +34,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       final bizId = context.read<AuthProvider>().businessId!;
       final data  = await FunctionsService.call(
           'getProducts', {'businessId': bizId, 'limit': 200});
-      final rawList = data is List ? data : (data['products'] ?? data['result'] ?? []);
-      final prod = (rawList as List)
+      final rawList = (data['products'] as List?) ?? [];
+      final prod = rawList
           .map((e) => Product.fromMap(Map<String, dynamic>.from(e as Map)))
           .where((p) => p.id == widget.productId)
           .firstOrNull;

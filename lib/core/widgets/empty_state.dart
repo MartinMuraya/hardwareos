@@ -23,6 +23,7 @@ class EmptyState extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(48),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(

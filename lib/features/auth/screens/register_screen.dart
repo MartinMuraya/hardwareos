@@ -71,8 +71,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       style: AppTheme.darkTheme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(height: 6),
-                    Text('14-day free trial • No credit card required',
-                      style: const TextStyle(color: AppColors.accent, fontSize: 13, fontWeight: FontWeight.w600),
+                    const Text('14-day free trial • No credit card required',
+                      style: TextStyle(color: AppColors.accent, fontSize: 13, fontWeight: FontWeight.w600),
                     ),
                   ]),
                 ),
@@ -80,10 +80,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 // Progress indicator
                 Row(children: [
-                  _StepDot(active: true, done: _accountCreated, label: '1. Account'),
+                  _StepDot(active: true, done: auth.isAuthenticated || _accountCreated, label: '1. Account'),
                   Expanded(child: Container(height: 2,
-                    color: _accountCreated ? AppColors.accent : AppColors.border)),
-                  _StepDot(active: _accountCreated, done: false, label: '2. Business'),
+                    color: (auth.isAuthenticated || _accountCreated) ? AppColors.accent : AppColors.border)),
+                  _StepDot(active: auth.isAuthenticated || _accountCreated, done: false, label: '2. Business'),
                 ]),
                 const SizedBox(height: 28),
 
@@ -96,7 +96,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   child: Form(
                     key: _formKey,
-                    child: !_accountCreated
+                    child: !(auth.isAuthenticated || _accountCreated)
                       ? _AccountStep(
                           emailCtrl: _emailCtrl, passCtrl: _passCtrl,
                           obscure: _obscure, isSubmitting: _isSubmitting,
@@ -223,10 +223,10 @@ class _BusinessStep extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: AppColors.accent.withValues(alpha: 0.2)),
         ),
-        child: Row(children: [
-          const Icon(Icons.star_rounded, color: AppColors.accent, size: 18),
-          const SizedBox(width: 10),
-          const Expanded(child: Text(
+        child: const Row(children: [
+          Icon(Icons.star_rounded, color: AppColors.accent, size: 18),
+          SizedBox(width: 10),
+          Expanded(child: Text(
             '14-day Pro trial included. No payment needed.',
             style: TextStyle(color: AppColors.accent, fontSize: 13),
           )),

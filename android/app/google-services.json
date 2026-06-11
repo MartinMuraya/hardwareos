@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "156906942756",
+    "project_id": "hardwareos-saas",
+    "storage_bucket": "hardwareos-saas.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:156906942756:android:1d76ea4d058db6c93643b1",
+        "android_client_info": {
+          "package_name": "com.hardwareos.hardwareos"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDck9XeCzIm-Uam6J-m118xd2SzFyqDhhU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

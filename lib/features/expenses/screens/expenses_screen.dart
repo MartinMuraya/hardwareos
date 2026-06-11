@@ -49,8 +49,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         if (_lastDocId != null) 'startAfter': _lastDocId,
       });
 
-      final rawList = data is List ? data : (data['result'] ?? data['expenses'] ?? []);
-      final newExpenses = (rawList as List).map((e) => Expense.fromMap(Map<String, dynamic>.from(e as Map))).toList();
+      final rawList = (data['expenses'] as List?) ?? [];
+      final newExpenses = rawList.map((e) => Expense.fromMap(Map<String, dynamic>.from(e as Map))).toList();
 
       if (mounted) {
         setState(() {

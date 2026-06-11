@@ -48,8 +48,8 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
         if (_lastDocId != null) 'startAfter': _lastDocId,
       });
 
-      final rawList = data is List ? data : (data['result'] ?? data['sales'] ?? []);
-      final newSales = (rawList as List).map((e) => Sale.fromMap(Map<String, dynamic>.from(e as Map))).toList();
+      final rawList = (data['sales'] as List?) ?? [];
+      final newSales = rawList.map((e) => Sale.fromMap(Map<String, dynamic>.from(e as Map))).toList();
 
       if (mounted) {
         setState(() {

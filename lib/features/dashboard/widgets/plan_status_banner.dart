@@ -18,11 +18,11 @@ class PlanStatusBanner extends StatelessWidget {
         bgColor: AppColors.error.withValues(alpha: 0.1),
         borderColor: AppColors.error.withValues(alpha: 0.3),
         iconColor: AppColors.error,
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Subscription Expired',
+        child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('Subscription Expired',
             style: TextStyle(color: AppColors.error, fontWeight: FontWeight.w700, fontSize: 14)),
-          const SizedBox(height: 2),
-          const Text('Renew your plan to continue using all features.',
+          SizedBox(height: 2),
+          Text('Renew your plan to continue using all features.',
             style: TextStyle(color: AppColors.error, fontSize: 12)),
         ]),
       );

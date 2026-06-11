@@ -19,8 +19,8 @@ class Expense {
     id:         map['id'] as String,
     businessId: map['businessId'] as String,
     category:   map['category'] as String,
-    amount:     (map['amount'] as num).toDouble(),
-    note:       map['note'] as String? ?? '',
+    amount:     ((map['amount'] ?? 0) as num).toDouble(),
+    note:       map['note'] as String? ?? map['description'] as String? ?? '',
     createdAt:  DateTime.tryParse(map['createdAt']?.toString() ?? '') ?? DateTime.now(),
   );
 }

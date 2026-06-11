@@ -16,9 +16,9 @@ class SaleItem {
   factory SaleItem.fromMap(Map<String, dynamic> map) => SaleItem(
     productId:    map['productId'] as String,
     name:         map['name'] as String,
-    quantity:     (map['quantity'] as num).toInt(),
-    sellingPrice: (map['sellingPrice'] as num).toDouble(),
-    costPrice:    (map['costPrice'] as num).toDouble(),
+    quantity:     ((map['quantity'] ?? 0) as num).toInt(),
+    sellingPrice: ((map['sellingPrice'] ?? 0) as num).toDouble(),
+    costPrice:    ((map['costPrice'] ?? 0) as num).toDouble(),
   );
 
   Map<String, dynamic> toMap() => {
@@ -60,8 +60,8 @@ class Sale {
       id:            map['id'] as String,
       businessId:    map['businessId'] as String,
       items:         rawItems.map((i) => SaleItem.fromMap(Map<String, dynamic>.from(i as Map))).toList(),
-      total:         (map['total'] as num).toDouble(),
-      profit:        (map['profit'] as num).toDouble(),
+      total:         ((map['total'] ?? 0) as num).toDouble(),
+      profit:        ((map['profit'] ?? 0) as num).toDouble(),
       paymentMethod: map['paymentMethod'] as String? ?? 'cash',
       note:          map['note'] as String? ?? '',
       createdAt:     DateTime.tryParse(map['createdAt']?.toString() ?? '') ?? DateTime.now(),

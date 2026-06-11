@@ -105,14 +105,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               // KPI grid
               if (kpis != null) ...[
-                _SectionHeader(title: "Today's Performance"),
+                const _SectionHeader(title: "Today's Performance"),
                 const SizedBox(height: 12),
                 _KpiGrid(kpis: kpis, fmt: fmt),
                 const SizedBox(height: 28),
               ],
 
               // Quick actions
-              _SectionHeader(title: 'Quick Actions'),
+              const _SectionHeader(title: 'Quick Actions'),
               const SizedBox(height: 12),
               _QuickActions(),
               const SizedBox(height: 28),
@@ -120,7 +120,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // Low stock
               if (lowStock.isNotEmpty) ...[
                 Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  _SectionHeader(title: '⚠️ Low Stock Alert'),
+                  const _SectionHeader(title: '⚠️ Low Stock Alert'),
                   TextButton(
                     onPressed: () => context.go('/inventory'),
                     child: const Text('View All'),
@@ -134,7 +134,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // Recent sales
               if (recentSales.isNotEmpty) ...[
                 Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  _SectionHeader(title: 'Recent Sales'),
+                  const _SectionHeader(title: 'Recent Sales'),
                   TextButton(
                     onPressed: () => context.go('/sales/history'),
                     child: const Text('View All'),

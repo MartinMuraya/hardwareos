@@ -39,8 +39,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
     try {
       final bizId = context.read<AuthProvider>().businessId!;
       final data = await FunctionsService.call('getProducts', {'businessId': bizId, 'limit': 100});
-      final rawList = data is List ? data : (data['products'] ?? data['result'] ?? []);
-      final prods = (rawList as List)
+      final rawList = (data['products'] as List?) ?? [];
+      final prods = rawList
           .map((e) => Product.fromMap(Map<String, dynamic>.from(e as Map)))
           .toList();
 

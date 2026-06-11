@@ -32,47 +32,52 @@ class KpiCard extends StatelessWidget {
           width: isHighlighted ? 1.5 : 1,
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Container(
-              width: 32, height: 32,
-              decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, color: iconColor, size: 16),
-            ),
-            if (trend != null)
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerLeft,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                width: 32, height: 32,
                 decoration: BoxDecoration(
-                  color: AppColors.success.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(6),
+                  color: iconColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: Text(trend!,
-                  style: const TextStyle(color: AppColors.success, fontSize: 10, fontWeight: FontWeight.w600),
+                child: Icon(icon, color: iconColor, size: 16),
+              ),
+              if (trend != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.success.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(trend!,
+                    style: const TextStyle(color: AppColors.success, fontSize: 10, fontWeight: FontWeight.w600),
+                  ),
                 ),
+            ]),
+            const SizedBox(height: 12),
+            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(value,
+                style: AppTheme.darkTheme.textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: isHighlighted ? iconColor : AppColors.textPrimary,
+                  fontSize: 16,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-          ]),
-          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(value,
-              style: AppTheme.darkTheme.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: isHighlighted ? iconColor : AppColors.textPrimary,
-                fontSize: 16,
+              const SizedBox(height: 2),
+              Text(label,
+                style: const TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w500),
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 2),
-            Text(label,
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w500),
-            ),
-          ]),
-        ],
+            ]),
+          ],
+        ),
       ),
     );
   }
