@@ -44,6 +44,8 @@ export const createBusiness = onCall({ cors: true }, async (request) => {
     id: businessRef.id,
     name: businessName.trim(),
     plan: "free",
+    status: "pending",
+    active: false,
     subscriptionStatus: "trial",
     trialEndsAt: admin.firestore.Timestamp.fromDate(trialEndsAt),
     subscriptionEndsAt: null,
@@ -69,6 +71,7 @@ export const createBusiness = onCall({ cors: true }, async (request) => {
     businessId: businessRef.id,
     businessName: businessName.trim(),
     plan: "free",
+    status: "pending",
     subscriptionStatus: "trial",
     trialEndsAt: trialEndsAt.toISOString(),
   };
@@ -129,7 +132,7 @@ export const inviteUser = onCall({ cors: true }, async (request) => {
 
 // -----------------------------------------------------------
 // getMyProfile
-// Returns the calling user's profile + business info.
+// Returns the calling user's profile + business info + super admin status.
 // Called on app startup to restore session context.
 // -----------------------------------------------------------
 export const getMyProfile = onCall({ cors: true }, async (request) => {
@@ -138,10 +141,18 @@ export const getMyProfile = onCall({ cors: true }, async (request) => {
   }
 
   const uid = request.auth.uid;
+  
+  // Check if user is a Super Admin
+  const adminSnap = await db().collection("platformAdmins").doc(uid).get();
+  const isSuperAdmin = adminSnap.exists;
+
   const userSnap = await db().collection("users").doc(uid).get();
 
   if (!userSnap.exists) {
-    return { registered: false };
+    return { 
+      registered: false,
+      isSuperAdmin,
+    };
   }
 
   const userData = userSnap.data()!;
@@ -149,6 +160,7 @@ export const getMyProfile = onCall({ cors: true }, async (request) => {
 
   return {
     registered: true,
+    isSuperAdmin,
     user: userData,
     business: bizSnap.data(),
   };

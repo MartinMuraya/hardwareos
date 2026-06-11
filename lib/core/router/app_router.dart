@@ -13,6 +13,14 @@ import '../../features/expenses/screens/expenses_screen.dart';
 import '../../features/expenses/screens/add_expense_screen.dart';
 import '../../features/reports/screens/reports_screen.dart';
 import '../../features/team/screens/team_screen.dart';
+import '../../features/admin/screens/admin_dashboard_screen.dart';
+import '../../features/admin/screens/admin_businesses_screen.dart';
+import '../../features/admin/screens/admin_subscriptions_screen.dart';
+import '../../features/admin/screens/admin_plans_screen.dart';
+import '../../features/admin/screens/admin_users_screen.dart';
+import '../../features/admin/screens/admin_settings_screen.dart';
+import '../../features/admin/widgets/admin_scaffold.dart';
+import '../../features/auth/screens/pending_approval_screen.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/app_scaffold.dart';
 
@@ -30,16 +38,68 @@ class AppRouter {
                                 state.matchedLocation == '/register';
 
         if (!isAuthenticated && !isAuthRoute) return '/login';
-        if (isAuthenticated && !isRegistered && state.matchedLocation != '/register') {
-          return '/register';
+        
+        if (isAuthenticated) {
+          if (authProvider.isSuperAdmin) {
+            if (!state.matchedLocation.startsWith('/admin')) {
+              return '/admin/dashboard';
+            }
+            return null;
+          }
+
+          if (!isRegistered && state.matchedLocation != '/register') {
+            return '/register';
+          }
+          if (isRegistered) {
+            if (authProvider.businessStatus == 'pending' && state.matchedLocation != '/pending-approval') {
+              return '/pending-approval';
+            }
+            if (authProvider.businessStatus != 'pending' && isAuthRoute) {
+              return '/dashboard';
+            }
+            if (authProvider.businessStatus != 'pending' && state.matchedLocation == '/pending-approval') {
+              return '/dashboard';
+            }
+          }
         }
-        if (isAuthenticated && isRegistered && isAuthRoute) return '/dashboard';
         return null;
       },
       routes: [
         // Auth
         GoRoute(path: '/login',    builder: (_, __) => const LoginScreen()),
         GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
+        GoRoute(path: '/pending-approval', builder: (_, __) => const PendingApprovalScreen()),
+        
+        // Super Admin Shell
+        ShellRoute(
+          builder: (context, state, child) => AdminScaffold(child: child),
+          routes: [
+            GoRoute(
+              path: '/admin/dashboard',
+              pageBuilder: (context, state) => const NoTransitionPage(child: AdminDashboardScreen()),
+            ),
+            GoRoute(
+              path: '/admin/businesses',
+              pageBuilder: (context, state) => const NoTransitionPage(child: AdminBusinessesScreen()),
+            ),
+            GoRoute(
+              path: '/admin/subscriptions',
+              pageBuilder: (context, state) => const NoTransitionPage(child: AdminSubscriptionsScreen()),
+            ),
+            GoRoute(
+              path: '/admin/plans',
+              pageBuilder: (context, state) => const NoTransitionPage(child: AdminPlansScreen()),
+            ),
+            GoRoute(
+              path: '/admin/users',
+              pageBuilder: (context, state) => const NoTransitionPage(child: AdminUsersScreen()),
+            ),
+            GoRoute(
+              path: '/admin/settings',
+              pageBuilder: (context, state) => const NoTransitionPage(child: AdminSettingsScreen()),
+            ),
+          ],
+        ),
 
         // Shell with side nav
         ShellRoute(

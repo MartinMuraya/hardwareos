@@ -33,3 +33,19 @@ export { createPurchase, getPurchases } from "./functions/purchases";
 
 // Dashboard & Reports
 export { getDashboardStats, getReportStats } from "./functions/dashboard";
+
+// Super Admin
+export { getPlatformStats } from "./functions/super_admin";
+export { adminGetAllBusinesses, adminUpdateBusinessStatus } from "./functions/admin_businesses";
+export {
+  adminGetSubscriptions,
+  adminUpdateSubscription,
+  adminGetPlans,
+  adminCreatePlan,
+  adminUpdatePlan,
+  adminDeletePlan,
+  adminGetUsers,
+  adminUpdateUser,
+  adminGetSettings,
+  adminUpdateSettings,
+} from "./functions/admin_operations";

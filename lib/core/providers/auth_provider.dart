@@ -10,6 +10,8 @@ class AuthProvider extends ChangeNotifier {
   User? _user;
   AuthState _state = AuthState.initial;
   bool _isRegistered = false;
+  bool _isSuperAdmin = false;
+  String? _businessStatus;
   Map<String, dynamic>? _userProfile;
   String? _errorMessage;
 
@@ -17,6 +19,8 @@ class AuthProvider extends ChangeNotifier {
   AuthState              get state         => _state;
   bool                   get isAuthenticated => _state == AuthState.authenticated;
   bool                   get isRegistered  => _isRegistered;
+  bool                   get isSuperAdmin  => _isSuperAdmin;
+  String?                get businessStatus => _businessStatus;
   bool                   get isLoading     => _state == AuthState.loading;
   Map<String, dynamic>?  get userProfile   => _userProfile;
   String?                get errorMessage  => _errorMessage;
@@ -47,11 +51,22 @@ class AuthProvider extends ChangeNotifier {
       final result = await fn.call();
       final data = Map<String, dynamic>.from(result.data as Map);
       _isRegistered = data['registered'] == true;
-      _userProfile  = _isRegistered ? Map<String, dynamic>.from(data['user'] as Map) : null;
-      _state        = AuthState.authenticated;
+      _isSuperAdmin = data['isSuperAdmin'] == true;
+      
+      if (_isRegistered) {
+        _userProfile = Map<String, dynamic>.from(data['user'] as Map);
+        final biz = Map<String, dynamic>.from(data['business'] as Map);
+        _businessStatus = biz['status'] as String?;
+      } else {
+        _userProfile = null;
+        _businessStatus = null;
+      }
+      _state = AuthState.authenticated;
     } catch (e) {
       _isRegistered = false;
-      _state        = AuthState.authenticated;
+      _isSuperAdmin = false;
+      _businessStatus = null;
+      _state = AuthState.authenticated;
     }
   }
 
