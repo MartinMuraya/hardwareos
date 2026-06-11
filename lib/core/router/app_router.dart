@@ -12,6 +12,7 @@ import '../../features/sales/screens/sales_history_screen.dart';
 import '../../features/expenses/screens/expenses_screen.dart';
 import '../../features/expenses/screens/add_expense_screen.dart';
 import '../../features/reports/screens/reports_screen.dart';
+import '../../features/team/screens/team_screen.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/app_scaffold.dart';
 
@@ -86,7 +87,11 @@ class AppRouter {
             ),
             GoRoute(
               path: '/reports',
-              builder: (_, __) => const ReportsScreen(),
+              pageBuilder: (context, state) => const NoTransitionPage(child: ReportsScreen()),
+            ),
+            GoRoute(
+              path: '/team',
+              pageBuilder: (context, state) => const NoTransitionPage(child: TeamScreen()),
             ),
           ],
         ),

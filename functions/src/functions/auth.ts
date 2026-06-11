@@ -153,3 +153,38 @@ export const getMyProfile = onCall({ cors: true }, async (request) => {
     business: bizSnap.data(),
   };
 });
+
+// -----------------------------------------------------------
+// getUsers
+// Retrieves all users associated with the given businessId.
+// Caller must be an owner or manager.
+// -----------------------------------------------------------
+export const getUsers = onCall({ cors: true }, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "You must be logged in.");
+  }
+
+  const { businessId } = request.data as { businessId: string };
+  if (!businessId) {
+    throw new HttpsError("invalid-argument", "businessId is required.");
+  }
+
+  // Caller must be owner or manager to view the team list
+  await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager"]);
+
+  const snap = await db()
+    .collection("users")
+    .where("businessId", "==", businessId)
+    .orderBy("createdAt", "desc")
+    .get();
+
+  return {
+    users: snap.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        ...data,
+        createdAt: (data.createdAt as admin.firestore.Timestamp)?.toDate()?.toISOString() || null,
+      };
+    }),
+  };
+});

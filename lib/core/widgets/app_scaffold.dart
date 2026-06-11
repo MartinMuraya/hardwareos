@@ -21,6 +21,7 @@ class _AppScaffoldState extends State<AppScaffold> {
     _NavItem(icon: Icons.point_of_sale_rounded,label: 'Sales',     route: '/sales'),
     _NavItem(icon: Icons.receipt_long_rounded, label: 'Expenses',  route: '/expenses'),
     _NavItem(icon: Icons.bar_chart_rounded,    label: 'Reports',   route: '/reports'),
+    _NavItem(icon: Icons.people_rounded,       label: 'Team',      route: '/team'),
   ];
 
   int _selectedIndex(BuildContext context) {

@@ -11,7 +11,7 @@ setGlobalOptions({ maxInstances: 10 });
 admin.initializeApp();
 
 // Auth
-export { createBusiness, inviteUser, getMyProfile } from "./functions/auth";
+export { createBusiness, inviteUser, getMyProfile, getUsers } from "./functions/auth";
 
 // Inventory
 export {
