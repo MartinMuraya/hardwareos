@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/providers/auth_provider.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_theme.dart';
+import '../../../core/providers/auth_provider.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -139,7 +139,6 @@ class _AccountStep extends StatelessWidget {
       const SizedBox(height: 20),
       if (error != null) _ErrorBanner(message: error!),
       TextFormField(
-        id: 'reg-email',
         controller: emailCtrl,
         keyboardType: TextInputType.emailAddress,
         style: const TextStyle(color: AppColors.textPrimary),
@@ -149,7 +148,6 @@ class _AccountStep extends StatelessWidget {
       ),
       const SizedBox(height: 16),
       TextFormField(
-        id: 'reg-password',
         controller: passCtrl,
         obscureText: obscure,
         style: const TextStyle(color: AppColors.textPrimary),
@@ -163,7 +161,6 @@ class _AccountStep extends StatelessWidget {
       ),
       const SizedBox(height: 24),
       ElevatedButton(
-        id: 'reg-submit',
         onPressed: isSubmitting ? null : onSubmit,
         child: isSubmitting
           ? const SizedBox(width: 20, height: 20,
@@ -175,7 +172,7 @@ class _AccountStep extends StatelessWidget {
       Row(mainAxisAlignment: MainAxisAlignment.center, children: [
         const Text('Already have an account? ',
           style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-        TextButton(id: 'goto-login', onPressed: onLogin, child: const Text('Sign In')),
+        TextButton(onPressed: onLogin, child: const Text('Sign In')),
       ]),
     ]);
   }
@@ -206,7 +203,6 @@ class _BusinessStep extends StatelessWidget {
       const SizedBox(height: 24),
       if (error != null) _ErrorBanner(message: error!),
       TextFormField(
-        id: 'biz-name',
         controller: bizNameCtrl,
         style: const TextStyle(color: AppColors.textPrimary),
         decoration: const InputDecoration(
@@ -223,9 +219,9 @@ class _BusinessStep extends StatelessWidget {
       Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppColors.accent.withOpacity(0.08),
+          color: AppColors.accent.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppColors.accent.withOpacity(0.2)),
+          border: Border.all(color: AppColors.accent.withValues(alpha: 0.2)),
         ),
         child: Row(children: [
           const Icon(Icons.star_rounded, color: AppColors.accent, size: 18),
@@ -239,7 +235,6 @@ class _BusinessStep extends StatelessWidget {
       const SizedBox(height: 20),
 
       ElevatedButton(
-        id: 'create-business',
         onPressed: isSubmitting ? null : onSubmit,
         child: isSubmitting
           ? const SizedBox(width: 20, height: 20,
@@ -262,7 +257,7 @@ class _StepDot extends StatelessWidget {
       Container(
         width: 28, height: 28,
         decoration: BoxDecoration(
-          color: done ? AppColors.accent : (active ? AppColors.accent.withOpacity(0.15) : AppColors.surfaceLight),
+          color: done ? AppColors.accent : (active ? AppColors.accent.withValues(alpha: 0.15) : AppColors.surfaceLight),
           shape: BoxShape.circle,
           border: Border.all(color: color, width: 2),
         ),
@@ -284,9 +279,9 @@ class _ErrorBanner extends StatelessWidget {
     margin: const EdgeInsets.only(bottom: 16),
     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
     decoration: BoxDecoration(
-      color: AppColors.error.withOpacity(0.1),
+      color: AppColors.error.withValues(alpha: 0.1),
       borderRadius: BorderRadius.circular(10),
-      border: Border.all(color: AppColors.error.withOpacity(0.3)),
+      border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
     ),
     child: Row(children: [
       const Icon(Icons.error_outline, color: AppColors.error, size: 16),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
+import '../../../core/theme/app_colors.dart';
 
 class PlanStatusBanner extends StatelessWidget {
   final Map subscription;
@@ -15,8 +15,8 @@ class PlanStatusBanner extends StatelessWidget {
     if (isExpired) {
       return _BannerCard(
         icon: Icons.warning_amber_rounded,
-        bgColor: AppColors.error.withOpacity(0.1),
-        borderColor: AppColors.error.withOpacity(0.3),
+        bgColor: AppColors.error.withValues(alpha: 0.1),
+        borderColor: AppColors.error.withValues(alpha: 0.3),
         iconColor: AppColors.error,
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('Subscription Expired',
@@ -32,8 +32,8 @@ class PlanStatusBanner extends StatelessWidget {
       final urgent = trialDaysLeft <= 3;
       return _BannerCard(
         icon: Icons.access_time_rounded,
-        bgColor: (urgent ? AppColors.warning : AppColors.accent).withOpacity(0.08),
-        borderColor: (urgent ? AppColors.warning : AppColors.accent).withOpacity(0.25),
+        bgColor: (urgent ? AppColors.warning : AppColors.accent).withValues(alpha: 0.08),
+        borderColor: (urgent ? AppColors.warning : AppColors.accent).withValues(alpha: 0.25),
         iconColor: urgent ? AppColors.warning : AppColors.accent,
         child: Row(children: [
           Expanded(
@@ -69,8 +69,8 @@ class PlanStatusBanner extends StatelessWidget {
     if (status == 'active') {
       return _BannerCard(
         icon: Icons.verified_rounded,
-        bgColor: AppColors.success.withOpacity(0.07),
-        borderColor: AppColors.success.withOpacity(0.2),
+        bgColor: AppColors.success.withValues(alpha: 0.07),
+        borderColor: AppColors.success.withValues(alpha: 0.2),
         iconColor: AppColors.success,
         child: Text('${_planLabel(plan)} Plan — Active',
           style: const TextStyle(color: AppColors.success, fontWeight: FontWeight.w600, fontSize: 13)),

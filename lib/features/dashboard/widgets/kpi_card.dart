@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_theme.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 
 class KpiCard extends StatelessWidget {
   final String label;
@@ -25,10 +25,10 @@ class KpiCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isHighlighted ? iconColor.withOpacity(0.08) : AppColors.card,
-        borderRadius: BorderRadius.circular(16),
+        color: isHighlighted ? iconColor.withValues(alpha: 0.08) : AppColors.card,
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isHighlighted ? iconColor.withOpacity(0.3) : AppColors.border,
+          color: isHighlighted ? iconColor.withValues(alpha: 0.3) : AppColors.border,
           width: isHighlighted ? 1.5 : 1,
         ),
       ),
@@ -40,8 +40,8 @@ class KpiCard extends StatelessWidget {
             Container(
               width: 32, height: 32,
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(8),
+                color: iconColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(icon, color: iconColor, size: 16),
             ),
@@ -49,7 +49,7 @@ class KpiCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: AppColors.success.withOpacity(0.1),
+                  color: AppColors.success.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(trend!,

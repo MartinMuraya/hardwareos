@@ -66,7 +66,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   Expanded(child: Text('Reports',
                     style: AppTheme.darkTheme.textTheme.displayMedium)),
                   IconButton(
-                    id: 'refresh-reports',
                     icon: const Icon(Icons.refresh_rounded),
                     onPressed: _load,
                     tooltip: 'Refresh',
@@ -124,9 +123,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     margin: const EdgeInsets.only(bottom: 16),
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: AppColors.error.withOpacity(0.1),
+                      color: AppColors.error.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                      border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
                     ),
                     child: Text(_error!,
                       style: const TextStyle(color: AppColors.error)),
@@ -273,7 +272,7 @@ class _TopProductsCard extends StatelessWidget {
                 width: 24, height: 24,
                 decoration: BoxDecoration(
                   color: i == 0
-                      ? const Color(0xFFFFB300).withOpacity(0.15)
+                      ? const Color(0xFFFFB300).withValues(alpha: 0.15)
                       : AppColors.surfaceLight,
                   shape: BoxShape.circle,
                 ),
@@ -385,7 +384,7 @@ class _ReportCard extends StatelessWidget {
             Container(
               width: 32, height: 32,
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.12),
+                color: iconColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, color: iconColor, size: 16),

@@ -172,7 +172,7 @@ class _ExpenseCard extends StatelessWidget {
         children: [
           Container(
             width: 44, height: 44,
-            decoration: BoxDecoration(color: AppColors.chartRed.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+            decoration: BoxDecoration(color: AppColors.chartRed.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
             child: const Icon(Icons.receipt_long_rounded, color: AppColors.chartRed, size: 22),
           ),
           const SizedBox(width: 14),

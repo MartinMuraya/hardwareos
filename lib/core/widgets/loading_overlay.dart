@@ -20,7 +20,7 @@ class LoadingOverlay extends StatelessWidget {
         child,
         if (isLoading)
           Container(
-            color: Colors.black.withOpacity(0.55),
+            color: AppColors.background.withValues(alpha: 0.7),
             child: Center(
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),

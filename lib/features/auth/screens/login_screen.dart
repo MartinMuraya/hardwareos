@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/providers/auth_provider.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_theme.dart';
+import '../../../core/providers/auth_provider.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -99,7 +99,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         // Email
                         TextFormField(
-                          id: 'login-email',
                           controller: _emailCtrl,
                           keyboardType: TextInputType.emailAddress,
                           style: const TextStyle(color: AppColors.textPrimary),
@@ -114,7 +113,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         // Password
                         TextFormField(
-                          id: 'login-password',
                           controller: _passCtrl,
                           obscureText: _obscure,
                           style: const TextStyle(color: AppColors.textPrimary),
@@ -133,7 +131,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 28),
 
                         ElevatedButton(
-                          id: 'login-submit',
                           onPressed: _isSubmitting ? null : _submit,
                           child: _isSubmitting
                               ? const SizedBox(width: 20, height: 20,
@@ -151,7 +148,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
                             ),
                             TextButton(
-                              id: 'goto-register',
                               onPressed: () => context.go('/register'),
                               child: const Text('Register'),
                             ),
@@ -179,9 +175,9 @@ class _ErrorBanner extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.error.withOpacity(0.1),
+        color: AppColors.error.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.error.withOpacity(0.3)),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
       ),
       child: Row(children: [
         const Icon(Icons.error_outline, color: AppColors.error, size: 16),

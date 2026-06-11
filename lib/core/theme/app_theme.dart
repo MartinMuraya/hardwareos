@@ -122,7 +122,7 @@ class AppTheme {
       ),
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.surfaceLight,
-        selectedColor: AppColors.accent.withOpacity(0.2),
+        selectedColor: AppColors.accent.withValues(alpha: 0.2),
         labelStyle: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         side: const BorderSide(color: AppColors.border),
@@ -137,7 +137,7 @@ class AppTheme {
         unselectedLabelTextStyle: GoogleFonts.inter(
           color: AppColors.textHint, fontSize: 12,
         ),
-        indicatorColor: AppColors.accent.withOpacity(0.15),
+        indicatorColor: AppColors.accent.withValues(alpha: 0.15),
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.card,

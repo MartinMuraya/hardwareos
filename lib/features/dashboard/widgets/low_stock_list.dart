@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
+import '../../../core/theme/app_colors.dart';
 
 class LowStockList extends StatelessWidget {
   final List<Map<String, dynamic>> items;
@@ -30,7 +30,7 @@ class LowStockList extends StatelessWidget {
                 leading: Container(
                   width: 36, height: 36,
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: AppColors.surfaceLight.withValues(alpha: 0.5),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -49,7 +49,7 @@ class LowStockList extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.12),
+                        color: color.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(isOut ? 'OUT' : 'Qty: $qty',

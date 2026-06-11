@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/loading_overlay.dart';
 
 class AddExpenseScreen extends StatefulWidget {
@@ -139,7 +138,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                                 horizontal: 14, vertical: 8),
                               decoration: BoxDecoration(
                                 color: sel
-                                    ? AppColors.chartRed.withOpacity(0.12)
+                                    ? AppColors.chartRed.withValues(alpha: 0.12)
                                     : AppColors.surfaceLight,
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
@@ -185,7 +184,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     const SizedBox(height: 32),
 
                     ElevatedButton.icon(
-                      id: 'save-expense-btn',
                       onPressed: _submitting ? null : _submit,
                       icon: const Icon(Icons.save_rounded, size: 18),
                       label: const Text('Record Expense'),
@@ -254,9 +252,9 @@ class _ErrorCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.error.withOpacity(0.1),
+        color: AppColors.error.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.error.withOpacity(0.3)),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
       ),
       child: Row(children: [
         const Icon(Icons.error_outline, color: AppColors.error, size: 16),

@@ -158,7 +158,7 @@ class _SideNav extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Material(
                     color: selected
-                        ? AppColors.accent.withOpacity(0.12)
+                        ? AppColors.accent.withValues(alpha: 0.12)
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(10),
                     child: InkWell(
@@ -245,9 +245,9 @@ class _PlanBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Text(plan.toUpperCase(),
         style: TextStyle(
