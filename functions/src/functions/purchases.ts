@@ -20,7 +20,7 @@ export interface PurchaseItem {
 // Records a supplier purchase and increases stock for each item.
 // Also logs stock movements.
 // -----------------------------------------------------------
-export const createPurchase = onCall(async (request) => {
+export const createPurchase = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, supplierId, supplierName, items, note } = request.data as {
@@ -102,7 +102,7 @@ export const createPurchase = onCall(async (request) => {
 // -----------------------------------------------------------
 // getPurchases
 // -----------------------------------------------------------
-export const getPurchases = onCall(async (request) => {
+export const getPurchases = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, limit: pageLimit = 30, startAfter } = request.data as {
@@ -125,8 +125,10 @@ export const getPurchases = onCall(async (request) => {
   }
 
   const snap = await query.get();
-  return snap.docs.map((d) => ({
-    ...d.data(),
-    createdAt: (d.data().createdAt as admin.firestore.Timestamp).toDate().toISOString(),
-  }));
+  return {
+    purchases: snap.docs.map((d) => ({
+      ...d.data(),
+      createdAt: (d.data().createdAt as admin.firestore.Timestamp).toDate().toISOString(),
+    })),
+  };
 });

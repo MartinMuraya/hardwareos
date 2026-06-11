@@ -4,8 +4,8 @@
 
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { assertBusinessMember, getBusinessData, getEffectivePlan } from "../middleware/checkPlanLimits";
-import { Plan, SubscriptionStatus } from "../config/planLimits";
+import { assertBusinessMember, getBusinessData } from "../middleware/checkPlanLimits";
+import { getEffectivePlan, Plan, SubscriptionStatus } from "../config/planLimits";
 
 const db = () => admin.firestore();
 
@@ -13,7 +13,7 @@ const db = () => admin.firestore();
 // getDashboardStats
 // Returns today's KPIs + low stock + subscription info.
 // -----------------------------------------------------------
-export const getDashboardStats = onCall(async (request) => {
+export const getDashboardStats = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId } = request.data as { businessId: string };
@@ -125,80 +125,77 @@ export const getDashboardStats = onCall(async (request) => {
 
 // -----------------------------------------------------------
 // getReportStats
-// Returns aggregated stats for a date range (daily/weekly/monthly).
+// Returns aggregated stats for a period ('today'|'week'|'month').
 // -----------------------------------------------------------
-export const getReportStats = onCall(async (request) => {
+export const getReportStats = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
-  const { businessId, fromDate, toDate } = request.data as {
+  const { businessId, period } = request.data as {
     businessId: string;
-    fromDate: string;
-    toDate: string;
+    period: 'today' | 'week' | 'month';
   };
 
   await assertBusinessMember(request.auth.uid, businessId);
 
-  const from = admin.firestore.Timestamp.fromDate(new Date(fromDate));
-  const to = admin.firestore.Timestamp.fromDate(new Date(toDate));
+  const now = new Date();
+  const fromDate = new Date();
+  if (period === 'today') {
+    fromDate.setHours(0, 0, 0, 0);
+  } else if (period === 'week') {
+    fromDate.setDate(now.getDate() - 7);
+  } else {
+    fromDate.setMonth(now.getMonth() - 1);
+  }
+
+  const from = admin.firestore.Timestamp.fromDate(fromDate);
 
   const [salesSnap, expensesSnap] = await Promise.all([
-    db()
-      .collection("sales")
-      .where("businessId", "==", businessId)
-      .where("createdAt", ">=", from)
-      .where("createdAt", "<=", to)
-      .orderBy("createdAt", "asc")
-      .get(),
-    db()
-      .collection("expenses")
-      .where("businessId", "==", businessId)
-      .where("createdAt", ">=", from)
-      .where("createdAt", "<=", to)
-      .get(),
+    db().collection("sales").where("businessId", "==", businessId).where("createdAt", ">=", from).get(),
+    db().collection("expenses").where("businessId", "==", businessId).where("createdAt", ">=", from).get(),
   ]);
 
-  // Group sales by date
-  const salesByDay: Record<string, { revenue: number; profit: number; count: number }> = {};
+  let totalRevenue = 0, totalCOGS = 0, totalSales = 0;
+  let cashTotal = 0, mpesaTotal = 0, creditTotal = 0;
+  const productMap: Record<string, { qty: number; revenue: number }> = {};
 
   salesSnap.docs.forEach((doc) => {
     const data = doc.data();
-    const date = (data.createdAt as admin.firestore.Timestamp)
-      .toDate()
-      .toISOString()
-      .substring(0, 10);
-    if (!salesByDay[date]) salesByDay[date] = { revenue: 0, profit: 0, count: 0 };
-    salesByDay[date].revenue += data.total || 0;
-    salesByDay[date].profit += data.profit || 0;
-    salesByDay[date].count++;
+    totalRevenue += data.total || 0;
+    totalCOGS    += data.totalCost || 0;  // createSale stores COGS as totalCost
+    totalSales++;
+    if (data.paymentMethod === 'cash')   cashTotal   += data.total || 0;
+    else if (data.paymentMethod === 'mpesa')  mpesaTotal  += data.total || 0;
+    else if (data.paymentMethod === 'credit') creditTotal += data.total || 0;
+
+    (data.items || []).forEach((item: { name: string; quantity: number; sellingPrice: number }) => {
+      if (!productMap[item.name]) productMap[item.name] = { qty: 0, revenue: 0 };
+      productMap[item.name].qty     += item.quantity;
+      productMap[item.name].revenue += (item.sellingPrice || 0) * item.quantity;
+    });
   });
 
-  let totalRevenue = 0;
-  let totalProfit = 0;
   let totalExpenses = 0;
-
-  salesSnap.docs.forEach((d) => {
-    totalRevenue += d.data().total || 0;
-    totalProfit += d.data().profit || 0;
-  });
-  expensesSnap.docs.forEach((d) => { totalExpenses += d.data().amount || 0; });
-
-  // Group expenses by category
-  const expensesByCategory: Record<string, number> = {};
+  const expenseByCategory: Record<string, number> = {};
   expensesSnap.docs.forEach((doc) => {
     const data = doc.data();
+    totalExpenses += data.amount || 0;
     const cat = data.category || "Other";
-    expensesByCategory[cat] = (expensesByCategory[cat] || 0) + (data.amount || 0);
+    expenseByCategory[cat] = (expenseByCategory[cat] || 0) + (data.amount || 0);
   });
 
   return {
-    totals: {
-      revenue: Number(totalRevenue.toFixed(2)),
-      profit: Number(totalProfit.toFixed(2)),
-      expenses: Number(totalExpenses.toFixed(2)),
-      netProfit: Number((totalProfit - totalExpenses).toFixed(2)),
-      salesCount: salesSnap.size,
-    },
-    salesByDay,
-    expensesByCategory,
+    totalRevenue,
+    totalCOGS,
+    totalExpenses,
+    netProfit: totalRevenue - totalCOGS - totalExpenses,
+    totalSales,
+    cashTotal,
+    mpesaTotal,
+    creditTotal,
+    topProducts: Object.entries(productMap)
+      .map(([name, v]) => ({ name, qty: v.qty, revenue: Number(v.revenue.toFixed(2)) }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5),
+    expenseByCategory,
   };
 });

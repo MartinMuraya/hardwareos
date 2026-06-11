@@ -14,7 +14,7 @@ const db = () => admin.firestore();
 // Called once when a new owner registers their hardware store.
 // Creates the business doc + owner user profile atomically.
 // -----------------------------------------------------------
-export const createBusiness = onCall(async (request) => {
+export const createBusiness = onCall({ cors: true }, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "You must be logged in.");
   }
@@ -80,7 +80,7 @@ export const createBusiness = onCall(async (request) => {
 // Enforces maxUsers plan limit before creating the profile.
 // The invited user must already have a Firebase Auth account.
 // -----------------------------------------------------------
-export const inviteUser = onCall(async (request) => {
+export const inviteUser = onCall({ cors: true }, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "You must be logged in.");
   }
@@ -132,7 +132,7 @@ export const inviteUser = onCall(async (request) => {
 // Returns the calling user's profile + business info.
 // Called on app startup to restore session context.
 // -----------------------------------------------------------
-export const getMyProfile = onCall(async (request) => {
+export const getMyProfile = onCall({ cors: true }, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "You must be logged in.");
   }

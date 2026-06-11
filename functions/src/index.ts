@@ -3,6 +3,9 @@
 // ============================================================
 
 import * as admin from "firebase-admin";
+import { setGlobalOptions } from "firebase-functions/v2";
+
+setGlobalOptions({ maxInstances: 10 });
 
 // Initialize Firebase Admin SDK (once)
 admin.initializeApp();

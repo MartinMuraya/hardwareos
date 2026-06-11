@@ -26,7 +26,7 @@ export interface SaleItem {
 //  5. Log stock movement per item
 // All steps atomic via Firestore transaction.
 // -----------------------------------------------------------
-export const createSale = onCall(async (request) => {
+export const createSale = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, items, paymentMethod, note } = request.data as {
@@ -148,7 +148,7 @@ export const createSale = onCall(async (request) => {
 // getSales
 // Paginated sales history, ordered by createdAt desc.
 // -----------------------------------------------------------
-export const getSales = onCall(async (request) => {
+export const getSales = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, limit: pageLimit = 30, startAfter } = request.data as {
@@ -171,8 +171,11 @@ export const getSales = onCall(async (request) => {
   }
 
   const snap = await query.get();
-  return snap.docs.map((d) => ({
-    ...d.data(),
-    createdAt: (d.data().createdAt as admin.firestore.Timestamp).toDate().toISOString(),
-  }));
+  // Wrap in object so Flutter's FunctionsService (Map cast) does not throw.
+  return {
+    sales: snap.docs.map((d) => ({
+      ...d.data(),
+      createdAt: (d.data().createdAt as admin.firestore.Timestamp).toDate().toISOString(),
+    })),
+  };
 });

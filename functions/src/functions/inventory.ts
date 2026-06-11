@@ -17,7 +17,7 @@ const db = () => admin.firestore();
 // Validates plan limits before creating a new product.
 // Only owner/manager can create products.
 // -----------------------------------------------------------
-export const createProduct = onCall(async (request) => {
+export const createProduct = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const {
@@ -97,7 +97,7 @@ export const createProduct = onCall(async (request) => {
 // updateProduct
 // Updates product details. Stock changes must use addStock().
 // -----------------------------------------------------------
-export const updateProduct = onCall(async (request) => {
+export const updateProduct = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, productId, updates } = request.data as {
@@ -125,7 +125,7 @@ export const updateProduct = onCall(async (request) => {
 // Increases inventory quantity + logs stock movement.
 // Used for manual top-ups and purchase receipts.
 // -----------------------------------------------------------
-export const addStock = onCall(async (request) => {
+export const addStock = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, productId, quantity, reason, referenceId } = request.data as {
@@ -177,7 +177,7 @@ export const addStock = onCall(async (request) => {
 // getProducts
 // Paginated product list with optional search/filter.
 // -----------------------------------------------------------
-export const getProducts = onCall(async (request) => {
+export const getProducts = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, limit: pageLimit = 50, startAfter, category } = request.data as {
@@ -205,14 +205,16 @@ export const getProducts = onCall(async (request) => {
   }
 
   const snap = await query.get();
-  return snap.docs.map((d) => d.data());
+  // Wrap in an object so Flutter's FunctionsService (which casts result.data
+  // to Map<String, dynamic>) does not throw when receiving a top-level list.
+  return { products: snap.docs.map((d) => d.data()) };
 });
 
 // -----------------------------------------------------------
 // getLowStockProducts
 // Returns products at or below reorderLevel. Used by dashboard.
 // -----------------------------------------------------------
-export const getLowStockProducts = onCall(async (request) => {
+export const getLowStockProducts = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId } = request.data as { businessId: string };
@@ -231,5 +233,5 @@ export const getLowStockProducts = onCall(async (request) => {
     .map((d) => d.data())
     .filter((p) => p.quantity <= p.reorderLevel);
 
-  return low;
+  return { products: low };
 });

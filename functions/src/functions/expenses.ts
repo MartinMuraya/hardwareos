@@ -16,7 +16,7 @@ export const EXPENSE_CATEGORIES = [
 // -----------------------------------------------------------
 // createExpense
 // -----------------------------------------------------------
-export const createExpense = onCall(async (request) => {
+export const createExpense = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, category, amount, note } = request.data as {
@@ -50,7 +50,7 @@ export const createExpense = onCall(async (request) => {
 // -----------------------------------------------------------
 // getExpenses
 // -----------------------------------------------------------
-export const getExpenses = onCall(async (request) => {
+export const getExpenses = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, limit: pageLimit = 30, startAfter } = request.data as {
@@ -73,8 +73,11 @@ export const getExpenses = onCall(async (request) => {
   }
 
   const snap = await query.get();
-  return snap.docs.map((d) => ({
-    ...d.data(),
-    createdAt: (d.data().createdAt as admin.firestore.Timestamp).toDate().toISOString(),
-  }));
+  // Wrap in object so Flutter's FunctionsService (Map cast) does not throw.
+  return {
+    expenses: snap.docs.map((d) => ({
+      ...d.data(),
+      createdAt: (d.data().createdAt as admin.firestore.Timestamp).toDate().toISOString(),
+    })),
+  };
 });
