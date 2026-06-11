@@ -14,15 +14,15 @@ class AddProductScreen extends StatefulWidget {
 }
 
 class _AddProductScreenState extends State<AddProductScreen> {
-  final _formKey      = GlobalKey<FormState>();
-  final _nameCtrl     = TextEditingController();
-  final _skuCtrl      = TextEditingController();
-  final _qtyCtrl      = TextEditingController(text: '0');
-  final _costCtrl     = TextEditingController();
-  final _priceCtrl    = TextEditingController();
-  final _reorderCtrl  = TextEditingController(text: '5');
-  String _category    = 'General';
-  bool _isSubmitting  = false;
+  final _formKey     = GlobalKey<FormState>();
+  final _nameCtrl    = TextEditingController();
+  final _skuCtrl     = TextEditingController();
+  final _qtyCtrl     = TextEditingController(text: '0');
+  final _costCtrl    = TextEditingController();
+  final _priceCtrl   = TextEditingController();
+  final _reorderCtrl = TextEditingController(text: '5');
+  String _category   = 'General';
+  bool _isSubmitting = false;
   String? _error;
 
   static const _categories = [
@@ -33,12 +33,14 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
   @override
   void dispose() {
-    for (final c in [_nameCtrl, _skuCtrl, _qtyCtrl, _costCtrl, _priceCtrl, _reorderCtrl]) c.dispose();
+    for (final c in [_nameCtrl, _skuCtrl, _qtyCtrl, _costCtrl, _priceCtrl, _reorderCtrl]) {
+      c.dispose();
+    }
     super.dispose();
   }
 
   double get _margin {
-    final cost = double.tryParse(_costCtrl.text) ?? 0;
+    final cost  = double.tryParse(_costCtrl.text)  ?? 0;
     final price = double.tryParse(_priceCtrl.text) ?? 0;
     if (price <= 0) return 0;
     return ((price - cost) / price) * 100;
@@ -61,8 +63,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✅ Product added successfully!')),
-        );
+          const SnackBar(content: Text('✅ Product added successfully!')));
         context.pop();
       }
     } on FunctionsException catch (e) {
@@ -98,12 +99,20 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     if (_error != null) _ErrorCard(message: _error!),
 
                     _Section(title: 'Product Info', children: [
-                      _Field(ctrl: _nameCtrl, label: 'Product Name', id: 'prod-name',
-                        validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null),
+                      TextFormField(
+                        controller: _nameCtrl,
+                        style: const TextStyle(color: AppColors.textPrimary),
+                        decoration: const InputDecoration(labelText: 'Product Name'),
+                        validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
+                      ),
                       const SizedBox(height: 14),
                       Row(children: [
                         Expanded(
-                          child: _Field(ctrl: _skuCtrl, label: 'SKU (optional)', id: 'prod-sku'),
+                          child: TextFormField(
+                            controller: _skuCtrl,
+                            style: const TextStyle(color: AppColors.textPrimary),
+                            decoration: const InputDecoration(labelText: 'SKU (optional)'),
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -112,7 +121,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
                             dropdownColor: AppColors.card,
                             style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
                             decoration: const InputDecoration(labelText: 'Category'),
-                            items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                            items: _categories.map((c) =>
+                              DropdownMenuItem(value: c, child: Text(c))).toList(),
                             onChanged: (v) => setState(() => _category = v!),
                           ),
                         ),
@@ -123,23 +133,31 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     _Section(title: 'Pricing', children: [
                       Row(children: [
                         Expanded(
-                          child: _Field(ctrl: _costCtrl, label: 'Cost Price (KES)', id: 'prod-cost',
+                          child: TextFormField(
+                            controller: _costCtrl,
                             keyboardType: TextInputType.number,
+                            style: const TextStyle(color: AppColors.textPrimary),
+                            decoration: const InputDecoration(labelText: 'Cost Price (KES)'),
                             onChanged: (_) => setState(() {}),
                             validator: (v) {
                               final n = double.tryParse(v ?? '');
                               return n == null || n < 0 ? 'Enter valid price' : null;
-                            }),
+                            },
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: _Field(ctrl: _priceCtrl, label: 'Selling Price (KES)', id: 'prod-price',
+                          child: TextFormField(
+                            controller: _priceCtrl,
                             keyboardType: TextInputType.number,
+                            style: const TextStyle(color: AppColors.textPrimary),
+                            decoration: const InputDecoration(labelText: 'Selling Price (KES)'),
                             onChanged: (_) => setState(() {}),
                             validator: (v) {
                               final n = double.tryParse(v ?? '');
                               return n == null || n <= 0 ? 'Must be > 0' : null;
-                            }),
+                            },
+                          ),
                         ),
                       ]),
                       if (_costCtrl.text.isNotEmpty && _priceCtrl.text.isNotEmpty) ...[
@@ -152,34 +170,42 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     _Section(title: 'Stock', children: [
                       Row(children: [
                         Expanded(
-                          child: _Field(ctrl: _qtyCtrl, label: 'Initial Quantity', id: 'prod-qty',
+                          child: TextFormField(
+                            controller: _qtyCtrl,
                             keyboardType: TextInputType.number,
+                            style: const TextStyle(color: AppColors.textPrimary),
+                            decoration: const InputDecoration(labelText: 'Initial Quantity'),
                             validator: (v) {
                               final n = int.tryParse(v ?? '');
                               return n == null || n < 0 ? 'Enter valid quantity' : null;
-                            }),
+                            },
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: _Field(ctrl: _reorderCtrl, label: 'Reorder Level', id: 'prod-reorder',
+                          child: TextFormField(
+                            controller: _reorderCtrl,
                             keyboardType: TextInputType.number,
+                            style: const TextStyle(color: AppColors.textPrimary),
+                            decoration: const InputDecoration(labelText: 'Reorder Level'),
                             validator: (v) {
                               final n = int.tryParse(v ?? '');
                               return n == null || n < 0 ? 'Enter valid number' : null;
-                            }),
+                            },
+                          ),
                         ),
                       ]),
                     ]),
                     const SizedBox(height: 32),
 
                     ElevatedButton.icon(
-                      id: 'save-product',
                       onPressed: _isSubmitting ? null : _submit,
                       icon: const Icon(Icons.save_rounded, size: 18),
                       label: const Text('Save Product'),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
                   ],
@@ -202,8 +228,8 @@ class _Section extends StatelessWidget {
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Text(title, style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-        color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600,
-        letterSpacing: 0.8)),
+        color: AppColors.textSecondary, fontSize: 12,
+        fontWeight: FontWeight.w600, letterSpacing: 0.8)),
       const SizedBox(height: 12),
       Container(
         padding: const EdgeInsets.all(16),
@@ -216,33 +242,14 @@ class _Section extends StatelessWidget {
   );
 }
 
-class _Field extends StatelessWidget {
-  final TextEditingController ctrl;
-  final String label, id;
-  final TextInputType? keyboardType;
-  final String? Function(String?)? validator;
-  final ValueChanged<String>? onChanged;
-
-  const _Field({required this.ctrl, required this.label, required this.id,
-    this.keyboardType, this.validator, this.onChanged});
-
-  @override
-  Widget build(BuildContext context) => TextFormField(
-    controller: ctrl,
-    keyboardType: keyboardType,
-    style: const TextStyle(color: AppColors.textPrimary),
-    decoration: InputDecoration(labelText: label),
-    validator: validator,
-    onChanged: onChanged,
-  );
-}
-
 class _MarginBar extends StatelessWidget {
   final double margin;
   const _MarginBar({required this.margin});
   @override
   Widget build(BuildContext context) {
-    final color = margin < 0 ? AppColors.error : margin < 15 ? AppColors.warning : AppColors.success;
+    final color = margin < 0
+        ? AppColors.error
+        : margin < 15 ? AppColors.warning : AppColors.success;
     return Row(children: [
       const Text('Margin: ', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
       Text('${margin.toStringAsFixed(1)}%',
@@ -271,12 +278,14 @@ class _ErrorCard extends StatelessWidget {
     margin: const EdgeInsets.only(bottom: 16),
     padding: const EdgeInsets.all(14),
     decoration: BoxDecoration(
-      color: AppColors.error.withOpacity(0.1), borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: AppColors.error.withOpacity(0.3))),
+      color: AppColors.error.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: AppColors.error.withValues(alpha: 0.3))),
     child: Row(children: [
       const Icon(Icons.error_outline, color: AppColors.error, size: 16),
       const SizedBox(width: 10),
-      Expanded(child: Text(message, style: const TextStyle(color: AppColors.error, fontSize: 13))),
+      Expanded(child: Text(message,
+        style: const TextStyle(color: AppColors.error, fontSize: 13))),
     ]),
   );
 }

@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/models/product.dart';
-import '../../../core/models/sale.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/loading_overlay.dart';
@@ -17,12 +16,10 @@ class POSScreen extends StatefulWidget {
 }
 
 class _POSScreenState extends State<POSScreen> {
-  // Cart state
   final List<_CartEntry> _cart = [];
   String _paymentMethod = 'cash';
 
-  // Product search
-  final _searchCtrl = TextEditingController();
+  final _searchCtrl  = TextEditingController();
   List<Product> _allProducts = [];
   List<Product> _filtered    = [];
   bool _loadingProducts      = true;
@@ -40,7 +37,7 @@ class _POSScreenState extends State<POSScreen> {
     setState(() { _loadingProducts = true; _error = null; });
     try {
       final bizId = context.read<AuthProvider>().businessId!;
-      final data = await FunctionsService.call('getProducts', {'businessId': bizId, 'limit': 200});
+      final data  = await FunctionsService.call('getProducts', {'businessId': bizId, 'limit': 200});
       final rawList = data is List ? data : (data['products'] ?? data['result'] ?? []);
       final prods = (rawList as List)
           .map((e) => Product.fromMap(Map<String, dynamic>.from(e as Map)))
@@ -102,17 +99,16 @@ class _POSScreenState extends State<POSScreen> {
     try {
       final bizId = context.read<AuthProvider>().businessId!;
       final result = await FunctionsService.call('createSale', {
-        'businessId': bizId,
+        'businessId':    bizId,
         'paymentMethod': _paymentMethod,
-        'items': _cart.map((e) => e.toMap()).toList(),
+        'items':         _cart.map((e) => e.toMap()).toList(),
       });
-
       if (mounted) {
         final total  = result['total']  as num;
         final profit = result['profit'] as num;
         _showReceiptDialog(total.toDouble(), profit.toDouble());
         setState(() { _cart.clear(); _processingCheckout = false; });
-        _loadProducts(); // Refresh stock
+        _loadProducts();
       }
     } on FunctionsException catch (e) {
       if (mounted) setState(() { _error = e.message; _processingCheckout = false; });
@@ -128,11 +124,14 @@ class _POSScreenState extends State<POSScreen> {
         content: Column(mainAxisSize: MainAxisSize.min, children: [
           Container(
             width: 64, height: 64,
-            decoration: BoxDecoration(color: AppColors.success.withOpacity(0.1), shape: BoxShape.circle),
+            decoration: BoxDecoration(
+              color: AppColors.success.withValues(alpha: 0.1),
+              shape: BoxShape.circle),
             child: const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 36),
           ),
           const SizedBox(height: 16),
-          const Text('Sale Complete!', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+          const Text('Sale Complete!',
+            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
           const SizedBox(height: 16),
           _ReceiptRow('Total',  _fmt.format(total)),
           _ReceiptRow('Profit', _fmt.format(profit), valueColor: AppColors.success),
@@ -152,7 +151,6 @@ class _POSScreenState extends State<POSScreen> {
   @override
   Widget build(BuildContext context) {
     final isWide = MediaQuery.of(context).size.width >= 900;
-
     return LoadingOverlay(
       isLoading: _processingCheckout,
       message: 'Processing sale...',
@@ -163,28 +161,24 @@ class _POSScreenState extends State<POSScreen> {
     );
   }
 
-  Widget _wideLayout() => Row(
-    children: [
-      Expanded(flex: 3, child: _productPanel()),
-      Container(width: 1, color: AppColors.border),
-      SizedBox(width: 360, child: _cartPanel()),
-    ],
-  );
+  Widget _wideLayout() => Row(children: [
+    Expanded(flex: 3, child: _productPanel()),
+    Container(width: 1, color: AppColors.border),
+    SizedBox(width: 360, child: _cartPanel()),
+  ]);
 
-  Widget _narrowLayout() => Column(
-    children: [
-      Expanded(child: _productPanel()),
-      if (_cart.isNotEmpty) _miniCartBar(),
-    ],
-  );
+  Widget _narrowLayout() => Column(children: [
+    Expanded(child: _productPanel()),
+    if (_cart.isNotEmpty) _miniCartBar(),
+  ]);
 
   Widget _productPanel() => Padding(
     padding: const EdgeInsets.all(20),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
-        Expanded(child: Text('POS — New Sale', style: AppTheme.darkTheme.textTheme.displayMedium)),
+        Expanded(child: Text('POS — New Sale',
+          style: AppTheme.darkTheme.textTheme.displayMedium)),
         TextButton.icon(
-          id: 'view-sales-history',
           onPressed: () => context.go('/sales/history'),
           icon: const Icon(Icons.history_rounded, size: 16),
           label: const Text('History'),
@@ -192,7 +186,6 @@ class _POSScreenState extends State<POSScreen> {
       ]),
       const SizedBox(height: 16),
       TextField(
-        id: 'pos-search',
         controller: _searchCtrl,
         style: const TextStyle(color: AppColors.textPrimary),
         decoration: InputDecoration(
@@ -211,8 +204,9 @@ class _POSScreenState extends State<POSScreen> {
           margin: const EdgeInsets.only(bottom: 10),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.error.withOpacity(0.1), borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppColors.error.withOpacity(0.3))),
+            color: AppColors.error.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppColors.error.withValues(alpha: 0.3))),
           child: Text(_error!, style: const TextStyle(color: AppColors.error, fontSize: 13)),
         ),
       Expanded(
@@ -233,7 +227,8 @@ class _POSScreenState extends State<POSScreen> {
                     itemBuilder: (_, i) {
                       final p = _filtered[i];
                       final inCart = _cart.any((e) => e.product.id == p.id);
-                      return _ProductTile(product: p, inCart: inCart, onTap: () => _addToCart(p));
+                      return _ProductTile(
+                        product: p, inCart: inCart, onTap: () => _addToCart(p));
                     },
                   ),
       ),
@@ -255,23 +250,23 @@ class _POSScreenState extends State<POSScreen> {
             decoration: BoxDecoration(
               color: AppColors.accent, borderRadius: BorderRadius.circular(20)),
             child: Text('${_cart.length}',
-              style: const TextStyle(color: AppColors.background, fontWeight: FontWeight.w800, fontSize: 12)),
+              style: const TextStyle(color: AppColors.background,
+                fontWeight: FontWeight.w800, fontSize: 12)),
           ),
       ]),
       const SizedBox(height: 16),
 
-      // Cart items
       Expanded(
         child: _cart.isEmpty
-            ? Center(
-                child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  const Icon(Icons.shopping_cart_outlined, color: AppColors.textHint, size: 48),
-                  const SizedBox(height: 12),
-                  const Text('Cart is empty', style: TextStyle(color: AppColors.textSecondary)),
-                  const SizedBox(height: 6),
-                  const Text('Tap a product to add it.', style: TextStyle(color: AppColors.textHint, fontSize: 12)),
-                ]),
-              )
+            ? const Center(child: Column(
+                mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Icon(Icons.shopping_cart_outlined, color: AppColors.textHint, size: 48),
+                  SizedBox(height: 12),
+                  Text('Cart is empty', style: TextStyle(color: AppColors.textSecondary)),
+                  SizedBox(height: 6),
+                  Text('Tap a product to add it.',
+                    style: TextStyle(color: AppColors.textHint, fontSize: 12)),
+                ]))
             : ListView.separated(
                 itemCount: _cart.length,
                 separatorBuilder: (_, __) => const Divider(height: 1),
@@ -279,7 +274,7 @@ class _POSScreenState extends State<POSScreen> {
                   final e = _cart[i];
                   return _CartTile(
                     entry: e, fmt: _fmt,
-                    onRemove: () => _removeFromCart(e.product.id),
+                    onRemove:    () => _removeFromCart(e.product.id),
                     onQtyChange: (q) => _updateQty(e.product.id, q),
                   );
                 },
@@ -288,19 +283,22 @@ class _POSScreenState extends State<POSScreen> {
 
       if (_cart.isNotEmpty) ...[
         const Divider(height: 20),
-        // Payment method
-        const Text('Payment Method', style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
+        const Text('Payment Method',
+          style: TextStyle(color: AppColors.textSecondary,
+            fontSize: 12, fontWeight: FontWeight.w600)),
         const SizedBox(height: 8),
         Row(children: [
-          _PayBtn(label: 'Cash',  value: 'cash',   selected: _paymentMethod, onTap: (v) => setState(() => _paymentMethod = v)),
+          _PayBtn(label: 'Cash',  value: 'cash',
+            selected: _paymentMethod, onTap: (v) => setState(() => _paymentMethod = v)),
           const SizedBox(width: 8),
-          _PayBtn(label: 'M-Pesa', value: 'mpesa', selected: _paymentMethod, onTap: (v) => setState(() => _paymentMethod = v)),
+          _PayBtn(label: 'M-Pesa', value: 'mpesa',
+            selected: _paymentMethod, onTap: (v) => setState(() => _paymentMethod = v)),
           const SizedBox(width: 8),
-          _PayBtn(label: 'Credit', value: 'credit',selected: _paymentMethod, onTap: (v) => setState(() => _paymentMethod = v)),
+          _PayBtn(label: 'Credit', value: 'credit',
+            selected: _paymentMethod, onTap: (v) => setState(() => _paymentMethod = v)),
         ]),
         const SizedBox(height: 16),
 
-        // Totals
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
@@ -314,7 +312,6 @@ class _POSScreenState extends State<POSScreen> {
         const SizedBox(height: 14),
 
         ElevatedButton(
-          id: 'checkout-btn',
           onPressed: _processingCheckout ? null : _checkout,
           style: ElevatedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -326,7 +323,6 @@ class _POSScreenState extends State<POSScreen> {
         ),
         const SizedBox(height: 8),
         OutlinedButton(
-          id: 'clear-cart-btn',
           onPressed: () => setState(() => _cart.clear()),
           child: const Text('Clear Cart'),
         ),
@@ -338,14 +334,12 @@ class _POSScreenState extends State<POSScreen> {
     color: AppColors.surface,
     padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
     child: Row(children: [
-      Expanded(
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('${_cart.length} item(s)',
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-          Text(_fmt.format(_cartTotal),
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-        ]),
-      ),
+      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('${_cart.length} item(s)',
+          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+        Text(_fmt.format(_cartTotal),
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+      ])),
       ElevatedButton(
         onPressed: _checkout,
         style: ElevatedButton.styleFrom(backgroundColor: AppColors.accent,
@@ -356,7 +350,7 @@ class _POSScreenState extends State<POSScreen> {
   );
 }
 
-// ─── Supporting widgets ────────────────────────────────────
+// ─── Supporting widgets ──────────────────────────────────────────────────────
 
 class _CartEntry {
   final Product product;
@@ -382,7 +376,7 @@ class _ProductTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-    color: inCart ? AppColors.accent.withOpacity(0.1) : AppColors.card,
+    color: inCart ? AppColors.accent.withValues(alpha: 0.1) : AppColors.card,
     borderRadius: BorderRadius.circular(12),
     child: InkWell(
       borderRadius: BorderRadius.circular(12),
@@ -391,20 +385,22 @@ class _ProductTile extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: inCart ? AppColors.accent : AppColors.border,
+          border: Border.all(
+            color: inCart ? AppColors.accent : AppColors.border,
             width: inCart ? 1.5 : 1)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
             Expanded(
               child: Text(product.name,
                 style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                maxLines: 2, overflow: TextOverflow.ellipsis),
-            ),
-            if (inCart) const Icon(Icons.check_circle_rounded, color: AppColors.accent, size: 16),
+                maxLines: 2, overflow: TextOverflow.ellipsis)),
+            if (inCart) const Icon(Icons.check_circle_rounded,
+              color: AppColors.accent, size: 16),
           ]),
           const Spacer(),
           Text('KES ${product.sellingPrice.toStringAsFixed(0)}',
-            style: const TextStyle(color: AppColors.accent, fontWeight: FontWeight.w700, fontSize: 14)),
+            style: const TextStyle(color: AppColors.accent,
+              fontWeight: FontWeight.w700, fontSize: 14)),
           Text('Stock: ${product.quantity}',
             style: const TextStyle(color: AppColors.textHint, fontSize: 11)),
         ]),
@@ -425,15 +421,14 @@ class _CartTile extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 10),
     child: Row(children: [
-      Expanded(
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(entry.product.name,
-            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
-            overflow: TextOverflow.ellipsis),
-          Text(fmt.format(entry.lineTotal),
-            style: const TextStyle(color: AppColors.accent, fontSize: 12, fontWeight: FontWeight.w600)),
-        ]),
-      ),
+      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(entry.product.name,
+          style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
+          overflow: TextOverflow.ellipsis),
+        Text(fmt.format(entry.lineTotal),
+          style: const TextStyle(color: AppColors.accent,
+            fontSize: 12, fontWeight: FontWeight.w600)),
+      ])),
       Row(children: [
         _QtyBtn(icon: Icons.remove, onTap: () => onQtyChange(entry.qty - 1)),
         Padding(
@@ -446,8 +441,8 @@ class _CartTile extends StatelessWidget {
       const SizedBox(width: 6),
       GestureDetector(
         onTap: onRemove,
-        child: const Icon(Icons.delete_outline_rounded, color: AppColors.textHint, size: 18),
-      ),
+        child: const Icon(Icons.delete_outline_rounded,
+          color: AppColors.textHint, size: 18)),
     ]),
   );
 }
@@ -482,12 +477,16 @@ class _PayBtn extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-            color: sel ? AppColors.accent.withOpacity(0.12) : AppColors.surfaceLight,
+            color: sel
+                ? AppColors.accent.withValues(alpha: 0.12)
+                : AppColors.surfaceLight,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: sel ? AppColors.accent : AppColors.border)),
           child: Text(label, textAlign: TextAlign.center,
-            style: TextStyle(color: sel ? AppColors.accent : AppColors.textSecondary,
-              fontSize: 11, fontWeight: sel ? FontWeight.w700 : FontWeight.w400)),
+            style: TextStyle(
+              color: sel ? AppColors.accent : AppColors.textSecondary,
+              fontSize: 11,
+              fontWeight: sel ? FontWeight.w700 : FontWeight.w400)),
         ),
       ),
     );
@@ -504,7 +503,8 @@ class _TotalRow extends StatelessWidget {
     children: [
       Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
       Text(value,  style: TextStyle(
-        color: color ?? AppColors.textPrimary, fontWeight: FontWeight.w700, fontSize: 14)),
+        color: color ?? AppColors.textPrimary,
+        fontWeight: FontWeight.w700, fontSize: 14)),
     ],
   );
 }

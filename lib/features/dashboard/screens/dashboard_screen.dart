@@ -88,7 +88,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ]),
                 ),
                 IconButton(
-                  id: 'refresh-dashboard',
                   icon: const Icon(Icons.refresh_rounded),
                   onPressed: _load,
                   tooltip: 'Refresh',
@@ -248,7 +247,7 @@ class _ActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: color.withOpacity(0.1),
+      color: color.withValues(alpha: 0.1),
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
@@ -257,7 +256,7 @@ class _ActionButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: color.withOpacity(0.25)),
+            border: Border.all(color: color.withValues(alpha: 0.25)),
           ),
           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
             Icon(icon, color: color, size: 26),
@@ -288,9 +287,9 @@ class _ErrorCard extends StatelessWidget {
     margin: const EdgeInsets.only(bottom: 20),
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
-      color: AppColors.error.withOpacity(0.08),
+      color: AppColors.error.withValues(alpha: 0.08),
       borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: AppColors.error.withOpacity(0.3)),
+      border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
     ),
     child: Row(children: [
       const Icon(Icons.warning_rounded, color: AppColors.error),

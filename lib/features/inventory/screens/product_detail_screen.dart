@@ -19,7 +19,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   bool _loading = true;
   String? _error;
 
-  // Add stock form
   final _addQtyCtrl = TextEditingController();
   final _reasonCtrl = TextEditingController(text: 'Stock replenishment');
   bool _submitting  = false;
@@ -33,15 +32,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     setState(() { _loading = true; });
     try {
       final bizId = context.read<AuthProvider>().businessId!;
-      final data = await FunctionsService.call('getProducts', {'businessId': bizId, 'limit': 200});
+      final data  = await FunctionsService.call(
+          'getProducts', {'businessId': bizId, 'limit': 200});
       final rawList = data is List ? data : (data['products'] ?? data['result'] ?? []);
       final prod = (rawList as List)
           .map((e) => Product.fromMap(Map<String, dynamic>.from(e as Map)))
           .where((p) => p.id == widget.productId)
           .firstOrNull;
-      setState(() { _product = prod; _loading = false; });
+      if (mounted) setState(() { _product = prod; _loading = false; });
     } on FunctionsException catch (e) {
-      setState(() { _error = e.message; _loading = false; });
+      if (mounted) setState(() { _error = e.message; _loading = false; });
     }
   }
 
@@ -65,7 +65,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         _load();
       }
     } on FunctionsException catch (e) {
-      setState(() { _error = e.message; });
+      if (mounted) setState(() { _error = e.message; });
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -80,8 +80,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => Padding(
         padding: EdgeInsets.fromLTRB(24, 24, 24,
-          24 + MediaQuery.of(context).viewInsets.bottom),
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            24 + MediaQuery.of(context).viewInsets.bottom),
+        child: Column(mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Row(children: [
             const Icon(Icons.add_box_rounded, color: AppColors.accent),
             const SizedBox(width: 10),
@@ -89,11 +90,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ]),
           const SizedBox(height: 20),
           TextField(
-            id: 'add-stock-qty',
             controller: _addQtyCtrl,
             keyboardType: TextInputType.number,
             style: const TextStyle(color: AppColors.textPrimary),
-            decoration: const InputDecoration(labelText: 'Quantity to Add', prefixIcon: Icon(Icons.add)),
+            decoration: const InputDecoration(
+              labelText: 'Quantity to Add',
+              prefixIcon: Icon(Icons.add)),
             autofocus: true,
           ),
           const SizedBox(height: 14),
@@ -104,7 +106,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ),
           const SizedBox(height: 24),
           ElevatedButton(
-            id: 'confirm-add-stock',
             onPressed: _submitting ? null : _addStock,
             child: _submitting
                 ? const SizedBox(width: 20, height: 20,
@@ -130,7 +131,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           actions: [
             if (p != null)
               IconButton(
-                id: 'add-stock-btn',
                 icon: const Icon(Icons.add_box_outlined),
                 tooltip: 'Add Stock',
                 onPressed: _showAddStockSheet,
@@ -147,24 +147,22 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 600),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                      // Stock status card
                       _StockCard(product: p),
                       const SizedBox(height: 16),
-
-                      // Details
                       _DetailCard(product: p),
                     ]),
                   ),
                 ),
               ),
-        floatingActionButton: p != null ? FloatingActionButton.extended(
-          id: 'fab-add-stock',
-          onPressed: _showAddStockSheet,
-          backgroundColor: AppColors.accent,
-          foregroundColor: AppColors.background,
-          icon: const Icon(Icons.add),
-          label: const Text('Add Stock'),
-        ) : null,
+        floatingActionButton: p != null
+            ? FloatingActionButton.extended(
+                onPressed: _showAddStockSheet,
+                backgroundColor: AppColors.accent,
+                foregroundColor: AppColors.background,
+                icon: const Icon(Icons.add),
+                label: const Text('Add Stock'),
+              )
+            : null,
       ),
     );
   }
@@ -175,29 +173,32 @@ class _StockCard extends StatelessWidget {
   const _StockCard({required this.product});
   @override
   Widget build(BuildContext context) {
-    final color = product.isOutOfStock ? AppColors.stockCritical
+    final color = product.isOutOfStock
+        ? AppColors.stockCritical
         : product.isLowStock ? AppColors.stockLow : AppColors.stockGood;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(children: [
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Current Stock', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-            const SizedBox(height: 4),
-            Text('${product.quantity} units',
-              style: TextStyle(color: color, fontSize: 28, fontWeight: FontWeight.w800)),
-            Text('Reorder at ${product.reorderLevel}',
-              style: TextStyle(color: color.withOpacity(0.7), fontSize: 12)),
-          ]),
-        ),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('Current Stock',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+          const SizedBox(height: 4),
+          Text('${product.quantity} units',
+            style: TextStyle(color: color, fontSize: 28, fontWeight: FontWeight.w800)),
+          Text('Reorder at ${product.reorderLevel}',
+            style: TextStyle(color: color.withValues(alpha: 0.7), fontSize: 12)),
+        ])),
         Icon(
-          product.isOutOfStock ? Icons.remove_circle : product.isLowStock
-              ? Icons.warning_amber_rounded : Icons.check_circle_rounded,
+          product.isOutOfStock
+              ? Icons.remove_circle
+              : product.isLowStock
+                  ? Icons.warning_amber_rounded
+                  : Icons.check_circle_rounded,
           color: color, size: 42,
         ),
       ]),
@@ -216,13 +217,13 @@ class _DetailCard extends StatelessWidget {
       border: Border.all(color: AppColors.border)),
     child: Column(children: [
       _Row('Category',      product.category),
-      _Divider(),
+      const _HDivider(),
       _Row('SKU',           product.sku.isEmpty ? '—' : product.sku),
-      _Divider(),
+      const _HDivider(),
       _Row('Cost Price',    'KES ${product.costPrice.toStringAsFixed(2)}'),
-      _Divider(),
+      const _HDivider(),
       _Row('Selling Price', 'KES ${product.sellingPrice.toStringAsFixed(2)}'),
-      _Divider(),
+      const _HDivider(),
       _Row('Margin',        '${product.margin.toStringAsFixed(1)}%'),
     ]),
   );
@@ -236,12 +237,14 @@ class _Row extends StatelessWidget {
     padding: const EdgeInsets.symmetric(vertical: 12),
     child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
       Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
-      Text(value,  style: const TextStyle(color: AppColors.textPrimary,   fontSize: 14, fontWeight: FontWeight.w600)),
+      Text(value,  style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600)),
     ]),
   );
 }
 
-class _Divider extends StatelessWidget {
+class _HDivider extends StatelessWidget {
+  const _HDivider();
   @override
-  Widget build(BuildContext context) => const Divider(height: 1, color: AppColors.border);
+  Widget build(BuildContext context) =>
+      const Divider(height: 1, color: AppColors.border);
 }

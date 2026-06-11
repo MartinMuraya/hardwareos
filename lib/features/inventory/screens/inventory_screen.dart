@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/models/product.dart';
@@ -39,21 +40,18 @@ class _InventoryScreenState extends State<InventoryScreen> {
     try {
       final bizId = context.read<AuthProvider>().businessId!;
       final data = await FunctionsService.call('getProducts', {'businessId': bizId, 'limit': 100});
-      final products = (data['result'] as List? ?? data.values.first as List? ?? [])
-          .map((e) => Product.fromMap(Map<String, dynamic>.from(e as Map)))
-          .toList();
-
-      // build from raw list if data IS the list
       final rawList = data is List ? data : (data['products'] ?? data['result'] ?? []);
       final prods = (rawList as List)
           .map((e) => Product.fromMap(Map<String, dynamic>.from(e as Map)))
           .toList();
 
-      final cats = {'All', ...prods.map((p) => p.category)}.toList()..sort();
-      setState(() {
-        _all = prods; _filtered = prods;
-        _categories = cats; _loading = false;
-      });
+      final cats = <String>{'All', ...prods.map((p) => p.category)}.toList()..sort();
+      if (mounted) {
+        setState(() {
+          _all = prods; _filtered = prods;
+          _categories = cats; _loading = false;
+        });
+      }
     } on FunctionsException catch (e) {
       if (mounted) setState(() { _error = e.message; _loading = false; });
     }
@@ -84,7 +82,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
               Row(children: [
                 Expanded(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -95,7 +92,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   ]),
                 ),
                 FilledButton.icon(
-                  id: 'add-product-btn',
                   onPressed: () async {
                     await context.push('/inventory/add');
                     _load();
@@ -108,11 +104,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
               ]),
               const SizedBox(height: 20),
 
-              // Search + filter
               Row(children: [
                 Expanded(
                   child: TextField(
-                    id: 'inventory-search',
                     controller: _searchCtrl,
                     style: const TextStyle(color: AppColors.textPrimary),
                     decoration: const InputDecoration(
@@ -130,11 +124,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
               ]),
               const SizedBox(height: 16),
 
-              // Error
               if (_error != null)
                 _ErrorBar(message: _error!, onRetry: _load),
 
-              // List
               Expanded(
                 child: _filtered.isEmpty && !_loading
                     ? EmptyState(
@@ -197,7 +189,6 @@ class _ProductCard extends StatelessWidget {
             border: Border.all(color: AppColors.border),
           ),
           child: Row(children: [
-            // Category icon
             Container(
               width: 44, height: 44,
               decoration: BoxDecoration(
@@ -227,7 +218,7 @@ class _ProductCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: stockColor.withOpacity(0.1),
+                  color: stockColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(stockLabel,
@@ -251,7 +242,7 @@ class _Chip extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
     decoration: BoxDecoration(
-      color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+      color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
     child: Text(label, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w500)),
   );
 }
@@ -281,8 +272,8 @@ class _ErrorBar extends StatelessWidget {
     margin: const EdgeInsets.only(bottom: 12),
     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
     decoration: BoxDecoration(
-      color: AppColors.error.withOpacity(0.1), borderRadius: BorderRadius.circular(10),
-      border: Border.all(color: AppColors.error.withOpacity(0.3))),
+      color: AppColors.error.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10),
+      border: Border.all(color: AppColors.error.withValues(alpha: 0.3))),
     child: Row(children: [
       const Icon(Icons.error_outline, color: AppColors.error, size: 16),
       const SizedBox(width: 8),
