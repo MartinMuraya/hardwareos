@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 
 class PlanStatusBanner extends StatelessWidget {
@@ -18,12 +19,25 @@ class PlanStatusBanner extends StatelessWidget {
         bgColor: AppColors.error.withValues(alpha: 0.1),
         borderColor: AppColors.error.withValues(alpha: 0.3),
         iconColor: AppColors.error,
-        child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Subscription Expired',
-            style: TextStyle(color: AppColors.error, fontWeight: FontWeight.w700, fontSize: 14)),
-          SizedBox(height: 2),
-          Text('Renew your plan to continue using all features.',
-            style: TextStyle(color: AppColors.error, fontSize: 12)),
+        child: Row(children: [
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('Subscription Expired',
+                style: TextStyle(color: AppColors.error, fontWeight: FontWeight.w700, fontSize: 14)),
+              const SizedBox(height: 2),
+              const Text('Renew your plan to continue using all features.',
+                style: TextStyle(color: AppColors.error, fontSize: 12)),
+            ]),
+          ),
+          FilledButton(
+            onPressed: () => GoRouter.of(context).go('/subscription'),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.error,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              visualDensity: VisualDensity.compact,
+            ),
+            child: const Text('Renew Now', style: TextStyle(fontSize: 12)),
+          ),
         ]),
       );
     }
@@ -53,7 +67,7 @@ class PlanStatusBanner extends StatelessWidget {
             ]),
           ),
           OutlinedButton(
-            onPressed: () {},
+            onPressed: () => GoRouter.of(context).go('/subscription'),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.accent,
               side: const BorderSide(color: AppColors.accent),
@@ -72,8 +86,22 @@ class PlanStatusBanner extends StatelessWidget {
         bgColor: AppColors.success.withValues(alpha: 0.07),
         borderColor: AppColors.success.withValues(alpha: 0.2),
         iconColor: AppColors.success,
-        child: Text('${_planLabel(plan)} Plan — Active',
-          style: const TextStyle(color: AppColors.success, fontWeight: FontWeight.w600, fontSize: 13)),
+        child: Row(children: [
+          Expanded(
+            child: Text('${_planLabel(plan)} Plan — Active',
+              style: const TextStyle(color: AppColors.success, fontWeight: FontWeight.w600, fontSize: 13)),
+          ),
+          OutlinedButton(
+            onPressed: () => GoRouter.of(context).go('/subscription'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.accent,
+              side: const BorderSide(color: AppColors.accent),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              visualDensity: VisualDensity.compact,
+            ),
+            child: const Text('Manage', style: TextStyle(fontSize: 12)),
+          ),
+        ]),
       );
     }
 

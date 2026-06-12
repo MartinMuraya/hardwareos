@@ -17,6 +17,36 @@ async function assertSuperAdmin(uid: string) {
 // 1. Subscription Management
 // ============================================================
 
+/** Get the current user's own subscription payment history */
+export const getMySubscriptionPayments = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
+
+  const userSnap = await db().collection("users").doc(request.auth.uid).get();
+  if (!userSnap.exists) {
+    throw new HttpsError("not-found", "User profile not found.");
+  }
+
+  const userData = userSnap.data()!;
+  const businessId = userData.businessId;
+
+  const snap = await db()
+    .collection("subscriptions")
+    .where("businessId", "==", businessId)
+    .orderBy("createdAt", "desc")
+    .limit(50)
+    .get();
+
+  const payments = snap.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data(),
+    createdAt: (doc.data().createdAt as admin.firestore.Timestamp)?.toDate()?.toISOString() || null,
+    paidAt: (doc.data().paidAt as admin.firestore.Timestamp)?.toDate()?.toISOString() || null,
+    expiresAt: (doc.data().expiresAt as admin.firestore.Timestamp)?.toDate()?.toISOString() || null,
+  }));
+
+  return { payments };
+});
+
 export const adminGetSubscriptions = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);

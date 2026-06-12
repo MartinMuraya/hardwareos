@@ -113,6 +113,53 @@ service cloud.firestore {
     }
 
     // =========================================================
+    // PLANS
+    // Public read (all users can view plans). No direct client writes.
+    // =========================================================
+    match /plans/{planId} {
+      allow read: if true; // Plans are public
+      allow create, update, delete: if false; // All writes via Cloud Functions only
+    }
+
+    // =========================================================
+    // SUBSCRIPTIONS
+    // Business owner can read their own subscriptions.
+    // Super Admin can read all subscriptions.
+    // No direct client writes.
+    // =========================================================
+    match /subscriptions/{subscriptionId} {
+      allow read: if isAuth() && (
+        userDoc().isSuperAdmin == true ||
+        resource.data.businessId == userDoc().businessId
+      );
+      allow create, update, delete: if false; // All writes via Cloud Functions only
+    }
+
+    // =========================================================
+    // SYSTEM NOTIFICATIONS
+    // Business owner can read their own notifications.
+    // Super Admin can read all notifications.
+    // No direct client writes.
+    // =========================================================
+    match /systemNotifications/{notificationId} {
+      allow read: if isAuth() && (
+        userDoc().isSuperAdmin == true ||
+        resource.data.businessId == userDoc().businessId
+      );
+      allow create, update, delete: if false; // All writes via Cloud Functions only
+    }
+
+    // =========================================================
+    // AUDIT LOGS
+    // Only Super Admin can read.
+    // No direct client writes.
+    // =========================================================
+    match /auditLogs/{logId} {
+      allow read: if isAuth() && userDoc().isSuperAdmin == true;
+      allow create, update, delete: if false; // All writes via Cloud Functions only
+    }
+
+    // =========================================================
     // DEFAULT DENY — reject everything else
     // =========================================================
     match /{document=**} {

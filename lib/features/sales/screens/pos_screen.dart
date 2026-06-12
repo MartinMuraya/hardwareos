@@ -118,7 +118,7 @@ class _POSScreenState extends State<POSScreen> {
   void _showReceiptDialog(double total, double profit) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.card,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -138,9 +138,9 @@ class _POSScreenState extends State<POSScreen> {
           _ReceiptRow('Method', _paymentMethod.toUpperCase()),
         ]),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Done')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Done')),
           ElevatedButton(
-            onPressed: () { Navigator.pop(context); context.go('/sales/history'); },
+            onPressed: () { Navigator.pop(dialogContext); context.go('/sales/history'); },
             child: const Text('View History'),
           ),
         ],

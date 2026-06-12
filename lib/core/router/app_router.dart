@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
+import '../../features/subscription/screens/subscription_screen.dart';
 import '../../features/dashboard/screens/dashboard_screen.dart';
 import '../../features/inventory/screens/inventory_screen.dart';
 import '../../features/inventory/screens/add_product_screen.dart';
@@ -36,9 +37,10 @@ class AppRouter {
         final isRegistered    = authProvider.isRegistered;
         final isAuthRoute     = state.matchedLocation == '/login' ||
                                 state.matchedLocation == '/register';
+        final isSubscriptionRoute = state.matchedLocation == '/subscription';
 
         if (!isAuthenticated && !isAuthRoute) return '/login';
-        
+
         if (isAuthenticated) {
           if (authProvider.isSuperAdmin) {
             if (!state.matchedLocation.startsWith('/admin')) {
@@ -60,6 +62,20 @@ class AppRouter {
             if (authProvider.businessStatus != 'pending' && state.matchedLocation == '/pending-approval') {
               return '/dashboard';
             }
+
+            final isExpired = authProvider.subscriptionStatus == 'expired';
+            final isProtectedRoute = state.matchedLocation.startsWith('/dashboard') ||
+                                     state.matchedLocation.startsWith('/inventory') ||
+                                     state.matchedLocation.startsWith('/sales') ||
+                                     state.matchedLocation.startsWith('/expenses') ||
+                                     state.matchedLocation.startsWith('/reports') ||
+                                     state.matchedLocation.startsWith('/team');
+
+            if (isExpired && isProtectedRoute && !isSubscriptionRoute) {
+              return '/subscription';
+            }
+            // Allow access to subscription page for expired or trial users
+            // Don't redirect away from subscription page - users may want to manage or upgrade their plan
           }
         }
         return null;
@@ -152,6 +168,10 @@ class AppRouter {
             GoRoute(
               path: '/team',
               pageBuilder: (context, state) => const NoTransitionPage(child: TeamScreen()),
+            ),
+            GoRoute(
+              path: '/subscription',
+              pageBuilder: (context, state) => const NoTransitionPage(child: SubscriptionScreen()),
             ),
           ],
         ),

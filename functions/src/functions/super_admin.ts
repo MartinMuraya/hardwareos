@@ -25,32 +25,66 @@ export const getPlatformStats = onCall({ cors: true }, async (request) => {
   await assertSuperAdmin(request.auth.uid);
 
   const businessesQuery = db().collection("businesses");
-  
-  const totalBusinesses = await businessesQuery.count().get();
-  const activeBusinesses = await businessesQuery.where("active", "==", true).count().get();
-  const pendingBusinesses = await businessesQuery.where("status", "==", "pending").count().get();
-  const suspendedBusinesses = await businessesQuery.where("status", "==", "suspended").count().get();
-  
-  const trialAccounts = await businessesQuery.where("subscriptionStatus", "==", "trial").count().get();
-  const expiredSubscriptions = await businessesQuery.where("subscriptionStatus", "==", "expired").count().get();
 
-  const totalUsers = await db().collection("users").count().get();
-  const totalSales = await db().collectionGroup("sales").count().get();
+  const [
+    totalBusinessesSnap,
+    activeBusinessesSnap,
+    pendingBusinessesSnap,
+    suspendedBusinessesSnap,
+    trialAccountsSnap,
+    expiredSubscriptionsSnap,
+    totalUsersSnap,
+    totalSalesSnap,
+  ] = await Promise.all([
+    businessesQuery.count().get(),
+    businessesQuery.where("active", "==", true).count().get(),
+    businessesQuery.where("status", "==", "pending").count().get(),
+    businessesQuery.where("status", "==", "suspended").count().get(),
+    businessesQuery.where("subscriptionStatus", "==", "trial").count().get(),
+    businessesQuery.where("subscriptionStatus", "==", "expired").count().get(),
+    db().collection("users").count().get(),
+    db().collectionGroup("sales").count().get(),
+  ]);
 
-  // Monthly Revenue would be calculated by summing active subscription values.
-  // For now, we return a mock value until subscriptions are fully integrated.
-  const monthlyRevenue = 0;
+  // Calculate real monthly revenue from completed subscription payments
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfMonthTimestamp = admin.firestore.Timestamp.fromDate(startOfMonth);
+
+  const [monthlySubsSnap, totalSubsSnap] = await Promise.all([
+    db().collection("subscriptions")
+      .where("transactionStatus", "==", "completed")
+      .where("paidAt", ">=", startOfMonthTimestamp)
+      .get(),
+    db().collection("subscriptions")
+      .where("transactionStatus", "==", "completed")
+      .get(),
+  ]);
+
+  const monthlyRevenue = monthlySubsSnap.docs.reduce((sum, doc) => {
+    const data = doc.data();
+    return sum + (typeof data.amount === "number" ? data.amount : 0);
+  }, 0);
+
+  const totalRevenue = totalSubsSnap.docs.reduce((sum, doc) => {
+    const data = doc.data();
+    return sum + (typeof data.amount === "number" ? data.amount : 0);
+  }, 0);
+
+  const totalTransactions = totalSubsSnap.docs.length;
 
   return {
-    totalBusinesses: totalBusinesses.data().count,
-    activeBusinesses: activeBusinesses.data().count,
-    pendingBusinesses: pendingBusinesses.data().count,
-    suspendedBusinesses: suspendedBusinesses.data().count,
-    trialAccounts: trialAccounts.data().count,
-    expiredSubscriptions: expiredSubscriptions.data().count,
-    totalUsers: totalUsers.data().count,
-    totalSales: totalSales.data().count,
+    totalBusinesses: totalBusinessesSnap.data().count,
+    activeBusinesses: activeBusinessesSnap.data().count,
+    pendingBusinesses: pendingBusinessesSnap.data().count,
+    suspendedBusinesses: suspendedBusinessesSnap.data().count,
+    trialAccounts: trialAccountsSnap.data().count,
+    expiredSubscriptions: expiredSubscriptionsSnap.data().count,
+    totalUsers: totalUsersSnap.data().count,
+    totalSales: totalSalesSnap.data().count,
     monthlyRevenue,
+    totalRevenue,
+    totalTransactions,
   };
 });
 

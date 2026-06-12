@@ -26,6 +26,12 @@ class AuthProvider extends ChangeNotifier {
   String?                get errorMessage  => _errorMessage;
   String?                get businessId    => _userProfile?['businessId'] as String?;
   String?                get userRole      => _userProfile?['role'] as String?;
+  String?                get subscriptionStatus => _userProfile?['subscriptionStatus'] as String?;
+  DateTime?              get subscriptionEndsAt {
+    final val = _userProfile?['subscriptionEndsAt'];
+    if (val == null) return null;
+    return DateTime.tryParse(val.toString());
+  }
 
   AuthProvider() {
     _auth.authStateChanges().listen(_onAuthStateChanged);
@@ -117,6 +123,16 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> signOut() async {
     await _auth.signOut();
+  }
+
+  Future<void> refreshProfile() async {
+    if (_user != null) {
+      await _loadUserProfile();
+    }
+  }
+
+  Future<void> refreshUserProfile() async {
+    await _loadUserProfile();
   }
 
   void clearError() {

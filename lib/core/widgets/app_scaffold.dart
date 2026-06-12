@@ -16,12 +16,13 @@ class AppScaffold extends StatefulWidget {
 
 class _AppScaffoldState extends State<AppScaffold> {
   static const _navItems = [
-    _NavItem(icon: Icons.dashboard_rounded,    label: 'Dashboard', route: '/dashboard'),
-    _NavItem(icon: Icons.inventory_2_rounded,  label: 'Inventory', route: '/inventory'),
-    _NavItem(icon: Icons.point_of_sale_rounded,label: 'Sales',     route: '/sales'),
-    _NavItem(icon: Icons.receipt_long_rounded, label: 'Expenses',  route: '/expenses'),
-    _NavItem(icon: Icons.bar_chart_rounded,    label: 'Reports',   route: '/reports'),
-    _NavItem(icon: Icons.people_rounded,       label: 'Team',      route: '/team'),
+    _NavItem(icon: Icons.dashboard_rounded,    label: 'Dashboard',     route: '/dashboard'),
+    _NavItem(icon: Icons.inventory_2_rounded,  label: 'Inventory',     route: '/inventory'),
+    _NavItem(icon: Icons.point_of_sale_rounded,label: 'Sales',         route: '/sales'),
+    _NavItem(icon: Icons.receipt_long_rounded, label: 'Expenses',      route: '/expenses'),
+    _NavItem(icon: Icons.bar_chart_rounded,    label: 'Reports',       route: '/reports'),
+    _NavItem(icon: Icons.people_rounded,       label: 'Team',          route: '/team'),
+    _NavItem(icon: Icons.workspace_premium_rounded, label: 'Subscription', route: '/subscription'),
   ];
 
   int _selectedIndex(BuildContext context) {
@@ -50,6 +51,7 @@ class _AppScaffoldState extends State<AppScaffold> {
               businessName: biz.businessName ?? 'HardwareOS',
               userRole:     auth.userRole ?? 'staff',
               plan:         biz.plan ?? 'free',
+              subscriptionStatus: biz.subscriptionStatus ?? 'trial',
               onSignOut:    () => auth.signOut(),
             ),
             const VerticalDivider(width: 1),
@@ -85,6 +87,7 @@ class _SideNav extends StatelessWidget {
   final String businessName;
   final String userRole;
   final String plan;
+  final String subscriptionStatus;
   final VoidCallback onSignOut;
 
   const _SideNav({
@@ -93,6 +96,7 @@ class _SideNav extends StatelessWidget {
     required this.businessName,
     required this.userRole,
     required this.plan,
+    required this.subscriptionStatus,
     required this.onSignOut,
   });
 
@@ -155,6 +159,9 @@ class _SideNav extends StatelessWidget {
               itemBuilder: (context, i) {
                 final item     = navItems[i];
                 final selected = selectedIndex == i;
+                final isSubscriptionItem = item.route == '/subscription';
+                final needsUpgrade = isSubscriptionItem &&
+                    (subscriptionStatus == 'trial' || subscriptionStatus == 'expired');
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Material(
@@ -170,17 +177,40 @@ class _SideNav extends StatelessWidget {
                         child: Row(children: [
                           Icon(item.icon,
                             size: 20,
-                            color: selected ? AppColors.accent : AppColors.textHint,
+                            color: needsUpgrade
+                                ? AppColors.chartAmber
+                                : (selected ? AppColors.accent : AppColors.textHint),
                           ),
                           const SizedBox(width: 12),
-                          Text(item.label,
-                            style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-                              color: selected ? AppColors.accent : AppColors.textSecondary,
-                              fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                          Expanded(
+                            child: Text(item.label,
+                              style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
+                                color: needsUpgrade
+                                    ? AppColors.chartAmber
+                                    : (selected ? AppColors.accent : AppColors.textSecondary),
+                                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                              ),
                             ),
                           ),
-                          if (selected) ...[
-                            const Spacer(),
+                          if (needsUpgrade)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.chartAmber.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: AppColors.chartAmber.withValues(alpha: 0.4)),
+                              ),
+                              child: Text(
+                                subscriptionStatus == 'expired' ? 'EXPIRED' : 'TRIAL',
+                                style: const TextStyle(
+                                  color: AppColors.chartAmber,
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            )
+                          else if (selected)
                             Container(
                               width: 4, height: 4,
                               decoration: const BoxDecoration(
@@ -188,7 +218,6 @@ class _SideNav extends StatelessWidget {
                                 shape: BoxShape.circle,
                               ),
                             ),
-                          ],
                         ]),
                       ),
                     ),

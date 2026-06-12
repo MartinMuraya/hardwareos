@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../../core/providers/auth_provider.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/loading_overlay.dart';
-import '../../../core/widgets/empty_state.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -27,6 +23,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   int _totalUsers = 0;
   int _totalSales = 0;
   double _monthlyRevenue = 0.0;
+  double _totalRevenue = 0.0;
+  int _totalTransactions = 0;
 
   @override
   void initState() {
@@ -53,6 +51,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           _totalUsers = res['totalUsers'] ?? 0;
           _totalSales = res['totalSales'] ?? 0;
           _monthlyRevenue = (res['monthlyRevenue'] ?? 0.0).toDouble();
+          _totalRevenue = (res['totalRevenue'] ?? 0.0).toDouble();
+          _totalTransactions = res['totalTransactions'] ?? 0;
           _loadingStats = false;
         });
       }
@@ -105,16 +105,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   physics: const NeverScrollableScrollPhysics(),
                   childAspectRatio: aspectRatio,
                   children: [
-                    _AdminKpiCard(title: 'Total Businesses', value: _loadingStats ? '...' : '$_totalBusinesses', icon: Icons.store_rounded, color: AppColors.chartBlue),
-                    _AdminKpiCard(title: 'Active Businesses', value: _loadingStats ? '...' : '$_activeBusinesses', icon: Icons.verified_rounded, color: AppColors.chartGreen),
-                    _AdminKpiCard(title: 'Pending Approvals', value: _loadingStats ? '...' : '$_pendingBusinessesCount', icon: Icons.hourglass_empty_rounded, color: AppColors.chartAmber),
-                    _AdminKpiCard(title: 'Suspended Businesses', value: _loadingStats ? '...' : '$_suspendedBusinessesCount', icon: Icons.block_rounded, color: AppColors.error),
-                    _AdminKpiCard(title: 'Trial Accounts', value: _loadingStats ? '...' : '$_trialAccounts', icon: Icons.timer_rounded, color: AppColors.accent),
-                    _AdminKpiCard(title: 'Expired Subscriptions', value: _loadingStats ? '...' : '$_expiredSubscriptions', icon: Icons.alarm_off_rounded, color: AppColors.textSecondary),
-                    _AdminKpiCard(title: 'Platform Users', value: _loadingStats ? '...' : '$_totalUsers', icon: Icons.people_rounded, color: AppColors.chartPurple),
-                    _AdminKpiCard(title: 'Transactions (Sales)', value: _loadingStats ? '...' : '$_totalSales', icon: Icons.point_of_sale_rounded, color: AppColors.success),
-                    _AdminKpiCard(title: 'Monthly Revenue', value: _loadingStats ? '...' : '\$${_monthlyRevenue.toStringAsFixed(2)}', icon: Icons.monetization_on_rounded, color: AppColors.chartGreen),
-                  ],
+                      _AdminKpiCard(title: 'Total Businesses',      value: _loadingStats ? '...' : '$_totalBusinesses',      icon: Icons.store_rounded,           color: AppColors.chartBlue),
+                      _AdminKpiCard(title: 'Active Businesses',      value: _loadingStats ? '...' : '$_activeBusinesses',      icon: Icons.verified_rounded,         color: AppColors.chartGreen),
+                      _AdminKpiCard(title: 'Pending Approvals',      value: _loadingStats ? '...' : '$_pendingBusinessesCount', icon: Icons.hourglass_empty_rounded,  color: AppColors.chartAmber),
+                      _AdminKpiCard(title: 'Suspended Businesses',   value: _loadingStats ? '...' : '$_suspendedBusinessesCount', icon: Icons.block_rounded,          color: AppColors.error),
+                      _AdminKpiCard(title: 'Trial Accounts',         value: _loadingStats ? '...' : '$_trialAccounts',         icon: Icons.timer_rounded,            color: AppColors.accent),
+                      _AdminKpiCard(title: 'Expired Subscriptions',  value: _loadingStats ? '...' : '$_expiredSubscriptions',  icon: Icons.alarm_off_rounded,        color: AppColors.textSecondary),
+                      _AdminKpiCard(title: 'Platform Users',         value: _loadingStats ? '...' : '$_totalUsers',            icon: Icons.people_rounded,           color: AppColors.chartPurple),
+                      _AdminKpiCard(title: 'Sales Transactions',     value: _loadingStats ? '...' : '$_totalSales',            icon: Icons.point_of_sale_rounded,    color: AppColors.success),
+                      _AdminKpiCard(title: 'Revenue This Month',     value: _loadingStats ? '...' : 'KES ${_monthlyRevenue.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}', icon: Icons.trending_up_rounded, color: AppColors.chartGreen),
+                      _AdminKpiCard(title: 'Total Revenue (All-Time)', value: _loadingStats ? '...' : 'KES ${_totalRevenue.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}', icon: Icons.monetization_on_rounded, color: AppColors.chartBlue),
+                      _AdminKpiCard(title: 'Paid Subscriptions',     value: _loadingStats ? '...' : '$_totalTransactions',     icon: Icons.receipt_long_rounded,     color: AppColors.chartAmber),
+                    ],
                 );
               },
             ),
