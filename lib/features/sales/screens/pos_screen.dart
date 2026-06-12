@@ -388,21 +388,30 @@ class _ProductTile extends StatelessWidget {
           border: Border.all(
             color: inCart ? AppColors.accent : AppColors.border,
             width: inCart ? 1.5 : 1)),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
-            Expanded(
-              child: Text(product.name,
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                maxLines: 2, overflow: TextOverflow.ellipsis)),
-            if (inCart) const Icon(Icons.check_circle_rounded,
-              color: AppColors.accent, size: 16),
-          ]),
-          const Spacer(),
-          Text('KES ${product.sellingPrice.toStringAsFixed(0)}',
-            style: const TextStyle(color: AppColors.accent,
-              fontWeight: FontWeight.w700, fontSize: 14)),
-          Text('Stock: ${product.quantity}',
-            style: const TextStyle(color: AppColors.textHint, fontSize: 11)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(product.name,
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, height: 1.2),
+                    maxLines: 2, overflow: TextOverflow.ellipsis)),
+                if (inCart) const Icon(Icons.check_circle_rounded,
+                  color: AppColors.accent, size: 16),
+            ]),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('KES ${product.sellingPrice.toStringAsFixed(0)}',
+                  style: const TextStyle(color: AppColors.accent,
+                    fontWeight: FontWeight.w700, fontSize: 14)),
+                Text('Stock: ${product.quantity}',
+                  style: const TextStyle(color: AppColors.textHint, fontSize: 11)),
+              ],
+            ),
         ]),
       ),
     ),

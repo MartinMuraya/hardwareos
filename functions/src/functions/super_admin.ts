@@ -55,6 +55,7 @@ export const getPlatformStats = onCall({ cors: true }, async (request) => {
     db().collection("subscriptions")
       .where("transactionStatus", "==", "completed")
       .where("paidAt", ">=", startOfMonthTimestamp)
+      .orderBy("paidAt", "desc")
       .get(),
     db().collection("subscriptions")
       .where("transactionStatus", "==", "completed")

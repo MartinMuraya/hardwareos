@@ -285,7 +285,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           Text('Payment Details', style: AppTheme.darkTheme.textTheme.titleMedium),
           const SizedBox(height: 16),
           TextField(
-            onChanged: (val) => _phoneNumber = val,
+            onChanged: (val) => setState(() => _phoneNumber = val),
             decoration: InputDecoration(
               hintText: '254712345678',
               labelText: 'M-Pesa Phone Number',
@@ -311,7 +311,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   ? null
                   : () => _processPayment(business.id),
               child: _isProcessing
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                   : const Text('Pay with M-Pesa STK Push'),
             ),
           ),
@@ -334,11 +334,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       });
 
       if (mounted) {
-        context.read<AuthProvider>().refreshUserProfile();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Payment completed successfully! Your subscription is now active.'),
+            content: Text('STK Push sent! Please enter your M-Pesa PIN on your phone to complete payment.'),
             backgroundColor: AppColors.success,
+            duration: Duration(seconds: 8),
           ),
         );
         setState(() => _isProcessing = false);

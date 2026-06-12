@@ -45,9 +45,6 @@ export const createSubscriptionPayment = onCall({ cors: true }, async (request) 
   // Generate checkout request ID (or simulate one)
   const checkoutRequestId = "ws_CO_" + Math.random().toString(36).substring(2, 15);
 
-  // Safely check if we should simulate (fallback if credentials aren't set)
-  const isSimulation = process.env.MPESA_CONSUMER_KEY ? false : true;
-
   // Create pending subscription transaction record
   const subscriptionId = db().collection("subscriptions").doc().id;
   const subscriptionPayload = {
@@ -69,78 +66,20 @@ export const createSubscriptionPayment = onCall({ cors: true }, async (request) 
 
   await db().collection("subscriptions").doc(subscriptionId).set(subscriptionPayload);
 
-  // Create audit log for trial payment initialization
+  // Create audit log for payment initialization
   await db().collection("auditLogs").add({
     action: "subscription_payment_initiated",
     targetId: subscriptionId,
     targetType: "subscription",
     performedBy: request.auth.uid,
     timestamp: admin.firestore.FieldValue.serverTimestamp(),
-    details: { businessId, planId, amount, phoneNumber, checkoutRequestId, isSimulation },
+    details: { businessId, planId, amount, phoneNumber, checkoutRequestId, isSimulation: false },
   });
 
-  // If simulation, trigger mock callback in 3 seconds to complete the loop
-  if (isSimulation) {
-    // Auto-complete the payment in simulation mode by updating the subscription directly
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 30);
+  // -----------------------------------------------------------
+  // Trigger Real Daraja STK Push
+  // -----------------------------------------------------------
 
-    const batch = db().batch();
-    const subRef = db().collection("subscriptions").doc(subscriptionId);
-
-    // Update subscription transaction to completed
-    batch.update(subRef, {
-      transactionStatus: "completed",
-      mpesaReceipt: "SIM" + Math.random().toString(36).substring(2, 10).toUpperCase(),
-      paidAt: admin.firestore.FieldValue.serverTimestamp(),
-      expiresAt: admin.firestore.Timestamp.fromDate(expiresAt),
-    });
-
-    // Update business details
-    const bizRef = db().collection("businesses").doc(businessId);
-    batch.update(bizRef, {
-      plan: planId,
-      subscriptionStatus: "active",
-      subscriptionStartsAt: admin.firestore.FieldValue.serverTimestamp(),
-      subscriptionEndsAt: admin.firestore.Timestamp.fromDate(expiresAt),
-      lastPaymentDate: admin.firestore.FieldValue.serverTimestamp(),
-      active: true,
-    });
-
-    // System notification
-    const notificationRef = db().collection("systemNotifications").doc();
-    batch.set(notificationRef, {
-      id: notificationRef.id,
-      type: "subscription_paid",
-      businessId: businessId,
-      businessName: bizData.name,
-      plan: planId,
-      amount: amount,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
-
-    // Audit Log
-    const auditRef = db().collection("auditLogs").doc();
-    batch.set(auditRef, {
-      action: "subscription_paid",
-      targetId: businessId,
-      targetType: "business",
-      performedBy: request.auth.uid,
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
-      details: { plan: planId, amount: amount, simulated: true },
-    });
-
-    await batch.commit();
-
-    return {
-      success: true,
-      checkoutRequestId,
-      isSimulation: true,
-      message: "Simulation payment completed successfully.",
-    };
-  }
-
-  // Otherwise perform Daraja STK Push
   try {
     const consumerKey = process.env.MPESA_CONSUMER_KEY!;
     const consumerSecret = process.env.MPESA_CONSUMER_SECRET!;
@@ -160,7 +99,7 @@ export const createSubscriptionPayment = onCall({ cors: true }, async (request) 
     const password = Buffer.from(`${shortcode}${passkey}${timestamp}`).toString("base64");
 
     // 3. Initiate STK Push
-    const stkRes = await axios.post("https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/query", {
+    const stkRes = await axios.post("https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest", {
       BusinessShortCode: shortcode,
       Password: password,
       Timestamp: timestamp,
@@ -185,13 +124,9 @@ export const createSubscriptionPayment = onCall({ cors: true }, async (request) 
 
     return { success: true, checkoutRequestId: stkRes.data.CheckoutRequestID || checkoutRequestId, isSimulation: false };
   } catch (error: any) {
-    // Return gracefully or fallback
-    return {
-      success: true,
-      checkoutRequestId,
-      isSimulation: true,
-      message: `Failed to invoke Safaricom: ${error.message}. Fallback to simulated payment.`
-    };
+    // Throw an error so the frontend knows the STK Push failed
+    console.error("Daraja Error:", error.response?.data || error.message);
+    throw new HttpsError("internal", `Failed to invoke Safaricom STK Push: ${error.message}`);
   }
 });
 
