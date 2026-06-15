@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
@@ -167,6 +168,37 @@ class _AccountStep extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2,
                 valueColor: AlwaysStoppedAnimation(AppColors.background)))
           : const Text('Create Account'),
+      ),
+      const SizedBox(height: 24),
+
+      // Divider
+      Row(children: [
+        Expanded(child: Divider(color: AppColors.border)),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: Text('OR', style: TextStyle(color: AppColors.textHint, fontSize: 12)),
+        ),
+        Expanded(child: Divider(color: AppColors.border)),
+      ]),
+      const SizedBox(height: 24),
+
+      // Google Sign In
+      SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: isSubmitting ? null : () => context.read<AuthProvider>().signInWithGoogle(),
+          icon: SvgPicture.network(
+            'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
+            height: 18,
+            placeholderBuilder: (context) => const SizedBox(width: 18, height: 18),
+          ),
+          label: const Text('Continue with Google'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.textPrimary,
+            side: const BorderSide(color: AppColors.border),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+          ),
+        ),
       ),
       const SizedBox(height: 12),
       Row(mainAxisAlignment: MainAxisAlignment.center, children: [

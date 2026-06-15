@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'auth_repository.dart';
 
 enum AuthState { initial, loading, authenticated, unauthenticated }
 
 class AuthProvider extends ChangeNotifier {
+  final AuthRepository _repo = AuthRepository();
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   User? _user;
@@ -18,6 +20,7 @@ class AuthProvider extends ChangeNotifier {
   User?                  get user          => _user;
   AuthState              get state         => _state;
   bool                   get isAuthenticated => _state == AuthState.authenticated;
+  bool                   get isEmailVerified => _user?.emailVerified ?? false;
   bool                   get isRegistered  => _isRegistered;
   bool                   get isSuperAdmin  => _isSuperAdmin;
   String?                get businessStatus => _businessStatus;
@@ -27,6 +30,8 @@ class AuthProvider extends ChangeNotifier {
   String?                get businessId    => _userProfile?['businessId'] as String?;
   String?                get userRole      => _userProfile?['role'] as String?;
   String?                get subscriptionStatus => _userProfile?['subscriptionStatus'] as String?;
+  String?                get photoUrl      => _user?.photoURL ?? _userProfile?['photoUrl'] as String?;
+  
   DateTime?              get subscriptionEndsAt {
     final val = _userProfile?['subscriptionEndsAt'];
     if (val == null) return null;
@@ -46,6 +51,9 @@ class AuthProvider extends ChangeNotifier {
     } else {
       _state = AuthState.loading;
       notifyListeners();
+      // Ensure we have the latest emailVerified status
+      await user.reload();
+      _user = _auth.currentUser; 
       await _loadUserProfile();
     }
     notifyListeners();
@@ -81,7 +89,7 @@ class AuthProvider extends ChangeNotifier {
     _state = AuthState.loading;
     notifyListeners();
     try {
-      await _auth.signInWithEmailAndPassword(email: email, password: password);
+      await _repo.signInWithEmail(email, password);
       return true;
     } on FirebaseAuthException catch (e) {
       _errorMessage = _mapAuthError(e.code);
@@ -96,11 +104,84 @@ class AuthProvider extends ChangeNotifier {
     _state = AuthState.loading;
     notifyListeners();
     try {
-      await _auth.createUserWithEmailAndPassword(email: email, password: password);
+      final cred = await _repo.registerWithEmail(email, password);
+      await cred.user?.sendEmailVerification(); // Automatically send verification email
       return true;
     } on FirebaseAuthException catch (e) {
       _errorMessage = _mapAuthError(e.code);
       _state = AuthState.unauthenticated;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> signInWithGoogle() async {
+    _errorMessage = null;
+    _state = AuthState.loading;
+    notifyListeners();
+    try {
+      final cred = await _repo.signInWithGoogle();
+      if (cred == null) {
+        _state = AuthState.unauthenticated;
+        notifyListeners();
+        return false;
+      }
+      return true;
+    } on FirebaseAuthException catch (e) {
+      _errorMessage = _mapAuthError(e.code);
+      _state = AuthState.unauthenticated;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _errorMessage = 'An error occurred during Google Sign In.';
+      _state = AuthState.unauthenticated;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> sendPasswordResetEmail(String email) async {
+    try {
+      await _repo.sendPasswordResetEmail(email);
+      return true;
+    } catch (e) {
+      _errorMessage = 'Failed to send password reset email. Check if the email is correct.';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> sendEmailVerification() async {
+    try {
+      await _repo.sendEmailVerification();
+      return true;
+    } catch (e) {
+      _errorMessage = 'Failed to send verification email. Please try again later.';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<void> reloadUser() async {
+    await _user?.reload();
+    _user = _auth.currentUser;
+    notifyListeners();
+  }
+
+  Future<bool> uploadProfilePicture() async {
+    if (_user == null) return false;
+    _state = AuthState.loading;
+    notifyListeners();
+    
+    final url = await _repo.uploadProfilePicture(_user!.uid);
+    if (url != null) {
+      await reloadUser();
+      _state = AuthState.authenticated;
+      notifyListeners();
+      return true;
+    } else {
+      _errorMessage = 'Failed to upload profile picture.';
+      _state = AuthState.authenticated;
       notifyListeners();
       return false;
     }
@@ -122,7 +203,7 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> signOut() async {
-    await _auth.signOut();
+    await _repo.signOut();
   }
 
   Future<void> refreshProfile() async {

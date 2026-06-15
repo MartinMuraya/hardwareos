@@ -22,6 +22,8 @@ import '../../features/admin/screens/admin_users_screen.dart';
 import '../../features/admin/screens/admin_settings_screen.dart';
 import '../../features/admin/widgets/admin_scaffold.dart';
 import '../../features/auth/screens/pending_approval_screen.dart';
+import '../../features/auth/screens/email_verification_screen.dart';
+import '../../features/auth/screens/forgot_password_screen.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/app_scaffold.dart';
 
@@ -36,12 +38,20 @@ class AppRouter {
         final isAuthenticated = authProvider.isAuthenticated;
         final isRegistered    = authProvider.isRegistered;
         final isAuthRoute     = state.matchedLocation == '/login' ||
-                                state.matchedLocation == '/register';
+                                state.matchedLocation == '/register' ||
+                                state.matchedLocation == '/forgot-password';
         final isSubscriptionRoute = state.matchedLocation == '/subscription';
 
         if (!isAuthenticated && !isAuthRoute) return '/login';
 
         if (isAuthenticated) {
+          if (!authProvider.isEmailVerified && state.matchedLocation != '/verify-email') {
+            return '/verify-email';
+          }
+          if (authProvider.isEmailVerified && state.matchedLocation == '/verify-email') {
+            return '/dashboard';
+          }
+
           if (authProvider.isSuperAdmin) {
             if (!state.matchedLocation.startsWith('/admin')) {
               return '/admin/dashboard';
@@ -49,7 +59,7 @@ class AppRouter {
             return null;
           }
 
-          if (!isRegistered && state.matchedLocation != '/register') {
+          if (!isRegistered && state.matchedLocation != '/register' && state.matchedLocation != '/verify-email') {
             return '/register';
           }
           if (isRegistered) {
@@ -69,13 +79,12 @@ class AppRouter {
                                      state.matchedLocation.startsWith('/sales') ||
                                      state.matchedLocation.startsWith('/expenses') ||
                                      state.matchedLocation.startsWith('/reports') ||
-                                     state.matchedLocation.startsWith('/team');
+                                     state.matchedLocation.startsWith('/team') ||
+                                     state.matchedLocation.startsWith('/profile');
 
             if (isExpired && isProtectedRoute && !isSubscriptionRoute) {
               return '/subscription';
             }
-            // Allow access to subscription page for expired or trial users
-            // Don't redirect away from subscription page - users may want to manage or upgrade their plan
           }
         }
         return null;
@@ -84,6 +93,8 @@ class AppRouter {
         // Auth
         GoRoute(path: '/login',    builder: (_, __) => const LoginScreen()),
         GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
+        GoRoute(path: '/verify-email', builder: (_, __) => const EmailVerificationScreen()),
+        GoRoute(path: '/forgot-password', builder: (_, __) => const ForgotPasswordScreen()),
         GoRoute(path: '/pending-approval', builder: (_, __) => const PendingApprovalScreen()),
         
         // Super Admin Shell
