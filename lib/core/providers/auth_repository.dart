@@ -7,18 +7,13 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 class AuthRepository {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  late final GoogleSignIn _googleSignIn;
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: ['email', 'profile'],
+  );
   final FirebaseStorage _storage = FirebaseStorage.instance;
   final ImagePicker _picker = ImagePicker();
 
-  AuthRepository() {
-    const clientId = String.fromEnvironment('GOOGLE_CLIENT_ID');
-    
-    _googleSignIn = gsi.GoogleSignIn(
-      clientId: kIsWeb ? (clientId.isEmpty ? null : clientId) : null,
-      scopes: ['email', 'profile'],
-    );
-  }
+  AuthRepository();
 
   Future<UserCredential> signInWithEmail(String email, String password) async {
     return await _auth.signInWithEmailAndPassword(email: email, password: password);

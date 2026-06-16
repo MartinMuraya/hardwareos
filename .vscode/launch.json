@@ -1,0 +1,22 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "hardwareos (Web Port 5000)",
+      "request": "launch",
+      "type": "dart",
+      "args": [
+        "--web-port=5000"
+      ]
+    },
+    {
+      "name": "hardwareos (Full Env)",
+      "request": "launch",
+      "type": "dart",
+      "args": [
+        "--web-port=5000",
+        "--dart-define-from-file=functions/.env"
+      ]
+    }
+  ]
+}

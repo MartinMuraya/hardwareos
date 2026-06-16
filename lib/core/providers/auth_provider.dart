@@ -35,7 +35,11 @@ class AuthProvider extends ChangeNotifier {
   DateTime?              get subscriptionEndsAt {
     final val = _userProfile?['subscriptionEndsAt'];
     if (val == null) return null;
-    return DateTime.tryParse(val.toString());
+    if (val is String) return DateTime.tryParse(val);
+    if (val is Map && val.containsKey('_seconds')) {
+      return DateTime.fromMillisecondsSinceEpoch(val['_seconds'] * 1000);
+    }
+    return null;
   }
 
   AuthProvider() {
@@ -71,6 +75,11 @@ class AuthProvider extends ChangeNotifier {
         _userProfile = Map<String, dynamic>.from(data['user'] as Map);
         final biz = Map<String, dynamic>.from(data['business'] as Map);
         _businessStatus = biz['status'] as String?;
+        
+        // Ensure subscription info is available in the profile for the router/getters
+        _userProfile!['subscriptionStatus'] = biz['subscriptionStatus'];
+        _userProfile!['subscriptionEndsAt'] = biz['subscriptionEndsAt'];
+        _userProfile!['plan'] = biz['plan'];
       } else {
         _userProfile = null;
         _businessStatus = null;

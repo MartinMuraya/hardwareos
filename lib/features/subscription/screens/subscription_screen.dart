@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -27,10 +29,20 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   List<Subscription> _paymentHistory = [];
   bool _loadingHistory = false;
 
+  StreamSubscription? _paymentSubscription;
+  bool _isWaitingForPayment = false;
+  String? _checkoutRequestId;
+
   @override
   void initState() {
     super.initState();
     _loadPaymentHistory();
+  }
+
+  @override
+  void dispose() {
+    _paymentSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadPaymentHistory() async {
@@ -122,21 +134,26 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         title: Text('Subscription & Plans', style: AppTheme.darkTheme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
         elevation: 0,
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildCurrentStatusCard(business, isExpired, isOnTrial, isActive),
-            const SizedBox(height: 24),
-            _buildAvailablePlansSection(),
-            if (_selectedPlanId != null) ...[
-              const SizedBox(height: 24),
-              _buildPaymentSection(business),
-            ],
-            const SizedBox(height: 24),
-            _buildPaymentHistorySection(),
-            const SizedBox(height: 24),
-          ],
-        ),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            child: Column(
+              children: [
+                _buildCurrentStatusCard(business, isExpired, isOnTrial, isActive),
+                const SizedBox(height: 24),
+                _buildAvailablePlansSection(),
+                if (_selectedPlanId != null) ...[
+                  const SizedBox(height: 24),
+                  _buildPaymentSection(business),
+                ],
+                const SizedBox(height: 24),
+                _buildPaymentHistorySection(),
+                const SizedBox(height: 24),
+              ],
+            ),
+          ),
+          if (_isWaitingForPayment) _buildWaitingOverlay(),
+        ],
       ),
     );
   }
@@ -327,24 +344,25 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     });
 
     try {
-      await FunctionsService.call('createSubscriptionPayment', {
+      final res = await FunctionsService.call('createSubscriptionPayment', {
         'businessId': businessId,
         'planId': _selectedPlanId,
         'phoneNumber': _phoneNumber,
       });
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('STK Push sent! Please enter your M-Pesa PIN on your phone to complete payment.'),
-            backgroundColor: AppColors.success,
-            duration: Duration(seconds: 8),
-          ),
-        );
-        setState(() => _isProcessing = false);
+      final checkoutRequestId = res['checkoutRequestId'] as String?;
 
-        await Future.delayed(const Duration(seconds: 2));
-        if (mounted) context.go('/dashboard');
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+          if (checkoutRequestId != null) {
+            _checkoutRequestId = checkoutRequestId;
+            _isWaitingForPayment = true;
+            _startPaymentListener();
+          } else {
+            _error = 'Failed to initialize payment. Please try again.';
+          }
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -354,6 +372,122 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         });
       }
     }
+  }
+
+  void _startPaymentListener() {
+    if (_checkoutRequestId == null) return;
+
+    _paymentSubscription?.cancel();
+    _paymentSubscription = FirebaseFirestore.instance
+        .collection('subscriptions')
+        .where('checkoutRequestId', isEqualTo: _checkoutRequestId)
+        .snapshots()
+        .listen((snapshot) {
+      if (snapshot.docs.isNotEmpty) {
+        final data = snapshot.docs.first.data();
+        final status = data['transactionStatus'] as String?;
+
+        if (status == 'completed') {
+          _paymentSubscription?.cancel();
+          if (mounted) {
+            setState(() => _isWaitingForPayment = false);
+            _showSuccessDialog();
+          }
+        } else if (status == 'failed') {
+          _paymentSubscription?.cancel();
+          if (mounted) {
+            setState(() {
+              _isWaitingForPayment = false;
+              _error = 'Payment failed. Please try again.';
+            });
+          }
+        }
+      }
+    });
+  }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: AppColors.card,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 64),
+            const SizedBox(height: 24),
+            Text('Payment Successful!', style: AppTheme.darkTheme.textTheme.headlineSmall),
+            const SizedBox(height: 16),
+            const Text(
+              'Your subscription is now active. You have full access to your new plan.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () async {
+                  await context.read<AuthProvider>().refreshProfile();
+                  if (mounted) {
+                    Navigator.pop(context);
+                    context.go('/dashboard');
+                  }
+                },
+                child: const Text('Go to Dashboard'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWaitingOverlay() {
+    return Container(
+      color: AppColors.background.withValues(alpha: 0.8),
+      child: Center(
+        child: Container(
+          margin: const EdgeInsets.all(32),
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: AppColors.card,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(
+                width: 48, height: 48,
+                child: CircularProgressIndicator(strokeWidth: 4),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Waiting for Payment',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Please enter your M-Pesa PIN on your phone. This screen will update automatically once confirmed.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 32),
+              OutlinedButton(
+                onPressed: () {
+                  _paymentSubscription?.cancel();
+                  setState(() => _isWaitingForPayment = false);
+                },
+                child: const Text('Cancel & Return'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildPaymentHistorySection() {
