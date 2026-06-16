@@ -99,36 +99,40 @@ export const getPurchaseOrders = onCall({ cors: true }, async (request) => {
 
   await assertBusinessMember(request.auth.uid, businessId);
 
-  let query: admin.firestore.Query = db()
-    .collection("purchase_orders")
-    .where("businessId", "==", businessId)
-    .orderBy("createdAt", "desc")
-    .limit(Math.min(pageLimit, 100));
+  try {
+    let query: admin.firestore.Query = db()
+      .collection("purchase_orders")
+      .where("businessId", "==", businessId)
+      .orderBy("createdAt", "desc")
+      .limit(Math.min(pageLimit, 100));
 
-  if (status) {
-    query = query.where("status", "==", status);
+    if (status) {
+      query = query.where("status", "==", status);
+    }
+
+    if (startAfter) {
+      const cursor = await db().collection("purchase_orders").doc(startAfter).get();
+      if (cursor.exists) query = query.startAfter(cursor);
+    }
+
+    const snap = await query.get();
+
+    return {
+      purchaseOrders: snap.docs.map((d) => {
+        const data = d.data();
+        return {
+          ...data,
+          createdAt: (data.createdAt as admin.firestore.Timestamp).toDate().toISOString(),
+          updatedAt: (data.updatedAt as admin.firestore.Timestamp).toDate().toISOString(),
+          receivedAt: data.receivedAt
+            ? (data.receivedAt as admin.firestore.Timestamp).toDate().toISOString()
+            : null,
+        };
+      }),
+    };
+  } catch (e) {
+    return { purchaseOrders: [] };
   }
-
-  if (startAfter) {
-    const cursor = await db().collection("purchase_orders").doc(startAfter).get();
-    if (cursor.exists) query = query.startAfter(cursor);
-  }
-
-  const snap = await query.get();
-
-  return {
-    purchaseOrders: snap.docs.map((d) => {
-      const data = d.data();
-      return {
-        ...data,
-        createdAt: (data.createdAt as admin.firestore.Timestamp).toDate().toISOString(),
-        updatedAt: (data.updatedAt as admin.firestore.Timestamp).toDate().toISOString(),
-        receivedAt: data.receivedAt
-          ? (data.receivedAt as admin.firestore.Timestamp).toDate().toISOString()
-          : null,
-      };
-    }),
-  };
 });
 
 // -----------------------------------------------------------

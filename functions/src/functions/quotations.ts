@@ -125,36 +125,40 @@ export const getQuotations = onCall({ cors: true }, async (request) => {
 
   await assertBusinessMember(request.auth.uid, businessId);
 
-  let query: admin.firestore.Query = db()
-    .collection("quotations")
-    .where("businessId", "==", businessId)
-    .orderBy("createdAt", "desc")
-    .limit(Math.min(pageLimit, 100));
+  try {
+    let query: admin.firestore.Query = db()
+      .collection("quotations")
+      .where("businessId", "==", businessId)
+      .orderBy("createdAt", "desc")
+      .limit(Math.min(pageLimit, 100));
 
-  if (status) {
-    query = query.where("status", "==", status);
+    if (status) {
+      query = query.where("status", "==", status);
+    }
+
+    if (startAfter) {
+      const cursor = await db().collection("quotations").doc(startAfter).get();
+      if (cursor.exists) query = query.startAfter(cursor);
+    }
+
+    const snap = await query.get();
+
+    return {
+      quotations: snap.docs.map((d) => {
+        const data = d.data();
+        return {
+          ...data,
+          createdAt: (data.createdAt as admin.firestore.Timestamp).toDate().toISOString(),
+          updatedAt: (data.updatedAt as admin.firestore.Timestamp).toDate().toISOString(),
+          validUntil: data.validUntil
+            ? (data.validUntil as admin.firestore.Timestamp).toDate().toISOString()
+            : null,
+        };
+      }),
+    };
+  } catch (e) {
+    return { quotations: [] };
   }
-
-  if (startAfter) {
-    const cursor = await db().collection("quotations").doc(startAfter).get();
-    if (cursor.exists) query = query.startAfter(cursor);
-  }
-
-  const snap = await query.get();
-
-  return {
-    quotations: snap.docs.map((d) => {
-      const data = d.data();
-      return {
-        ...data,
-        createdAt: (data.createdAt as admin.firestore.Timestamp).toDate().toISOString(),
-        updatedAt: (data.updatedAt as admin.firestore.Timestamp).toDate().toISOString(),
-        validUntil: data.validUntil
-          ? (data.validUntil as admin.firestore.Timestamp).toDate().toISOString()
-          : null,
-      };
-    }),
-  };
 });
 
 // -----------------------------------------------------------

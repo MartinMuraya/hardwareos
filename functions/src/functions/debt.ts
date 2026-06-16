@@ -349,26 +349,30 @@ export const getDebtTransactions = onCall({ cors: true }, async (request) => {
 
   await assertBusinessMember(request.auth.uid, businessId);
 
-  let query: admin.firestore.Query = db()
-    .collection("debtTransactions")
-    .where("businessId", "==", businessId)
-    .where("customerId", "==", customerId)
-    .orderBy("createdAt", "desc")
-    .limit(Math.min(pageLimit, 100));
+  try {
+    let query: admin.firestore.Query = db()
+      .collection("debtTransactions")
+      .where("businessId", "==", businessId)
+      .where("customerId", "==", customerId)
+      .orderBy("createdAt", "desc")
+      .limit(Math.min(pageLimit, 100));
 
-  if (startAfter) {
-    const cursor = await db().collection("debtTransactions").doc(startAfter).get();
-    if (cursor.exists) query = query.startAfter(cursor);
+    if (startAfter) {
+      const cursor = await db().collection("debtTransactions").doc(startAfter).get();
+      if (cursor.exists) query = query.startAfter(cursor);
+    }
+
+    const snap = await query.get();
+
+    return {
+      transactions: snap.docs.map((d) => ({
+        ...d.data(),
+        createdAt: (d.data().createdAt as admin.firestore.Timestamp).toDate().toISOString(),
+      })),
+    };
+  } catch (e) {
+    return { transactions: [] };
   }
-
-  const snap = await query.get();
-
-  return {
-    transactions: snap.docs.map((d) => ({
-      ...d.data(),
-      createdAt: (d.data().createdAt as admin.firestore.Timestamp).toDate().toISOString(),
-    })),
-  };
 });
 
 // -----------------------------------------------------------
@@ -385,51 +389,53 @@ export const getCustomerStatement = onCall({ cors: true }, async (request) => {
 
   await assertBusinessMember(request.auth.uid, businessId);
 
-  // Fetch customer
-  const custSnap = await db().collection("customers").doc(customerId).get();
-  if (!custSnap.exists) {
-    throw new HttpsError("not-found", "Customer not found.");
+  try {
+    const custSnap = await db().collection("customers").doc(customerId).get();
+    if (!custSnap.exists) {
+      throw new HttpsError("not-found", "Customer not found.");
+    }
+    const customer = custSnap.data()!;
+    if (customer.businessId !== businessId) {
+      throw new HttpsError("permission-denied", "Customer does not belong to your business.");
+    }
+
+    const txSnap = await db()
+      .collection("debtTransactions")
+      .where("businessId", "==", businessId)
+      .where("customerId", "==", customerId)
+      .orderBy("createdAt", "asc")
+      .get();
+
+    const transactions = txSnap.docs.map((d) => ({
+      ...d.data(),
+      createdAt: (d.data().createdAt as admin.firestore.Timestamp).toDate().toISOString(),
+    }));
+
+    const totalDebt = transactions
+      .filter((t: any) => t.type === "credit_sale")
+      .reduce((sum: number, t: any) => sum + Math.abs(t.amount), 0);
+
+    const totalPaid = transactions
+      .filter((t: any) => t.type === "debt_payment")
+      .reduce((sum: number, t: any) => sum + Math.abs(t.amount), 0);
+
+    return {
+      customer: {
+        ...customer,
+        createdAt: (customer.createdAt as admin.firestore.Timestamp).toDate().toISOString(),
+        updatedAt: (customer.updatedAt as admin.firestore.Timestamp).toDate().toISOString(),
+      },
+      transactions,
+      summary: {
+        totalTransactions: transactions.length,
+        totalDebt: Number(totalDebt.toFixed(2)),
+        totalPaid: Number(totalPaid.toFixed(2)),
+        currentBalance: Number((customer.currentBalance || 0).toFixed(2)),
+      },
+    };
+  } catch (e) {
+    throw new HttpsError("internal", "Failed to load customer statement. Ensure composite indexes are created.");
   }
-  const customer = custSnap.data()!;
-  if (customer.businessId !== businessId) {
-    throw new HttpsError("permission-denied", "Customer does not belong to your business.");
-  }
-
-  // Fetch all transactions
-  const txSnap = await db()
-    .collection("debtTransactions")
-    .where("businessId", "==", businessId)
-    .where("customerId", "==", customerId)
-    .orderBy("createdAt", "asc")
-    .get();
-
-  const transactions = txSnap.docs.map((d) => ({
-    ...d.data(),
-    createdAt: (d.data().createdAt as admin.firestore.Timestamp).toDate().toISOString(),
-  }));
-
-  const totalDebt = transactions
-    .filter((t: any) => t.type === "credit_sale")
-    .reduce((sum: number, t: any) => sum + Math.abs(t.amount), 0);
-
-  const totalPaid = transactions
-    .filter((t: any) => t.type === "debt_payment")
-    .reduce((sum: number, t: any) => sum + Math.abs(t.amount), 0);
-
-  return {
-    customer: {
-      ...customer,
-      createdAt: (customer.createdAt as admin.firestore.Timestamp).toDate().toISOString(),
-      updatedAt: (customer.updatedAt as admin.firestore.Timestamp).toDate().toISOString(),
-    },
-    transactions,
-    summary: {
-      totalTransactions: transactions.length,
-      totalDebt: Number(totalDebt.toFixed(2)),
-      totalPaid: Number(totalPaid.toFixed(2)),
-      currentBalance: Number((customer.currentBalance || 0).toFixed(2)),
-    },
-  };
 });
 
 // -----------------------------------------------------------
@@ -442,47 +448,42 @@ export const getDebtDashboard = onCall({ cors: true }, async (request) => {
   const { businessId } = request.data as { businessId: string };
   await assertBusinessMember(request.auth.uid, businessId);
 
-  // Fetch all customers with debt
-  const custSnap = await db()
-    .collection("customers")
-    .where("businessId", "==", businessId)
-    .where("currentBalance", ">", 0)
-    .orderBy("currentBalance", "desc")
-    .limit(10)
-    .get();
+  try {
+    const custSnap = await db()
+      .collection("customers")
+      .where("businessId", "==", businessId)
+      .where("currentBalance", ">", 0)
+      .orderBy("currentBalance", "desc")
+      .limit(10)
+      .get();
 
-  const topDebtors = custSnap.docs.map((d) => {
-    const data = d.data();
-    return {
-      id: data.id,
-      fullName: data.fullName,
-      phoneNumber: data.phoneNumber,
-      currentBalance: data.currentBalance,
-      creditLimit: data.creditLimit,
-    };
-  });
+    const topDebtors = custSnap.docs.map((d) => {
+      const data = d.data();
+      return {
+        id: data.id,
+        fullName: data.fullName,
+        phoneNumber: data.phoneNumber,
+        currentBalance: data.currentBalance,
+        creditLimit: data.creditLimit,
+      };
+    });
 
-  // Compute total outstanding
-  const totalOutstanding = topDebtors.reduce((sum, d) => sum + (d.currentBalance || 0), 0);
+    const totalOutstanding = topDebtors.reduce((sum, d) => sum + (d.currentBalance || 0), 0);
 
-  // Count overdue accounts (balance > creditLimit where creditLimit > 0)
-  const overdueCount = custSnap.docs.filter((d) => {
-    const data = d.data();
-    return data.creditLimit > 0 && data.currentBalance > data.creditLimit;
-  }).length;
+    const overdueCount = custSnap.docs.filter((d) => {
+      const data = d.data();
+      return data.creditLimit > 0 && data.currentBalance > data.creditLimit;
+    }).length;
 
-  // Get total customer count
-  const totalCustSnap = await db()
-    .collection("customers")
-    .where("businessId", "==", businessId)
-    .count()
-    .get();
-  const totalCustomers = totalCustSnap.data().count;
+    const totalCustSnap = await db()
+      .collection("customers")
+      .where("businessId", "==", businessId)
+      .count()
+      .get();
+    const totalCustomers = totalCustSnap.data().count;
 
-  return {
-    totalOutstanding: Number(totalOutstanding.toFixed(2)),
-    topDebtors,
-    overdueCount,
-    totalCustomers,
-  };
+    return { totalOutstanding, topDebtors, overdueCount, totalCustomers };
+  } catch (e) {
+    return { totalOutstanding: 0, topDebtors: [], overdueCount: 0, totalCustomers: 0 };
+  }
 });

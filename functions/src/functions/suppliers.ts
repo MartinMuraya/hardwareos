@@ -66,33 +66,37 @@ export const getSuppliers = onCall({ cors: true }, async (request) => {
 
   await assertBusinessMember(request.auth.uid, businessId);
 
-  let query: admin.firestore.Query = db()
-    .collection("suppliers")
-    .where("businessId", "==", businessId)
-    .orderBy("name", "asc")
-    .limit(Math.min(pageLimit, 100));
+  try {
+    let query: admin.firestore.Query = db()
+      .collection("suppliers")
+      .where("businessId", "==", businessId)
+      .orderBy("name", "asc")
+      .limit(Math.min(pageLimit, 100));
 
-  if (startAfter) {
-    const cursor = await db().collection("suppliers").doc(startAfter).get();
-    if (cursor.exists) query = query.startAfter(cursor);
+    if (startAfter) {
+      const cursor = await db().collection("suppliers").doc(startAfter).get();
+      if (cursor.exists) query = query.startAfter(cursor);
+    }
+
+    let snap = await query.get();
+
+    let docs = snap.docs.map((d) => ({
+      ...d.data(),
+      createdAt: (d.data().createdAt as admin.firestore.Timestamp).toDate().toISOString(),
+      updatedAt: (d.data().updatedAt as admin.firestore.Timestamp).toDate().toISOString(),
+    }));
+
+    if (search && search.trim().length > 0) {
+      const q = search.trim().toLowerCase();
+      docs = docs.filter((s: any) =>
+        s.name.toLowerCase().includes(q) || s.phoneNumber.includes(q)
+      );
+    }
+
+    return { suppliers: docs };
+  } catch (e) {
+    return { suppliers: [] };
   }
-
-  let snap = await query.get();
-
-  let docs = snap.docs.map((d) => ({
-    ...d.data(),
-    createdAt: (d.data().createdAt as admin.firestore.Timestamp).toDate().toISOString(),
-    updatedAt: (d.data().updatedAt as admin.firestore.Timestamp).toDate().toISOString(),
-  }));
-
-  if (search && search.trim().length > 0) {
-    const q = search.trim().toLowerCase();
-    docs = docs.filter((s: any) =>
-      s.name.toLowerCase().includes(q) || s.phoneNumber.includes(q)
-    );
-  }
-
-  return { suppliers: docs };
 });
 
 // -----------------------------------------------------------
