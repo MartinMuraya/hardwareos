@@ -22,6 +22,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   bool _loading = true;
   Map<String, dynamic>? _stats;
+  Map<String, dynamic>? _debtStats;
   String? _error;
 
   @override
@@ -36,9 +37,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final businessId = context.read<AuthProvider>().businessId;
       if (businessId == null) { setState(() { _loading = false; _error = 'No business found.'; }); return; }
 
-      final data = await FunctionsService.call('getDashboardStats', {'businessId': businessId});
+      final results = await Future.wait([
+        FunctionsService.call('getDashboardStats', {'businessId': businessId}),
+        FunctionsService.call('getDebtDashboard', {'businessId': businessId}),
+      ]);
+      final data = results[0];
+      final debt = results[1];
       if (mounted) {
-        setState(() { _stats = data; _loading = false; });
+        setState(() { _stats = data; _debtStats = debt; _loading = false; });
         final sub = data['subscription'] as Map?;
         if (sub != null) {
           context.read<BusinessProvider>().setBusinessData({
@@ -123,6 +129,49 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ]),
                 const SizedBox(height: 12),
                 LowStockList(items: lowStock),
+                const SizedBox(height: 28),
+              ],
+
+              if (_debtStats != null) ...[
+                _SectionHeader(title: 'Credit Overview', theme: theme),
+                const SizedBox(height: 12),
+                InkWell(
+                  onTap: () => context.go('/credit-ledger'),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: theme.cardColor,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: theme.dividerColor),
+                    ),
+                    child: Row(children: [
+                      Container(
+                        width: 44, height: 44,
+                        decoration: BoxDecoration(
+                          color: AppColors.warning.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.account_balance_wallet_rounded, color: AppColors.warning, size: 22),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text('Outstanding Debt',
+                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: theme.colorScheme.onSurface)),
+                        const SizedBox(height: 4),
+                        Text('${_debtStats!['overdueCount'] ?? 0} overdue customers',
+                          style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
+                      ])),
+                      Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                        Text(fmt.format(_debtStats!['totalOutstanding'] ?? 0),
+                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: AppColors.warning)),
+                        const SizedBox(height: 4),
+                        Text('Tap to view',
+                          style: TextStyle(fontSize: 11, color: theme.hintColor)),
+                      ]),
+                    ]),
+                  ),
+                ),
                 const SizedBox(height: 28),
               ],
 

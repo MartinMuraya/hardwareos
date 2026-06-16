@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/models/product.dart';
+import '../../../core/models/customer.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/responsive.dart';
 import '../../../core/widgets/loading_overlay.dart';
@@ -19,6 +20,13 @@ class _POSScreenState extends State<POSScreen> {
   final List<_CartEntry> _cart = [];
   String _paymentMethod = 'cash';
 
+  // Credit sale state
+  String? _selectedCustomerId;
+  String _selectedCustomerName = '';
+  final _amountPaidCtrl = TextEditingController();
+  List<Customer> _customers = [];
+  bool _loadingCustomers = false;
+
   final _searchCtrl  = TextEditingController();
   List<Product> _allProducts = [];
   List<Product> _filtered    = [];
@@ -31,7 +39,19 @@ class _POSScreenState extends State<POSScreen> {
   @override
   void initState() { super.initState(); _loadProducts(); _searchCtrl.addListener(_filter); }
   @override
-  void dispose() { _searchCtrl.dispose(); super.dispose(); }
+  void dispose() { _searchCtrl.dispose(); _amountPaidCtrl.dispose(); super.dispose(); }
+
+  Future<void> _loadCustomers() async {
+    if (_customers.isNotEmpty) return;
+    setState(() => _loadingCustomers = true);
+    try {
+      final bizId = context.read<AuthProvider>().businessId!;
+      final data = await FunctionsService.call('getCustomers', {'businessId': bizId, 'limit': 200});
+      final rawList = (data['customers'] as List?) ?? [];
+      _customers = rawList.map((e) => Customer.fromMap(Map<String, dynamic>.from(e as Map))).toList();
+    } catch (_) {}
+    if (mounted) setState(() => _loadingCustomers = false);
+  }
 
   Future<void> _loadProducts() async {
     setState(() { _loadingProducts = true; _error = null; });
@@ -95,19 +115,45 @@ class _POSScreenState extends State<POSScreen> {
 
   Future<void> _checkout() async {
     if (_cart.isEmpty) return;
+    if (_paymentMethod == 'credit' && _selectedCustomerId == null) {
+      if (mounted) setState(() => _error = 'Please select a customer for credit sales.');
+      return;
+    }
     setState(() { _processingCheckout = true; _error = null; });
     try {
       final bizId = context.read<AuthProvider>().businessId!;
-      final result = await FunctionsService.call('createSale', {
-        'businessId':    bizId,
-        'paymentMethod': _paymentMethod,
-        'items':         _cart.map((e) => e.toMap()).toList(),
-      });
+
+      final Map<String, dynamic> result;
+      if (_paymentMethod == 'credit') {
+        final amountPaid = double.tryParse(_amountPaidCtrl.text.trim()) ?? 0;
+        result = await FunctionsService.call('createCreditSale', {
+          'businessId': bizId,
+          'customerId': _selectedCustomerId,
+          'customerName': _selectedCustomerName,
+          'items': _cart.map((e) => e.toMap()).toList(),
+          'amountPaid': amountPaid > 0 ? amountPaid : 0,
+        });
+      } else {
+        result = await FunctionsService.call('createSale', {
+          'businessId': bizId,
+          'paymentMethod': _paymentMethod,
+          'items': _cart.map((e) => e.toMap()).toList(),
+        });
+      }
+
       if (mounted) {
-        final total  = result['total']  as num;
-        final profit = result['profit'] as num;
-        _showReceiptDialog(total.toDouble(), profit.toDouble());
-        setState(() { _cart.clear(); _processingCheckout = false; });
+        final total  = (result['total'] as num?)?.toDouble() ?? 0;
+        final profit = (result['profit'] as num?)?.toDouble() ?? 0;
+        final outstanding = (result['outstanding'] as num?)?.toDouble();
+        final amountPaid = (result['amountPaid'] as num?)?.toDouble();
+        _showReceiptDialog(total, profit, outstanding: outstanding, amountPaid: amountPaid);
+        setState(() {
+          _cart.clear();
+          _processingCheckout = false;
+          _selectedCustomerId = null;
+          _selectedCustomerName = '';
+          _amountPaidCtrl.clear();
+        });
         _loadProducts();
       }
     } on FunctionsException catch (e) {
@@ -115,7 +161,8 @@ class _POSScreenState extends State<POSScreen> {
     }
   }
 
-  void _showReceiptDialog(double total, double profit) {
+  void _showReceiptDialog(double total, double profit,
+      {double? outstanding, double? amountPaid}) {
     final theme = Theme.of(context);
     showDialog(
       context: context,
@@ -137,6 +184,10 @@ class _POSScreenState extends State<POSScreen> {
           _ReceiptRow('Total',  _fmt.format(total), theme: theme),
           _ReceiptRow('Profit', _fmt.format(profit), valueColor: AppColors.success, theme: theme),
           _ReceiptRow('Method', _paymentMethod.toUpperCase(), theme: theme),
+          if (amountPaid != null && amountPaid > 0)
+            _ReceiptRow('Paid', _fmt.format(amountPaid), valueColor: AppColors.success, theme: theme),
+          if (outstanding != null && outstanding > 0)
+            _ReceiptRow('Outstanding', _fmt.format(outstanding), valueColor: AppColors.warning, theme: theme),
         ]),
         actions: [
           TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Done')),
@@ -146,6 +197,82 @@ class _POSScreenState extends State<POSScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showCustomerPicker() {
+    _loadCustomers();
+    final theme = Theme.of(context);
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: theme.cardColor,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) {
+        final searchCtrl = TextEditingController();
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            final filtered = _customers.where((c) =>
+              c.fullName.toLowerCase().contains(searchCtrl.text.toLowerCase()) ||
+              c.phoneNumber.contains(searchCtrl.text)).toList();
+            return Column(mainAxisSize: MainAxisSize.min, children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                child: Row(children: [
+                  Text('Select Customer', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                  const Spacer(),
+                  TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                ]),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: TextField(
+                  controller: searchCtrl,
+                  decoration: const InputDecoration(
+                    hintText: 'Search customers...',
+                    prefixIcon: Icon(Icons.search, size: 18),
+                  ),
+                  onChanged: (_) => setSheetState(() {}),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 300,
+                child: _loadingCustomers
+                    ? const Center(child: CircularProgressIndicator())
+                    : filtered.isEmpty
+                        ? const Center(child: Text('No customers found'))
+                        : ListView.separated(
+                            itemCount: filtered.length,
+                            separatorBuilder: (_, __) => Divider(height: 1, color: theme.dividerColor),
+                            itemBuilder: (_, i) {
+                              final c = filtered[i];
+                              return ListTile(
+                                leading: CircleAvatar(
+                                  backgroundColor: AppColors.accent.withValues(alpha: 0.1),
+                                  child: Text(c.fullName[0].toUpperCase(),
+                                    style: const TextStyle(color: AppColors.accent, fontWeight: FontWeight.w700)),
+                                ),
+                                title: Text(c.fullName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                                subtitle: Text(c.phoneNumber, style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
+                                trailing: c.currentBalance > 0
+                                    ? Text(_fmt.format(c.currentBalance),
+                                        style: const TextStyle(color: AppColors.warning, fontWeight: FontWeight.w700, fontSize: 13))
+                                    : null,
+                                onTap: () {
+                                  setState(() {
+                                    _selectedCustomerId = c.id;
+                                    _selectedCustomerName = c.fullName;
+                                  });
+                                  Navigator.pop(ctx);
+                                },
+                              );
+                            },
+                          ),
+              ),
+            ]);
+          },
+        );
+      },
     );
   }
 
@@ -305,6 +432,41 @@ class _POSScreenState extends State<POSScreen> {
           ]),
           const SizedBox(height: 16),
 
+          if (_paymentMethod == 'credit') ...[
+            GestureDetector(
+              onTap: _showCustomerPicker,
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: theme.dividerColor)),
+                child: Row(children: [
+                  Expanded(
+                    child: _selectedCustomerId != null
+                        ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text('Customer', style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurfaceVariant)),
+                            Text(_selectedCustomerName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                          ])
+                        : Text('Select Customer *', style: TextStyle(color: theme.hintColor, fontSize: 13)),
+                  ),
+                  const Icon(Icons.arrow_drop_down_rounded, size: 20),
+                ]),
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _amountPaidCtrl,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                hintText: 'Amount paid (optional)',
+                prefixText: 'KES ',
+                prefixStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontWeight: FontWeight.w600),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
@@ -313,6 +475,10 @@ class _POSScreenState extends State<POSScreen> {
               _TotalRow('Subtotal', _fmt.format(_cartTotal), theme: theme),
               const SizedBox(height: 4),
               _TotalRow('Profit',   _fmt.format(_cartProfit), color: AppColors.success, theme: theme),
+              if (_paymentMethod == 'credit' && _selectedCustomerId != null) ...[
+                const SizedBox(height: 4),
+                _TotalRow('Customer', _selectedCustomerName, color: AppColors.accent, theme: theme),
+              ],
             ]),
           ),
           const SizedBox(height: 14),

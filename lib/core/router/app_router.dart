@@ -24,6 +24,20 @@ import '../../features/admin/widgets/admin_scaffold.dart';
 import '../../features/auth/screens/pending_approval_screen.dart';
 import '../../features/auth/screens/email_verification_screen.dart';
 import '../../features/auth/screens/forgot_password_screen.dart';
+import '../../features/customers/screens/customers_screen.dart';
+import '../../features/customers/screens/add_customer_screen.dart';
+import '../../features/customers/screens/customer_detail_screen.dart';
+import '../../features/customers/screens/customer_statement_screen.dart';
+import '../../features/customers/screens/credit_ledger_screen.dart';
+import '../../features/quotations/screens/quotations_screen.dart';
+import '../../features/quotations/screens/add_quotation_screen.dart';
+import '../../features/quotations/screens/quotation_detail_screen.dart';
+import '../../features/suppliers/screens/suppliers_screen.dart';
+import '../../features/suppliers/screens/add_supplier_screen.dart';
+import '../../features/suppliers/screens/supplier_detail_screen.dart';
+import '../../features/purchase_orders/screens/purchase_orders_screen.dart';
+import '../../features/purchase_orders/screens/add_purchase_order_screen.dart';
+import '../../features/purchase_orders/screens/purchase_order_detail_screen.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/app_scaffold.dart';
 
@@ -80,7 +94,12 @@ class AppRouter {
                                      state.matchedLocation.startsWith('/expenses') ||
                                      state.matchedLocation.startsWith('/reports') ||
                                      state.matchedLocation.startsWith('/team') ||
-                                     state.matchedLocation.startsWith('/profile');
+                                     state.matchedLocation.startsWith('/profile') ||
+                                     state.matchedLocation.startsWith('/customers') ||
+                                     state.matchedLocation.startsWith('/credit-ledger') ||
+                                     state.matchedLocation.startsWith('/quotations') ||
+                                     state.matchedLocation.startsWith('/suppliers') ||
+                                     state.matchedLocation.startsWith('/purchase-orders');
 
             if (isExpired && isProtectedRoute && !isSubscriptionRoute) {
               return '/subscription';
@@ -183,6 +202,82 @@ class AppRouter {
             GoRoute(
               path: '/subscription',
               pageBuilder: (context, state) => const NoTransitionPage(child: SubscriptionScreen()),
+            ),
+            GoRoute(
+              path: '/customers',
+              builder: (_, __) => const CustomersScreen(),
+              routes: [
+                GoRoute(
+                  path: 'add',
+                  builder: (_, __) => const AddCustomerScreen(),
+                ),
+                GoRoute(
+                  path: ':customerId',
+                  builder: (_, state) => CustomerDetailScreen(
+                    customerId: state.pathParameters['customerId']!,
+                  ),
+                  routes: [
+                    GoRoute(
+                      path: 'statement',
+                      builder: (_, state) => CustomerStatementScreen(
+                        customerId: state.pathParameters['customerId']!,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            GoRoute(
+              path: '/credit-ledger',
+              builder: (_, __) => const CreditLedgerScreen(),
+            ),
+            GoRoute(
+              path: '/suppliers',
+              builder: (_, __) => const SuppliersScreen(),
+              routes: [
+                GoRoute(
+                  path: 'add',
+                  builder: (_, __) => const AddSupplierScreen(),
+                ),
+                GoRoute(
+                  path: ':supplierId',
+                  builder: (_, state) => SupplierDetailScreen(
+                    supplierId: state.pathParameters['supplierId']!,
+                  ),
+                ),
+              ],
+            ),
+            GoRoute(
+              path: '/purchase-orders',
+              builder: (_, __) => const PurchaseOrdersScreen(),
+              routes: [
+                GoRoute(
+                  path: 'add',
+                  builder: (_, __) => const AddPurchaseOrderScreen(),
+                ),
+                GoRoute(
+                  path: ':purchaseOrderId',
+                  builder: (_, state) => PurchaseOrderDetailScreen(
+                    purchaseOrderId: state.pathParameters['purchaseOrderId']!,
+                  ),
+                ),
+              ],
+            ),
+            GoRoute(
+              path: '/quotations',
+              builder: (_, __) => const QuotationsScreen(),
+              routes: [
+                GoRoute(
+                  path: 'add',
+                  builder: (_, __) => const AddQuotationScreen(),
+                ),
+                GoRoute(
+                  path: ':quotationId',
+                  builder: (_, state) => QuotationDetailScreen(
+                    quotationId: state.pathParameters['quotationId']!,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

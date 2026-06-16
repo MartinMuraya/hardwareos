@@ -53,3 +53,45 @@ export {
 
 // M-Pesa Billing
 export { createSubscriptionPayment, mpesaCallback, simulateMpesaCallback } from "./functions/mpesa_billing";
+
+// Customers & Debt
+export {
+  createCustomer,
+  getCustomers,
+  getCustomer,
+  updateCustomer,
+} from "./functions/customers";
+
+export {
+  createCreditSale,
+  recordDebtPayment,
+  adjustDebt,
+  getDebtTransactions,
+  getCustomerStatement,
+  getDebtDashboard,
+} from "./functions/debt";
+
+// Quotations
+export {
+  createQuotation,
+  getQuotations,
+  getQuotation,
+  updateQuotationStatus,
+  convertQuotationToSale,
+} from "./functions/quotations";
+
+// Suppliers & Purchase Orders
+export {
+  createSupplier,
+  getSuppliers,
+  getSupplier,
+  updateSupplier,
+} from "./functions/suppliers";
+
+export {
+  createPurchaseOrder,
+  getPurchaseOrders,
+  getPurchaseOrder,
+  updatePurchaseOrderStatus,
+  receivePurchaseOrder,
+} from "./functions/purchase_orders";
