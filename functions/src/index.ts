@@ -22,6 +22,13 @@ export {
   getLowStockProducts,
 } from "./functions/inventory";
 
+// Inventory — Stock Adjustments
+export {
+  adjustInventoryStock,
+  getStockAdjustments,
+  getAdjustmentStats,
+} from "./functions/stock_adjustments";
+
 // Sales
 export { createSale, getSales } from "./functions/sales";
 
@@ -95,3 +102,17 @@ export {
   updatePurchaseOrderStatus,
   receivePurchaseOrder,
 } from "./functions/purchase_orders";
+
+// Audit Trail
+export {
+  getAuditLogs,
+  getAuditModules,
+  getRecentAuditLogs,
+} from "./functions/audit_log";
+
+// Returns & Refunds
+export {
+  processReturn,
+  getReturns,
+  getReturnStats,
+} from "./functions/returns";
