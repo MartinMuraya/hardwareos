@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/empty_state.dart';
 
 class AdminPlansScreen extends StatefulWidget {
@@ -44,10 +43,11 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
   }
 
   Future<void> _deletePlan(String id) async {
+    final theme = Theme.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.card,
+        backgroundColor: theme.cardColor,
         title: const Text('Delete Plan'),
         content: Text('Are you sure you want to delete plan: $id? This cannot be undone.'),
         actions: [
@@ -68,7 +68,7 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
         _loadPlans();
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: AppColors.error));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
           setState(() => _loading = false);
         }
       }
@@ -76,6 +76,7 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
   }
 
   Future<void> _savePlan([Map<String, dynamic>? plan]) async {
+    final theme = Theme.of(context);
     final isNew = plan == null;
     final idController = TextEditingController(text: plan?['id'] ?? '');
     final nameController = TextEditingController(text: plan?['name'] ?? '');
@@ -92,7 +93,7 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.card,
+        backgroundColor: theme.cardColor,
         title: Text(isNew ? 'Create New Plan' : 'Edit Plan: ${plan['name']}'),
         content: SingleChildScrollView(
           child: Column(
@@ -193,7 +194,7 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
         _loadPlans();
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: AppColors.error));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
           setState(() => _loading = false);
         }
       }
@@ -202,11 +203,11 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        title: Text('Subscription Plans', style: AppTheme.darkTheme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+        title: Text('Subscription Plans', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
         actions: [
           IconButton(icon: const Icon(Icons.refresh_rounded), onPressed: _loadPlans),
           const SizedBox(width: 8),
@@ -241,9 +242,9 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
                         return Container(
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
-                            color: AppColors.card,
+                            color: theme.cardColor,
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: AppColors.border),
+                            border: Border.all(color: theme.dividerColor),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -254,7 +255,8 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
                                   Expanded(
                                     child: Text(
                                       p['name'] ?? 'Unnamed Plan',
-                                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold,
+                                        color: theme.colorScheme.onSurface),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -266,15 +268,20 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
                                 ],
                               ),
                               const SizedBox(height: 8),
-                              Text('ID: ${p['id']}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-                              const Divider(height: 24, color: AppColors.border),
+                              Text('ID: ${p['id']}',
+                                style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13)),
+                              Divider(height: 24, color: theme.dividerColor),
                               Expanded(
                                 child: Column(
                                   children: [
-                                    _LimitRow(icon: Icons.inventory_2_rounded, label: 'Products Limit', value: p['maxProducts'] == -1 ? 'Unlimited' : '${p['maxProducts']}'),
-                                    _LimitRow(icon: Icons.people_rounded, label: 'Users Limit', value: p['maxUsers'] == -1 ? 'Unlimited' : '${p['maxUsers']}'),
-                                    _LimitRow(icon: Icons.auto_awesome_rounded, label: 'AI Assistance', value: p['aiEnabled'] == true ? 'Yes' : 'No'),
-                                    _LimitRow(icon: Icons.chat_rounded, label: 'WhatsApp Bot', value: p['whatsappEnabled'] == true ? 'Yes' : 'No'),
+                                    _LimitRow(icon: Icons.inventory_2_rounded, label: 'Products Limit',
+                                      value: p['maxProducts'] == -1 ? 'Unlimited' : '${p['maxProducts']}', theme: theme),
+                                    _LimitRow(icon: Icons.people_rounded, label: 'Users Limit',
+                                      value: p['maxUsers'] == -1 ? 'Unlimited' : '${p['maxUsers']}', theme: theme),
+                                    _LimitRow(icon: Icons.auto_awesome_rounded, label: 'AI Assistance',
+                                      value: p['aiEnabled'] == true ? 'Yes' : 'No', theme: theme),
+                                    _LimitRow(icon: Icons.chat_rounded, label: 'WhatsApp Bot',
+                                      value: p['whatsappEnabled'] == true ? 'Yes' : 'No', theme: theme),
                                   ],
                                 ),
                               ),
@@ -282,7 +289,7 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
                                   IconButton(
-                                    icon: const Icon(Icons.edit_rounded, color: AppColors.textSecondary),
+                                    icon: Icon(Icons.edit_rounded, color: theme.colorScheme.onSurfaceVariant),
                                     onPressed: () => _savePlan(p),
                                     tooltip: 'Edit Plan',
                                   ),
@@ -307,8 +314,9 @@ class _LimitRow extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
+  final ThemeData theme;
 
-  const _LimitRow({required this.icon, required this.label, required this.value});
+  const _LimitRow({required this.icon, required this.label, required this.value, required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -316,11 +324,12 @@ class _LimitRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: AppColors.textSecondary),
+          Icon(icon, size: 16, color: theme.colorScheme.onSurfaceVariant),
           const SizedBox(width: 8),
-          Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+          Text(label, style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13)),
           const Spacer(),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+          Text(value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13,
+            color: theme.colorScheme.onSurface)),
         ],
       ),
     );

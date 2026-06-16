@@ -6,7 +6,7 @@ import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/business_provider.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/responsive.dart';
 import '../../../core/widgets/loading_overlay.dart';
 import '../widgets/kpi_card.dart';
 import '../widgets/plan_status_banner.dart';
@@ -39,7 +39,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final data = await FunctionsService.call('getDashboardStats', {'businessId': businessId});
       if (mounted) {
         setState(() { _stats = data; _loading = false; });
-        // Update BusinessProvider with plan data
         final sub = data['subscription'] as Map?;
         if (sub != null) {
           context.read<BusinessProvider>().setBusinessData({
@@ -57,11 +56,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final kpis       = _stats?['kpis']        as Map?;
     final lowStock   = (_stats?['lowStock']    as List?)?.cast<Map<String, dynamic>>() ?? [];
     final recentSales= (_stats?['recentSales'] as List?)?.cast<Map<String, dynamic>>() ?? [];
     final sub        = _stats?['subscription'] as Map?;
     final fmt        = NumberFormat.currency(locale: 'en_KE', symbol: 'KES ');
+    final padding    = Responsive.padding(context);
 
     return LoadingOverlay(
       isLoading: _loading,
@@ -69,22 +70,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: RefreshIndicator(
         onRefresh: _load,
         color: AppColors.accent,
-        backgroundColor: AppColors.card,
+        backgroundColor: theme.cardColor,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(padding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
               Row(children: [
                 Expanded(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text('Dashboard',
-                      style: AppTheme.darkTheme.textTheme.displayMedium),
+                      style: theme.textTheme.displayMedium),
                     const SizedBox(height: 4),
                     Text(DateFormat('EEEE, MMM d').format(DateTime.now()),
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+                      style: theme.textTheme.bodyMedium),
                   ]),
                 ),
                 IconButton(
@@ -95,32 +95,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ]),
               const SizedBox(height: 20),
 
-              // Plan banner
               if (sub != null) PlanStatusBanner(subscription: sub),
               if (sub != null) const SizedBox(height: 20),
 
-              // Error
               if (_error != null && !_loading)
-                _ErrorCard(message: _error!, onRetry: _load),
+                _ErrorCard(message: _error!, onRetry: _load, theme: theme),
 
-              // KPI grid
               if (kpis != null) ...[
-                const _SectionHeader(title: "Today's Performance"),
+                _SectionHeader(title: "Today's Performance", theme: theme),
                 const SizedBox(height: 12),
                 _KpiGrid(kpis: kpis, fmt: fmt),
                 const SizedBox(height: 28),
               ],
 
-              // Quick actions
               const _SectionHeader(title: 'Quick Actions'),
               const SizedBox(height: 12),
               _QuickActions(),
               const SizedBox(height: 28),
 
-              // Low stock
               if (lowStock.isNotEmpty) ...[
                 Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  const _SectionHeader(title: '⚠️ Low Stock Alert'),
+                  _SectionHeader(title: 'Low Stock Alert', theme: theme),
                   TextButton(
                     onPressed: () => context.go('/inventory'),
                     child: const Text('View All'),
@@ -131,10 +126,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 28),
               ],
 
-              // Recent sales
               if (recentSales.isNotEmpty) ...[
                 Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  const _SectionHeader(title: 'Recent Sales'),
+                  _SectionHeader(title: 'Recent Sales', theme: theme),
                   TextButton(
                     onPressed: () => context.go('/sales/history'),
                     child: const Text('View All'),
@@ -159,7 +153,7 @@ class _KpiGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final cols = width > 900 ? 4 : (width > 600 ? 2 : 2);
+    final cols = width > 900 ? 4 : (width > 600 ? 2 : 1);
 
     return GridView.count(
       crossAxisCount: cols,
@@ -167,7 +161,7 @@ class _KpiGrid extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 12,
       crossAxisSpacing: 12,
-      childAspectRatio: 1.6,
+      childAspectRatio: cols == 1 ? 2.2 : 1.6,
       children: [
         KpiCard(
           label: 'Revenue',
@@ -206,34 +200,34 @@ class _KpiGrid extends StatelessWidget {
 class _QuickActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Row(children: [
-      Expanded(
-        child: _ActionButton(
+    final isMobile = Responsive.isMobile(context);
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: [
+        _ActionButton(
           icon: Icons.point_of_sale_rounded,
           label: 'New Sale',
           color: AppColors.accent,
           onTap: () => context.go('/sales'),
         ),
-      ),
-      const SizedBox(width: 12),
-      Expanded(
-        child: _ActionButton(
+        _ActionButton(
           icon: Icons.add_box_rounded,
           label: 'Add Product',
           color: AppColors.chartBlue,
           onTap: () => context.go('/inventory/add'),
         ),
-      ),
-      const SizedBox(width: 12),
-      Expanded(
-        child: _ActionButton(
+        _ActionButton(
           icon: Icons.receipt_long_rounded,
           label: 'Add Expense',
           color: AppColors.chartRed,
           onTap: () => context.go('/expenses/add'),
         ),
-      ),
-    ]);
+      ].map((btn) => isMobile
+        ? SizedBox(width: (MediaQuery.of(context).size.width - 24 - 24 - 24) / 3, child: btn)
+        : SizedBox(width: 160, child: btn)
+      ).toList(),
+    );
   }
 }
 
@@ -271,17 +265,21 @@ class _ActionButton extends StatelessWidget {
 
 class _SectionHeader extends StatelessWidget {
   final String title;
-  const _SectionHeader({required this.title});
+  final ThemeData? theme;
+  const _SectionHeader({required this.title, this.theme});
+
   @override
   Widget build(BuildContext context) => Text(title,
-    style: AppTheme.darkTheme.textTheme.titleLarge,
+    style: (theme ?? Theme.of(context)).textTheme.titleLarge,
   );
 }
 
 class _ErrorCard extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
-  const _ErrorCard({required this.message, required this.onRetry});
+  final ThemeData theme;
+  const _ErrorCard({required this.message, required this.onRetry, required this.theme});
+
   @override
   Widget build(BuildContext context) => Container(
     margin: const EdgeInsets.only(bottom: 20),
@@ -294,7 +292,7 @@ class _ErrorCard extends StatelessWidget {
     child: Row(children: [
       const Icon(Icons.warning_rounded, color: AppColors.error),
       const SizedBox(width: 12),
-      Expanded(child: Text(message, style: const TextStyle(color: AppColors.error))),
+      Expanded(child: Text(message, style: TextStyle(color: theme.colorScheme.onSurface))),
       TextButton(onPressed: onRetry, child: const Text('Retry')),
     ]),
   );

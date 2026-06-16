@@ -8,6 +8,7 @@ class PlanStatusBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme         = Theme.of(context);
     final plan          = subscription['plan'] as String? ?? 'free';
     final status        = subscription['status'] as String? ?? 'trial';
     final trialDaysLeft = subscription['trialDaysLeft'] as int?;
@@ -20,12 +21,12 @@ class PlanStatusBanner extends StatelessWidget {
         borderColor: AppColors.error.withValues(alpha: 0.3),
         iconColor: AppColors.error,
         child: Row(children: [
-          Expanded(
+          const Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('Subscription Expired',
+              Text('Subscription Expired',
                 style: TextStyle(color: AppColors.error, fontWeight: FontWeight.w700, fontSize: 14)),
-              const SizedBox(height: 2),
-              const Text('Renew your plan to continue using all features.',
+              SizedBox(height: 2),
+              Text('Renew your plan to continue using all features.',
                 style: TextStyle(color: AppColors.error, fontSize: 12)),
             ]),
           ),
@@ -62,7 +63,7 @@ class PlanStatusBanner extends StatelessWidget {
               const SizedBox(height: 2),
               Text('$trialDaysLeft days remaining on your trial.',
                 style: TextStyle(
-                  color: urgent ? AppColors.warning : AppColors.textSecondary, fontSize: 12,
+                  color: urgent ? AppColors.warning : theme.textTheme.bodySmall?.color, fontSize: 12,
                 )),
             ]),
           ),

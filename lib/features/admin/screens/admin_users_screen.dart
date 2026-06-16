@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/empty_state.dart';
 
 class AdminUsersScreen extends StatefulWidget {
@@ -44,6 +43,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   }
 
   Future<void> _editUser(Map<String, dynamic> user) async {
+    final theme = Theme.of(context);
     String selectedRole = user['role'] ?? 'staff';
     bool disabled = user['disabled'] ?? false;
     bool resetPassword = false;
@@ -54,15 +54,15 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              backgroundColor: AppColors.card,
+              backgroundColor: theme.cardColor,
               title: Text('Edit User: ${user['displayName']}'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   DropdownButtonFormField<String>(
-                    value: selectedRole,
+                    initialValue: selectedRole,
                     decoration: const InputDecoration(labelText: 'Role'),
-                    dropdownColor: AppColors.card,
+                    dropdownColor: theme.cardColor,
                     items: const [
                       DropdownMenuItem(value: 'owner', child: Text('Owner')),
                       DropdownMenuItem(value: 'manager', child: Text('Manager')),
@@ -77,7 +77,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                     title: const Text('Disable Login'),
                     value: disabled,
                     onChanged: (val) => setDialogState(() => disabled = val),
-                    activeColor: AppColors.error,
+                    activeThumbColor: AppColors.error,
                   ),
                   const SizedBox(height: 16),
                   CheckboxListTile(
@@ -120,7 +120,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
             showDialog(
               context: context,
               builder: (context) => AlertDialog(
-                backgroundColor: AppColors.card,
+                backgroundColor: theme.cardColor,
                 title: const Text('Password Reset Link'),
                 content: SelectableText(link, style: const TextStyle(fontFamily: 'monospace')),
                 actions: [
@@ -133,7 +133,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         _loadUsers();
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: AppColors.error));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
           setState(() => _loading = false);
         }
       }
@@ -142,11 +142,11 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        title: Text('Platform Users', style: AppTheme.darkTheme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+        title: Text('Platform Users', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
         actions: [
           IconButton(icon: const Icon(Icons.refresh_rounded), onPressed: _loadUsers),
           const SizedBox(width: 24),
@@ -172,9 +172,9 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                         return Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: AppColors.card,
+                            color: theme.cardColor,
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: AppColors.border),
+                            border: Border.all(color: theme.dividerColor),
                           ),
                           child: Row(
                             children: [
@@ -199,10 +199,12 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                   children: [
                                     Text(
                                       (u['displayName'] as String).isNotEmpty ? u['displayName'] : 'No Name Set',
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16,
+                                        color: theme.colorScheme.onSurface),
                                     ),
                                     const SizedBox(height: 4),
-                                    Text(u['email'] ?? '', style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                                    Text(u['email'] ?? '',
+                                      style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13)),
                                     const SizedBox(height: 8),
                                     Row(
                                       children: [
@@ -213,7 +215,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                             borderRadius: BorderRadius.circular(6),
                                             border: Border.all(color: AppColors.accent.withValues(alpha: 0.2)),
                                           ),
-                                          child: Text((u['role'] ?? 'staff').toUpperCase(), style: const TextStyle(color: AppColors.accent, fontSize: 10, fontWeight: FontWeight.bold)),
+                                          child: Text((u['role'] ?? 'staff').toUpperCase(),
+                                            style: const TextStyle(color: AppColors.accent, fontSize: 10, fontWeight: FontWeight.bold)),
                                         ),
                                         if (isSuspended) ...[
                                           const SizedBox(width: 8),
@@ -228,14 +231,15 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                           ),
                                         ],
                                         const SizedBox(width: 12),
-                                        Text('Business: ${u['businessId']}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                                        Text('Business: ${u['businessId']}',
+                                          style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12)),
                                       ],
                                     ),
                                   ],
                                 ),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.edit_rounded, color: AppColors.textSecondary),
+                                icon: Icon(Icons.edit_rounded, color: theme.colorScheme.onSurfaceVariant),
                                 onPressed: () => _editUser(u),
                                 tooltip: 'Edit User Settings',
                               ),

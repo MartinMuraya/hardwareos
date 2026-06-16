@@ -23,15 +23,16 @@ class PlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return GestureDetector(
       onTap: onSelect,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.card,
+          color: theme.cardColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppColors.accent : AppColors.border,
+            color: isSelected ? AppColors.accent : theme.dividerColor,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -41,7 +42,8 @@ class PlanCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                Text(name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14,
+                  color: theme.colorScheme.onSurface)),
                 if (isSelected)
                   const Icon(Icons.check_circle_rounded, color: AppColors.accent, size: 18),
               ],
@@ -56,7 +58,7 @@ class PlanCard extends StatelessWidget {
                   ),
                   TextSpan(
                     text: billing,
-                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -73,7 +75,7 @@ class PlanCard extends StatelessWidget {
                             const Icon(Icons.check_rounded, size: 14, color: AppColors.success),
                             const SizedBox(width: 6),
                             Expanded(
-                              child: Text(f.replaceAll('_', ' '), style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                              child: Text(f.replaceAll('_', ' '), style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant)),
                             ),
                           ],
                         ),
@@ -83,7 +85,7 @@ class PlanCard extends StatelessWidget {
             if (features.length > 3)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
-                child: Text('+ ${features.length - 3} more', style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+                child: Text('+ ${features.length - 3} more', style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurfaceVariant)),
               ),
           ],
         ),

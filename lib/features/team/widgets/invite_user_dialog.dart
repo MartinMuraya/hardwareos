@@ -57,22 +57,23 @@ class _InviteUserDialogState extends State<InviteUserDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return AlertDialog(
-      backgroundColor: AppColors.card,
-      title: const Text('Invite Staff', style: TextStyle(fontWeight: FontWeight.bold)),
+      backgroundColor: theme.cardColor,
+      title: Text('Invite Staff', style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Enter the Firebase UID of the user you wish to invite. The user must have already created an account on the login screen.',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+              style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _uidCtrl,
-              style: const TextStyle(color: AppColors.textPrimary),
+              style: TextStyle(color: theme.colorScheme.onSurface),
               decoration: const InputDecoration(
                 labelText: 'User UID',
                 hintText: 'e.g. jX9f2...',
@@ -81,19 +82,19 @@ class _InviteUserDialogState extends State<InviteUserDialog> {
             const SizedBox(height: 12),
             TextField(
               controller: _nameCtrl,
-              style: const TextStyle(color: AppColors.textPrimary),
+              style: TextStyle(color: theme.colorScheme.onSurface),
               decoration: const InputDecoration(
                 labelText: 'Display Name',
                 hintText: 'e.g. John Doe',
               ),
             ),
             const SizedBox(height: 16),
-            const Text('Role', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+            Text('Role', style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13)),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
               initialValue: _role,
-              dropdownColor: AppColors.card,
-              style: const TextStyle(color: AppColors.textPrimary),
+              dropdownColor: theme.cardColor,
+              style: TextStyle(color: theme.colorScheme.onSurface),
               decoration: const InputDecoration(
                 contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
@@ -119,9 +120,8 @@ class _InviteUserDialogState extends State<InviteUserDialog> {
         ),
         FilledButton(
           onPressed: _loading ? null : _invite,
-          style: FilledButton.styleFrom(backgroundColor: AppColors.accent),
           child: _loading 
-            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.background))
+            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
             : const Text('Invite'),
         ),
       ],

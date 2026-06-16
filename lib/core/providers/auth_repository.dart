@@ -3,7 +3,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 
 class AuthRepository {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -25,23 +25,26 @@ class AuthRepository {
 
   Future<UserCredential?> signInWithGoogle() async {
     try {
-      // Trigger the authentication flow
-      final googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return null; // The user canceled the sign-in
+      GoogleSignInAccount? googleUser;
 
-      // Obtain the auth details from the request
+      if (kIsWeb) {
+        googleUser = await _googleSignIn.signInSilently();
+        googleUser ??= await _googleSignIn.signIn();
+      } else {
+        googleUser = await _googleSignIn.signIn();
+      }
+
+      if (googleUser == null) return null;
+
       final googleAuth = await googleUser.authentication;
-
-      // Create a new credential
       final OAuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      // Once signed in, return the UserCredential
       return await _auth.signInWithCredential(credential);
     } catch (e) {
-      print('Google Sign-In Error: $e');
+      debugPrint('Google Sign-In Error: $e');
       rethrow;
     }
   }
@@ -92,7 +95,7 @@ class AuthRepository {
       
       return downloadUrl;
     } catch (e) {
-      print('Error uploading profile picture: $e');
+      debugPrint('Error uploading profile picture: $e');
       return null;
     }
   }

@@ -2,23 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
 
 class PendingApprovalScreen extends StatelessWidget {
   const PendingApprovalScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Center(
         child: Container(
-          width: 400,
+          constraints: const BoxConstraints(maxWidth: 400),
+          margin: const EdgeInsets.all(24),
           padding: const EdgeInsets.all(40),
           decoration: BoxDecoration(
-            color: AppColors.card,
+            color: theme.cardColor,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: theme.dividerColor),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -34,13 +35,13 @@ class PendingApprovalScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text('Pending Approval',
-                style: AppTheme.darkTheme.textTheme.displaySmall,
+                style: theme.textTheme.displaySmall,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Your business registration is currently under review by the platform administrators.\n\nYou will gain access once your account is approved.',
-                style: TextStyle(color: AppColors.textSecondary, height: 1.5),
+                style: TextStyle(color: theme.colorScheme.onSurfaceVariant, height: 1.5),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
@@ -49,8 +50,6 @@ class PendingApprovalScreen extends StatelessWidget {
                 icon: const Icon(Icons.logout_rounded, size: 18),
                 label: const Text('Sign Out'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.textPrimary,
-                  side: const BorderSide(color: AppColors.border),
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 ),
               ),

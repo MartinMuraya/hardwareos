@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -63,11 +62,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        title: Text('Platform Admin', style: AppTheme.darkTheme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+        title: Text('Platform Admin', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
@@ -81,7 +81,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Platform Overview', style: AppTheme.darkTheme.textTheme.displaySmall),
+            Text('Platform Overview', style: theme.textTheme.displaySmall),
             const SizedBox(height: 24),
             if (_error != null)
               Container(
@@ -105,24 +105,23 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   physics: const NeverScrollableScrollPhysics(),
                   childAspectRatio: aspectRatio,
                   children: [
-                      _AdminKpiCard(title: 'Total Businesses',      value: _loadingStats ? '...' : '$_totalBusinesses',      icon: Icons.store_rounded,           color: AppColors.chartBlue),
-                      _AdminKpiCard(title: 'Active Businesses',      value: _loadingStats ? '...' : '$_activeBusinesses',      icon: Icons.verified_rounded,         color: AppColors.chartGreen),
-                      _AdminKpiCard(title: 'Pending Approvals',      value: _loadingStats ? '...' : '$_pendingBusinessesCount', icon: Icons.hourglass_empty_rounded,  color: AppColors.chartAmber),
-                      _AdminKpiCard(title: 'Suspended Businesses',   value: _loadingStats ? '...' : '$_suspendedBusinessesCount', icon: Icons.block_rounded,          color: AppColors.error),
-                      _AdminKpiCard(title: 'Trial Accounts',         value: _loadingStats ? '...' : '$_trialAccounts',         icon: Icons.timer_rounded,            color: AppColors.accent),
-                      _AdminKpiCard(title: 'Expired Subscriptions',  value: _loadingStats ? '...' : '$_expiredSubscriptions',  icon: Icons.alarm_off_rounded,        color: AppColors.textSecondary),
-                      _AdminKpiCard(title: 'Platform Users',         value: _loadingStats ? '...' : '$_totalUsers',            icon: Icons.people_rounded,           color: AppColors.chartPurple),
-                      _AdminKpiCard(title: 'Sales Transactions',     value: _loadingStats ? '...' : '$_totalSales',            icon: Icons.point_of_sale_rounded,    color: AppColors.success),
-                      _AdminKpiCard(title: 'Revenue This Month',     value: _loadingStats ? '...' : 'KES ${_monthlyRevenue.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}', icon: Icons.trending_up_rounded, color: AppColors.chartGreen),
-                      _AdminKpiCard(title: 'Total Revenue (All-Time)', value: _loadingStats ? '...' : 'KES ${_totalRevenue.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}', icon: Icons.monetization_on_rounded, color: AppColors.chartBlue),
-                      _AdminKpiCard(title: 'Paid Subscriptions',     value: _loadingStats ? '...' : '$_totalTransactions',     icon: Icons.receipt_long_rounded,     color: AppColors.chartAmber),
+                      _AdminKpiCard(title: 'Total Businesses',      value: _loadingStats ? '...' : '$_totalBusinesses',      icon: Icons.store_rounded,           color: AppColors.chartBlue, theme: theme),
+                      _AdminKpiCard(title: 'Active Businesses',      value: _loadingStats ? '...' : '$_activeBusinesses',      icon: Icons.verified_rounded,         color: AppColors.chartGreen, theme: theme),
+                      _AdminKpiCard(title: 'Pending Approvals',      value: _loadingStats ? '...' : '$_pendingBusinessesCount', icon: Icons.hourglass_empty_rounded,  color: AppColors.chartAmber, theme: theme),
+                      _AdminKpiCard(title: 'Suspended Businesses',   value: _loadingStats ? '...' : '$_suspendedBusinessesCount', icon: Icons.block_rounded,          color: AppColors.error, theme: theme),
+                      _AdminKpiCard(title: 'Trial Accounts',         value: _loadingStats ? '...' : '$_trialAccounts',         icon: Icons.timer_rounded,            color: AppColors.accent, theme: theme),
+                      _AdminKpiCard(title: 'Expired Subscriptions',  value: _loadingStats ? '...' : '$_expiredSubscriptions',  icon: Icons.alarm_off_rounded,        color: theme.colorScheme.onSurfaceVariant, theme: theme),
+                      _AdminKpiCard(title: 'Platform Users',         value: _loadingStats ? '...' : '$_totalUsers',            icon: Icons.people_rounded,           color: AppColors.chartPurple, theme: theme),
+                      _AdminKpiCard(title: 'Sales Transactions',     value: _loadingStats ? '...' : '$_totalSales',            icon: Icons.point_of_sale_rounded,    color: AppColors.success, theme: theme),
+                      _AdminKpiCard(title: 'Revenue This Month',     value: _loadingStats ? '...' : 'KES ${_monthlyRevenue.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}', icon: Icons.trending_up_rounded, color: AppColors.chartGreen, theme: theme),
+                      _AdminKpiCard(title: 'Total Revenue (All-Time)', value: _loadingStats ? '...' : 'KES ${_totalRevenue.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}', icon: Icons.monetization_on_rounded, color: AppColors.chartBlue, theme: theme),
+                      _AdminKpiCard(title: 'Paid Subscriptions',     value: _loadingStats ? '...' : '$_totalTransactions',     icon: Icons.receipt_long_rounded,     color: AppColors.chartAmber, theme: theme),
                     ],
                 );
               },
             ),
 
             const SizedBox(height: 48),
-            // The pending approvals list has been moved to AdminBusinessesScreen
           ],
         ),
       ),
@@ -135,17 +134,18 @@ class _AdminKpiCard extends StatelessWidget {
   final String value;
   final IconData icon;
   final Color color;
+  final ThemeData theme;
 
-  const _AdminKpiCard({required this.title, required this.value, required this.icon, required this.color});
+  const _AdminKpiCard({required this.title, required this.value, required this.icon, required this.color, required this.theme});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: theme.dividerColor),
       ),
       child: Row(
         children: [
@@ -166,9 +166,9 @@ class _AdminKpiCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(title, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w500)),
+                  Text(title, style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13, fontWeight: FontWeight.w500)),
                   const SizedBox(height: 4),
-                  Text(value, style: const TextStyle(color: AppColors.textPrimary, fontSize: 24, fontWeight: FontWeight.bold)),
+                  Text(value, style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 24, fontWeight: FontWeight.bold)),
                 ],
               ),
             ),

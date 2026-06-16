@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -47,9 +46,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final auth = context.watch<AuthProvider>();
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -65,11 +65,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       decoration: BoxDecoration(
                         color: AppColors.accent, borderRadius: BorderRadius.circular(18),
                       ),
-                      child: const Icon(Icons.hardware_rounded, color: AppColors.background, size: 36),
+                      child: const Icon(Icons.hardware_rounded, color: Colors.white, size: 36),
                     ),
                     const SizedBox(height: 16),
                     Text('Get Started',
-                      style: AppTheme.darkTheme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w800),
+                      style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(height: 6),
                     const Text('14-day free trial • No credit card required',
@@ -83,7 +83,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Row(children: [
                   _StepDot(active: true, done: auth.isAuthenticated || _accountCreated, label: '1. Account'),
                   Expanded(child: Container(height: 2,
-                    color: (auth.isAuthenticated || _accountCreated) ? AppColors.accent : AppColors.border)),
+                    color: (auth.isAuthenticated || _accountCreated) ? AppColors.accent : theme.dividerColor)),
                   _StepDot(active: auth.isAuthenticated || _accountCreated, done: false, label: '2. Business'),
                 ]),
                 const SizedBox(height: 28),
@@ -91,9 +91,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Container(
                   padding: const EdgeInsets.all(28),
                   decoration: BoxDecoration(
-                    color: AppColors.card,
+                    color: theme.cardColor,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: theme.dividerColor),
                   ),
                   child: Form(
                     key: _formKey,
@@ -135,14 +135,14 @@ class _AccountStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      Text('Create Account', style: AppTheme.darkTheme.textTheme.headlineMedium),
+      Text('Create Account', style: theme.textTheme.headlineMedium),
       const SizedBox(height: 20),
       if (error != null) _ErrorBanner(message: error!),
       TextFormField(
         controller: emailCtrl,
         keyboardType: TextInputType.emailAddress,
-        style: const TextStyle(color: AppColors.textPrimary),
         decoration: const InputDecoration(labelText: 'Email Address',
           prefixIcon: Icon(Icons.email_outlined, size: 18)),
         validator: (v) => v == null || !v.contains('@') ? 'Enter a valid email' : null,
@@ -151,7 +151,6 @@ class _AccountStep extends StatelessWidget {
       TextFormField(
         controller: passCtrl,
         obscureText: obscure,
-        style: const TextStyle(color: AppColors.textPrimary),
         decoration: InputDecoration(labelText: 'Password',
           prefixIcon: const Icon(Icons.lock_outline, size: 18),
           suffixIcon: IconButton(
@@ -166,19 +165,19 @@ class _AccountStep extends StatelessWidget {
         child: isSubmitting
           ? const SizedBox(width: 20, height: 20,
               child: CircularProgressIndicator(strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation(AppColors.background)))
+                valueColor: AlwaysStoppedAnimation(Colors.white)))
           : const Text('Create Account'),
       ),
       const SizedBox(height: 24),
 
       // Divider
       Row(children: [
-        Expanded(child: Divider(color: AppColors.border)),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Text('OR', style: TextStyle(color: AppColors.textHint, fontSize: 12)),
+        Expanded(child: Divider(color: theme.dividerColor)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text('OR', style: theme.textTheme.labelSmall?.copyWith(fontSize: 10)),
         ),
-        Expanded(child: Divider(color: AppColors.border)),
+        Expanded(child: Divider(color: theme.dividerColor)),
       ]),
       const SizedBox(height: 24),
 
@@ -194,16 +193,16 @@ class _AccountStep extends StatelessWidget {
           ),
           label: const Text('Continue with Google'),
           style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.textPrimary,
-            side: const BorderSide(color: AppColors.border),
+            foregroundColor: theme.colorScheme.onSurface,
+            side: BorderSide(color: theme.dividerColor),
             padding: const EdgeInsets.symmetric(vertical: 12),
           ),
         ),
       ),
       const SizedBox(height: 12),
       Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-        const Text('Already have an account? ',
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+        Text('Already have an account? ',
+          style: theme.textTheme.bodySmall),
         TextButton(onPressed: onLogin, child: const Text('Sign In')),
       ]),
     ]);
@@ -223,20 +222,20 @@ class _BusinessStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Row(children: [
         const Icon(Icons.store_rounded, color: AppColors.accent, size: 24),
         const SizedBox(width: 10),
-        Text('Your Business', style: AppTheme.darkTheme.textTheme.headlineMedium),
+        Text('Your Business', style: theme.textTheme.headlineMedium),
       ]),
       const SizedBox(height: 6),
-      const Text('This is your store name — visible to your team.',
-        style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+      Text('This is your store name — visible to your team.',
+        style: theme.textTheme.bodySmall),
       const SizedBox(height: 24),
       if (error != null) _ErrorBanner(message: error!),
       TextFormField(
         controller: bizNameCtrl,
-        style: const TextStyle(color: AppColors.textPrimary),
         decoration: const InputDecoration(
           labelText: 'Hardware Store Name',
           prefixIcon: Icon(Icons.storefront_outlined, size: 18),
@@ -271,7 +270,7 @@ class _BusinessStep extends StatelessWidget {
         child: isSubmitting
           ? const SizedBox(width: 20, height: 20,
               child: CircularProgressIndicator(strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation(AppColors.background)))
+                valueColor: AlwaysStoppedAnimation(Colors.white)))
           : const Text('Launch My Store 🚀'),
       ),
     ]);
@@ -284,17 +283,18 @@ class _StepDot extends StatelessWidget {
   const _StepDot({required this.active, required this.done, required this.label});
   @override
   Widget build(BuildContext context) {
-    final color = done || active ? AppColors.accent : AppColors.textHint;
+    final theme = Theme.of(context);
+    final color = done || active ? AppColors.accent : theme.disabledColor;
     return Column(children: [
       Container(
         width: 28, height: 28,
         decoration: BoxDecoration(
-          color: done ? AppColors.accent : (active ? AppColors.accent.withValues(alpha: 0.15) : AppColors.surfaceLight),
+          color: done ? AppColors.accent : (active ? AppColors.accent.withValues(alpha: 0.15) : theme.colorScheme.surfaceContainer),
           shape: BoxShape.circle,
           border: Border.all(color: color, width: 2),
         ),
         child: done
-          ? const Icon(Icons.check, size: 14, color: AppColors.background)
+          ? Icon(Icons.check, size: 14, color: theme.colorScheme.onPrimary)
           : null,
       ),
       const SizedBox(height: 4),

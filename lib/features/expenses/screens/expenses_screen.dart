@@ -6,7 +6,7 @@ import '../../../core/providers/auth_provider.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/models/expense.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/responsive.dart';
 import '../../../core/widgets/loading_overlay.dart';
 import '../../../core/widgets/empty_state.dart';
 
@@ -76,13 +76,16 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final padding = Responsive.padding(context);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: LoadingOverlay(
         isLoading: _loading && _expenses.isEmpty,
         message: 'Loading expenses...',
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(padding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -92,9 +95,10 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Expenses', style: AppTheme.darkTheme.textTheme.displayMedium),
+                        Text('Expenses', style: theme.textTheme.displayMedium),
                         const SizedBox(height: 4),
-                        const Text('Track and manage business expenses', style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+                        Text('Track and manage business expenses',
+                          style: theme.textTheme.bodyMedium),
                       ],
                     ),
                   ),
@@ -105,13 +109,13 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     },
                     icon: const Icon(Icons.add, size: 18),
                     label: const Text('Add Expense'),
-                    style: FilledButton.styleFrom(backgroundColor: AppColors.chartRed, foregroundColor: AppColors.background),
+                    style: FilledButton.styleFrom(backgroundColor: AppColors.chartRed),
                   ),
                 ],
               ),
               const SizedBox(height: 24),
               if (_error != null && _expenses.isEmpty)
-                Center(child: Text(_error!, style: const TextStyle(color: AppColors.error))),
+                Center(child: Text(_error!, style: TextStyle(color: theme.colorScheme.onSurface))),
               Expanded(
                 child: _expenses.isEmpty && !_loading
                     ? EmptyState(
@@ -127,7 +131,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     : RefreshIndicator(
                         onRefresh: () => _loadExpenses(refresh: true),
                         color: AppColors.accent,
-                        backgroundColor: AppColors.card,
+                        backgroundColor: theme.cardColor,
                         child: ListView.separated(
                           itemCount: _expenses.length + (_hasMore ? 1 : 0),
                           separatorBuilder: (_, __) => const SizedBox(height: 12),
@@ -135,12 +139,12 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                             if (i == _expenses.length) {
                               _loadExpenses();
                               return const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 20),
-                                child: Center(child: CircularProgressIndicator(color: AppColors.accent)),
-                              );
+                              padding: EdgeInsets.symmetric(vertical: 20),
+                              child: Center(child: CircularProgressIndicator(color: AppColors.accent)),
+                            );
                             }
                             final exp = _expenses[i];
-                            return _ExpenseCard(expense: exp, fmt: _fmt);
+                            return _ExpenseCard(expense: exp, fmt: _fmt, theme: theme);
                           },
                         ),
                       ),
@@ -156,17 +160,18 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 class _ExpenseCard extends StatelessWidget {
   final Expense expense;
   final NumberFormat fmt;
+  final ThemeData theme;
 
-  const _ExpenseCard({required this.expense, required this.fmt});
+  const _ExpenseCard({required this.expense, required this.fmt, required this.theme});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: theme.dividerColor),
       ),
       child: Row(
         children: [
@@ -180,16 +185,20 @@ class _ExpenseCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(expense.category, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                Text(expense.category,
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14,
+                    color: theme.colorScheme.onSurface)),
                 const SizedBox(height: 4),
                 if (expense.note.isNotEmpty)
-                  Text(expense.note, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  Text(expense.note, style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
                 const SizedBox(height: 4),
-                Text(DateFormat('MMM d, y • h:mm a').format(expense.createdAt), style: const TextStyle(color: AppColors.textHint, fontSize: 11)),
+                Text(DateFormat('MMM d, y • h:mm a').format(expense.createdAt),
+                  style: TextStyle(color: theme.hintColor, fontSize: 11)),
               ],
             ),
           ),
-          Text(fmt.format(expense.amount), style: const TextStyle(color: AppColors.chartRed, fontWeight: FontWeight.w700, fontSize: 15)),
+          Text(fmt.format(expense.amount),
+            style: const TextStyle(color: AppColors.chartRed, fontWeight: FontWeight.w700, fontSize: 15)),
         ],
       ),
     );

@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -36,9 +35,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final auth = context.watch<AuthProvider>();
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -56,17 +56,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         color: AppColors.accent,
                         borderRadius: BorderRadius.circular(18),
                       ),
-                      child: const Icon(Icons.hardware_rounded, color: AppColors.background, size: 36),
+                      child: const Icon(Icons.hardware_rounded, color: Colors.white, size: 36),
                     ),
                     const SizedBox(height: 16),
                     Text('HardwareOS',
-                      style: AppTheme.darkTheme.textTheme.displayMedium?.copyWith(
+                      style: theme.textTheme.displayMedium?.copyWith(
                         fontWeight: FontWeight.w800,
                       ),
                     ),
                     const SizedBox(height: 6),
-                    const Text('Your Store, Fully Operated.',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                    Text('Your Store, Fully Operated.',
+                      style: theme.textTheme.bodyMedium,
                     ),
                   ]),
                 ),
@@ -76,9 +76,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 Container(
                   padding: const EdgeInsets.all(28),
                   decoration: BoxDecoration(
-                    color: AppColors.card,
+                    color: theme.cardColor,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: theme.dividerColor),
                   ),
                   child: Form(
                     key: _formKey,
@@ -86,11 +86,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Text('Sign In',
-                          style: AppTheme.darkTheme.textTheme.headlineMedium,
+                          style: theme.textTheme.headlineMedium,
                         ),
                         const SizedBox(height: 6),
-                        const Text('Welcome back to your store dashboard.',
-                          style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                        Text('Welcome back to your store dashboard.',
+                          style: theme.textTheme.bodySmall,
                         ),
                         const SizedBox(height: 24),
 
@@ -102,7 +102,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         TextFormField(
                           controller: _emailCtrl,
                           keyboardType: TextInputType.emailAddress,
-                          style: const TextStyle(color: AppColors.textPrimary),
                           decoration: const InputDecoration(
                             labelText: 'Email Address',
                             prefixIcon: Icon(Icons.email_outlined, size: 18),
@@ -116,7 +115,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         TextFormField(
                           controller: _passCtrl,
                           obscureText: _obscure,
-                          style: const TextStyle(color: AppColors.textPrimary),
                           decoration: InputDecoration(
                             labelText: 'Password',
                             prefixIcon: const Icon(Icons.lock_outline, size: 18),
@@ -145,7 +143,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: _isSubmitting
                               ? const SizedBox(width: 20, height: 20,
                                   child: CircularProgressIndicator(strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation(AppColors.background)),
+                                    valueColor: AlwaysStoppedAnimation(Colors.white)),
                                 )
                               : const Text('Sign In'),
                         ),
@@ -153,12 +151,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         // Divider
                         Row(children: [
-                          Expanded(child: Divider(color: AppColors.border)),
-                          const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16),
-                            child: Text('OR', style: TextStyle(color: AppColors.textHint, fontSize: 12)),
+                          Expanded(child: Divider(color: theme.dividerColor)),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text('OR', style: theme.textTheme.labelSmall?.copyWith(fontSize: 10)),
                           ),
-                          Expanded(child: Divider(color: AppColors.border)),
+                          Expanded(child: Divider(color: theme.dividerColor)),
                         ]),
                         const SizedBox(height: 24),
 
@@ -174,8 +172,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             label: const Text('Continue with Google'),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.textPrimary,
-                              side: const BorderSide(color: AppColors.border),
+                              foregroundColor: theme.colorScheme.onSurface,
+                              side: BorderSide(color: theme.dividerColor),
                               padding: const EdgeInsets.symmetric(vertical: 12),
                             ),
                           ),
@@ -185,8 +183,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Text("Don't have an account? ",
-                              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                            Text("Don't have an account? ",
+                              style: theme.textTheme.bodySmall,
                             ),
                             TextButton(
                               onPressed: () => context.go('/register'),

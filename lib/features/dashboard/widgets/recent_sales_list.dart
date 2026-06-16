@@ -9,11 +9,12 @@ class RecentSalesList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: theme.dividerColor),
       ),
       child: Column(
         children: sales.asMap().entries.map((entry) {
@@ -25,7 +26,7 @@ class RecentSalesList extends StatelessWidget {
           final createdAt = DateTime.tryParse(sale['createdAt']?.toString() ?? '') ?? DateTime.now();
 
           return Column(children: [
-            if (i > 0) const Divider(height: 1),
+            if (i > 0) Divider(height: 1, color: theme.dividerColor),
             ListTile(
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               leading: Container(
@@ -37,12 +38,13 @@ class RecentSalesList extends StatelessWidget {
                 child: const Icon(Icons.receipt_rounded, color: AppColors.accent, size: 18),
               ),
               title: Text(fmt.format(total),
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14,
+                  color: theme.colorScheme.onSurface)),
               subtitle: Row(children: [
                 _PaymentChip(method: method),
                 const SizedBox(width: 8),
                 Text(DateFormat('h:mm a').format(createdAt),
-                  style: const TextStyle(color: AppColors.textHint, fontSize: 11)),
+                  style: TextStyle(color: theme.hintColor, fontSize: 11)),
               ]),
               trailing: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -51,8 +53,8 @@ class RecentSalesList extends StatelessWidget {
                   Text('+${fmt.format(profit)}',
                     style: const TextStyle(color: AppColors.success,
                       fontWeight: FontWeight.w600, fontSize: 13)),
-                  const Text('profit',
-                    style: TextStyle(color: AppColors.textHint, fontSize: 10)),
+                  Text('profit',
+                    style: TextStyle(color: theme.hintColor, fontSize: 10)),
                 ],
               ),
             ),

@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/responsive.dart';
 import '../../../core/widgets/loading_overlay.dart';
 
 class AddProductScreen extends StatefulWidget {
@@ -63,7 +63,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✅ Product added successfully!')));
+          const SnackBar(content: Text('Product added successfully!')));
         context.pop();
       }
     } on FunctionsException catch (e) {
@@ -73,21 +73,21 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return LoadingOverlay(
       isLoading: _isSubmitting,
       message: 'Adding product...',
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
           title: const Text('Add Product'),
-          backgroundColor: AppColors.surface,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_rounded),
             onPressed: () => context.pop(),
           ),
         ),
         body: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(Responsive.padding(context)),
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 600),
@@ -96,12 +96,12 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (_error != null) _ErrorCard(message: _error!),
+                    if (_error != null) _ErrorCard(message: _error!, theme: theme),
 
-                    _Section(title: 'Product Info', children: [
+                    _Section(title: 'Product Info', theme: theme, children: [
                       TextFormField(
                         controller: _nameCtrl,
-                        style: const TextStyle(color: AppColors.textPrimary),
+                        style: TextStyle(color: theme.colorScheme.onSurface),
                         decoration: const InputDecoration(labelText: 'Product Name'),
                         validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
                       ),
@@ -110,7 +110,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         Expanded(
                           child: TextFormField(
                             controller: _skuCtrl,
-                            style: const TextStyle(color: AppColors.textPrimary),
+                            style: TextStyle(color: theme.colorScheme.onSurface),
                             decoration: const InputDecoration(labelText: 'SKU (optional)'),
                           ),
                         ),
@@ -118,8 +118,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         Expanded(
                           child: DropdownButtonFormField<String>(
                             initialValue: _category,
-                            dropdownColor: AppColors.card,
-                            style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                            dropdownColor: theme.cardColor,
+                            style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 14),
                             decoration: const InputDecoration(labelText: 'Category'),
                             items: _categories.map((c) =>
                               DropdownMenuItem(value: c, child: Text(c))).toList(),
@@ -130,13 +130,13 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     ]),
                     const SizedBox(height: 20),
 
-                    _Section(title: 'Pricing', children: [
+                    _Section(title: 'Pricing', theme: theme, children: [
                       Row(children: [
                         Expanded(
                           child: TextFormField(
                             controller: _costCtrl,
                             keyboardType: TextInputType.number,
-                            style: const TextStyle(color: AppColors.textPrimary),
+                            style: TextStyle(color: theme.colorScheme.onSurface),
                             decoration: const InputDecoration(labelText: 'Cost Price (KES)'),
                             onChanged: (_) => setState(() {}),
                             validator: (v) {
@@ -150,7 +150,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           child: TextFormField(
                             controller: _priceCtrl,
                             keyboardType: TextInputType.number,
-                            style: const TextStyle(color: AppColors.textPrimary),
+                            style: TextStyle(color: theme.colorScheme.onSurface),
                             decoration: const InputDecoration(labelText: 'Selling Price (KES)'),
                             onChanged: (_) => setState(() {}),
                             validator: (v) {
@@ -162,18 +162,18 @@ class _AddProductScreenState extends State<AddProductScreen> {
                       ]),
                       if (_costCtrl.text.isNotEmpty && _priceCtrl.text.isNotEmpty) ...[
                         const SizedBox(height: 12),
-                        _MarginBar(margin: _margin),
+                        _MarginBar(margin: _margin, theme: theme),
                       ],
                     ]),
                     const SizedBox(height: 20),
 
-                    _Section(title: 'Stock', children: [
+                    _Section(title: 'Stock', theme: theme, children: [
                       Row(children: [
                         Expanded(
                           child: TextFormField(
                             controller: _qtyCtrl,
                             keyboardType: TextInputType.number,
-                            style: const TextStyle(color: AppColors.textPrimary),
+                            style: TextStyle(color: theme.colorScheme.onSurface),
                             decoration: const InputDecoration(labelText: 'Initial Quantity'),
                             validator: (v) {
                               final n = int.tryParse(v ?? '');
@@ -186,7 +186,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           child: TextFormField(
                             controller: _reorderCtrl,
                             keyboardType: TextInputType.number,
-                            style: const TextStyle(color: AppColors.textPrimary),
+                            style: TextStyle(color: theme.colorScheme.onSurface),
                             decoration: const InputDecoration(labelText: 'Reorder Level'),
                             validator: (v) {
                               final n = int.tryParse(v ?? '');
@@ -222,20 +222,21 @@ class _AddProductScreenState extends State<AddProductScreen> {
 class _Section extends StatelessWidget {
   final String title;
   final List<Widget> children;
-  const _Section({required this.title, required this.children});
+  final ThemeData theme;
+  const _Section({required this.title, required this.children, required this.theme});
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(title, style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-        color: AppColors.textSecondary, fontSize: 12,
+      Text(title, style: TextStyle(
+        color: theme.colorScheme.onSurfaceVariant, fontSize: 12,
         fontWeight: FontWeight.w600, letterSpacing: 0.8)),
       const SizedBox(height: 12),
       Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.card, borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.border)),
+          color: theme.cardColor, borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: theme.dividerColor)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: children),
       ),
     ],
@@ -244,14 +245,15 @@ class _Section extends StatelessWidget {
 
 class _MarginBar extends StatelessWidget {
   final double margin;
-  const _MarginBar({required this.margin});
+  final ThemeData theme;
+  const _MarginBar({required this.margin, required this.theme});
   @override
   Widget build(BuildContext context) {
     final color = margin < 0
         ? AppColors.error
         : margin < 15 ? AppColors.warning : AppColors.success;
     return Row(children: [
-      const Text('Margin: ', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+      Text('Margin: ', style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12)),
       Text('${margin.toStringAsFixed(1)}%',
         style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 12)),
       const SizedBox(width: 10),
@@ -260,7 +262,7 @@ class _MarginBar extends StatelessWidget {
           borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
             value: (margin / 100).clamp(0.0, 1.0),
-            backgroundColor: AppColors.border,
+            backgroundColor: theme.dividerColor,
             valueColor: AlwaysStoppedAnimation(color),
             minHeight: 4,
           ),
@@ -272,7 +274,8 @@ class _MarginBar extends StatelessWidget {
 
 class _ErrorCard extends StatelessWidget {
   final String message;
-  const _ErrorCard({required this.message});
+  final ThemeData theme;
+  const _ErrorCard({required this.message, required this.theme});
   @override
   Widget build(BuildContext context) => Container(
     margin: const EdgeInsets.only(bottom: 16),

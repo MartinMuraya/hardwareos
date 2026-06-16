@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/responsive.dart';
 import '../../../core/widgets/loading_overlay.dart';
 
 class AddExpenseScreen extends StatefulWidget {
@@ -54,7 +55,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✅ Expense recorded successfully!')),
+          const SnackBar(content: Text('Expense recorded successfully!')),
         );
         context.pop();
       }
@@ -65,21 +66,21 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return LoadingOverlay(
       isLoading: _submitting,
       message: 'Recording expense...',
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
           title: const Text('Add Expense'),
-          backgroundColor: AppColors.surface,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_rounded),
             onPressed: () => context.pop(),
           ),
         ),
         body: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(Responsive.padding(context)),
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 560),
@@ -88,17 +89,18 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (_error != null) _ErrorCard(message: _error!),
+                    if (_error != null) _ErrorCard(message: _error!, theme: theme),
 
                     // Amount
                     _Section(
                       title: 'Amount',
+                      theme: theme,
                       child: TextFormField(
                         controller: _amountCtrl,
                         keyboardType: TextInputType.number,
                         autofocus: true,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurface,
                           fontSize: 28,
                           fontWeight: FontWeight.w700,
                         ),
@@ -106,7 +108,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                           hintText: '0.00',
                           prefixText: 'KES  ',
                           prefixStyle: TextStyle(
-                            color: AppColors.textSecondary,
                             fontSize: 20,
                             fontWeight: FontWeight.w400,
                           ),
@@ -125,6 +126,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     // Category
                     _Section(
                       title: 'Category',
+                      theme: theme,
                       child: Wrap(
                         spacing: 8,
                         runSpacing: 8,
@@ -139,12 +141,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                               decoration: BoxDecoration(
                                 color: sel
                                     ? AppColors.chartRed.withValues(alpha: 0.12)
-                                    : AppColors.surfaceLight,
+                                    : theme.colorScheme.surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
                                   color: sel
                                       ? AppColors.chartRed
-                                      : AppColors.border,
+                                      : theme.dividerColor,
                                   width: sel ? 1.5 : 1,
                                 ),
                               ),
@@ -152,7 +154,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                                 style: TextStyle(
                                   color: sel
                                       ? AppColors.chartRed
-                                      : AppColors.textSecondary,
+                                      : theme.colorScheme.onSurfaceVariant,
                                   fontWeight: sel
                                       ? FontWeight.w600 : FontWeight.w400,
                                   fontSize: 13,
@@ -168,11 +170,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     // Note
                     _Section(
                       title: 'Note (optional)',
+                      theme: theme,
                       child: TextFormField(
                         controller: _noteCtrl,
                         maxLines: 3,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary, fontSize: 14),
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurface, fontSize: 14),
                         decoration: const InputDecoration(
                           hintText: 'Add a description...',
                           border: InputBorder.none,
@@ -190,7 +193,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         backgroundColor: AppColors.chartRed,
-                        foregroundColor: AppColors.textPrimary,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
                       ),
@@ -209,8 +211,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 class _Section extends StatelessWidget {
   final String title;
   final Widget child;
+  final ThemeData theme;
 
-  const _Section({required this.title, required this.child});
+  const _Section({required this.title, required this.child, required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -219,8 +222,8 @@ class _Section extends StatelessWidget {
       children: [
         Text(
           title.toUpperCase(),
-          style: const TextStyle(
-            color: AppColors.textHint,
+          style: TextStyle(
+            color: theme.hintColor,
             fontSize: 11,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.9,
@@ -231,9 +234,9 @@ class _Section extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.card,
+            color: theme.cardColor,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: theme.dividerColor),
           ),
           child: child,
         ),
@@ -244,7 +247,8 @@ class _Section extends StatelessWidget {
 
 class _ErrorCard extends StatelessWidget {
   final String message;
-  const _ErrorCard({required this.message});
+  final ThemeData theme;
+  const _ErrorCard({required this.message, required this.theme});
 
   @override
   Widget build(BuildContext context) {

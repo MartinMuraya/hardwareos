@@ -3,8 +3,9 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/business_provider.dart';
+import '../providers/theme_provider.dart';
 import '../theme/app_colors.dart';
-import '../theme/app_theme.dart';
+import '../utils/responsive.dart';
 
 class AppScaffold extends StatefulWidget {
   final Widget child;
@@ -35,48 +36,109 @@ class _AppScaffoldState extends State<AppScaffold> {
 
   @override
   Widget build(BuildContext context) {
-    final isWide     = MediaQuery.of(context).size.width >= 800;
+    final themeProvider = context.watch<ThemeProvider>();
+    final theme = Theme.of(context);
     final selectedIdx = _selectedIndex(context);
-    final auth       = context.watch<AuthProvider>();
-    final biz        = context.watch<BusinessProvider>();
+    final auth = context.watch<AuthProvider>();
+    final biz = context.watch<BusinessProvider>();
+    final isMobile = Responsive.isMobile(context);
+    final isDesktop = Responsive.isDesktop(context);
 
-    if (isWide) {
-      return Scaffold(
-        backgroundColor: AppColors.background,
-        body: Row(
-          children: [
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      drawer: !isDesktop ? Drawer(
+        child: _SideNav(
+          selectedIndex: selectedIdx,
+          navItems: _navItems,
+          businessName: biz.businessName ?? 'HardwareOS',
+          userRole: auth.userRole ?? 'staff',
+          plan: biz.plan ?? 'free',
+          subscriptionStatus: biz.subscriptionStatus ?? 'trial',
+          onSignOut: () => auth.signOut(),
+          isDrawer: true,
+        ),
+      ) : null,
+      appBar: !isDesktop ? AppBar(
+        title: Text(_navItems[selectedIdx].label),
+        actions: [
+          IconButton(
+            icon: Icon(themeProvider.isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded),
+            onPressed: () => themeProvider.toggleTheme(!themeProvider.isDarkMode),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ) : null,
+      body: Row(
+        children: [
+          if (isDesktop)
             _SideNav(
               selectedIndex: selectedIdx,
               navItems: _navItems,
               businessName: biz.businessName ?? 'HardwareOS',
-              userRole:     auth.userRole ?? 'staff',
-              plan:         biz.plan ?? 'free',
+              userRole: auth.userRole ?? 'staff',
+              plan: biz.plan ?? 'free',
               subscriptionStatus: biz.subscriptionStatus ?? 'trial',
-              onSignOut:    () => auth.signOut(),
+              onSignOut: () => auth.signOut(),
             ),
-            const VerticalDivider(width: 1),
-            Expanded(child: widget.child),
-          ],
-        ),
-      );
-    }
-
-    // Mobile — bottom nav
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: widget.child,
-      bottomNavigationBar: NavigationBar(
-        backgroundColor: AppColors.surface,
-        selectedIndex: selectedIdx,
-        onDestinationSelected: (i) => context.go(_navItems[i].route),
-        destinations: _navItems
-            .map((item) => NavigationDestination(
-                  icon:          Icon(item.icon),
-                  selectedIcon:  Icon(item.icon, color: AppColors.accent),
-                  label:         item.label,
-                ))
-            .toList(),
+          if (Responsive.isTablet(context))
+            NavigationRail(
+              extended: false,
+              selectedIndex: selectedIdx,
+              onDestinationSelected: (i) => context.go(_navItems[i].route),
+              leading: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Container(
+                  width: 36, height: 36,
+                  decoration: BoxDecoration(
+                    color: AppColors.accent,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.hardware_rounded, color: Colors.white, size: 20),
+                ),
+              ),
+              trailing: Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    IconButton(
+                      icon: Icon(themeProvider.isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded),
+                      onPressed: () => themeProvider.toggleTheme(!themeProvider.isDarkMode),
+                    ),
+                    const SizedBox(height: 12),
+                    IconButton(
+                      icon: const Icon(Icons.logout_rounded),
+                      onPressed: () => auth.signOut(),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+              destinations: _navItems.map((item) => NavigationRailDestination(
+                icon: Icon(item.icon),
+                selectedIcon: Icon(item.icon, color: AppColors.accent),
+                label: Text(item.label),
+              )).toList(),
+            ),
+          if (isDesktop || Responsive.isTablet(context)) const VerticalDivider(width: 1),
+          Expanded(child: widget.child),
+        ],
       ),
+      bottomNavigationBar: isMobile ? SizedBox(
+        height: 80,
+        child: NavigationBar(
+          selectedIndex: selectedIdx,
+          onDestinationSelected: (i) => context.go(_navItems[i].route),
+          height: 80,
+          labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+          destinations: _navItems
+              .map((item) => NavigationDestination(
+                    icon:          Icon(item.icon),
+                    selectedIcon:  Icon(item.icon, color: AppColors.accent),
+                    label:         item.label,
+                  ))
+              .toList(),
+        ),
+      ) : null,
     );
   }
 }
@@ -89,6 +151,7 @@ class _SideNav extends StatelessWidget {
   final String plan;
   final String subscriptionStatus;
   final VoidCallback onSignOut;
+  final bool isDrawer;
 
   const _SideNav({
     required this.selectedIndex,
@@ -98,19 +161,23 @@ class _SideNav extends StatelessWidget {
     required this.plan,
     required this.subscriptionStatus,
     required this.onSignOut,
+    this.isDrawer = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final themeProvider = context.watch<ThemeProvider>();
+
     return Container(
-      width: 240,
-      color: AppColors.surface,
+      width: 260,
+      color: theme.colorScheme.surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Logo area
           Container(
-            padding: const EdgeInsets.fromLTRB(20, 48, 20, 24),
+            padding: EdgeInsets.fromLTRB(20, isDrawer ? 32 : 48, 20, 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -121,24 +188,30 @@ class _SideNav extends StatelessWidget {
                       color: AppColors.accent,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.hardware_rounded, color: AppColors.background, size: 20),
+                    child: const Icon(Icons.hardware_rounded, color: Colors.white, size: 20),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Text('HardwareOS',
-                      style: AppTheme.darkTheme.textTheme.titleLarge?.copyWith(
-                        color: AppColors.textPrimary, fontWeight: FontWeight.w800,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  if (!isDrawer)
+                    IconButton(
+                      icon: Icon(themeProvider.isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded, size: 20),
+                      onPressed: () => themeProvider.toggleTheme(!themeProvider.isDarkMode),
+                      visualDensity: VisualDensity.compact,
+                    ),
                 ]),
                 const SizedBox(height: 12),
                 Text(businessName,
-                  style: AppTheme.darkTheme.textTheme.bodyMedium,
+                  style: theme.textTheme.bodyMedium,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 Row(children: [
                   _PlanBadge(plan: plan),
                   const SizedBox(width: 8),
@@ -162,65 +235,28 @@ class _SideNav extends StatelessWidget {
                 final isSubscriptionItem = item.route == '/subscription';
                 final needsUpgrade = isSubscriptionItem &&
                     (subscriptionStatus == 'trial' || subscriptionStatus == 'expired');
+                
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 4),
-                  child: Material(
-                    color: selected
-                        ? AppColors.accent.withValues(alpha: 0.12)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(10),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(10),
-                      onTap: () => context.go(item.route),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-                        child: Row(children: [
-                          Icon(item.icon,
-                            size: 20,
-                            color: needsUpgrade
-                                ? AppColors.chartAmber
-                                : (selected ? AppColors.accent : AppColors.textHint),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(item.label,
-                              style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-                                color: needsUpgrade
-                                    ? AppColors.chartAmber
-                                    : (selected ? AppColors.accent : AppColors.textSecondary),
-                                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                              ),
-                            ),
-                          ),
-                          if (needsUpgrade)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: AppColors.chartAmber.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(4),
-                                border: Border.all(color: AppColors.chartAmber.withValues(alpha: 0.4)),
-                              ),
-                              child: Text(
-                                subscriptionStatus == 'expired' ? 'EXPIRED' : 'TRIAL',
-                                style: const TextStyle(
-                                  color: AppColors.chartAmber,
-                                  fontSize: 8,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            )
-                          else if (selected)
-                            Container(
-                              width: 4, height: 4,
-                              decoration: const BoxDecoration(
-                                color: AppColors.accent,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                        ]),
+                  child: ListTile(
+                    selected: selected,
+                    leading: Icon(item.icon, 
+                      color: needsUpgrade ? AppColors.warning : (selected ? AppColors.accent : null)
+                    ),
+                    title: Text(item.label,
+                      style: TextStyle(
+                        color: needsUpgrade ? AppColors.warning : (selected ? AppColors.accent : null),
+                        fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                       ),
                     ),
+                    trailing: needsUpgrade ? _UpgradeBadge(status: subscriptionStatus) : null,
+                    onTap: () {
+                      if (isDrawer) Navigator.pop(context);
+                      context.go(item.route);
+                    },
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    selectedTileColor: AppColors.accent.withValues(alpha: 0.1),
+                    dense: true,
                   ),
                 );
               },
@@ -230,31 +266,41 @@ class _SideNav extends StatelessWidget {
           const Divider(height: 1),
 
           // Sign out
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Material(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(10),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(10),
-                onTap: onSignOut,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-                  child: Row(children: [
-                    const Icon(Icons.logout_rounded, size: 20, color: AppColors.textHint),
-                    const SizedBox(width: 12),
-                    Text('Sign Out',
-                      style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ]),
-                ),
-              ),
-            ),
+          ListTile(
+            leading: const Icon(Icons.logout_rounded),
+            title: const Text('Sign Out'),
+            onTap: onSignOut,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
           ),
           const SizedBox(height: 16),
         ],
+      ),
+    );
+  }
+}
+
+class _UpgradeBadge extends StatelessWidget {
+  final String status;
+  const _UpgradeBadge({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
+      ),
+      child: Text(
+        status == 'expired' ? 'EXPIRED' : 'TRIAL',
+        style: const TextStyle(
+          color: AppColors.warning,
+          fontSize: 8,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }
@@ -295,16 +341,15 @@ class _RoleBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: AppColors.surfaceLight,
+        color: theme.dividerColor.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(role,
-        style: const TextStyle(
-          color: AppColors.textSecondary, fontSize: 10, fontWeight: FontWeight.w500,
-        ),
+        style: theme.textTheme.labelSmall?.copyWith(fontSize: 10),
       ),
     );
   }

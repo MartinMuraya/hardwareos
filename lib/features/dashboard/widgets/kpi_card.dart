@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
 
 class KpiCard extends StatelessWidget {
   final String label;
@@ -22,13 +21,14 @@ class KpiCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isHighlighted ? iconColor.withValues(alpha: 0.08) : AppColors.card,
+        color: isHighlighted ? iconColor.withValues(alpha: 0.08) : theme.cardColor,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isHighlighted ? iconColor.withValues(alpha: 0.3) : AppColors.border,
+          color: isHighlighted ? iconColor.withValues(alpha: 0.3) : theme.dividerColor,
           width: isHighlighted ? 1.5 : 1,
         ),
       ),
@@ -63,9 +63,9 @@ class KpiCard extends StatelessWidget {
             const SizedBox(height: 12),
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(value,
-                style: AppTheme.darkTheme.textTheme.headlineMedium?.copyWith(
+                style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: isHighlighted ? iconColor : AppColors.textPrimary,
+                  color: isHighlighted ? iconColor : theme.textTheme.headlineSmall?.color,
                   fontSize: 16,
                 ),
                 maxLines: 1,
@@ -73,7 +73,7 @@ class KpiCard extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(label,
-                style: const TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w500),
+                style: theme.textTheme.bodySmall,
               ),
             ]),
           ],

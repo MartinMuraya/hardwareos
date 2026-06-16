@@ -4,7 +4,7 @@ import '../../../core/providers/auth_provider.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/models/product.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/responsive.dart';
 import '../../../core/widgets/loading_overlay.dart';
 
 class ProductDetailScreen extends StatefulWidget {
@@ -60,7 +60,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       _addQtyCtrl.clear();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('✅ Added $qty units to stock.')));
+          SnackBar(content: Text('Added $qty units to stock.')));
         Navigator.of(context).pop();
         _load();
       }
@@ -72,10 +72,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   void _showAddStockSheet() {
+    final theme = Theme.of(context);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
+      backgroundColor: theme.colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => Padding(
@@ -86,13 +87,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           Row(children: [
             const Icon(Icons.add_box_rounded, color: AppColors.accent),
             const SizedBox(width: 10),
-            Text('Add Stock', style: AppTheme.darkTheme.textTheme.headlineMedium),
+            Text('Add Stock', style: theme.textTheme.headlineMedium),
           ]),
           const SizedBox(height: 20),
           TextField(
             controller: _addQtyCtrl,
             keyboardType: TextInputType.number,
-            style: const TextStyle(color: AppColors.textPrimary),
+            style: TextStyle(color: theme.colorScheme.onSurface),
             decoration: const InputDecoration(
               labelText: 'Quantity to Add',
               prefixIcon: Icon(Icons.add)),
@@ -101,7 +102,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           const SizedBox(height: 14),
           TextField(
             controller: _reasonCtrl,
-            style: const TextStyle(color: AppColors.textPrimary),
+            style: TextStyle(color: theme.colorScheme.onSurface),
             decoration: const InputDecoration(labelText: 'Reason'),
           ),
           const SizedBox(height: 24),
@@ -110,7 +111,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             child: _submitting
                 ? const SizedBox(width: 20, height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation(AppColors.background)))
+                      valueColor: AlwaysStoppedAnimation(Colors.white)))
                 : const Text('Confirm Stock Addition'),
           ),
         ]),
@@ -120,14 +121,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final p = _product;
     return LoadingOverlay(
       isLoading: _loading,
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
           title: Text(p?.name ?? 'Product'),
-          backgroundColor: AppColors.surface,
           actions: [
             if (p != null)
               IconButton(
@@ -139,17 +140,17 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         ),
         body: p == null && !_loading
             ? Center(child: Text(_error ?? 'Product not found.',
-                style: const TextStyle(color: AppColors.textSecondary)))
+                style: TextStyle(color: theme.colorScheme.onSurfaceVariant)))
             : p == null ? const SizedBox()
             : SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
+                padding: EdgeInsets.all(Responsive.padding(context)),
                 child: Center(
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 600),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                       _StockCard(product: p),
                       const SizedBox(height: 16),
-                      _DetailCard(product: p),
+                      _DetailCard(product: p, theme: theme),
                     ]),
                   ),
                 ),
@@ -157,8 +158,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         floatingActionButton: p != null
             ? FloatingActionButton.extended(
                 onPressed: _showAddStockSheet,
-                backgroundColor: AppColors.accent,
-                foregroundColor: AppColors.background,
                 icon: const Icon(Icons.add),
                 label: const Text('Add Stock'),
               )
@@ -185,8 +184,8 @@ class _StockCard extends StatelessWidget {
       ),
       child: Row(children: [
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Current Stock',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+          Text('Current Stock',
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12)),
           const SizedBox(height: 4),
           Text('${product.quantity} units',
             style: TextStyle(color: color, fontSize: 28, fontWeight: FontWeight.w800)),
@@ -208,36 +207,38 @@ class _StockCard extends StatelessWidget {
 
 class _DetailCard extends StatelessWidget {
   final Product product;
-  const _DetailCard({required this.product});
+  final ThemeData theme;
+  const _DetailCard({required this.product, required this.theme});
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(20),
     decoration: BoxDecoration(
-      color: AppColors.card, borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: AppColors.border)),
+      color: theme.cardColor, borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: theme.dividerColor)),
     child: Column(children: [
-      _Row('Category',      product.category),
+      _Row('Category',      product.category, theme: theme),
       const _HDivider(),
-      _Row('SKU',           product.sku.isEmpty ? '—' : product.sku),
+      _Row('SKU',           product.sku.isEmpty ? '\u2014' : product.sku, theme: theme),
       const _HDivider(),
-      _Row('Cost Price',    'KES ${product.costPrice.toStringAsFixed(2)}'),
+      _Row('Cost Price',    'KES ${product.costPrice.toStringAsFixed(2)}', theme: theme),
       const _HDivider(),
-      _Row('Selling Price', 'KES ${product.sellingPrice.toStringAsFixed(2)}'),
+      _Row('Selling Price', 'KES ${product.sellingPrice.toStringAsFixed(2)}', theme: theme),
       const _HDivider(),
-      _Row('Margin',        '${product.margin.toStringAsFixed(1)}%'),
+      _Row('Margin',        '${product.margin.toStringAsFixed(1)}%', theme: theme),
     ]),
   );
 }
 
 class _Row extends StatelessWidget {
   final String label, value;
-  const _Row(this.label, this.value);
+  final ThemeData theme;
+  const _Row(this.label, this.value, {required this.theme});
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 12),
     child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-      Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
-      Text(value,  style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600)),
+      Text(label, style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 14)),
+      Text(value,  style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 14, fontWeight: FontWeight.w600)),
     ]),
   );
 }
@@ -246,5 +247,5 @@ class _HDivider extends StatelessWidget {
   const _HDivider();
   @override
   Widget build(BuildContext context) =>
-      const Divider(height: 1, color: AppColors.border);
+      Divider(height: 1, color: Theme.of(context).dividerColor);
 }

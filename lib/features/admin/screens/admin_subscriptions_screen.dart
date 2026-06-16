@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/empty_state.dart';
 
 class AdminSubscriptionsScreen extends StatefulWidget {
@@ -44,7 +43,7 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
   }
 
   Future<void> _editSubscription(Map<String, dynamic> sub) async {
-    final nameController = TextEditingController(text: sub['businessName']);
+    final theme = Theme.of(context);
     String selectedPlan = sub['plan'] ?? 'free';
     String selectedStatus = sub['subscriptionStatus'] ?? 'trial';
     bool active = sub['active'] ?? false;
@@ -58,16 +57,16 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              backgroundColor: AppColors.card,
+              backgroundColor: theme.cardColor,
               title: Text('Edit Subscription: ${sub['businessName']}'),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     DropdownButtonFormField<String>(
-                      value: selectedPlan,
+                      initialValue: selectedPlan,
                       decoration: const InputDecoration(labelText: 'Plan'),
-                      dropdownColor: AppColors.card,
+                      dropdownColor: theme.cardColor,
                       items: const [
                         DropdownMenuItem(value: 'free', child: Text('Free')),
                         DropdownMenuItem(value: 'starter', child: Text('Starter')),
@@ -79,9 +78,9 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
-                      value: selectedStatus,
+                      initialValue: selectedStatus,
                       decoration: const InputDecoration(labelText: 'Subscription Status'),
-                      dropdownColor: AppColors.card,
+                      dropdownColor: theme.cardColor,
                       items: const [
                         DropdownMenuItem(value: 'trial', child: Text('Trial')),
                         DropdownMenuItem(value: 'active', child: Text('Active')),
@@ -96,7 +95,7 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
                       title: const Text('Active Status'),
                       value: active,
                       onChanged: (val) => setDialogState(() => active = val),
-                      activeColor: AppColors.accent,
+                      activeThumbColor: AppColors.accent,
                     ),
                     const SizedBox(height: 16),
                     ListTile(
@@ -162,7 +161,7 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
         _loadSubscriptions();
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: AppColors.error));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
           setState(() => _loading = false);
         }
       }
@@ -171,11 +170,11 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        title: Text('Subscriptions', style: AppTheme.darkTheme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+        title: Text('Subscriptions', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
         actions: [
           IconButton(icon: const Icon(Icons.refresh_rounded), onPressed: _loadSubscriptions),
           const SizedBox(width: 24),
@@ -205,9 +204,9 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
                         return Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: AppColors.card,
+                            color: theme.cardColor,
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: AppColors.border),
+                            border: Border.all(color: theme.dividerColor),
                           ),
                           child: Row(
                             children: [
@@ -225,7 +224,9 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(sub['businessName'] ?? 'Unknown', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                    Text(sub['businessName'] ?? 'Unknown',
+                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16,
+                                        color: theme.colorScheme.onSurface)),
                                     const SizedBox(height: 4),
                                     Row(
                                       children: [
@@ -237,12 +238,13 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
                                       ],
                                     ),
                                     const SizedBox(height: 8),
-                                    Text('Expires/Trial Ends: $expires', style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                                    Text('Expires/Trial Ends: $expires',
+                                      style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13)),
                                   ],
                                 ),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.edit_rounded, color: AppColors.textSecondary),
+                                icon: Icon(Icons.edit_rounded, color: theme.colorScheme.onSurfaceVariant),
                                 onPressed: () => _editSubscription(sub),
                                 tooltip: 'Edit Subscription',
                               ),

@@ -15,19 +15,20 @@ class LoadingOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Stack(
       children: [
         child,
         if (isLoading)
           Container(
-            color: AppColors.background.withValues(alpha: 0.7),
+            color: theme.scaffoldBackgroundColor.withValues(alpha: 0.7),
             child: Center(
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
                 decoration: BoxDecoration(
-                  color: AppColors.card,
+                  color: theme.cardColor,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: theme.dividerColor),
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -42,7 +43,7 @@ class LoadingOverlay extends StatelessWidget {
                     if (message != null) ...[
                       const SizedBox(height: 16),
                       Text(message!,
-                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                        style: theme.textTheme.bodyMedium,
                       ),
                     ],
                   ],

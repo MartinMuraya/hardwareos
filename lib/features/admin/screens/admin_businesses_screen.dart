@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/empty_state.dart';
 
 class AdminBusinessesScreen extends StatefulWidget {
@@ -48,18 +47,19 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
       _loadBusinesses();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: AppColors.error));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        title: Text('Businesses', style: AppTheme.darkTheme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+        title: Text('Businesses', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
         actions: [
           IconButton(icon: const Icon(Icons.refresh_rounded), onPressed: _loadBusinesses),
           const SizedBox(width: 24),
@@ -69,17 +69,17 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
         children: [
           // Filter Tabs
           Container(
-            color: AppColors.surface,
+            color: theme.colorScheme.surface,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
             child: Row(
               children: [
-                _FilterChip(label: 'All', value: 'all', groupValue: _filter, onChanged: (v) { setState(() => _filter = v); _loadBusinesses(); }),
+                _FilterChip(label: 'All', value: 'all', groupValue: _filter, onChanged: (v) { setState(() => _filter = v); _loadBusinesses(); }, theme: theme),
                 const SizedBox(width: 8),
-                _FilterChip(label: 'Pending', value: 'pending', groupValue: _filter, onChanged: (v) { setState(() => _filter = v); _loadBusinesses(); }),
+                _FilterChip(label: 'Pending', value: 'pending', groupValue: _filter, onChanged: (v) { setState(() => _filter = v); _loadBusinesses(); }, theme: theme),
                 const SizedBox(width: 8),
-                _FilterChip(label: 'Active', value: 'approved', groupValue: _filter, onChanged: (v) { setState(() => _filter = v); _loadBusinesses(); }),
+                _FilterChip(label: 'Active', value: 'approved', groupValue: _filter, onChanged: (v) { setState(() => _filter = v); _loadBusinesses(); }, theme: theme),
                 const SizedBox(width: 8),
-                _FilterChip(label: 'Suspended', value: 'suspended', groupValue: _filter, onChanged: (v) { setState(() => _filter = v); _loadBusinesses(); }),
+                _FilterChip(label: 'Suspended', value: 'suspended', groupValue: _filter, onChanged: (v) { setState(() => _filter = v); _loadBusinesses(); }, theme: theme),
               ],
             ),
           ),
@@ -102,9 +102,9 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
                         return Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: AppColors.card,
+                            color: theme.cardColor,
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: AppColors.border),
+                            border: Border.all(color: theme.dividerColor),
                           ),
                           child: Row(
                             children: [
@@ -112,25 +112,29 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
                                 width: 50,
                                 height: 50,
                                 decoration: BoxDecoration(
-                                  color: AppColors.surfaceLight,
+                                  color: theme.colorScheme.surfaceContainerHighest,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: const Icon(Icons.storefront_rounded, color: AppColors.textSecondary),
+                                child: Icon(Icons.storefront_rounded, color: theme.colorScheme.onSurfaceVariant),
                               ),
                               const SizedBox(width: 16),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(biz['name'] ?? 'Unknown Business', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                    Text(biz['name'] ?? 'Unknown Business',
+                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16,
+                                        color: theme.colorScheme.onSurface)),
                                     const SizedBox(height: 4),
-                                    Text('ID: ${biz['id']}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                                    Text('ID: ${biz['id']}',
+                                      style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13)),
                                     const SizedBox(height: 8),
                                     Row(
                                       children: [
                                         _StatusBadge(status: status),
                                         const SizedBox(width: 12),
-                                        Text('Created: ${biz['createdAt'] ?? 'N/A'}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                                        Text('Created: ${biz['createdAt'] ?? 'N/A'}',
+                                          style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12)),
                                       ],
                                     ),
                                   ],
@@ -166,8 +170,9 @@ class _FilterChip extends StatelessWidget {
   final String value;
   final String groupValue;
   final ValueChanged<String> onChanged;
+  final ThemeData theme;
 
-  const _FilterChip({required this.label, required this.value, required this.groupValue, required this.onChanged});
+  const _FilterChip({required this.label, required this.value, required this.groupValue, required this.onChanged, required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -178,8 +183,8 @@ class _FilterChip extends StatelessWidget {
       onSelected: (_) => onChanged(value),
       selectedColor: AppColors.accent.withValues(alpha: 0.2),
       backgroundColor: Colors.transparent,
-      side: BorderSide(color: isSelected ? AppColors.accent : AppColors.border),
-      labelStyle: TextStyle(color: isSelected ? AppColors.accent : AppColors.textSecondary, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
+      side: BorderSide(color: isSelected ? AppColors.accent : theme.dividerColor),
+      labelStyle: TextStyle(color: isSelected ? AppColors.accent : theme.colorScheme.onSurfaceVariant, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
     );
   }
 }
@@ -197,7 +202,7 @@ class _StatusBadge extends StatelessWidget {
       case 'suspended': color = AppColors.error; break;
       case 'rejected': color = AppColors.error; break;
       case 'pending': color = AppColors.warning; break;
-      default: color = AppColors.textSecondary;
+      default: color = Theme.of(context).colorScheme.onSurfaceVariant;
     }
 
     return Container(

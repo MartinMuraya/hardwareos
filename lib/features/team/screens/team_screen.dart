@@ -4,7 +4,7 @@ import '../../../core/providers/auth_provider.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/models/user.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/responsive.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/loading_overlay.dart';
 import '../widgets/invite_user_dialog.dart';
@@ -58,16 +58,18 @@ class _TeamScreenState extends State<TeamScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final auth = context.watch<AuthProvider>();
     final canInvite = auth.userRole == 'owner' || auth.userRole == 'manager';
+    final padding = Responsive.padding(context);
 
     return LoadingOverlay(
       isLoading: _loading,
       message: 'Loading team...',
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: theme.scaffoldBackgroundColor,
         body: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(padding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -77,11 +79,11 @@ class _TeamScreenState extends State<TeamScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Team Management', style: AppTheme.darkTheme.textTheme.displayMedium),
+                        Text('Team Management', style: theme.textTheme.displayMedium),
                         const SizedBox(height: 4),
                         Text(
                           '${_team.length} member(s)',
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                          style: theme.textTheme.bodyMedium,
                         ),
                       ],
                     ),
@@ -91,10 +93,6 @@ class _TeamScreenState extends State<TeamScreen> {
                       onPressed: _showInviteDialog,
                       icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
                       label: const Text('Invite Staff'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.accent,
-                        foregroundColor: AppColors.background,
-                      ),
                     ),
                 ],
               ),
@@ -124,11 +122,11 @@ class _TeamScreenState extends State<TeamScreen> {
                     : RefreshIndicator(
                         onRefresh: _loadTeam,
                         color: AppColors.accent,
-                        backgroundColor: AppColors.card,
+                        backgroundColor: theme.cardColor,
                         child: ListView.separated(
                           itemCount: _team.length,
                           separatorBuilder: (_, __) => const SizedBox(height: 12),
-                          itemBuilder: (_, i) => _TeamMemberCard(user: _team[i]),
+                          itemBuilder: (_, i) => _TeamMemberCard(user: _team[i], theme: theme),
                         ),
                       ),
               ),
@@ -142,7 +140,8 @@ class _TeamScreenState extends State<TeamScreen> {
 
 class _TeamMemberCard extends StatelessWidget {
   final User user;
-  const _TeamMemberCard({required this.user});
+  final ThemeData theme;
+  const _TeamMemberCard({required this.user, required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -150,15 +149,15 @@ class _TeamMemberCard extends StatelessWidget {
     switch (user.role) {
       case 'owner':   roleColor = AppColors.chartBlue; break;
       case 'manager': roleColor = AppColors.chartPurple; break;
-      default:        roleColor = AppColors.textHint;
+      default:        roleColor = theme.hintColor;
     }
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: theme.dividerColor),
       ),
       child: Row(
         children: [
@@ -166,14 +165,14 @@ class _TeamMemberCard extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: AppColors.surfaceLight,
+              color: theme.colorScheme.surfaceContainerHighest,
               shape: BoxShape.circle,
             ),
             child: Center(
               child: Text(
                 user.displayName.isNotEmpty ? user.displayName[0].toUpperCase() : '?',
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
+                style: TextStyle(
+                  color: theme.colorScheme.onSurface,
                   fontWeight: FontWeight.w800,
                   fontSize: 18,
                 ),
@@ -187,13 +186,14 @@ class _TeamMemberCard extends StatelessWidget {
               children: [
                 Text(
                   user.displayName.isNotEmpty ? user.displayName : 'Unknown User',
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15,
+                    color: theme.colorScheme.onSurface),
                 ),
                 if (user.email.isNotEmpty) ...[
                   const SizedBox(height: 2),
                   Text(
                     user.email,
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                    style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
                   ),
                 ],
               ],

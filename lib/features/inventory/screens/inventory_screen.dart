@@ -5,7 +5,7 @@ import '../../../core/providers/auth_provider.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/models/product.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/responsive.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/loading_overlay.dart';
 
@@ -69,25 +69,29 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final lowCount = _all.where((p) => p.isLowStock || p.isOutOfStock).length;
+    final width = MediaQuery.of(context).size.width;
+    final isWide = width > 900;
+    final padding = Responsive.padding(context);
 
     return LoadingOverlay(
       isLoading: _loading,
       message: 'Loading inventory...',
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: theme.scaffoldBackgroundColor,
         body: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(padding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(children: [
                 Expanded(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('Inventory', style: AppTheme.darkTheme.textTheme.displayMedium),
+                    Text('Inventory', style: theme.textTheme.displayMedium),
                     const SizedBox(height: 4),
                     Text('${_all.length} products${lowCount > 0 ? ' · $lowCount low stock' : ''}',
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+                      style: theme.textTheme.bodyMedium),
                   ]),
                 ),
                 FilledButton.icon(
@@ -97,8 +101,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   },
                   icon: const Icon(Icons.add, size: 18),
                   label: const Text('Add Product'),
-                  style: FilledButton.styleFrom(backgroundColor: AppColors.accent,
-                    foregroundColor: AppColors.background),
                 ),
               ]),
               const SizedBox(height: 20),
@@ -107,7 +109,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 Expanded(
                   child: TextField(
                     controller: _searchCtrl,
-                    style: const TextStyle(color: AppColors.textPrimary),
                     decoration: const InputDecoration(
                       hintText: 'Search by name or SKU...',
                       prefixIcon: Icon(Icons.search, size: 18),
@@ -119,12 +120,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   categories: _categories,
                   selected: _selectedCategory,
                   onChanged: (c) { setState(() => _selectedCategory = c); _filter(); },
+                  theme: theme,
                 ),
               ]),
               const SizedBox(height: 16),
 
               if (_error != null)
-                _ErrorBar(message: _error!, onRetry: _load),
+                _ErrorBar(message: _error!, onRetry: _load, theme: theme),
 
               Expanded(
                 child: _filtered.isEmpty && !_loading
@@ -140,18 +142,37 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     : RefreshIndicator(
                         onRefresh: _load,
                         color: AppColors.accent,
-                        backgroundColor: AppColors.card,
-                        child: ListView.separated(
-                          itemCount: _filtered.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 8),
-                          itemBuilder: (_, i) => _ProductCard(
-                            product: _filtered[i],
-                            onTap: () async {
-                              await context.push('/inventory/${_filtered[i].id}');
-                              _load();
-                            },
-                          ),
-                        ),
+                        backgroundColor: theme.cardColor,
+                        child: isWide 
+                          ? GridView.builder(
+                              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                                maxCrossAxisExtent: 400,
+                                mainAxisSpacing: 12,
+                                crossAxisSpacing: 12,
+                                mainAxisExtent: 100,
+                              ),
+                              itemCount: _filtered.length,
+                              itemBuilder: (_, i) => _ProductCard(
+                                product: _filtered[i],
+                                theme: theme,
+                                onTap: () async {
+                                  await context.push('/inventory/${_filtered[i].id}');
+                                  _load();
+                                },
+                              ),
+                            )
+                          : ListView.separated(
+                              itemCount: _filtered.length,
+                              separatorBuilder: (_, __) => const SizedBox(height: 8),
+                              itemBuilder: (_, i) => _ProductCard(
+                                product: _filtered[i],
+                                theme: theme,
+                                onTap: () async {
+                                  await context.push('/inventory/${_filtered[i].id}');
+                                  _load();
+                                },
+                              ),
+                            ),
                       ),
               ),
             ],
@@ -165,7 +186,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
 class _ProductCard extends StatelessWidget {
   final Product product;
   final VoidCallback onTap;
-  const _ProductCard({required this.product, required this.onTap});
+  final ThemeData theme;
+  const _ProductCard({required this.product, required this.onTap, required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -176,7 +198,7 @@ class _ProductCard extends StatelessWidget {
     else { stockColor = AppColors.stockGood; stockLabel = '${product.quantity}'; }
 
     return Material(
-      color: AppColors.card,
+      color: theme.cardColor,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
@@ -185,35 +207,40 @@ class _ProductCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: theme.dividerColor),
           ),
           child: Row(children: [
             Container(
               width: 44, height: 44,
               decoration: BoxDecoration(
-                color: AppColors.surfaceLight,
+                color: theme.colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.hardware_rounded, color: AppColors.textHint, size: 22),
+              child: Icon(Icons.hardware_rounded, color: theme.colorScheme.onSurfaceVariant, size: 22),
             ),
             const SizedBox(width: 14),
             Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, 
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
                 Text(product.name,
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14,
+                    color: theme.colorScheme.onSurface),
                   overflow: TextOverflow.ellipsis),
                 const SizedBox(height: 4),
                 Row(children: [
                   _Chip(label: product.category, color: AppColors.chartBlue),
                   if (product.sku.isNotEmpty) ...[
                     const SizedBox(width: 6),
-                    _Chip(label: 'SKU: ${product.sku}', color: AppColors.textHint),
+                    _Chip(label: product.sku, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
                   ],
                 ]),
               ]),
             ),
             const SizedBox(width: 12),
-            Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+            Column(crossAxisAlignment: CrossAxisAlignment.end, 
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
@@ -225,7 +252,7 @@ class _ProductCard extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text('KES ${product.sellingPrice.toStringAsFixed(0)}',
-                style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                style: theme.textTheme.bodySmall),
             ]),
           ]),
         ),
@@ -250,22 +277,26 @@ class _CategoryFilter extends StatelessWidget {
   final List<String> categories;
   final String selected;
   final ValueChanged<String> onChanged;
-  const _CategoryFilter({required this.categories, required this.selected, required this.onChanged});
+  final ThemeData theme;
+  const _CategoryFilter({required this.categories, required this.selected, required this.onChanged, required this.theme});
   @override
-  Widget build(BuildContext context) => DropdownButtonHideUnderline(
-    child: DropdownButton<String>(
-      value: selected,
-      dropdownColor: AppColors.card,
-      style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
-      items: categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
-      onChanged: (v) => onChanged(v!),
-    ),
-  );
+  Widget build(BuildContext context) {
+    return DropdownButtonHideUnderline(
+      child: DropdownButton<String>(
+        value: selected,
+        dropdownColor: theme.cardColor,
+        style: TextStyle(color: theme.textTheme.bodyMedium?.color, fontSize: 13),
+        items: categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+        onChanged: (v) => onChanged(v!),
+      ),
+    );
+  }
 }
 
 class _ErrorBar extends StatelessWidget {
   final String message; final VoidCallback onRetry;
-  const _ErrorBar({required this.message, required this.onRetry});
+  final ThemeData theme;
+  const _ErrorBar({required this.message, required this.onRetry, required this.theme});
   @override
   Widget build(BuildContext context) => Container(
     margin: const EdgeInsets.only(bottom: 12),

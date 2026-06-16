@@ -7,11 +7,12 @@ class LowStockList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: theme.dividerColor),
       ),
       child: Column(
         children: items.asMap().entries.map((entry) {
@@ -24,13 +25,13 @@ class LowStockList extends StatelessWidget {
 
           return Column(
             children: [
-              if (i > 0) const Divider(height: 1),
+              if (i > 0) Divider(height: 1, color: theme.dividerColor),
               ListTile(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 leading: Container(
                   width: 36, height: 36,
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceLight.withValues(alpha: 0.5),
+                    color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -39,9 +40,10 @@ class LowStockList extends StatelessWidget {
                   ),
                 ),
                 title: Text(item['name'] as String,
-                  style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14,
+                    color: theme.colorScheme.onSurface)),
                 subtitle: Text(item['category'] as String? ?? '',
-                  style: const TextStyle(color: AppColors.textHint, fontSize: 12)),
+                  style: TextStyle(color: theme.hintColor, fontSize: 12)),
                 trailing: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -57,7 +59,7 @@ class LowStockList extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text('Reorder: $reorder',
-                      style: const TextStyle(color: AppColors.textHint, fontSize: 10)),
+                      style: TextStyle(color: theme.hintColor, fontSize: 10)),
                   ],
                 ),
               ),

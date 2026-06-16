@@ -6,7 +6,7 @@ import '../../../core/providers/auth_provider.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/models/product.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/responsive.dart';
 import '../../../core/widgets/loading_overlay.dart';
 
 class POSScreen extends StatefulWidget {
@@ -116,10 +116,11 @@ class _POSScreenState extends State<POSScreen> {
   }
 
   void _showReceiptDialog(double total, double profit) {
+    final theme = Theme.of(context);
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.card,
+        backgroundColor: theme.cardColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
           Container(
@@ -133,9 +134,9 @@ class _POSScreenState extends State<POSScreen> {
           const Text('Sale Complete!',
             style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
           const SizedBox(height: 16),
-          _ReceiptRow('Total',  _fmt.format(total)),
-          _ReceiptRow('Profit', _fmt.format(profit), valueColor: AppColors.success),
-          _ReceiptRow('Method', _paymentMethod.toUpperCase()),
+          _ReceiptRow('Total',  _fmt.format(total), theme: theme),
+          _ReceiptRow('Profit', _fmt.format(profit), valueColor: AppColors.success, theme: theme),
+          _ReceiptRow('Method', _paymentMethod.toUpperCase(), theme: theme),
         ]),
         actions: [
           TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Done')),
@@ -155,7 +156,7 @@ class _POSScreenState extends State<POSScreen> {
       isLoading: _processingCheckout,
       message: 'Processing sale...',
       child: Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: isWide ? _wideLayout() : _narrowLayout(),
       ),
     );
@@ -163,8 +164,8 @@ class _POSScreenState extends State<POSScreen> {
 
   Widget _wideLayout() => Row(children: [
     Expanded(flex: 3, child: _productPanel()),
-    Container(width: 1, color: AppColors.border),
-    SizedBox(width: 360, child: _cartPanel()),
+    Container(width: 1, color: Theme.of(context).dividerColor),
+    Expanded(flex: 2, child: _cartPanel()),
   ]);
 
   Widget _narrowLayout() => Column(children: [
@@ -172,182 +173,188 @@ class _POSScreenState extends State<POSScreen> {
     if (_cart.isNotEmpty) _miniCartBar(),
   ]);
 
-  Widget _productPanel() => Padding(
-    padding: const EdgeInsets.all(20),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Row(children: [
-        Expanded(child: Text('POS — New Sale',
-          style: AppTheme.darkTheme.textTheme.displayMedium)),
-        TextButton.icon(
-          onPressed: () => context.go('/sales/history'),
-          icon: const Icon(Icons.history_rounded, size: 16),
-          label: const Text('History'),
-        ),
-      ]),
-      const SizedBox(height: 16),
-      TextField(
-        controller: _searchCtrl,
-        style: const TextStyle(color: AppColors.textPrimary),
-        decoration: InputDecoration(
-          hintText: 'Search products...',
-          prefixIcon: const Icon(Icons.search, size: 18),
-          suffixIcon: _searchCtrl.text.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.clear, size: 18),
-                  onPressed: () { _searchCtrl.clear(); _filter(); })
-              : null,
-        ),
-      ),
-      const SizedBox(height: 12),
-      if (_error != null)
-        Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: AppColors.error.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppColors.error.withValues(alpha: 0.3))),
-          child: Text(_error!, style: const TextStyle(color: AppColors.error, fontSize: 13)),
-        ),
-      Expanded(
-        child: _loadingProducts
-            ? const Center(child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation(AppColors.accent)))
-            : _filtered.isEmpty
-                ? const Center(child: Text('No products found.',
-                    style: TextStyle(color: AppColors.textSecondary)))
-                : GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent: 220,
-                      mainAxisSpacing: 10,
-                      crossAxisSpacing: 10,
-                      childAspectRatio: 1.6,
-                    ),
-                    itemCount: _filtered.length,
-                    itemBuilder: (_, i) {
-                      final p = _filtered[i];
-                      final inCart = _cart.any((e) => e.product.id == p.id);
-                      return _ProductTile(
-                        product: p, inCart: inCart, onTap: () => _addToCart(p));
-                    },
-                  ),
-      ),
-    ]),
-  );
-
-  Widget _cartPanel() => Container(
-    color: AppColors.surface,
-    padding: const EdgeInsets.all(20),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      Row(children: [
-        const Icon(Icons.shopping_cart_rounded, color: AppColors.accent, size: 20),
-        const SizedBox(width: 8),
-        Text('Cart', style: AppTheme.darkTheme.textTheme.headlineMedium),
-        const Spacer(),
-        if (_cart.isNotEmpty)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: AppColors.accent, borderRadius: BorderRadius.circular(20)),
-            child: Text('${_cart.length}',
-              style: const TextStyle(color: AppColors.background,
-                fontWeight: FontWeight.w800, fontSize: 12)),
-          ),
-      ]),
-      const SizedBox(height: 16),
-
-      Expanded(
-        child: _cart.isEmpty
-            ? const Center(child: Column(
-                mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Icon(Icons.shopping_cart_outlined, color: AppColors.textHint, size: 48),
-                  SizedBox(height: 12),
-                  Text('Cart is empty', style: TextStyle(color: AppColors.textSecondary)),
-                  SizedBox(height: 6),
-                  Text('Tap a product to add it.',
-                    style: TextStyle(color: AppColors.textHint, fontSize: 12)),
-                ]))
-            : ListView.separated(
-                itemCount: _cart.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
-                itemBuilder: (_, i) {
-                  final e = _cart[i];
-                  return _CartTile(
-                    entry: e, fmt: _fmt,
-                    onRemove:    () => _removeFromCart(e.product.id),
-                    onQtyChange: (q) => _updateQty(e.product.id, q),
-                  );
-                },
-              ),
-      ),
-
-      if (_cart.isNotEmpty) ...[
-        const Divider(height: 20),
-        const Text('Payment Method',
-          style: TextStyle(color: AppColors.textSecondary,
-            fontSize: 12, fontWeight: FontWeight.w600)),
-        const SizedBox(height: 8),
+  Widget _productPanel() {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: EdgeInsets.all(Responsive.padding(context)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          _PayBtn(label: 'Cash',  value: 'cash',
-            selected: _paymentMethod, onTap: (v) => setState(() => _paymentMethod = v)),
+          Expanded(child: Text('POS — New Sale',
+            style: theme.textTheme.displayMedium)),
+          TextButton.icon(
+            onPressed: () => context.go('/sales/history'),
+            icon: const Icon(Icons.history_rounded, size: 16),
+            label: const Text('History'),
+          ),
+        ]),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _searchCtrl,
+          style: TextStyle(color: theme.colorScheme.onSurface),
+          decoration: InputDecoration(
+            hintText: 'Search products...',
+            prefixIcon: const Icon(Icons.search, size: 18),
+            suffixIcon: _searchCtrl.text.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear, size: 18),
+                    onPressed: () { _searchCtrl.clear(); _filter(); })
+                : null,
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (_error != null)
+          Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.error.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.error.withValues(alpha: 0.3))),
+            child: Text(_error!, style: const TextStyle(color: AppColors.error, fontSize: 13)),
+          ),
+        Expanded(
+          child: _loadingProducts
+              ? const Center(child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation(AppColors.accent)))
+              : _filtered.isEmpty
+                  ? Center(child: Text('No products found.',
+                      style: TextStyle(color: theme.colorScheme.onSurfaceVariant)))
+                  : GridView.builder(
+                      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                        maxCrossAxisExtent: 220,
+                        mainAxisSpacing: 10,
+                        crossAxisSpacing: 10,
+                        childAspectRatio: 1.6,
+                      ),
+                      itemCount: _filtered.length,
+                      itemBuilder: (_, i) {
+                        final p = _filtered[i];
+                        final inCart = _cart.any((e) => e.product.id == p.id);
+                        return _ProductTile(
+                          product: p, inCart: inCart, onTap: () => _addToCart(p), theme: theme);
+                      },
+                    ),
+        ),
+      ]),
+    );
+  }
+
+  Widget _cartPanel() {
+    final theme = Theme.of(context);
+    return Container(
+      color: theme.colorScheme.surface,
+      padding: const EdgeInsets.all(20),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(children: [
+          const Icon(Icons.shopping_cart_rounded, color: AppColors.accent, size: 20),
           const SizedBox(width: 8),
-          _PayBtn(label: 'M-Pesa', value: 'mpesa',
-            selected: _paymentMethod, onTap: (v) => setState(() => _paymentMethod = v)),
-          const SizedBox(width: 8),
-          _PayBtn(label: 'Credit', value: 'credit',
-            selected: _paymentMethod, onTap: (v) => setState(() => _paymentMethod = v)),
+          Text('Cart', style: theme.textTheme.headlineMedium),
+          const Spacer(),
+          if (_cart.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: AppColors.accent, borderRadius: BorderRadius.circular(20)),
+              child: Text('${_cart.length}',
+                style: TextStyle(color: theme.colorScheme.onPrimary,
+                  fontWeight: FontWeight.w800, fontSize: 12)),
+            ),
         ]),
         const SizedBox(height: 16),
 
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceLight, borderRadius: BorderRadius.circular(12)),
-          child: Column(children: [
-            _TotalRow('Subtotal', _fmt.format(_cartTotal)),
-            const SizedBox(height: 4),
-            _TotalRow('Profit',   _fmt.format(_cartProfit), color: AppColors.success),
+        Expanded(
+          child: _cart.isEmpty
+              ? Center(child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center, children: [
+                    Icon(Icons.shopping_cart_outlined, color: theme.hintColor, size: 48),
+                    const SizedBox(height: 12),
+                    Text('Cart is empty', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+                    const SizedBox(height: 6),
+                    Text('Tap a product to add it.',
+                      style: TextStyle(color: theme.hintColor, fontSize: 12)),
+                  ]))
+              : ListView.separated(
+                  itemCount: _cart.length,
+                  separatorBuilder: (_, __) => Divider(height: 1, color: theme.dividerColor),
+                  itemBuilder: (_, i) {
+                    final e = _cart[i];
+                    return _CartTile(
+                      entry: e, fmt: _fmt, theme: theme,
+                      onRemove:    () => _removeFromCart(e.product.id),
+                      onQtyChange: (q) => _updateQty(e.product.id, q),
+                    );
+                  },
+                ),
+        ),
+
+        if (_cart.isNotEmpty) ...[
+          Divider(height: 20, color: theme.dividerColor),
+          Text('Payment Method',
+            style: TextStyle(color: theme.colorScheme.onSurfaceVariant,
+              fontSize: 12, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          Row(children: [
+            _PayBtn(label: 'Cash',  value: 'cash',
+              selected: _paymentMethod, onTap: (v) => setState(() => _paymentMethod = v), theme: theme),
+            const SizedBox(width: 8),
+            _PayBtn(label: 'M-Pesa', value: 'mpesa',
+              selected: _paymentMethod, onTap: (v) => setState(() => _paymentMethod = v), theme: theme),
+            const SizedBox(width: 8),
+            _PayBtn(label: 'Credit', value: 'credit',
+              selected: _paymentMethod, onTap: (v) => setState(() => _paymentMethod = v), theme: theme),
           ]),
-        ),
-        const SizedBox(height: 14),
+          const SizedBox(height: 16),
 
-        ElevatedButton(
-          onPressed: _processingCheckout ? null : _checkout,
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            backgroundColor: AppColors.accent,
-            foregroundColor: AppColors.background,
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(12)),
+            child: Column(children: [
+              _TotalRow('Subtotal', _fmt.format(_cartTotal), theme: theme),
+              const SizedBox(height: 4),
+              _TotalRow('Profit',   _fmt.format(_cartProfit), color: AppColors.success, theme: theme),
+            ]),
           ),
-          child: Text('Charge ${_fmt.format(_cartTotal)}',
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
-        ),
-        const SizedBox(height: 8),
-        OutlinedButton(
-          onPressed: () => setState(() => _cart.clear()),
-          child: const Text('Clear Cart'),
-        ),
-      ],
-    ]),
-  );
+          const SizedBox(height: 14),
 
-  Widget _miniCartBar() => Container(
-    color: AppColors.surface,
-    padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-    child: Row(children: [
-      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('${_cart.length} item(s)',
-          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-        Text(_fmt.format(_cartTotal),
-          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-      ])),
-      ElevatedButton(
-        onPressed: _checkout,
-        style: ElevatedButton.styleFrom(backgroundColor: AppColors.accent,
-          foregroundColor: AppColors.background),
-        child: const Text('Checkout'),
-      ),
-    ]),
-  );
+          ElevatedButton(
+            onPressed: _processingCheckout ? null : _checkout,
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+            child: Text('Charge ${_fmt.format(_cartTotal)}',
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton(
+            onPressed: () => setState(() => _cart.clear()),
+            child: const Text('Clear Cart'),
+          ),
+        ],
+      ]),
+    );
+  }
+
+  Widget _miniCartBar() {
+    final theme = Theme.of(context);
+    return Container(
+      color: theme.colorScheme.surface,
+      padding: EdgeInsets.fromLTRB(Responsive.padding(context), 12, Responsive.padding(context), 20),
+      child: Row(children: [
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('${_cart.length} item(s)',
+            style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12)),
+          Text(_fmt.format(_cartTotal),
+            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16,
+              color: theme.colorScheme.onSurface)),
+        ])),
+        ElevatedButton(
+          onPressed: _checkout,
+          child: const Text('Checkout'),
+        ),
+      ]),
+    );
+  }
 }
 
 // ─── Supporting widgets ──────────────────────────────────────────────────────
@@ -372,11 +379,12 @@ class _ProductTile extends StatelessWidget {
   final Product product;
   final bool inCart;
   final VoidCallback onTap;
-  const _ProductTile({required this.product, required this.inCart, required this.onTap});
+  final ThemeData theme;
+  const _ProductTile({required this.product, required this.inCart, required this.onTap, required this.theme});
 
   @override
   Widget build(BuildContext context) => Material(
-    color: inCart ? AppColors.accent.withValues(alpha: 0.1) : AppColors.card,
+    color: inCart ? AppColors.accent.withValues(alpha: 0.1) : theme.cardColor,
     borderRadius: BorderRadius.circular(12),
     child: InkWell(
       borderRadius: BorderRadius.circular(12),
@@ -386,7 +394,7 @@ class _ProductTile extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: inCart ? AppColors.accent : AppColors.border,
+            color: inCart ? AppColors.accent : theme.dividerColor,
             width: inCart ? 1.5 : 1)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -409,7 +417,7 @@ class _ProductTile extends StatelessWidget {
                   style: const TextStyle(color: AppColors.accent,
                     fontWeight: FontWeight.w700, fontSize: 14)),
                 Text('Stock: ${product.quantity}',
-                  style: const TextStyle(color: AppColors.textHint, fontSize: 11)),
+                  style: TextStyle(color: theme.hintColor, fontSize: 11)),
               ],
             ),
         ]),
@@ -421,9 +429,10 @@ class _ProductTile extends StatelessWidget {
 class _CartTile extends StatelessWidget {
   final _CartEntry entry;
   final NumberFormat fmt;
+  final ThemeData theme;
   final VoidCallback onRemove;
   final ValueChanged<int> onQtyChange;
-  const _CartTile({required this.entry, required this.fmt,
+  const _CartTile({required this.entry, required this.fmt, required this.theme,
     required this.onRemove, required this.onQtyChange});
 
   @override
@@ -432,26 +441,28 @@ class _CartTile extends StatelessWidget {
     child: Row(children: [
       Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(entry.product.name,
-          style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
+          style: TextStyle(fontWeight: FontWeight.w500, fontSize: 13,
+            color: theme.colorScheme.onSurface),
           overflow: TextOverflow.ellipsis),
         Text(fmt.format(entry.lineTotal),
           style: const TextStyle(color: AppColors.accent,
             fontSize: 12, fontWeight: FontWeight.w600)),
       ])),
       Row(children: [
-        _QtyBtn(icon: Icons.remove, onTap: () => onQtyChange(entry.qty - 1)),
+        _QtyBtn(icon: Icons.remove, onTap: () => onQtyChange(entry.qty - 1), theme: theme),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Text('${entry.qty}',
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15,
+              color: theme.colorScheme.onSurface)),
         ),
-        _QtyBtn(icon: Icons.add, onTap: () => onQtyChange(entry.qty + 1)),
+        _QtyBtn(icon: Icons.add, onTap: () => onQtyChange(entry.qty + 1), theme: theme),
       ]),
       const SizedBox(width: 6),
       GestureDetector(
         onTap: onRemove,
-        child: const Icon(Icons.delete_outline_rounded,
-          color: AppColors.textHint, size: 18)),
+        child: Icon(Icons.delete_outline_rounded,
+          color: theme.hintColor, size: 18)),
     ]),
   );
 }
@@ -459,15 +470,16 @@ class _CartTile extends StatelessWidget {
 class _QtyBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
-  const _QtyBtn({required this.icon, required this.onTap});
+  final ThemeData theme;
+  const _QtyBtn({required this.icon, required this.onTap, required this.theme});
   @override
   Widget build(BuildContext context) => GestureDetector(
     onTap: onTap,
     child: Container(
       width: 26, height: 26,
       decoration: BoxDecoration(
-        color: AppColors.surfaceLight, borderRadius: BorderRadius.circular(6)),
-      child: Icon(icon, size: 14, color: AppColors.textSecondary),
+        color: theme.colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(6)),
+      child: Icon(icon, size: 14, color: theme.colorScheme.onSurfaceVariant),
     ),
   );
 }
@@ -475,8 +487,9 @@ class _QtyBtn extends StatelessWidget {
 class _PayBtn extends StatelessWidget {
   final String label, value, selected;
   final ValueChanged<String> onTap;
+  final ThemeData theme;
   const _PayBtn({required this.label, required this.value,
-    required this.selected, required this.onTap});
+    required this.selected, required this.onTap, required this.theme});
   @override
   Widget build(BuildContext context) {
     final sel = value == selected;
@@ -488,12 +501,12 @@ class _PayBtn extends StatelessWidget {
           decoration: BoxDecoration(
             color: sel
                 ? AppColors.accent.withValues(alpha: 0.12)
-                : AppColors.surfaceLight,
+                : theme.colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: sel ? AppColors.accent : AppColors.border)),
+            border: Border.all(color: sel ? AppColors.accent : theme.dividerColor)),
           child: Text(label, textAlign: TextAlign.center,
             style: TextStyle(
-              color: sel ? AppColors.accent : AppColors.textSecondary,
+              color: sel ? AppColors.accent : theme.colorScheme.onSurfaceVariant,
               fontSize: 11,
               fontWeight: sel ? FontWeight.w700 : FontWeight.w400)),
         ),
@@ -505,14 +518,16 @@ class _PayBtn extends StatelessWidget {
 class _TotalRow extends StatelessWidget {
   final String label, value;
   final Color? color;
-  const _TotalRow(this.label, this.value, {this.color});
+  final ThemeData theme;
+  const _TotalRow(this.label, this.value, {this.color, required this.theme});
+
   @override
   Widget build(BuildContext context) => Row(
     mainAxisAlignment: MainAxisAlignment.spaceBetween,
     children: [
-      Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+      Text(label, style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13)),
       Text(value,  style: TextStyle(
-        color: color ?? AppColors.textPrimary,
+        color: color ?? theme.colorScheme.onSurface,
         fontWeight: FontWeight.w700, fontSize: 14)),
     ],
   );
@@ -521,14 +536,16 @@ class _TotalRow extends StatelessWidget {
 class _ReceiptRow extends StatelessWidget {
   final String label, value;
   final Color? valueColor;
-  const _ReceiptRow(this.label, this.value, {this.valueColor});
+  final ThemeData theme;
+  const _ReceiptRow(this.label, this.value, {this.valueColor, required this.theme});
+
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 6),
     child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-      Text(label, style: const TextStyle(color: AppColors.textSecondary)),
+      Text(label, style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
       Text(value,  style: TextStyle(fontWeight: FontWeight.w700,
-        color: valueColor ?? AppColors.textPrimary)),
+        color: valueColor ?? theme.colorScheme.onSurface)),
     ]),
   );
 }

@@ -6,6 +6,7 @@ import '../../../core/providers/auth_provider.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/models/sale.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/responsive.dart';
 import '../../../core/widgets/loading_overlay.dart';
 import '../../../core/widgets/empty_state.dart';
 
@@ -75,11 +76,12 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Sales History'),
-        backgroundColor: AppColors.surface,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.pop(),
@@ -89,7 +91,7 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
         isLoading: _loading && _sales.isEmpty,
         message: 'Loading sales...',
         child: _error != null && _sales.isEmpty
-            ? Center(child: Text(_error!, style: const TextStyle(color: AppColors.error)))
+            ? Center(child: Text(_error!, style: TextStyle(color: theme.colorScheme.onSurface)))
             : _sales.isEmpty && !_loading
                 ? const EmptyState(
                     icon: Icons.receipt_long_rounded,
@@ -99,21 +101,21 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
                 : RefreshIndicator(
                     onRefresh: () => _loadSales(refresh: true),
                     color: AppColors.accent,
-                    backgroundColor: AppColors.card,
+                    backgroundColor: theme.cardColor,
                     child: ListView.separated(
-                      padding: const EdgeInsets.all(24),
+                      padding: EdgeInsets.all(Responsive.padding(context)),
                       itemCount: _sales.length + (_hasMore ? 1 : 0),
                       separatorBuilder: (_, __) => const SizedBox(height: 12),
                       itemBuilder: (context, i) {
                         if (i == _sales.length) {
-                          _loadSales(); // Fetch next page
+                          _loadSales();
                           return const Padding(
                             padding: EdgeInsets.symmetric(vertical: 20),
                             child: Center(child: CircularProgressIndicator(color: AppColors.accent)),
                           );
                         }
                         final sale = _sales[i];
-                        return _SaleCard(sale: sale, fmt: _fmt);
+                        return _SaleCard(sale: sale, fmt: _fmt, theme: theme);
                       },
                     ),
                   ),
@@ -125,17 +127,18 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
 class _SaleCard extends StatelessWidget {
   final Sale sale;
   final NumberFormat fmt;
+  final ThemeData theme;
 
-  const _SaleCard({required this.sale, required this.fmt});
+  const _SaleCard({required this.sale, required this.fmt, required this.theme});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: theme.dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -145,7 +148,7 @@ class _SaleCard extends StatelessWidget {
             children: [
               Text(
                 DateFormat('MMM d, y • h:mm a').format(sale.createdAt),
-                style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
               ),
               _PaymentChip(method: sale.paymentMethod),
             ],
@@ -156,12 +159,14 @@ class _SaleCard extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('${item.quantity}x ${item.name}', style: const TextStyle(fontSize: 14)),
-                    Text(fmt.format(item.lineTotal), style: const TextStyle(fontSize: 14)),
+                    Text('${item.quantity}x ${item.name}',
+                      style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurface)),
+                    Text(fmt.format(item.lineTotal),
+                      style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurface)),
                   ],
                 ),
               )),
-          const Divider(height: 24, color: AppColors.border),
+          Divider(height: 24, color: theme.dividerColor),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -173,7 +178,7 @@ class _SaleCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Profit', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+              Text('Profit', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12)),
               Text(fmt.format(sale.profit), style: const TextStyle(color: AppColors.success, fontWeight: FontWeight.w600, fontSize: 12)),
             ],
           ),

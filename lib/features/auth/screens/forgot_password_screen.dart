@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -53,13 +52,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
           onPressed: () => context.go('/login'),
         ),
       ),
@@ -83,15 +83,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text('Reset Password',
-                      style: AppTheme.darkTheme.textTheme.headlineMedium?.copyWith(
+                      style: theme.textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.w800,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       'Enter your email and we\'ll send you a link to reset your password.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                      style: theme.textTheme.bodyMedium,
                     ),
                   ]),
                 ),
@@ -100,9 +100,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 Container(
                   padding: const EdgeInsets.all(28),
                   decoration: BoxDecoration(
-                    color: AppColors.card,
+                    color: theme.cardColor,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: theme.dividerColor),
                   ),
                   child: Form(
                     key: _formKey,
@@ -112,7 +112,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         TextFormField(
                           controller: _emailCtrl,
                           keyboardType: TextInputType.emailAddress,
-                          style: const TextStyle(color: AppColors.textPrimary),
+                          style: TextStyle(color: theme.colorScheme.onSurface),
                           decoration: const InputDecoration(
                             labelText: 'Email Address',
                             prefixIcon: Icon(Icons.email_outlined, size: 18),
@@ -127,7 +127,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           child: _isSubmitting
                               ? const SizedBox(width: 20, height: 20,
                                   child: CircularProgressIndicator(strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation(AppColors.background)),
+                                    valueColor: AlwaysStoppedAnimation(Colors.white)),
                                 )
                               : const Text('Send Reset Link'),
                         ),

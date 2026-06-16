@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/services/plan_seeder.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
 
 class PlanSeederDialog extends StatefulWidget {
   const PlanSeederDialog({super.key});
@@ -55,8 +54,10 @@ class _PlanSeederDialogState extends State<PlanSeederDialog> {
   Widget build(BuildContext context) {
     final plansExist = _planCount != null && _planCount! > 0;
 
+    final theme = Theme.of(context);
+
     return AlertDialog(
-      backgroundColor: AppColors.card,
+      backgroundColor: theme.cardColor,
       title: const Text('Initialize Plans'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -66,7 +67,7 @@ class _PlanSeederDialogState extends State<PlanSeederDialog> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: theme.colorScheme.surface,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -109,7 +110,7 @@ class _PlanSeederDialogState extends State<PlanSeederDialog> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Column(
@@ -120,17 +121,17 @@ class _PlanSeederDialogState extends State<PlanSeederDialog> {
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   '• Standard: KES 2,600/month (3 users)',
-                  style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                  style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
                 ),
-                const Text(
+                Text(
                   '• Pro: KES 5,200/month (unlimited users)',
-                  style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                  style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
                 ),
-                const Text(
+                Text(
                   '• Trial: Free 14-day trial',
-                  style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                  style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
                 ),
               ],
             ),

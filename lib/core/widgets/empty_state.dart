@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
+import '../utils/responsive.dart';
 
 class EmptyState extends StatelessWidget {
   final IconData icon;
@@ -19,39 +19,39 @@ class EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    final theme = Theme.of(context);
+    final pad = Responsive.padding(context);
+    return SingleChildScrollView(
       child: Padding(
-        padding: const EdgeInsets.all(48),
+        padding: EdgeInsets.all(pad),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 80, height: 80,
-              decoration: const BoxDecoration(
-                color: AppColors.surfaceLight,
+              width: 64, height: 64,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest,
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 36, color: AppColors.textHint),
+              child: Icon(icon, size: 28, color: theme.colorScheme.onSurfaceVariant),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             Text(title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 18,
+              style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
             if (subtitle != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Text(subtitle!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                style: theme.textTheme.bodySmall,
               ),
             ],
             if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
               ElevatedButton(onPressed: onAction, child: Text(actionLabel!)),
             ],
           ],

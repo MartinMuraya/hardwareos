@@ -10,7 +10,6 @@ import '../../../core/providers/business_provider.dart';
 import '../../../core/services/feature_access_service.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../widgets/plan_card.dart';
 
@@ -73,6 +72,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final businessProvider = Provider.of<BusinessProvider>(context);
     final authProvider = context.read<AuthProvider>();
     Map<String, dynamic>? businessData = businessProvider.businessData;
@@ -99,15 +99,15 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     }
 
     if (businessData == null) {
-      return const Scaffold(
-        backgroundColor: AppColors.background,
-        body: Center(
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        body: const Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               CircularProgressIndicator(),
               SizedBox(height: 16),
-              Text('Loading subscription data...', style: TextStyle(color: AppColors.textSecondary)),
+              Text('Loading subscription data...'),
             ],
           ),
         ),
@@ -128,10 +128,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     final isActive = business.isActive;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        title: Text('Subscription & Plans', style: AppTheme.darkTheme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+        backgroundColor: theme.colorScheme.surface,
+        title: Text('Subscription & Plans', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
         elevation: 0,
       ),
       body: Stack(
@@ -159,6 +159,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   }
 
   Widget _buildCurrentStatusCard(Business business, bool isExpired, bool isOnTrial, bool isActive) {
+    final theme = Theme.of(context);
     final statusColor = isExpired ? AppColors.error : (isActive ? AppColors.success : AppColors.warning);
     final statusText = isExpired ? 'Expired' : (isActive ? 'Active' : 'Trial');
     final expiryDate = isOnTrial ? business.trialEndsAt : business.subscriptionEndsAt;
@@ -168,14 +169,14 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       margin: const EdgeInsets.all(24),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: theme.dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Current Plan', style: AppTheme.darkTheme.textTheme.titleMedium),
+          Text('Current Plan', style: theme.textTheme.titleMedium),
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -205,12 +206,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   children: [
                     Text(
                       '$daysLeft days left',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textSecondary),
+                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Expires: ${expiryDate?.toLocal().toString().split(' ')[0] ?? 'N/A'}',
-                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                      style: theme.textTheme.bodySmall,
                     ),
                   ],
                 ),
@@ -248,17 +249,21 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   }
 
   Widget _buildAvailablePlansSection() {
+    final theme = Theme.of(context);
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 600;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Available Plans', style: AppTheme.darkTheme.textTheme.titleMedium),
+          Text('Available Plans', style: theme.textTheme.titleMedium),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: PlanCard(
+          if (isMobile) 
+            Column(
+              children: [
+                PlanCard(
                   planId: 'starter',
                   name: 'Starter',
                   price: 'KES 2,600',
@@ -267,10 +272,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   isSelected: _selectedPlanId == 'starter',
                   onSelect: () => setState(() => _selectedPlanId = 'starter'),
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: PlanCard(
+                const SizedBox(height: 16),
+                PlanCard(
                   planId: 'pro',
                   name: 'Pro',
                   price: 'KES 5,200',
@@ -279,35 +282,63 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   isSelected: _selectedPlanId == 'pro',
                   onSelect: () => setState(() => _selectedPlanId = 'pro'),
                 ),
-              ),
-            ],
-          ),
+              ],
+            )
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: PlanCard(
+                    planId: 'starter',
+                    name: 'Starter',
+                    price: 'KES 2,600',
+                    billing: '/month',
+                    features: FeatureAccessService.getFeatures('starter'),
+                    isSelected: _selectedPlanId == 'starter',
+                    onSelect: () => setState(() => _selectedPlanId = 'starter'),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: PlanCard(
+                    planId: 'pro',
+                    name: 'Pro',
+                    price: 'KES 5,200',
+                    billing: '/month',
+                    features: FeatureAccessService.getFeatures('pro'),
+                    isSelected: _selectedPlanId == 'pro',
+                    onSelect: () => setState(() => _selectedPlanId = 'pro'),
+                  ),
+                ),
+              ],
+            ),
         ],
       ),
     );
   }
 
   Widget _buildPaymentSection(Business business) {
+    final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: theme.dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Payment Details', style: AppTheme.darkTheme.textTheme.titleMedium),
+          Text('Payment Details', style: theme.textTheme.titleMedium),
           const SizedBox(height: 16),
           TextField(
             onChanged: (val) => setState(() => _phoneNumber = val),
-            decoration: InputDecoration(
+            style: TextStyle(color: theme.textTheme.bodyLarge?.color),
+            decoration: const InputDecoration(
               hintText: '254712345678',
               labelText: 'M-Pesa Phone Number',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-              prefixIcon: const Icon(Icons.phone_rounded),
+              prefixIcon: Icon(Icons.phone_rounded),
             ),
           ),
           const SizedBox(height: 16),
@@ -407,23 +438,24 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   }
 
   void _showSuccessDialog() {
+    final theme = Theme.of(context);
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        backgroundColor: AppColors.card,
+        backgroundColor: theme.cardColor,
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 64),
             const SizedBox(height: 24),
-            Text('Payment Successful!', style: AppTheme.darkTheme.textTheme.headlineSmall),
+            Text('Payment Successful!', style: theme.textTheme.headlineSmall),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Your subscription is now active. You have full access to your new plan.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textSecondary),
+              style: theme.textTheme.bodyMedium,
             ),
             const SizedBox(height: 32),
             SizedBox(
@@ -431,10 +463,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               child: FilledButton(
                 onPressed: () async {
                   await context.read<AuthProvider>().refreshProfile();
-                  if (mounted) {
-                    Navigator.pop(context);
-                    context.go('/dashboard');
-                  }
+                  if (!context.mounted) return;
+                  Navigator.pop(context);
+                  context.go('/dashboard');
                 },
                 child: const Text('Go to Dashboard'),
               ),
@@ -446,16 +477,17 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   }
 
   Widget _buildWaitingOverlay() {
+    final theme = Theme.of(context);
     return Container(
-      color: AppColors.background.withValues(alpha: 0.8),
+      color: theme.scaffoldBackgroundColor.withValues(alpha: 0.8),
       child: Center(
         child: Container(
           margin: const EdgeInsets.all(32),
           padding: const EdgeInsets.all(32),
           decoration: BoxDecoration(
-            color: AppColors.card,
+            color: theme.cardColor,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: theme.dividerColor),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -465,15 +497,15 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 child: CircularProgressIndicator(strokeWidth: 4),
               ),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'Waiting for Payment',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'Please enter your M-Pesa PIN on your phone. This screen will update automatically once confirmed.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.textSecondary),
+                style: theme.textTheme.bodyMedium,
               ),
               const SizedBox(height: 32),
               OutlinedButton(
@@ -491,12 +523,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   }
 
   Widget _buildPaymentHistorySection() {
+    final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Payment History', style: AppTheme.darkTheme.textTheme.titleMedium),
+          Text('Payment History', style: theme.textTheme.titleMedium),
           const SizedBox(height: 16),
           if (_loadingHistory)
             const Center(child: CircularProgressIndicator())
@@ -520,15 +553,16 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   }
 
   Widget _buildPaymentHistoryItem(Subscription sub) {
+    final theme = Theme.of(context);
     final statusColor = sub.isCompleted ? AppColors.success : (sub.isFailed ? AppColors.error : AppColors.warning);
     final statusText = sub.isCompleted ? 'Completed' : (sub.isFailed ? 'Failed' : 'Pending');
 
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: theme.dividerColor),
       ),
       child: Row(
         children: [
@@ -539,7 +573,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(sub.plan.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                Text('${sub.createdAt.toLocal().toString().split(' ')[0]} • KES ${sub.amount}', style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                Text('${sub.createdAt.toLocal().toString().split(' ')[0]} • KES ${sub.amount}', 
+                  style: theme.textTheme.bodySmall),
               ],
             ),
           ),
