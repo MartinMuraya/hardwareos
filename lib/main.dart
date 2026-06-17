@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'core/router/app_router.dart';
 import 'core/providers/auth_provider.dart';
@@ -15,31 +16,42 @@ void main() async {
   runApp(HardwareOSApp(themeProvider: themeProvider));
 }
 
-class HardwareOSApp extends StatelessWidget {
+class HardwareOSApp extends StatefulWidget {
   final ThemeProvider themeProvider;
   const HardwareOSApp({required this.themeProvider, super.key});
+
+  @override
+  State<HardwareOSApp> createState() => _HardwareOSAppState();
+}
+
+class _HardwareOSAppState extends State<HardwareOSApp> {
+  GoRouter? _router;
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider.value(value: themeProvider),
+        ChangeNotifierProvider.value(value: widget.themeProvider),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProxyProvider<AuthProvider, BusinessProvider>(
           create: (_) => BusinessProvider(),
           update: (_, auth, biz) => biz!..updateFromAuth(auth),
         ),
       ],
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, child) {
-          final router = AppRouter.createRouter(context);
-          return MaterialApp.router(
-            title: 'HardwareOS',
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.darkTheme,
-            themeMode: themeProvider.themeMode,
-            routerConfig: router,
+      child: Builder(
+        builder: (context) {
+          _router ??= AppRouter.createRouter(context);
+          return Consumer<ThemeProvider>(
+            builder: (context, themeProvider, child) {
+              return MaterialApp.router(
+                title: 'HardwareOS',
+                debugShowCheckedModeBanner: false,
+                theme: AppTheme.lightTheme,
+                darkTheme: AppTheme.darkTheme,
+                themeMode: themeProvider.themeMode,
+                routerConfig: _router!,
+              );
+            },
           );
         },
       ),

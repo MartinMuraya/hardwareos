@@ -131,6 +131,14 @@
       ]
     },
     {
+      "collectionGroup": "customers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "businessId", "order": "ASCENDING" },
+        { "fieldPath": "fullName", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "quotations",
       "queryScope": "COLLECTION",
       "fields": [

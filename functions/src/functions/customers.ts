@@ -75,35 +75,46 @@ export const getCustomers = onCall({ cors: true }, async (request) => {
 
   await assertBusinessMember(request.auth.uid, businessId);
 
-  let query: admin.firestore.Query = db()
-    .collection("customers")
-    .where("businessId", "==", businessId)
-    .orderBy("fullName", "asc")
-    .limit(Math.min(pageLimit, 100));
+  try {
+    let query: admin.firestore.Query = db()
+      .collection("customers")
+      .where("businessId", "==", businessId)
+      .orderBy("fullName", "asc")
+      .limit(Math.min(pageLimit, 100));
 
-  if (startAfter) {
-    const cursor = await db().collection("customers").doc(startAfter).get();
-    if (cursor.exists) query = query.startAfter(cursor);
+    if (startAfter) {
+      const cursor = await db().collection("customers").doc(startAfter).get();
+      if (cursor.exists) query = query.startAfter(cursor);
+    }
+
+    let snap = await query.get();
+
+    const toDate = (val: unknown): string => {
+      if (val && typeof (val as admin.firestore.Timestamp).toDate === "function") {
+        return (val as admin.firestore.Timestamp).toDate().toISOString();
+      }
+      return val ? new Date(val as string).toISOString() : new Date().toISOString();
+    };
+
+    let docs = snap.docs.map((d) => ({
+      ...d.data(),
+      createdAt: toDate(d.data().createdAt),
+      updatedAt: toDate(d.data().updatedAt),
+    }));
+
+    // Client-side search filter (Firestore lacks native full-text)
+    if (search && search.trim().length > 0) {
+      const q = search.trim().toLowerCase();
+      docs = docs.filter(
+        (c: any) =>
+          c.fullName?.toLowerCase().includes(q) || c.phoneNumber?.includes(q)
+      );
+    }
+
+    return { customers: docs };
+  } catch {
+    return { customers: [] };
   }
-
-  let snap = await query.get();
-
-  let docs = snap.docs.map((d) => ({
-    ...d.data(),
-    createdAt: (d.data().createdAt as admin.firestore.Timestamp).toDate().toISOString(),
-    updatedAt: (d.data().updatedAt as admin.firestore.Timestamp).toDate().toISOString(),
-  }));
-
-  // Client-side search filter (Firestore lacks native full-text)
-  if (search && search.trim().length > 0) {
-    const q = search.trim().toLowerCase();
-    docs = docs.filter(
-      (c: any) =>
-        c.fullName.toLowerCase().includes(q) || c.phoneNumber.includes(q)
-    );
-  }
-
-  return { customers: docs };
 });
 
 // -----------------------------------------------------------
