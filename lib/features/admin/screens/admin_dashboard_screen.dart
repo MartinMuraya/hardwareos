@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/theme/app_colors.dart';
 
@@ -121,10 +122,75 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               },
             ),
 
+            // Subscription Analytics Summary
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: theme.cardColor,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: theme.dividerColor),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Subscription Health', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                      TextButton.icon(
+                        onPressed: () => context.go('/admin/analytics'),
+                        icon: const Icon(Icons.analytics_rounded, size: 16),
+                        label: const Text('Full Analytics'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      _MiniStat(label: 'Active', value: '$_activeBusinesses', color: AppColors.success),
+                      const SizedBox(width: 24),
+                      _MiniStat(label: 'Trial', value: '$_trialAccounts', color: AppColors.info),
+                      const SizedBox(width: 24),
+                      _MiniStat(label: 'Expired', value: '$_expiredSubscriptions', color: AppColors.error),
+                      const SizedBox(width: 24),
+                      _MiniStat(label: 'Revenue', value: 'KES ${_monthlyRevenue.toStringAsFixed(0)}', color: AppColors.accent),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
             const SizedBox(height: 48),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _MiniStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+
+  const _MiniStat({required this.label, required this.value, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: theme.colorScheme.onSurface)),
+        const SizedBox(height: 2),
+        Row(
+          children: [
+            Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+            const SizedBox(width: 4),
+            Text(label, style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
+          ],
+        ),
+      ],
     );
   }
 }

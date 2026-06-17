@@ -2,13 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:uuid/uuid.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/connectivity_provider.dart';
 import '../../../core/services/functions_service.dart';
+import '../../../core/services/receipt_service.dart';
+import '../../../core/services/offline_service.dart';
 import '../../../core/models/product.dart';
 import '../../../core/models/customer.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/responsive.dart';
 import '../../../core/widgets/loading_overlay.dart';
+import '../services/offline_sales_queue.dart';
 
 class POSScreen extends StatefulWidget {
   const POSScreen({super.key});
@@ -34,12 +39,53 @@ class _POSScreenState extends State<POSScreen> {
   bool _processingCheckout   = false;
   String? _error;
 
+  ReceiptData? _lastReceiptData;
+
   final _fmt = NumberFormat.currency(locale: 'en_KE', symbol: 'KES ');
 
   @override
-  void initState() { super.initState(); _loadProducts(); _searchCtrl.addListener(_filter); }
+  void initState() {
+    super.initState();
+    _loadSavedCart();
+    _loadProducts();
+    _searchCtrl.addListener(_filter);
+  }
   @override
   void dispose() { _searchCtrl.dispose(); _amountPaidCtrl.dispose(); super.dispose(); }
+
+  void _loadSavedCart() {
+    final saved = OfflineService.loadCart();
+    if (saved.isNotEmpty) {
+      final loaded = <_CartEntry>[];
+      for (final item in saved) {
+        final prodMap = item['product'] as Map<String, dynamic>;
+        final qty = item['qty'] as int;
+        loaded.add(_CartEntry(product: Product.fromMap(prodMap), qty: qty));
+      }
+      _cart.addAll(loaded);
+    }
+  }
+
+  void _saveCart() {
+    OfflineService.saveCart(
+      _cart.map((e) => {
+        'product': {
+          'id': e.product.id,
+          'businessId': e.product.businessId,
+          'name': e.product.name,
+          'sku': e.product.sku,
+          'category': e.product.category,
+          'quantity': e.product.quantity,
+          'costPrice': e.product.costPrice,
+          'sellingPrice': e.product.sellingPrice,
+          'reorderLevel': e.product.reorderLevel,
+          'createdAt': e.product.createdAt.toIso8601String(),
+          'updatedAt': e.product.updatedAt.toIso8601String(),
+        },
+        'qty': e.qty,
+      }).toList(),
+    );
+  }
 
   Future<void> _loadCustomers() async {
     if (_customers.isNotEmpty) return;
@@ -92,10 +138,13 @@ class _POSScreenState extends State<POSScreen> {
         _cart.add(_CartEntry(product: p, qty: 1));
       }
     });
+    _saveCart();
   }
 
-  void _removeFromCart(String productId) =>
-      setState(() => _cart.removeWhere((e) => e.product.id == productId));
+  void _removeFromCart(String productId) {
+    setState(() => _cart.removeWhere((e) => e.product.id == productId));
+    _saveCart();
+  }
 
   void _updateQty(String productId, int newQty) {
     setState(() {
@@ -108,6 +157,7 @@ class _POSScreenState extends State<POSScreen> {
         }
       }
     });
+    _saveCart();
   }
 
   double get _cartTotal  => _cart.fold(0, (s, e) => s + e.lineTotal);
@@ -121,48 +171,156 @@ class _POSScreenState extends State<POSScreen> {
     }
     setState(() { _processingCheckout = true; _error = null; });
     try {
-      final bizId = context.read<AuthProvider>().businessId!;
+      final auth = context.read<AuthProvider>();
+      final bizId = auth.businessId;
+      if (bizId == null) { setState(() { _error = 'No business found.'; _processingCheckout = false; }); return; }
 
-      final Map<String, dynamic> result;
-      if (_paymentMethod == 'credit') {
-        final amountPaid = double.tryParse(_amountPaidCtrl.text.trim()) ?? 0;
-        result = await FunctionsService.call('createCreditSale', {
-          'businessId': bizId,
-          'customerId': _selectedCustomerId,
-          'customerName': _selectedCustomerName,
-          'items': _cart.map((e) => e.toMap()).toList(),
-          'amountPaid': amountPaid > 0 ? amountPaid : 0,
-        });
+      final total = _cartTotal;
+      final profit = _cartProfit;
+      final items = _cart.map((e) => e.toMap()).toList();
+      final isOnline = context.read<ConnectivityProvider>().isOnline;
+
+      if (isOnline) {
+        Map<String, dynamic> result;
+        if (_paymentMethod == 'credit') {
+          final amountPaid = double.tryParse(_amountPaidCtrl.text.trim()) ?? 0;
+          result = await FunctionsService.call('createCreditSale', {
+            'businessId': bizId,
+            'customerId': _selectedCustomerId,
+            'customerName': _selectedCustomerName,
+            'items': items,
+            'amountPaid': amountPaid > 0 ? amountPaid : 0,
+          });
+        } else {
+          result = await FunctionsService.call('createSale', {
+            'businessId': bizId,
+            'paymentMethod': _paymentMethod,
+            'items': items,
+          });
+        }
+
+        if (mounted) {
+          final saleTotal  = (result['total'] as num?)?.toDouble() ?? total;
+          final saleProfit = (result['profit'] as num?)?.toDouble() ?? profit;
+          final outstanding = (result['outstanding'] as num?)?.toDouble();
+          final amountPaid = (result['amountPaid'] as num?)?.toDouble();
+          _lastReceiptData = ReceiptData(
+            storeName: auth.userProfile?['businessName'] as String? ?? 'Hardware Store',
+            storePhone: auth.userProfile?['phone'] as String? ?? '',
+            date: DateTime.now(),
+            cashier: auth.user?.email ?? 'staff',
+            receiptNumber: result['saleId'] as String? ?? const Uuid().v4().substring(0, 8),
+            items: _cart.map((e) => ReceiptItem(
+              name: e.product.name, quantity: e.qty,
+              price: e.product.sellingPrice, subtotal: e.lineTotal,
+            )).toList(),
+            subtotal: saleTotal,
+            grandTotal: saleTotal,
+            paymentMethod: _paymentMethod,
+          );
+          _showReceiptDialog(saleTotal, saleProfit, outstanding: outstanding, amountPaid: amountPaid);
+          _clearAfterCheckout();
+          _loadProducts();
+        }
       } else {
-        result = await FunctionsService.call('createSale', {
-          'businessId': bizId,
+        final queue = context.read<OfflineSalesQueue>();
+        final saleId = 'offline_${const Uuid().v4().substring(0, 8)}';
+        final saleData = {
           'paymentMethod': _paymentMethod,
-          'items': _cart.map((e) => e.toMap()).toList(),
-        });
-      }
+          'items': items,
+          if (_paymentMethod == 'credit') ...{
+            'customerId': _selectedCustomerId,
+            'customerName': _selectedCustomerName,
+            'amountPaid': double.tryParse(_amountPaidCtrl.text.trim()) ?? 0,
+          },
+        };
+        await queue.enqueueOfflineSale(saleData);
 
-      if (mounted) {
-        final total  = (result['total'] as num?)?.toDouble() ?? 0;
-        final profit = (result['profit'] as num?)?.toDouble() ?? 0;
-        final outstanding = (result['outstanding'] as num?)?.toDouble();
-        final amountPaid = (result['amountPaid'] as num?)?.toDouble();
-        _showReceiptDialog(total, profit, outstanding: outstanding, amountPaid: amountPaid);
-        setState(() {
-          _cart.clear();
-          _processingCheckout = false;
-          _selectedCustomerId = null;
-          _selectedCustomerName = '';
-          _amountPaidCtrl.clear();
-        });
-        _loadProducts();
+        if (mounted) {
+          _lastReceiptData = ReceiptData(
+            storeName: auth.userProfile?['businessName'] as String? ?? 'Hardware Store',
+            storePhone: auth.userProfile?['phone'] as String? ?? '',
+            date: DateTime.now(),
+            cashier: auth.user?.email ?? 'staff',
+            receiptNumber: saleId,
+            items: _cart.map((e) => ReceiptItem(
+              name: e.product.name, quantity: e.qty,
+              price: e.product.sellingPrice, subtotal: e.lineTotal,
+            )).toList(),
+            subtotal: total,
+            grandTotal: total,
+            paymentMethod: _paymentMethod,
+          );
+          _showReceiptDialog(total, profit, isOffline: true);
+          _clearAfterCheckout();
+        }
       }
     } on FunctionsException catch (e) {
-      if (mounted) setState(() { _error = e.message; _processingCheckout = false; });
+      if (mounted) {
+        if (e.code == 'unavailable' || e.code == 'deadline-exceeded') {
+          _handleOfflineCheckout();
+        } else {
+          setState(() { _error = e.message; _processingCheckout = false; });
+        }
+      }
+    }
+  }
+
+  void _clearAfterCheckout() {
+    setState(() {
+      _cart.clear();
+      _processingCheckout = false;
+      _selectedCustomerId = null;
+      _selectedCustomerName = '';
+      _amountPaidCtrl.clear();
+    });
+    _saveCart();
+  }
+
+  Future<void> _handleOfflineCheckout() async {
+    final auth = context.read<AuthProvider>();
+    final bizId = auth.businessId;
+    if (bizId == null) return;
+
+    final total = _cartTotal;
+    final profit = _cartProfit;
+    final items = _cart.map((e) => e.toMap()).toList();
+    final queue = context.read<OfflineSalesQueue>();
+    final saleId = 'offline_${const Uuid().v4().substring(0, 8)}';
+
+    final saleData = {
+      'paymentMethod': _paymentMethod,
+      'items': items,
+      if (_paymentMethod == 'credit') ...{
+        'customerId': _selectedCustomerId,
+        'customerName': _selectedCustomerName,
+        'amountPaid': double.tryParse(_amountPaidCtrl.text.trim()) ?? 0,
+      },
+    };
+    await queue.enqueueOfflineSale(saleData);
+
+    if (mounted) {
+      _lastReceiptData = ReceiptData(
+        storeName: auth.userProfile?['businessName'] as String? ?? 'Hardware Store',
+        storePhone: auth.userProfile?['phone'] as String? ?? '',
+        date: DateTime.now(),
+        cashier: auth.user?.email ?? 'staff',
+        receiptNumber: saleId,
+        items: _cart.map((e) => ReceiptItem(
+          name: e.product.name, quantity: e.qty,
+          price: e.product.sellingPrice, subtotal: e.lineTotal,
+        )).toList(),
+        subtotal: total,
+        grandTotal: total,
+        paymentMethod: _paymentMethod,
+      );
+      _showReceiptDialog(total, profit, isOffline: true);
+      _clearAfterCheckout();
     }
   }
 
   void _showReceiptDialog(double total, double profit,
-      {double? outstanding, double? amountPaid}) {
+      {double? outstanding, double? amountPaid, bool isOffline = false}) {
     final theme = Theme.of(context);
     showDialog(
       context: context,
@@ -173,13 +331,21 @@ class _POSScreenState extends State<POSScreen> {
           Container(
             width: 64, height: 64,
             decoration: BoxDecoration(
-              color: AppColors.success.withValues(alpha: 0.1),
+              color: isOffline ? AppColors.warning.withValues(alpha: 0.1) : AppColors.success.withValues(alpha: 0.1),
               shape: BoxShape.circle),
-            child: const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 36),
+            child: Icon(
+              isOffline ? Icons.wifi_off_rounded : Icons.check_circle_rounded,
+              color: isOffline ? AppColors.warning : AppColors.success, size: 36,
+            ),
           ),
           const SizedBox(height: 16),
-          const Text('Sale Complete!',
+          Text(isOffline ? 'Sale Saved Offline' : 'Sale Complete!',
             style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+          if (isOffline) ...[
+            const SizedBox(height: 4),
+            Text('Will sync when online',
+              style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12)),
+          ],
           const SizedBox(height: 16),
           _ReceiptRow('Total',  _fmt.format(total), theme: theme),
           _ReceiptRow('Profit', _fmt.format(profit), valueColor: AppColors.success, theme: theme),
@@ -191,6 +357,24 @@ class _POSScreenState extends State<POSScreen> {
         ]),
         actions: [
           TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Done')),
+          if (_lastReceiptData != null) ...[
+            TextButton.icon(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                _printReceipt(context);
+              },
+              icon: const Icon(Icons.print_rounded, size: 16),
+              label: const Text('Print'),
+            ),
+            TextButton.icon(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                _shareReceiptPdf();
+              },
+              icon: const Icon(Icons.share_rounded, size: 16),
+              label: const Text('Share PDF'),
+            ),
+          ],
           ElevatedButton(
             onPressed: () { Navigator.pop(dialogContext); context.go('/sales/history'); },
             child: const Text('View History'),
@@ -198,6 +382,38 @@ class _POSScreenState extends State<POSScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _printReceipt(BuildContext context) async {
+    if (_lastReceiptData == null) return;
+    try {
+      final bytes = await ReceiptService.generateEscPos(_lastReceiptData!);
+      final success = await ReceiptService.printViaBluetooth(bytes);
+      if (!success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No Bluetooth printer found. Connect a printer and try again.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Print failed: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _shareReceiptPdf() async {
+    if (_lastReceiptData == null) return;
+    try {
+      await ReceiptService.sharePdf(_lastReceiptData!);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Share failed: $e')),
+        );
+      }
+    }
   }
 
   void _showCustomerPicker() {

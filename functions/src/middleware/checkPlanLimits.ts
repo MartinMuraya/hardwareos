@@ -48,14 +48,30 @@ export async function assertBusinessMember(
   }
 }
 
-/** Enforce: subscription is valid (not expired) */
+/** Enforce: subscription is active (not expired or grace_period) — for write operations */
 export async function assertActiveSubscription(businessId: string): Promise<BusinessData> {
   const biz = await getBusinessData(businessId);
   const trialEndsAt = biz.trialEndsAt ? biz.trialEndsAt.toDate() : null;
 
-  const { isExpired } = getEffectivePlan(biz.plan, biz.subscriptionStatus, trialEndsAt);
+  const { isExpired, isGracePeriod } = getEffectivePlan(biz.plan, biz.subscriptionStatus, trialEndsAt);
 
-  if (isExpired) {
+  if (isExpired && !isGracePeriod) {
+    throw new HttpsError("resource-exhausted", UPGRADE_MESSAGES["expired"]);
+  }
+  if (isGracePeriod) {
+    throw new HttpsError("resource-exhausted", UPGRADE_MESSAGES["gracePeriod"]);
+  }
+  return biz;
+}
+
+/** Enforce: subscription is not hard-expired — allows grace_period for read operations */
+export async function assertActiveOrGracePeriod(businessId: string): Promise<BusinessData> {
+  const biz = await getBusinessData(businessId);
+  const trialEndsAt = biz.trialEndsAt ? biz.trialEndsAt.toDate() : null;
+
+  const { isExpired, isGracePeriod } = getEffectivePlan(biz.plan, biz.subscriptionStatus, trialEndsAt);
+
+  if (isExpired && !isGracePeriod) {
     throw new HttpsError("resource-exhausted", UPGRADE_MESSAGES["expired"]);
   }
   return biz;

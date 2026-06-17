@@ -32,20 +32,35 @@ class FeatureAccessService {
     ],
   };
 
+  /// Features restricted during grace period (read-only only)
+  static const List<String> _gracePeriodRestricted = [
+    'sales',
+    'expenses',
+    'customers',
+    'suppliers',
+  ];
+
   /// Check if a plan has access to a specific feature
   static bool hasFeature(String planId, String feature) {
     final features = _planFeatures[planId] ?? [];
     return features.contains(feature);
   }
 
-  /// Get all features for a plan
-  static List<String> getFeatures(String planId) {
-    return _planFeatures[planId] ?? [];
+  /// Get all features for a plan (respects grace period restrictions)
+  static List<String> getFeatures(String planId, {bool isGracePeriod = false}) {
+    final features = _planFeatures[planId] ?? [];
+    if (!isGracePeriod) return features;
+    return features.where((f) => !_gracePeriodRestricted.contains(f)).toList();
   }
 
   /// Get available features for a plan
   static List<String> getAvailableFeatures(Plan plan) {
     return _planFeatures[plan.id] ?? [];
+  }
+
+  /// Check if a feature is write-restricted during grace period
+  static bool isGracePeriodRestricted(String feature) {
+    return _gracePeriodRestricted.contains(feature);
   }
 
   /// Check if upgrade needed for feature

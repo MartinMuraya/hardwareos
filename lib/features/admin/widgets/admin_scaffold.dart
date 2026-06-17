@@ -83,8 +83,10 @@ class AdminScaffold extends StatelessWidget {
                 NavigationRailDestination(icon: Icon(Icons.dashboard_rounded), label: Text('Overview')),
                 NavigationRailDestination(icon: Icon(Icons.store_rounded), label: Text('Businesses')),
                 NavigationRailDestination(icon: Icon(Icons.card_membership_rounded), label: Text('Subscriptions')),
+                NavigationRailDestination(icon: Icon(Icons.analytics_rounded), label: Text('Analytics')),
                 NavigationRailDestination(icon: Icon(Icons.people_rounded), label: Text('Users')),
                 NavigationRailDestination(icon: Icon(Icons.view_list_rounded), label: Text('Plans')),
+                NavigationRailDestination(icon: Icon(Icons.security_rounded), label: Text('Security')),
                 NavigationRailDestination(icon: Icon(Icons.settings_rounded), label: Text('Settings')),
               ],
             ),
@@ -99,9 +101,11 @@ class AdminScaffold extends StatelessWidget {
     if (location == '/admin' || location == '/admin/dashboard') return 0;
     if (location.startsWith('/admin/businesses')) return 1;
     if (location.startsWith('/admin/subscriptions')) return 2;
-    if (location.startsWith('/admin/users')) return 3;
-    if (location.startsWith('/admin/plans')) return 4;
-    if (location.startsWith('/admin/settings')) return 5;
+    if (location.startsWith('/admin/analytics')) return 3;
+    if (location.startsWith('/admin/users')) return 4;
+    if (location.startsWith('/admin/plans')) return 5;
+    if (location.startsWith('/admin/security')) return 7;
+    if (location.startsWith('/admin/settings')) return 6;
     return 0;
   }
 
@@ -110,9 +114,11 @@ class AdminScaffold extends StatelessWidget {
       case 0: context.go('/admin/dashboard'); break;
       case 1: context.go('/admin/businesses'); break;
       case 2: context.go('/admin/subscriptions'); break;
-      case 3: context.go('/admin/users'); break;
-      case 4: context.go('/admin/plans'); break;
-      case 5: context.go('/admin/settings'); break;
+      case 3: context.go('/admin/analytics'); break;
+      case 4: context.go('/admin/users'); break;
+      case 5: context.go('/admin/plans'); break;
+      case 6: context.go('/admin/settings'); break;
+      case 7: context.go('/admin/security'); break;
     }
   }
 }
@@ -201,6 +207,15 @@ class _Sidebar extends StatelessWidget {
                   },
                 ),
                 _NavItem(
+                  icon: Icons.analytics_rounded,
+                  label: 'Analytics',
+                  isSelected: location.startsWith('/admin/analytics'),
+                  onTap: () {
+                    if (isDrawer) Navigator.pop(context);
+                    context.go('/admin/analytics');
+                  },
+                ),
+                _NavItem(
                   icon: Icons.people_rounded,
                   label: 'Users',
                   isSelected: location.startsWith('/admin/users'),
@@ -216,6 +231,15 @@ class _Sidebar extends StatelessWidget {
                   onTap: () {
                     if (isDrawer) Navigator.pop(context);
                     context.go('/admin/plans');
+                  },
+                ),
+                _NavItem(
+                  icon: Icons.security_rounded,
+                  label: 'Security',
+                  isSelected: location.startsWith('/admin/security'),
+                  onTap: () {
+                    if (isDrawer) Navigator.pop(context);
+                    context.go('/admin/security');
                   },
                 ),
                 _NavItem(

@@ -27,6 +27,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   String? _error;
   List<Subscription> _paymentHistory = [];
   bool _loadingHistory = false;
+  List<Map<String, dynamic>> _subscriptionHistory = [];
+  bool _loadingSubscriptionHistory = false;
 
   StreamSubscription? _paymentSubscription;
   bool _isWaitingForPayment = false;
@@ -36,6 +38,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   void initState() {
     super.initState();
     _loadPaymentHistory();
+    _loadSubscriptionHistory();
   }
 
   @override
@@ -69,6 +72,25 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     }
   }
 
+  Future<void> _loadSubscriptionHistory() async {
+    setState(() => _loadingSubscriptionHistory = true);
+    try {
+      final res = await FunctionsService.call('getMySubscriptionHistory', {});
+      final events = (res['events'] as List? ?? [])
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+      if (mounted) {
+        setState(() {
+          _subscriptionHistory = events;
+          _loadingSubscriptionHistory = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loadingSubscriptionHistory = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -126,6 +148,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     final isExpired = business.isExpired;
     final isOnTrial = business.isOnTrial;
     final isActive = business.isActive;
+    final isGracePeriod = business.isOnGracePeriod;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -139,7 +162,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           SingleChildScrollView(
             child: Column(
               children: [
-                _buildCurrentStatusCard(business, isExpired, isOnTrial, isActive),
+                _buildCurrentStatusCard(business, isExpired, isOnTrial, isActive, isGracePeriod),
                 const SizedBox(height: 24),
                 _buildAvailablePlansSection(),
                 if (_selectedPlanId != null) ...[
@@ -148,6 +171,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 ],
                 const SizedBox(height: 24),
                 _buildPaymentHistorySection(),
+                const SizedBox(height: 24),
+                _buildSubscriptionHistorySection(),
                 const SizedBox(height: 24),
               ],
             ),
@@ -158,12 +183,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     );
   }
 
-  Widget _buildCurrentStatusCard(Business business, bool isExpired, bool isOnTrial, bool isActive) {
+  Widget _buildCurrentStatusCard(Business business, bool isExpired, bool isOnTrial, bool isActive, bool isGracePeriod) {
     final theme = Theme.of(context);
-    final statusColor = isExpired ? AppColors.error : (isActive ? AppColors.success : AppColors.warning);
-    final statusText = isExpired ? 'Expired' : (isActive ? 'Active' : 'Trial');
-    final expiryDate = isOnTrial ? business.trialEndsAt : business.subscriptionEndsAt;
-    final daysLeft = isOnTrial ? business.trialDaysLeft : business.subscriptionDaysLeft;
+    final statusColor = isExpired ? AppColors.error : (isGracePeriod ? AppColors.warning : (isActive ? AppColors.success : AppColors.info));
+    final statusText = isExpired ? 'Expired' : (isGracePeriod ? 'Grace Period' : (isActive ? 'Active' : 'Trial'));
+    final expiryDate = isOnTrial ? business.trialEndsAt : (isGracePeriod ? business.gracePeriodEndsAt : business.subscriptionEndsAt);
+    final daysLeft = isOnTrial ? business.trialDaysLeft : (isGracePeriod ? business.graceDaysLeft : business.subscriptionDaysLeft);
 
     return Container(
       margin: const EdgeInsets.all(24),
@@ -236,6 +261,32 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                         child: Text(
                           'Your trial or subscription has expired. Upgrade to continue using HardwareOS.',
                           style: TextStyle(color: AppColors.error, fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          if (isGracePeriod)
+            Column(
+              children: [
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.warning.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.hourglass_bottom_rounded, color: AppColors.warning, size: 18),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Your subscription has ended. You have ${business.graceDaysLeft ?? 0} days left in the grace period. Renew now to avoid losing access.',
+                          style: const TextStyle(color: AppColors.warning, fontSize: 13),
                         ),
                       ),
                     ],
@@ -585,6 +636,137 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(statusText, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: statusColor)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubscriptionHistorySection() {
+    final theme = Theme.of(context);
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Subscription Timeline', style: theme.textTheme.titleMedium),
+              IconButton(
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                onPressed: _loadSubscriptionHistory,
+                tooltip: 'Refresh',
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (_loadingSubscriptionHistory)
+            const Center(child: CircularProgressIndicator())
+          else if (_subscriptionHistory.isEmpty)
+            const EmptyState(
+              icon: Icons.history_rounded,
+              title: 'No Events Yet',
+              subtitle: 'Subscription lifecycle events will appear here',
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _subscriptionHistory.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (context, i) => _buildSubscriptionHistoryItem(_subscriptionHistory[i]),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubscriptionHistoryItem(Map<String, dynamic> event) {
+    final theme = Theme.of(context);
+    final eventType = event['eventType'] as String? ?? '';
+    final description = event['description'] as String? ?? '';
+    final timestamp = event['timestamp'] as String?;
+    final newStatus = event['newStatus'] as String?;
+
+    IconData icon;
+    Color color;
+    switch (eventType) {
+      case 'subscription_activated':
+      case 'subscription_renewed':
+        icon = Icons.check_circle_rounded;
+        color = AppColors.success;
+        break;
+      case 'payment_failed':
+      case 'payment_timeout':
+        icon = Icons.cancel_rounded;
+        color = AppColors.error;
+        break;
+      case 'subscription_expired':
+      case 'trial_ended':
+        icon = Icons.timer_off_rounded;
+        color = AppColors.error;
+        break;
+      case 'grace_period_ended':
+        icon = Icons.hourglass_empty_rounded;
+        color = AppColors.warning;
+        break;
+      case 'renewal_reminder':
+        icon = Icons.notifications_rounded;
+        color = AppColors.info;
+        break;
+      default:
+        icon = Icons.info_rounded;
+        color = AppColors.info;
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.dividerColor),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: color, size: 16),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(description, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    if (newStatus != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        margin: const EdgeInsets.only(right: 8),
+                        decoration: BoxDecoration(
+                          color: AppColors.accent.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(newStatus.toUpperCase(),
+                          style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: AppColors.accent)),
+                      ),
+                    if (timestamp != null)
+                      Text(
+                        DateTime.tryParse(timestamp)?.toLocal().toString().split(' ')[0] ?? '',
+                        style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
+                      ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),

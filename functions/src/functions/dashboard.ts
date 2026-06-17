@@ -201,22 +201,27 @@ export const getReportStats = onCall({ cors: true }, async (request) => {
 });
 
 // -----------------------------------------------------------
-// TEMPORARY: seedDemoData
+// seedDemoData
 // Seeds realistic products, sales, and expenses.
+// Admin-only function.
 // -----------------------------------------------------------
-import { onRequest } from "firebase-functions/v2/https";
 
-export const seedDemoData = onRequest(async (req, res) => {
-  try {
-    let businessId = req.query.businessId as string;
-    if (!businessId) {
-      const snap = await db().collection("businesses").limit(1).get();
-      if (snap.empty) {
-        res.status(400).send("No businesses found! Create one first.");
-        return;
-      }
-      businessId = snap.docs[0].id;
+export const seedDemoData = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
+
+  const adminSnap = await db().collection("platformAdmins").doc(request.auth.uid).get();
+  if (!adminSnap.exists) {
+    throw new HttpsError("permission-denied", "Only platform administrators can seed demo data.");
+  }
+
+  let businessId = (request.data as { businessId?: string }).businessId;
+  if (!businessId) {
+    const snap = await db().collection("businesses").limit(1).get();
+    if (snap.empty) {
+      throw new HttpsError("not-found", "No businesses found.");
     }
+    businessId = snap.docs[0].id;
+  }
     const batchArray: Promise<any>[] = [];
     let currentBatch = db().batch();
     let operationCounter = 0;
@@ -342,8 +347,5 @@ export const seedDemoData = onRequest(async (req, res) => {
     }
 
     await Promise.all(batchArray);
-    res.send("✅ Seed complete! Inserted ~250 products, ~300 sales, ~100 expenses.");
-  } catch (error: any) {
-    res.status(500).send(`Error: ${error.message}`);
-  }
+    return { success: true, message: "Seed complete! Inserted ~250 products, ~300 sales, ~100 expenses." };
 });

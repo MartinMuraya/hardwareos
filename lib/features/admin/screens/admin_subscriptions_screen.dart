@@ -84,6 +84,7 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
                       items: const [
                         DropdownMenuItem(value: 'trial', child: Text('Trial')),
                         DropdownMenuItem(value: 'active', child: Text('Active')),
+                        DropdownMenuItem(value: 'grace_period', child: Text('Grace Period')),
                         DropdownMenuItem(value: 'expired', child: Text('Expired')),
                       ],
                       onChanged: (val) {
@@ -233,8 +234,8 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
                                         _Badge(label: (sub['plan'] ?? 'free').toUpperCase(), color: AppColors.accent),
                                         const SizedBox(width: 8),
                                         _Badge(
-                                            label: (sub['subscriptionStatus'] ?? 'trial').toUpperCase(),
-                                            color: sub['subscriptionStatus'] == 'active' ? AppColors.success : AppColors.warning),
+                                            label: _statusLabel(sub['subscriptionStatus'] ?? 'trial'),
+                                            color: _statusColor(sub['subscriptionStatus'] ?? 'trial')),
                                       ],
                                     ),
                                     const SizedBox(height: 8),
@@ -254,6 +255,26 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
                       },
                     ),
     );
+  }
+
+  String _statusLabel(String status) {
+    switch (status) {
+      case 'active': return 'ACTIVE';
+      case 'trial': return 'TRIAL';
+      case 'grace_period': return 'GRACE PERIOD';
+      case 'expired': return 'EXPIRED';
+      default: return status.toUpperCase();
+    }
+  }
+
+  Color _statusColor(String status) {
+    switch (status) {
+      case 'active': return AppColors.success;
+      case 'trial': return AppColors.info;
+      case 'grace_period': return AppColors.warning;
+      case 'expired': return AppColors.error;
+      default: return AppColors.warning;
+    }
   }
 }
 

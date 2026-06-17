@@ -12,6 +12,7 @@ import '../widgets/kpi_card.dart';
 import '../widgets/plan_status_banner.dart';
 import '../widgets/low_stock_list.dart';
 import '../widgets/recent_sales_list.dart';
+import '../widgets/pending_sync_card.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -127,6 +128,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               if (sub != null) PlanStatusBanner(subscription: sub),
               if (sub != null) const SizedBox(height: 20),
+              const PendingSyncCard(),
+              const SizedBox(height: 12),
 
               if (_error != null && !_loading)
                 _ErrorCard(message: _error!, onRetry: _load, theme: theme),

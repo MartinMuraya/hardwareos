@@ -106,8 +106,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             labelText: 'Email Address',
                             prefixIcon: Icon(Icons.email_outlined, size: 18),
                           ),
-                          validator: (v) => v == null || !v.contains('@')
-                              ? 'Enter a valid email' : null,
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) return 'Enter your email';
+                            final emailRegExp = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+                            if (!emailRegExp.hasMatch(v.trim())) return 'Enter a valid email address';
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 16),
 
@@ -123,8 +127,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               onPressed: () => setState(() => _obscure = !_obscure),
                             ),
                           ),
-                          validator: (v) => v == null || v.length < 6
-                              ? 'Password must be 6+ characters' : null,
+                          validator: (v) => v == null || v.length < 8
+                              ? 'Password must be 8+ characters' : null,
                           onFieldSubmitted: (_) => _submit(),
                         ),
                         const SizedBox(height: 8),

@@ -1,8 +1,20 @@
 import * as admin from "firebase-admin";
 import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
-import axios from "axios";
+import { MpesaProvider } from "../services/mpesaProvider";
+import { assertBusinessMember } from "../middleware/checkPlanLimits";
 
 const db = () => admin.firestore();
+
+const mpesa = new MpesaProvider();
+
+// -----------------------------------------------------------
+// Helper: compute next expiry date (always 30 days from now)
+// -----------------------------------------------------------
+function computeNextExpiry(): admin.firestore.Timestamp {
+  const d = new Date();
+  d.setDate(d.getDate() + 30);
+  return admin.firestore.Timestamp.fromDate(d);
+}
 
 // -----------------------------------------------------------
 // createSubscriptionPayment
@@ -20,10 +32,24 @@ export const createSubscriptionPayment = onCall({ cors: true }, async (request) 
     throw new HttpsError("invalid-argument", "businessId, planId, and phoneNumber are required");
   }
 
+  // Tenant isolation: caller must be a member of this business
+  await assertBusinessMember(request.auth.uid, businessId);
+
   // Validate phone format (e.g. 254712345678)
   const phoneRegex = /^254(7|1|3)\d{8}$/;
   if (!phoneRegex.test(phoneNumber)) {
     throw new HttpsError("invalid-argument", "Invalid M-Pesa phone number format. Must start with 254.");
+  }
+
+  // Rate limit: prevent duplicate pending payments for the same business
+  const existingPending = await db()
+    .collection("subscriptions")
+    .where("businessId", "==", businessId)
+    .where("transactionStatus", "==", "pending")
+    .limit(1)
+    .get();
+  if (!existingPending.empty) {
+    throw new HttpsError("aborted", "You already have a pending payment. Please wait or cancel before retrying.");
   }
 
   // Fetch plan info
@@ -42,7 +68,7 @@ export const createSubscriptionPayment = onCall({ cors: true }, async (request) 
   }
   const bizData = bizDoc.data()!;
 
-  // Generate checkout request ID (or simulate one)
+  // Generate checkout request ID
   const checkoutRequestId = "ws_CO_" + Math.random().toString(36).substring(2, 15);
 
   // Create pending subscription transaction record
@@ -62,6 +88,7 @@ export const createSubscriptionPayment = onCall({ cors: true }, async (request) 
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
     paidAt: null,
     expiresAt: null,
+    isRenewal: bizData.subscriptionStatus === "active" || bizData.subscriptionStatus === "grace_period" || bizData.subscriptionStatus === "expired",
   };
 
   await db().collection("subscriptions").doc(subscriptionId).set(subscriptionPayload);
@@ -77,54 +104,27 @@ export const createSubscriptionPayment = onCall({ cors: true }, async (request) 
   });
 
   // -----------------------------------------------------------
-  // Trigger Real Daraja STK Push
+  // Trigger Real Daraja STK Push via MpesaProvider
   // -----------------------------------------------------------
 
   try {
-    const consumerKey = process.env.MPESA_CONSUMER_KEY!;
-    const consumerSecret = process.env.MPESA_CONSUMER_SECRET!;
-    const shortcode = process.env.MPESA_SHORTCODE || "174379";
-    const passkey = process.env.MPESA_PASSKEY || "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919";
-    const callbackUrl = process.env.MPESA_CALLBACK_URL || `https://mpesacallback-us-central1.run.app`;
-
-    // 1. Get OAuth token
-    const authHeader = Buffer.from(`${consumerKey}:${consumerSecret}`).toString("base64");
-    const tokenRes = await axios.get("https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials", {
-      headers: { Authorization: `Basic ${authHeader}` }
+    const stkRes = await mpesa.initiatePayment({
+      amount,
+      currency,
+      phoneNumber,
+      accountReference: (bizData.name || "HardwareOS").substring(0, 12),
+      transactionDesc: `HardwareOS ${planId}`,
     });
-    const accessToken = tokenRes.data.access_token;
 
-    // 2. Generate password & timestamp
-    const timestamp = new Date().toISOString().replace(/[^0-9]/g, "").slice(0, 14);
-    const password = Buffer.from(`${shortcode}${passkey}${timestamp}`).toString("base64");
-
-    // 3. Initiate STK Push
-    const stkRes = await axios.post("https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest", {
-      BusinessShortCode: shortcode,
-      Password: password,
-      Timestamp: timestamp,
-      TransactionType: "CustomerPayBillOnline",
-      Amount: amount,
-      PartyA: phoneNumber,
-      PartyB: shortcode,
-      PhoneNumber: phoneNumber,
-      CallBackURL: callbackUrl,
-      AccountReference: bizData.name.substring(0, 12),
-      TransactionDesc: `HardwareOS ${planId}`
-    }, {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    });
+    const resolvedCheckoutId = stkRes.providerReference || checkoutRequestId;
 
     // Update with real checkout request ID if returned
-    if (stkRes.data && stkRes.data.CheckoutRequestID) {
-      await db().collection("subscriptions").doc(subscriptionId).update({
-        checkoutRequestId: stkRes.data.CheckoutRequestID
-      });
-    }
+    await db().collection("subscriptions").doc(subscriptionId).update({
+      checkoutRequestId: resolvedCheckoutId,
+    });
 
-    return { success: true, checkoutRequestId: stkRes.data.CheckoutRequestID || checkoutRequestId, isSimulation: false };
+    return { success: true, checkoutRequestId: resolvedCheckoutId, isSimulation: false };
   } catch (error: any) {
-    // Throw an error so the frontend knows the STK Push failed
     console.error("Daraja Error:", error.response?.data || error.message);
     throw new HttpsError("internal", `Failed to invoke Safaricom STK Push: ${error.message}`);
   }
@@ -163,28 +163,36 @@ export const mpesaCallback = onRequest({ cors: true }, async (req, res) => {
     const subDoc = subSnap.docs[0];
     const subData = subDoc.data();
 
+    // Process via MpesaProvider
+    let mpesaReceipt = "";
     if (ResultCode === 0) {
-      // Payment Successful
-      let mpesaReceipt = "";
       const metadataItems = stkCallback?.CallbackMetadata?.Item || [];
       for (const item of metadataItems) {
         if (item.Name === "MpesaReceiptNumber") {
           mpesaReceipt = item.Value;
         }
       }
+    }
 
+    const callbackResult = await mpesa.processCallback({
+      providerReference: CheckoutRequestID,
+      resultCode: ResultCode || 1,
+      resultDesc: ResultDesc || "",
+      receiptNumber: mpesaReceipt,
+    });
+
+    if (callbackResult.success) {
       const paidAt = admin.firestore.FieldValue.serverTimestamp();
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 30);
+      const expiresAt = computeNextExpiry();
 
       const batch = db().batch();
 
       // 1. Update subscription transaction
       batch.update(subDoc.ref, {
         transactionStatus: "completed",
-        mpesaReceipt,
+        mpesaReceipt: callbackResult.receiptNumber,
         paidAt,
-        expiresAt: admin.firestore.Timestamp.fromDate(expiresAt),
+        expiresAt,
       });
 
       // 2. Update business details
@@ -193,9 +201,10 @@ export const mpesaCallback = onRequest({ cors: true }, async (req, res) => {
         plan: subData.plan,
         subscriptionStatus: "active",
         subscriptionStartsAt: paidAt,
-        subscriptionEndsAt: admin.firestore.Timestamp.fromDate(expiresAt),
+        subscriptionEndsAt: expiresAt,
         lastPaymentDate: paidAt,
         active: true,
+        gracePeriodEndsAt: null,
       });
 
       // 3. System notification
@@ -210,7 +219,26 @@ export const mpesaCallback = onRequest({ cors: true }, async (req, res) => {
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       });
 
-      // 4. Audit Log
+      // 4. Subscription history event
+      const isRenewal = subData.isRenewal === true;
+      const histRef = db().collection("subscriptionHistory").doc();
+      batch.set(histRef, {
+        id: histRef.id,
+        businessId: subData.businessId,
+        businessName: subData.businessName,
+        eventType: isRenewal ? "subscription_renewed" : "subscription_activated",
+        description: isRenewal
+          ? `Subscription renewed to ${subData.plan} plan. KES ${subData.amount} paid.`
+          : `Subscription activated: ${subData.plan} plan. KES ${subData.amount} paid.`,
+        plan: subData.plan,
+        previousStatus: null,
+        newStatus: "active",
+        details: { amount: subData.amount, mpesaReceipt: callbackResult.receiptNumber, isRenewal },
+        performedBy: subData.ownerUid || "system",
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      // 5. Audit Log
       const auditRef = db().collection("auditLogs").doc();
       batch.set(auditRef, {
         action: "subscription_paid",
@@ -218,19 +246,38 @@ export const mpesaCallback = onRequest({ cors: true }, async (req, res) => {
         targetType: "business",
         performedBy: subData.ownerUid || "system",
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
-        details: { plan: subData.plan, amount: subData.amount, mpesaReceipt },
+        details: { plan: subData.plan, amount: subData.amount, mpesaReceipt: callbackResult.receiptNumber },
       });
 
       await batch.commit();
-      console.log(`Successfully activated subscription for business: ${subData.businessName} (plan: ${subData.plan})`);
+      console.log(`Successfully activated/renewed subscription for business: ${subData.businessName} (plan: ${subData.plan})`);
     } else {
       // Payment failed
-      await db().collection("subscriptions").doc(subDoc.id).update({
+      const batch = db().batch();
+
+      batch.update(subDoc.ref, {
         transactionStatus: "failed",
       });
 
+      // Subscription history event
+      const histRef = db().collection("subscriptionHistory").doc();
+      batch.set(histRef, {
+        id: histRef.id,
+        businessId: subData.businessId,
+        businessName: subData.businessName,
+        eventType: "payment_failed",
+        description: `Payment failed for ${subData.plan} plan. ${ResultDesc || ""}`,
+        plan: subData.plan,
+        previousStatus: null,
+        newStatus: "failed",
+        details: { amount: subData.amount, errorDesc: ResultDesc },
+        performedBy: subData.ownerUid || "system",
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
       // Audit Log
-      await db().collection("auditLogs").add({
+      const auditRef = db().collection("auditLogs").doc();
+      batch.set(auditRef, {
         action: "subscription_failed",
         targetId: subData.businessId,
         targetType: "business",
@@ -238,6 +285,8 @@ export const mpesaCallback = onRequest({ cors: true }, async (req, res) => {
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
         details: { plan: subData.plan, errorDesc: ResultDesc },
       });
+
+      await batch.commit();
     }
 
     res.status(200).send("OK");
@@ -249,10 +298,19 @@ export const mpesaCallback = onRequest({ cors: true }, async (req, res) => {
 
 // -----------------------------------------------------------
 // simulateMpesaCallback
-// Helper callable to test end-to-end payment loop instantly
+// Admin-only helper to test end-to-end payment loop instantly
 // -----------------------------------------------------------
 export const simulateMpesaCallback = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
+
+  // Production safety: only super admins can simulate payments
+  const adminSnap = await db()
+    .collection("platformAdmins")
+    .doc(request.auth.uid)
+    .get();
+  if (!adminSnap.exists) {
+    throw new HttpsError("permission-denied", "Only platform administrators can simulate payments.");
+  }
 
   const { checkoutRequestId, success } = request.data as { checkoutRequestId: string; success: boolean };
 
@@ -274,36 +332,10 @@ export const simulateMpesaCallback = onCall({ cors: true }, async (request) => {
   const subDoc = subSnap.docs[0];
   const subData = subDoc.data();
 
-  // Create simulated Safaricom callback body
-  const mockCallback = {
-    Body: {
-      stkCallback: {
-        MerchantRequestID: "mock_merchant_123",
-        CheckoutRequestID: checkoutRequestId,
-        ResultCode: success ? 0 : 1032, // 1032 = Cancelled by user
-        ResultDesc: success ? "The service request is processed successfully." : "Request cancelled by user.",
-        CallbackMetadata: success ? {
-          Item: [
-            { Name: "Amount", Value: subData.amount },
-            { Name: "MpesaReceiptNumber", "Value": "MPESA" + Math.random().toString(36).substring(2, 10).toUpperCase() },
-            { Name: "TransactionDate", Value: parseInt(new Date().toISOString().replace(/[^0-9]/g, "").slice(0, 14)) },
-            { Name: "PhoneNumber", Value: parseInt(subData.phoneNumber) }
-          ]
-        } : null
-      }
-    }
-  };
-
-  // Perform internal call processing
-  // We write to database directly to ensure completion in simulation
-  const ResultCode = mockCallback.Body.stkCallback.ResultCode;
-  const ResultDesc = mockCallback.Body.stkCallback.ResultDesc;
-
-  if (ResultCode === 0) {
-    let mpesaReceipt = "MOCK" + Math.random().toString(36).substring(2, 10).toUpperCase();
+  if (success) {
+    const mpesaReceipt = "MOCK" + Math.random().toString(36).substring(2, 10).toUpperCase();
     const paidAt = admin.firestore.FieldValue.serverTimestamp();
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 30);
+    const expiresAt = computeNextExpiry();
 
     const batch = db().batch();
 
@@ -311,7 +343,7 @@ export const simulateMpesaCallback = onCall({ cors: true }, async (request) => {
       transactionStatus: "completed",
       mpesaReceipt,
       paidAt,
-      expiresAt: admin.firestore.Timestamp.fromDate(expiresAt),
+      expiresAt,
     });
 
     const bizRef = db().collection("businesses").doc(subData.businessId);
@@ -319,9 +351,10 @@ export const simulateMpesaCallback = onCall({ cors: true }, async (request) => {
       plan: subData.plan,
       subscriptionStatus: "active",
       subscriptionStartsAt: paidAt,
-      subscriptionEndsAt: admin.firestore.Timestamp.fromDate(expiresAt),
+      subscriptionEndsAt: expiresAt,
       lastPaymentDate: paidAt,
       active: true,
+      gracePeriodEndsAt: null,
     });
 
     const notificationRef = db().collection("systemNotifications").doc();
@@ -333,6 +366,24 @@ export const simulateMpesaCallback = onCall({ cors: true }, async (request) => {
       plan: subData.plan,
       amount: subData.amount,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    const isRenewal = subData.isRenewal === true;
+    const histRef = db().collection("subscriptionHistory").doc();
+    batch.set(histRef, {
+      id: histRef.id,
+      businessId: subData.businessId,
+      businessName: subData.businessName,
+      eventType: isRenewal ? "subscription_renewed" : "subscription_activated",
+      description: isRenewal
+        ? `Subscription renewed to ${subData.plan} plan. KES ${subData.amount} paid.`
+        : `Subscription activated: ${subData.plan} plan. KES ${subData.amount} paid.`,
+      plan: subData.plan,
+      previousStatus: null,
+      newStatus: "active",
+      details: { amount: subData.amount, mpesaReceipt, isRenewal, simulated: true },
+      performedBy: request.auth.uid,
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
     });
 
     const auditRef = db().collection("auditLogs").doc();
@@ -347,18 +398,38 @@ export const simulateMpesaCallback = onCall({ cors: true }, async (request) => {
 
     await batch.commit();
   } else {
-    await db().collection("subscriptions").doc(subDoc.id).update({
+    const batch = db().batch();
+
+    batch.update(subDoc.ref, {
       transactionStatus: "failed",
     });
 
-    await db().collection("auditLogs").add({
+    const histRef = db().collection("subscriptionHistory").doc();
+    batch.set(histRef, {
+      id: histRef.id,
+      businessId: subData.businessId,
+      businessName: subData.businessName,
+      eventType: "payment_failed",
+      description: `Simulated payment failed for ${subData.plan} plan.`,
+      plan: subData.plan,
+      previousStatus: null,
+      newStatus: "failed",
+      details: { amount: subData.amount, simulated: true },
+      performedBy: request.auth.uid,
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    const auditRef = db().collection("auditLogs").doc();
+    batch.set(auditRef, {
       action: "subscription_failed",
       targetId: subData.businessId,
       targetType: "business",
       performedBy: request.auth.uid,
       timestamp: admin.firestore.FieldValue.serverTimestamp(),
-      details: { plan: subData.plan, errorDesc: ResultDesc, simulated: true },
+      details: { plan: subData.plan, simulated: true },
     });
+
+    await batch.commit();
   }
 
   return { success: true };

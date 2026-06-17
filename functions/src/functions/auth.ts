@@ -6,6 +6,7 @@ import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { TRIAL_DAYS } from "../config/planLimits";
 import { assertBusinessMember, assertUserLimit } from "../middleware/checkPlanLimits";
+import { assertCanManageRole } from "../middleware/securityMiddleware";
 
 const db = () => admin.firestore();
 
@@ -101,6 +102,9 @@ export const inviteUser = onCall({ cors: true }, async (request) => {
 
   // Caller must be owner or manager
   await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager"]);
+
+  // Role escalation protection
+  await assertCanManageRole(request.auth.uid, businessId, role);
 
   // Enforce plan user limit
   await assertUserLimit(businessId);

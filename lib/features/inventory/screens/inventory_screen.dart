@@ -8,6 +8,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/responsive.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/loading_overlay.dart';
+import '../widgets/import_dialog.dart';
 
 class InventoryScreen extends StatefulWidget {
   const InventoryScreen({super.key});
@@ -101,6 +102,18 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   },
                   icon: const Icon(Icons.add, size: 18),
                   label: const Text('Add Product'),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    final result = await showDialog<bool>(
+                      context: context,
+                      builder: (_) => const ImportDialog(),
+                    );
+                    if (result == true) _load();
+                  },
+                  icon: const Icon(Icons.upload_file_rounded, size: 18),
+                  label: const Text('Import'),
                 ),
               ]),
               const SizedBox(height: 20),

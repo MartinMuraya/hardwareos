@@ -17,9 +17,11 @@ import '../../features/team/screens/team_screen.dart';
 import '../../features/admin/screens/admin_dashboard_screen.dart';
 import '../../features/admin/screens/admin_businesses_screen.dart';
 import '../../features/admin/screens/admin_subscriptions_screen.dart';
+import '../../features/admin/screens/admin_analytics_screen.dart';
 import '../../features/admin/screens/admin_plans_screen.dart';
 import '../../features/admin/screens/admin_users_screen.dart';
 import '../../features/admin/screens/admin_settings_screen.dart';
+import '../../features/admin/screens/admin_security_screen.dart';
 import '../../features/admin/widgets/admin_scaffold.dart';
 import '../../features/auth/screens/pending_approval_screen.dart';
 import '../../features/auth/screens/email_verification_screen.dart';
@@ -146,6 +148,10 @@ class AppRouter {
               pageBuilder: (context, state) => const NoTransitionPage(child: AdminSubscriptionsScreen()),
             ),
             GoRoute(
+              path: '/admin/analytics',
+              pageBuilder: (context, state) => const NoTransitionPage(child: AdminAnalyticsScreen()),
+            ),
+            GoRoute(
               path: '/admin/plans',
               pageBuilder: (context, state) => const NoTransitionPage(child: AdminPlansScreen()),
             ),
@@ -156,6 +162,10 @@ class AppRouter {
             GoRoute(
               path: '/admin/settings',
               pageBuilder: (context, state) => const NoTransitionPage(child: AdminSettingsScreen()),
+            ),
+            GoRoute(
+              path: '/admin/security',
+              pageBuilder: (context, state) => const NoTransitionPage(child: AdminSecurityScreen()),
             ),
           ],
         ),

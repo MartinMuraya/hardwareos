@@ -192,6 +192,52 @@ service cloud.firestore {
     }
 
     // =========================================================
+    // LOGIN ATTEMPTS — deny all direct client access
+    // (managed by Cloud Functions only)
+    // =========================================================
+    match /loginAttempts/{docId} {
+      allow read, write: if false;
+    }
+
+    // =========================================================
+    // PASSWORD RESET REQUESTS — deny all direct client access
+    // (managed by Cloud Functions only)
+    // =========================================================
+    match /passwordResetRequests/{docId} {
+      allow read, write: if false;
+    }
+
+    // =========================================================
+    // SUBSCRIPTION STATS — super admins can read aggregate
+    // No direct client writes.
+    // =========================================================
+    match /subscriptionStats/{docId} {
+      allow read: if isAuth() && userDoc().isSuperAdmin == true;
+      allow write: if false;
+    }
+
+    // =========================================================
+    // SUBSCRIPTION HISTORY — business owner or super admin can read
+    // No direct client writes.
+    // =========================================================
+    match /subscriptionHistory/{docId} {
+      allow read: if isAuth() && (
+        userDoc().isSuperAdmin == true ||
+        resource.data.businessId == userDoc().businessId
+      );
+      allow create, update, delete: if false;
+    }
+
+    // =========================================================
+    // SUBSCRIPTION REMINDERS — super admin can read
+    // No direct client writes.
+    // =========================================================
+    match /subscriptionReminders/{docId} {
+      allow read: if isAuth() && userDoc().isSuperAdmin == true;
+      allow write: if false;
+    }
+
+    // =========================================================
     // DEFAULT DENY — reject everything else
     // =========================================================
     match /{document=**} {

@@ -6,6 +6,7 @@ class Business {
   final DateTime? trialEndsAt;
   final DateTime? subscriptionStartsAt;
   final DateTime? subscriptionEndsAt;
+  final DateTime? gracePeriodEndsAt;
   final DateTime? lastPaymentDate;
   final String ownerId;
   final DateTime createdAt;
@@ -19,6 +20,7 @@ class Business {
     this.trialEndsAt,
     this.subscriptionStartsAt,
     this.subscriptionEndsAt,
+    this.gracePeriodEndsAt,
     this.lastPaymentDate,
     required this.ownerId,
     required this.createdAt,
@@ -40,6 +42,9 @@ class Business {
       subscriptionEndsAt: map['subscriptionEndsAt'] != null
           ? DateTime.tryParse(map['subscriptionEndsAt'].toString())
           : null,
+      gracePeriodEndsAt: map['gracePeriodEndsAt'] != null
+          ? DateTime.tryParse(map['gracePeriodEndsAt'].toString())
+          : null,
       lastPaymentDate: map['lastPaymentDate'] != null
           ? DateTime.tryParse(map['lastPaymentDate'].toString())
           : null,
@@ -51,11 +56,12 @@ class Business {
     );
   }
 
-  bool get isOnTrial   => subscriptionStatus == 'trial';
-  bool get isExpired   => subscriptionStatus == 'expired';
-  bool get isActive    => subscriptionStatus == 'active';
-  bool get isPro       => plan == 'pro';
-  bool get isStarter   => plan == 'starter';
+  bool get isOnTrial        => subscriptionStatus == 'trial';
+  bool get isExpired        => subscriptionStatus == 'expired';
+  bool get isActive         => subscriptionStatus == 'active';
+  bool get isOnGracePeriod  => subscriptionStatus == 'grace_period';
+  bool get isPro            => plan == 'pro';
+  bool get isStarter        => plan == 'starter';
 
   int? get trialDaysLeft {
     if (trialEndsAt == null) return null;
@@ -67,5 +73,11 @@ class Business {
     if (subscriptionEndsAt == null) return null;
     final now = DateTime.now();
     return subscriptionEndsAt!.isAfter(now) ? subscriptionEndsAt!.difference(now).inDays.clamp(0, 999) : 0;
+  }
+
+  int? get graceDaysLeft {
+    if (gracePeriodEndsAt == null) return null;
+    final now = DateTime.now();
+    return gracePeriodEndsAt!.isAfter(now) ? gracePeriodEndsAt!.difference(now).inDays.clamp(0, 999) : 0;
   }
 }

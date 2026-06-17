@@ -13,6 +13,14 @@ admin.initializeApp();
 // Auth
 export { createBusiness, inviteUser, getMyProfile, getUsers } from "./functions/auth";
 
+// Security - Login/Password Abuse Protection
+export {
+  checkLoginLocked,
+  reportFailedLogin,
+  reportSuccessfulLogin,
+  requestPasswordReset,
+} from "./functions/loginSecurity";
+
 // Inventory
 export {
   createProduct,
@@ -21,6 +29,9 @@ export {
   getProducts,
   getLowStockProducts,
 } from "./functions/inventory";
+
+// Bulk Import
+export { importProducts } from "./functions/import_products";
 
 // Inventory — Stock Adjustments
 export {
@@ -39,7 +50,7 @@ export { createExpense, getExpenses } from "./functions/expenses";
 export { createPurchase, getPurchases } from "./functions/purchases";
 
 // Dashboard & Reports
-export { getDashboardStats, getReportStats } from "./functions/dashboard";
+export { getDashboardStats, getReportStats, seedDemoData } from "./functions/dashboard";
 
 // Super Admin
 export { getPlatformStats } from "./functions/super_admin";
@@ -60,6 +71,20 @@ export {
 
 // M-Pesa Billing
 export { createSubscriptionPayment, mpesaCallback, simulateMpesaCallback } from "./functions/mpesa_billing";
+
+// Subscription Lifecycle
+export {
+  expireSubscriptions,
+  sendRenewalReminders,
+  getSubscriptionAnalytics,
+  checkSubscriptionHealth,
+} from "./functions/subscriptionLifecycle";
+
+// Subscription History
+export {
+  getMySubscriptionHistory,
+  adminGetBusinessHistory,
+} from "./functions/subscriptionHistory";
 
 // Customers & Debt
 export {
@@ -161,3 +186,9 @@ export {
   getNotificationStats,
   processNotificationQueue,
 } from "./functions/whatsapp_automation";
+
+// Security Dashboard
+export {
+  getSecurityMetrics,
+  getSecurityEvents,
+} from "./functions/securityDashboard";

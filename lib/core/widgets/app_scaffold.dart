@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/business_provider.dart';
 import '../providers/theme_provider.dart';
+import '../providers/connectivity_provider.dart';
 import '../theme/app_colors.dart';
 import '../utils/responsive.dart';
 
@@ -174,6 +175,8 @@ class _AppScaffoldState extends State<AppScaffold> {
     final isMobile = Responsive.isMobile(context);
     final isDesktop = Responsive.isDesktop(context);
 
+    final connectivity = context.watch<ConnectivityProvider>();
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       drawer: !isDesktop ? Drawer(
@@ -198,7 +201,24 @@ class _AppScaffoldState extends State<AppScaffold> {
           const SizedBox(width: 8),
         ],
       ) : null,
-      body: Row(
+      body: Column(
+        children: [
+          if (connectivity.isOffline)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: AppColors.warning.withValues(alpha: 0.15),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.wifi_off_rounded, size: 16, color: AppColors.warning),
+                  const SizedBox(width: 8),
+                  Text('Offline Mode — sales will sync when connection restores',
+                    style: TextStyle(color: AppColors.warning, fontSize: 12, fontWeight: FontWeight.w500)),
+                ],
+              ),
+            ),
+          Expanded(child: Row(
         children: [
           if (isDesktop)
             _SideNav(
@@ -251,6 +271,8 @@ class _AppScaffoldState extends State<AppScaffold> {
             ),
           if (isDesktop || Responsive.isTablet(context)) const VerticalDivider(width: 1),
           Expanded(child: widget.child),
+        ],
+      )),
         ],
       ),
       bottomNavigationBar: isMobile ? SizedBox(

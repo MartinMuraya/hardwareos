@@ -95,12 +95,26 @@ class AuthProvider extends ChangeNotifier {
 
   Future<bool> signInWithEmail(String email, String password) async {
     _errorMessage = null;
+    final fn = FirebaseFunctions.instance.httpsCallable;
+
+    try {
+      // Check login abuse rate limit before attempting auth
+      await fn('checkLoginLocked').call({'email': email});
+    } catch (_) {
+      _errorMessage = 'Too many failed login attempts. Please try again later.';
+      _state = AuthState.unauthenticated;
+      notifyListeners();
+      return false;
+    }
+
     _state = AuthState.loading;
     notifyListeners();
     try {
       await _repo.signInWithEmail(email, password);
+      try { await fn('reportSuccessfulLogin').call({'email': email}); } catch (_) {}
       return true;
     } on FirebaseAuthException catch (e) {
+      try { await fn('reportFailedLogin').call({'email': email}); } catch (_) {}
       _errorMessage = _mapAuthError(e.code);
       _state = AuthState.unauthenticated;
       notifyListeners();
@@ -151,13 +165,11 @@ class AuthProvider extends ChangeNotifier {
 
   Future<bool> sendPasswordResetEmail(String email) async {
     try {
-      await _repo.sendPasswordResetEmail(email);
-      return true;
-    } catch (e) {
-      _errorMessage = 'Failed to send password reset email. Check if the email is correct.';
-      notifyListeners();
-      return false;
-    }
+      final fn = FirebaseFunctions.instance.httpsCallable('requestPasswordReset');
+      await fn.call({'email': email});
+    } catch (_) {}
+    // Always return the same generic message to prevent account enumeration
+    return true;
   }
 
   Future<bool> sendEmailVerification() async {
@@ -232,10 +244,10 @@ class AuthProvider extends ChangeNotifier {
 
   String _mapAuthError(String code) {
     switch (code) {
-      case 'user-not-found':      return 'No account found with this email.';
-      case 'wrong-password':      return 'Incorrect password.';
+      case 'user-not-found':
+      case 'wrong-password':      return 'Invalid email or password.';
       case 'email-already-in-use':return 'An account with this email already exists.';
-      case 'weak-password':       return 'Password must be at least 6 characters.';
+      case 'weak-password':       return 'Password must be at least 8 characters with a mix of letters and numbers.';
       case 'invalid-email':       return 'Please enter a valid email address.';
       case 'too-many-requests':   return 'Too many attempts. Please try again later.';
       case 'network-request-failed': return 'Network error. Check your connection.';

@@ -39,6 +39,21 @@ dependencies:
   google_sign_in: ^6.2.1
   image_picker: ^1.2.2
   firebase_storage: ^12.4.10
+  firebase_app_check: ^0.3.1
+
+  # File picking & parsing (Bulk Import)
+  file_picker: ^8.1.6
+  csv: ^6.0.0
+  excel: ^4.0.6
+
+  # Receipt printing
+  esc_pos_utils_plus: ^2.0.3
+  blue_thermal_printer: ^1.2.3
+
+  # Offline resilience
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  connectivity_plus: ^6.1.4
 
 dev_dependencies:
   flutter_test:
