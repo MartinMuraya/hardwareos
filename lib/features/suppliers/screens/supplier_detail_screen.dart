@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/models/supplier.dart';
@@ -18,6 +19,7 @@ class SupplierDetailScreen extends StatefulWidget {
 class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
   Supplier? _supplier;
   bool _loading = true;
+  final _fmt = NumberFormat.currency(locale: 'en_KE', symbol: 'KES ');
 
   @override
   void initState() { super.initState(); _load(); }
@@ -85,6 +87,20 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
                       _InfoRow(label: 'Address', value: _supplier!.address.isNotEmpty ? _supplier!.address : '—', theme: theme),
                       _InfoRow(label: 'Contact Person', value: _supplier!.contactPerson.isNotEmpty ? _supplier!.contactPerson : '—', theme: theme),
                       _InfoRow(label: 'Payment Terms', value: _supplier!.paymentTerms, theme: theme),
+                      const SizedBox(height: 8),
+                      Container(height: 1, color: theme.dividerColor),
+                      const SizedBox(height: 12),
+                      Row(children: [
+                        Text('Current Balance',
+                          style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13)),
+                        const Spacer(),
+                        Text(_fmt.format(_supplier!.currentBalance),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 16,
+                            color: _supplier!.currentBalance > 0 ? AppColors.warning : AppColors.success,
+                          )),
+                      ]),
                     ]),
                   ),
                   const SizedBox(height: 20),

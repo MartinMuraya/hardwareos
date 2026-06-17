@@ -23,6 +23,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _loading = true;
   Map<String, dynamic>? _stats;
   Map<String, dynamic>? _debtStats;
+  Map<String, dynamic>? _adjStats;
+  Map<String, dynamic>? _returnStats;
+  List<Map<String, dynamic>> _recentLogs = [];
   String? _error;
 
   @override
@@ -40,11 +43,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final results = await Future.wait([
         FunctionsService.call('getDashboardStats', {'businessId': businessId}),
         FunctionsService.call('getDebtDashboard', {'businessId': businessId}),
+        FunctionsService.call('getAdjustmentStats', {'businessId': businessId}),
+        FunctionsService.call('getReturnStats', {'businessId': businessId}),
+        FunctionsService.call('getRecentAuditLogs', {'businessId': businessId}),
       ]);
       final data = results[0];
       final debt = results[1];
+      final adj = results[2];
+      final retStats = results[3];
+      final logs = results[4];
       if (mounted) {
-        setState(() { _stats = data; _debtStats = debt; _loading = false; });
+        setState(() { _stats = data; _debtStats = debt; _adjStats = adj; _returnStats = retStats; _recentLogs = (logs['logs'] as List?)?.cast<Map<String, dynamic>>() ?? []; _loading = false; });
         final sub = data['subscription'] as Map?;
         if (sub != null) {
           context.read<BusinessProvider>().setBusinessData({
@@ -111,6 +120,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 _SectionHeader(title: "Today's Performance", theme: theme),
                 const SizedBox(height: 12),
                 _KpiGrid(kpis: kpis, fmt: fmt),
+                const SizedBox(height: 28),
+              ],
+
+              if (_adjStats != null || _returnStats != null) ...[
+                _SectionHeader(title: 'Inventory & Returns', theme: theme),
+                const SizedBox(height: 12),
+                _InventoryReturnsRow(adjStats: _adjStats, returnStats: _returnStats, fmt: fmt),
                 const SizedBox(height: 28),
               ],
 
@@ -185,6 +201,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ]),
                 const SizedBox(height: 12),
                 RecentSalesList(sales: recentSales, fmt: fmt),
+              ],
+
+              if (_recentLogs.isNotEmpty) ...[
+                const SizedBox(height: 28),
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                  _SectionHeader(title: 'Recent Activity', theme: theme),
+                  TextButton(
+                    onPressed: () => context.go('/audit-logs'),
+                    child: const Text('View All'),
+                  ),
+                ]),
+                const SizedBox(height: 12),
+                _RecentActivityList(logs: _recentLogs),
               ],
             ],
           ),
@@ -308,6 +337,138 @@ class _ActionButton extends StatelessWidget {
           ]),
         ),
       ),
+    );
+  }
+}
+
+class _InventoryReturnsRow extends StatelessWidget {
+  final Map<String, dynamic>? adjStats;
+  final Map<String, dynamic>? returnStats;
+  final NumberFormat fmt;
+  const _InventoryReturnsRow({this.adjStats, this.returnStats, required this.fmt});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final width = MediaQuery.of(context).size.width;
+    final isCompact = width < 600;
+
+    return Row(children: [
+      if (adjStats != null) ...[
+        Expanded(
+          child: _MiniCard(
+            icon: Icons.balance_rounded,
+            iconColor: AppColors.warning,
+            value: '${adjStats!['totalAdjustmentsToday'] ?? 0}',
+            label: 'Adjustments',
+            subtitle: fmt.format(adjStats!['totalAdjustmentValueToday'] ?? 0),
+            theme: theme,
+          ),
+        ),
+        if (!isCompact) const SizedBox(width: 12),
+      ],
+      if (returnStats != null) ...[
+        if (isCompact && adjStats != null) const SizedBox(height: 12),
+        Expanded(
+          child: _MiniCard(
+            icon: Icons.replay_rounded,
+            iconColor: AppColors.chartRed,
+            value: '${returnStats!['returnsToday'] ?? 0}',
+            label: 'Returns',
+            subtitle: fmt.format(returnStats!['refundAmountToday'] ?? 0),
+            theme: theme,
+          ),
+        ),
+      ],
+    ]);
+  }
+}
+
+class _MiniCard extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String value;
+  final String label;
+  final String subtitle;
+  final ThemeData theme;
+  const _MiniCard({required this.icon, required this.iconColor, required this.value, required this.label, required this.subtitle, required this.theme});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: theme.dividerColor),
+      ),
+      child: Row(children: [
+        Container(
+          width: 40, height: 40,
+          decoration: BoxDecoration(
+            color: iconColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: iconColor, size: 20),
+        ),
+        const SizedBox(width: 12),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+          Text(label, style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant)),
+          Text(subtitle, style: TextStyle(fontSize: 10, color: theme.hintColor)),
+        ])),
+      ]),
+    );
+  }
+}
+
+class _RecentActivityList extends StatelessWidget {
+  final List<Map<String, dynamic>> logs;
+  const _RecentActivityList({required this.logs});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      children: logs.take(5).map((log) {
+        final module = log['module'] as String? ?? '';
+        final action = log['action'] as String? ?? '';
+
+        Color color;
+        switch (module) {
+          case 'Inventory': color = AppColors.chartBlue; break;
+          case 'Sales': color = AppColors.accent; break;
+          case 'Credit': color = AppColors.warning; break;
+          case 'Quotation': color = AppColors.chartPurple; break;
+          case 'Suppliers': color = AppColors.chartGreen; break;
+          default: color = theme.colorScheme.onSurfaceVariant;
+        }
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(children: [
+            Container(
+              width: 8, height: 8,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('$module · $action',
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(log['entityName'] as String? ?? '',
+                  style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ]),
+            ),
+            Text(log['userName'] as String? ?? '',
+              style: TextStyle(fontSize: 10, color: theme.hintColor)),
+          ]),
+        );
+      }).toList(),
     );
   }
 }

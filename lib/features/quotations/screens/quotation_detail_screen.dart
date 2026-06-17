@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:printing/printing.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/models/quotation.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/quotation_pdf.dart';
 import '../../../core/utils/responsive.dart';
 import '../../../core/widgets/loading_overlay.dart';
 import '../widgets/quotation_status_badge.dart';
@@ -51,6 +53,23 @@ class _QuotationDetailScreenState extends State<QuotationDetailScreen> {
       if (mounted) _load();
     } on FunctionsException catch (e) {
       if (mounted) setState(() { _error = e.message; _actionLoading = false; });
+    }
+  }
+
+  Future<void> _sharePdf() async {
+    if (_quotation == null) return;
+    try {
+      final pdf = await generateQuotationPdf(_quotation!);
+      await Printing.sharePdf(
+        bytes: pdf,
+        filename: '${_quotation!.quotationNumber.replaceAll('/', '_')}.pdf',
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to generate PDF: $e')),
+        );
+      }
     }
   }
 
@@ -101,6 +120,12 @@ class _QuotationDetailScreenState extends State<QuotationDetailScreen> {
         appBar: AppBar(
           title: Text(_quotation?.quotationNumber ?? 'Quotation'),
           actions: [
+            if (_quotation != null)
+              IconButton(
+                icon: const Icon(Icons.share_rounded),
+                tooltip: 'Share PDF',
+                onPressed: _sharePdf,
+              ),
             if (_quotation != null && _quotation!.isEditable)
               PopupMenuButton<String>(
                 onSelected: _updateStatus,

@@ -160,6 +160,38 @@ service cloud.firestore {
     }
 
     // =========================================================
+    // Cash Drawer — read-only via rules; writes via Cloud Functions
+    // =========================================================
+    match /cashSessions/{sessionId} {
+      allow read: if isMember(resource.data.businessId);
+      allow create, update, delete: if false;
+    }
+
+    // =========================================================
+    // Branches — read-only via rules; writes via Cloud Functions
+    // =========================================================
+    match /branches/{branchId} {
+      allow read: if isMember(resource.data.businessId);
+      allow create, update, delete: if false;
+    }
+
+    // =========================================================
+    // Stock Transfers — read-only via rules; writes via Cloud Functions
+    // =========================================================
+    match /stockTransfers/{transferId} {
+      allow read: if isMember(resource.data.businessId);
+      allow create, update, delete: if false;
+    }
+
+    // =========================================================
+    // Notification Queue — read-only via rules; writes via Cloud Functions
+    // =========================================================
+    match /notificationQueue/{notificationId} {
+      allow read: if isMember(resource.data.businessId);
+      allow create, update, delete: if false;
+    }
+
+    // =========================================================
     // DEFAULT DENY — reject everything else
     // =========================================================
     match /{document=**} {

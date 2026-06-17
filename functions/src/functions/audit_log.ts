@@ -85,15 +85,19 @@ export const getAuditModules = onCall({ cors: true }, async (request) => {
   const { businessId } = request.data as { businessId: string };
   await assertBusinessMember(request.auth.uid, businessId);
 
-  const snap = await db()
-    .collection("auditLogs")
-    .where("businessId", "==", businessId)
-    .orderBy("module")
-    .select("module")
-    .get();
+  try {
+    const snap = await db()
+      .collection("auditLogs")
+      .where("businessId", "==", businessId)
+      .orderBy("module")
+      .select("module")
+      .get();
 
-  const modules = [...new Set(snap.docs.map((d) => d.data().module as string))].sort();
-  return { modules };
+    const modules = [...new Set(snap.docs.map((d) => d.data().module as string).filter(Boolean))].sort();
+    return { modules };
+  } catch {
+    return { modules: [] };
+  }
 });
 
 // -----------------------------------------------------------

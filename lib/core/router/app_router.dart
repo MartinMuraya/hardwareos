@@ -38,6 +38,12 @@ import '../../features/suppliers/screens/supplier_detail_screen.dart';
 import '../../features/purchase_orders/screens/purchase_orders_screen.dart';
 import '../../features/purchase_orders/screens/add_purchase_order_screen.dart';
 import '../../features/purchase_orders/screens/purchase_order_detail_screen.dart';
+import '../../features/stock_adjustments/screens/adjustment_screen.dart';
+import '../../features/audit/screens/audit_logs_screen.dart';
+import '../../features/returns/screens/returns_screen.dart';
+import '../../features/cash_drawer/screens/cash_drawer_screen.dart';
+import '../../features/branches/screens/branches_screen.dart';
+import '../../features/branches/screens/stock_transfers_screen.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/app_scaffold.dart';
 
@@ -99,7 +105,14 @@ class AppRouter {
                                      state.matchedLocation.startsWith('/credit-ledger') ||
                                      state.matchedLocation.startsWith('/quotations') ||
                                      state.matchedLocation.startsWith('/suppliers') ||
-                                     state.matchedLocation.startsWith('/purchase-orders');
+                                     state.matchedLocation.startsWith('/purchase-orders') ||
+                                     state.matchedLocation.startsWith('/stock-adjustments') ||
+                                     state.matchedLocation.startsWith('/audit-logs') ||
+                                     state.matchedLocation.startsWith('/returns') ||
+                                     state.matchedLocation.startsWith('/cash-drawer') ||
+                                     state.matchedLocation.startsWith('/branches') ||
+                                     state.matchedLocation.startsWith('/stock-transfers') ||
+                                     state.matchedLocation.startsWith('/stock-transfers');
 
             if (isExpired && isProtectedRoute && !isSubscriptionRoute) {
               return '/subscription';
@@ -278,6 +291,30 @@ class AppRouter {
                   ),
                 ),
               ],
+            ),
+            GoRoute(
+              path: '/stock-adjustments',
+              builder: (_, __) => const AdjustmentScreen(),
+            ),
+            GoRoute(
+              path: '/audit-logs',
+              builder: (_, __) => const AuditLogsScreen(),
+            ),
+            GoRoute(
+              path: '/returns',
+              builder: (_, __) => const ReturnsScreen(),
+            ),
+            GoRoute(
+              path: '/cash-drawer',
+              builder: (_, __) => const CashDrawerScreen(),
+            ),
+            GoRoute(
+              path: '/branches',
+              builder: (_, __) => const BranchesScreen(),
+            ),
+            GoRoute(
+              path: '/stock-transfers',
+              builder: (_, __) => const StockTransfersScreen(),
             ),
           ],
         ),

@@ -116,3 +116,40 @@ export {
   getReturns,
   getReturnStats,
 } from "./functions/returns";
+
+// Cash Drawer Reconciliation
+export {
+  openCashSession,
+  closeCashSession,
+  getCashSessions,
+  getCashVarianceReport,
+} from "./functions/cash_drawer";
+
+// Broken-Bulk Inventory
+export {
+  bulkCreateProduct,
+  autoConvertDuringSale,
+} from "./functions/bulk_inventory";
+
+// Multi-Branch Operations
+export {
+  createBranch,
+  getBranches,
+  updateBranch,
+  requestStockTransfer,
+  approveStockTransfer,
+  getStockTransfers,
+  getBranchInventory,
+  getBranchPerformance,
+  getPendingTransfers,
+} from "./functions/branches";
+
+// WhatsApp Automation
+export {
+  enqueueNotification,
+  getNotificationSettings,
+  updateNotificationSettings,
+  getNotifications,
+  getNotificationStats,
+  processNotificationQueue,
+} from "./functions/whatsapp_automation";
