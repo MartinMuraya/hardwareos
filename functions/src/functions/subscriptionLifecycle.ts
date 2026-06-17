@@ -298,10 +298,12 @@ async function recoverFailedPayments(): Promise<void> {
 // aggregateSubscriptionStats
 // Computes subscription analytics and stores in a single doc
 // for fast admin dashboard loading (< 2s target)
+// Paginates through businesses in batches of 400 to avoid
+// OOM/timeout at scale (10,000+ businesses).
 // -----------------------------------------------------------
 async function aggregateSubscriptionStats(): Promise<void> {
   const now = new Date();
-  const bizSnap = await db().collection("businesses").get();
+  const BATCH_SIZE = 400;
 
   let totalBusinesses = 0;
   let activeSubscriptions = 0;
@@ -311,19 +313,36 @@ async function aggregateSubscriptionStats(): Promise<void> {
   let starterAccounts = 0;
   let proAccounts = 0;
   let monthlyRecurringRevenue = 0;
+  let lastDoc: admin.firestore.DocumentSnapshot | null = null;
+  let hasMore = true;
 
-  for (const doc of bizSnap.docs) {
-    const data = doc.data();
-    totalBusinesses++;
-    const status = data.subscriptionStatus || "trial";
-    const plan = data.plan || "free";
+  while (hasMore) {
+    let query: admin.firestore.Query = db()
+      .collection("businesses")
+      .orderBy(admin.firestore.FieldPath.documentId())
+      .limit(BATCH_SIZE);
+    if (lastDoc) {
+      query = query.startAfter(lastDoc);
+    }
+    const snap = await query.get();
+    if (snap.empty) break;
 
-    if (status === "active") activeSubscriptions++;
-    if (status === "trial") trialAccounts++;
-    if (status === "expired") expiredSubscriptions++;
-    if (status === "grace_period") gracePeriodAccounts++;
-    if (plan === "starter") { starterAccounts++; monthlyRecurringRevenue += 2600; }
-    if (plan === "pro") { proAccounts++; monthlyRecurringRevenue += 5200; }
+    for (const doc of snap.docs) {
+      const data = doc.data();
+      totalBusinesses++;
+      const status = data.subscriptionStatus || "trial";
+      const plan = data.plan || "free";
+
+      if (status === "active") activeSubscriptions++;
+      if (status === "trial") trialAccounts++;
+      if (status === "expired") expiredSubscriptions++;
+      if (status === "grace_period") gracePeriodAccounts++;
+      if (plan === "starter") { starterAccounts++; monthlyRecurringRevenue += 2600; }
+      if (plan === "pro") { proAccounts++; monthlyRecurringRevenue += 5200; }
+    }
+
+    lastDoc = snap.docs[snap.docs.length - 1];
+    hasMore = snap.docs.length >= BATCH_SIZE;
   }
 
   // Churn rate (last 30 days)

@@ -29,12 +29,24 @@ export const getMySubscriptionPayments = onCall({ cors: true }, async (request) 
   const userData = userSnap.data()!;
   const businessId = userData.businessId;
 
-  const snap = await db()
+  const { lastDocId, pageSize } = (request.data || {}) as {
+    lastDocId?: string;
+    pageSize?: number;
+  };
+
+  const limit = Math.min(pageSize || 50, 100);
+  let query: admin.firestore.Query = db()
     .collection("subscriptions")
     .where("businessId", "==", businessId)
     .orderBy("createdAt", "desc")
-    .limit(50)
-    .get();
+    .limit(limit);
+
+  if (lastDocId) {
+    const cursor = await db().collection("subscriptions").doc(lastDocId).get();
+    if (cursor.exists) query = query.startAfter(cursor);
+  }
+
+  const snap = await query.get();
 
   const payments = snap.docs.map(doc => ({
     id: doc.id,
@@ -44,14 +56,34 @@ export const getMySubscriptionPayments = onCall({ cors: true }, async (request) 
     expiresAt: (doc.data().expiresAt as admin.firestore.Timestamp)?.toDate()?.toISOString() || null,
   }));
 
-  return { payments };
+  return {
+    payments,
+    lastDocId: snap.docs.length > 0 ? snap.docs[snap.docs.length - 1].id : null,
+    hasMore: snap.docs.length >= limit,
+  };
 });
 
 export const adminGetSubscriptions = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 
-  const snap = await db().collection("businesses").orderBy("createdAt", "desc").limit(100).get();
+  const { lastDocId, pageSize } = (request.data || {}) as {
+    lastDocId?: string;
+    pageSize?: number;
+  };
+
+  const limit = Math.min(pageSize || 100, 200);
+  let query: admin.firestore.Query = db()
+    .collection("businesses")
+    .orderBy("createdAt", "desc")
+    .limit(limit);
+
+  if (lastDocId) {
+    const cursor = await db().collection("businesses").doc(lastDocId).get();
+    if (cursor.exists) query = query.startAfter(cursor);
+  }
+
+  const snap = await query.get();
 
   const subscriptions = snap.docs.map(doc => {
     const data = doc.data();
@@ -67,7 +99,11 @@ export const adminGetSubscriptions = onCall({ cors: true }, async (request) => {
     };
   });
 
-  return { subscriptions };
+  return {
+    subscriptions,
+    lastDocId: snap.docs.length > 0 ? snap.docs[snap.docs.length - 1].id : null,
+    hasMore: snap.docs.length >= limit,
+  };
 });
 
 export const adminUpdateSubscription = onCall({ cors: true }, async (request) => {
@@ -103,14 +139,15 @@ export const adminUpdateSubscription = onCall({ cors: true }, async (request) =>
 
   await db().collection("businesses").doc(businessId).update(updateData);
 
-  // Log the action
+  // Enhanced audit log
   await db().collection("auditLogs").add({
-    action: "update_subscription",
+    actorId: request.auth.uid,
+    actionSource: "admin_panel",
+    action: "SUB_UPDATED",
     targetId: businessId,
     targetType: "business_subscription",
-    performedBy: request.auth.uid,
-    timestamp: admin.firestore.FieldValue.serverTimestamp(),
-    details: { plan, subscriptionStatus, active },
+    metadata: { plan, subscriptionStatus, active, trialEndsAt, subscriptionEndsAt },
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 
   return { success: true };
@@ -245,7 +282,25 @@ export const adminGetUsers = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 
-  const snap = await db().collection("users").limit(100).get();
+  const { lastDocId, pageSize } = (request.data || {}) as {
+    lastDocId?: string;
+    pageSize?: number;
+  };
+
+  const limit = Math.min(pageSize || 100, 200);
+  let query: admin.firestore.Query = db()
+    .collection("users")
+    .orderBy(admin.firestore.FieldPath.documentId())
+    .limit(limit);
+
+  if (lastDocId) {
+    const lastSnap = await db().collection("users").doc(lastDocId).get();
+    if (lastSnap.exists) {
+      query = query.startAfter(lastSnap);
+    }
+  }
+
+  const snap = await query.get();
 
   const users = await Promise.all(snap.docs.map(async doc => {
     const data = doc.data();
@@ -268,7 +323,11 @@ export const adminGetUsers = onCall({ cors: true }, async (request) => {
     };
   }));
 
-  return { users };
+  return {
+    users,
+    lastDocId: snap.docs.length > 0 ? snap.docs[snap.docs.length - 1].id : null,
+    hasMore: snap.docs.length >= limit,
+  };
 });
 
 export const adminUpdateUser = onCall({ cors: true }, async (request) => {
@@ -286,6 +345,10 @@ export const adminUpdateUser = onCall({ cors: true }, async (request) => {
     throw new HttpsError("invalid-argument", "uid is required");
   }
 
+  // Capture previous state for audit trail
+  const prevUserSnap = await db().collection("users").doc(uid).get();
+  const prevRole = prevUserSnap.exists ? prevUserSnap.data()!.role : null;
+
   if (role) {
     await db().collection("users").doc(uid).update({ role });
   }
@@ -302,14 +365,25 @@ export const adminUpdateUser = onCall({ cors: true }, async (request) => {
     }
   }
 
-  // Log action
+  // Enhanced audit log with actorId, actionSource, reason, previousValues, newValues
   await db().collection("auditLogs").add({
-    action: "admin_update_user",
+    actorId: request.auth.uid,
+    actionSource: "admin_panel",
+    action: "ADMIN_UPDATE_USER",
     targetId: uid,
     targetType: "user",
-    performedBy: request.auth.uid,
-    timestamp: admin.firestore.FieldValue.serverTimestamp(),
-    details: { role, disabled, resetPasswordTriggered: !!resetPassword },
+    reason: `Role: ${prevRole} → ${role || prevRole}${disabled !== undefined ? `, disabled: ${disabled}` : ""}${resetPassword ? ", password reset triggered" : ""}`,
+    previousValues: {
+      role: prevRole,
+    },
+    newValues: {
+      role: role || prevRole,
+      disabled: disabled !== undefined ? disabled : undefined,
+    },
+    metadata: {
+      resetPasswordTriggered: !!resetPassword,
+    },
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 
   return { success: true, resetLink };
@@ -365,14 +439,15 @@ export const adminUpdateSettings = onCall({ cors: true }, async (request) => {
 
   await db().collection("settings").doc("platform").update(updateData);
 
-  // Log action
+  // Enhanced audit log
   await db().collection("auditLogs").add({
-    action: "admin_update_settings",
+    actorId: request.auth.uid,
+    actionSource: "admin_panel",
+    action: "ADMIN_UPDATE_SETTINGS",
     targetId: "platform",
     targetType: "settings",
-    performedBy: request.auth.uid,
-    timestamp: admin.firestore.FieldValue.serverTimestamp(),
-    details: settings,
+    metadata: settings as Record<string, unknown>,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 
   return { success: true };

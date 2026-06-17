@@ -167,9 +167,13 @@ class AuthProvider extends ChangeNotifier {
     try {
       final fn = FirebaseFunctions.instance.httpsCallable('requestPasswordReset');
       await fn.call({'email': email});
-    } catch (_) {}
-    // Always return the same generic message to prevent account enumeration
-    return true;
+      return true;
+    } catch (e) {
+      // Always return true to prevent account enumeration
+      // Even if the callable fails (rate limit, network, etc.),
+      // the user sees a success message.
+      return true;
+    }
   }
 
   Future<bool> sendEmailVerification() async {

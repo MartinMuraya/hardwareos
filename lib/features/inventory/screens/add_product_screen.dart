@@ -269,7 +269,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         if (!_isBulkParent) ...[
                           const SizedBox(height: 14),
                           DropdownButtonFormField<String>(
-                            value: _parentProductId,
+                            initialValue: _parentProductId,
                             dropdownColor: theme.cardColor,
                             style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 14),
                             decoration: const InputDecoration(labelText: 'Parent Product'),

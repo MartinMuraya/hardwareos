@@ -166,13 +166,17 @@ class _BranchDetailScreenState extends State<BranchDetailScreen> {
         'transferId': transferId,
       });
       _load();
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Transfer approved')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Transfer approved')),
+        );
+      }
     } on FunctionsException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
+        );
+      }
     }
   }
 
@@ -201,9 +205,11 @@ class _BranchDetailScreenState extends State<BranchDetailScreen> {
             final name = productCtrl.text.trim();
             final qty = int.tryParse(qtyCtrl.text) ?? 0;
             if (name.isEmpty || qty <= 0) {
-              if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(
-                const SnackBar(content: Text('Fill in all fields')),
-              );
+              if (ctx.mounted) {
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  const SnackBar(content: Text('Fill in all fields')),
+                );
+              }
               return;
             }
             Navigator.pop(ctx);
@@ -224,9 +230,11 @@ class _BranchDetailScreenState extends State<BranchDetailScreen> {
                 _load();
               }
             } on FunctionsException catch (e) {
-              if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
-              );
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
+                );
+              }
             }
           }, child: const Text('Request')),
         ],

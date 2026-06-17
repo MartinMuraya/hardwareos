@@ -1,0 +1,40 @@
+name: Deploy → Staging
+
+on:
+  push:
+    branches: [develop]
+
+concurrency:
+  group: staging
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: functions
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: functions/package-lock.json
+
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm test -- --ci
+
+      - name: Deploy to Firebase (Staging)
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STAGING }}
+          channelId: live
+          projectId: hardwareos-staging
+        env:
+          FIREBASE_CLI_EXPERIMENTS: webframeworks

@@ -132,10 +132,11 @@ export const updateNotificationSettings = onCall({ cors: true }, async (request)
 export const getNotifications = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
-  const { businessId, status, limit: pageLimit = 50 } = request.data as {
+  const { businessId, status, limit: pageLimit = 50, startAfter } = request.data as {
     businessId: string;
     status?: string;
     limit?: number;
+    startAfter?: string;
   };
 
   await assertBusinessMember(request.auth.uid, businessId);
@@ -147,6 +148,12 @@ export const getNotifications = onCall({ cors: true }, async (request) => {
   if (status) query = query.where("status", "==", status);
 
   query = query.orderBy("createdAt", "desc").limit(Math.min(pageLimit, 100));
+
+  if (startAfter) {
+    const cursor = await db().collection("notificationQueue").doc(startAfter).get();
+    if (cursor.exists) query = query.startAfter(cursor);
+  }
+
   const snap = await query.get();
 
   return {
@@ -158,6 +165,8 @@ export const getNotifications = onCall({ cors: true }, async (request) => {
         sentAt: data.sentAt ? (data.sentAt as admin.firestore.Timestamp).toDate().toISOString() : null,
       };
     }),
+    lastDocId: snap.docs.length > 0 ? snap.docs[snap.docs.length - 1].id : null,
+    hasMore: snap.docs.length >= Math.min(pageLimit, 100),
   };
 });
 

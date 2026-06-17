@@ -15,22 +15,31 @@ async function assertSuperAdmin(uid: string) {
 
 // -----------------------------------------------------------
 // adminGetAllBusinesses
-// Fetches all businesses with optional filter
+// Fetches all businesses with optional filter and cursor pagination.
 // -----------------------------------------------------------
 export const adminGetAllBusinesses = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 
-  const { filter } = request.data as { filter?: "all" | "pending" | "approved" | "suspended" | "rejected" };
+  const { filter, lastDocId, pageSize } = request.data as {
+    filter?: "all" | "pending" | "approved" | "suspended" | "rejected";
+    lastDocId?: string;
+    pageSize?: number;
+  };
 
+  const limit = Math.min(pageSize || 100, 200);
   let query: admin.firestore.Query = db().collection("businesses");
   
   if (filter && filter !== "all") {
     query = query.where("status", "==", filter);
   }
   
-  // Sort by newest first
-  query = query.orderBy("createdAt", "desc").limit(100); // Pagination could be added later
+  query = query.orderBy("createdAt", "desc").limit(limit);
+
+  if (lastDocId) {
+    const cursor = await db().collection("businesses").doc(lastDocId).get();
+    if (cursor.exists) query = query.startAfter(cursor);
+  }
 
   const snap = await query.get();
 
@@ -43,6 +52,8 @@ export const adminGetAllBusinesses = onCall({ cors: true }, async (request) => {
         updatedAt: (data.updatedAt as admin.firestore.Timestamp)?.toDate()?.toISOString(),
       };
     }),
+    lastDocId: snap.docs.length > 0 ? snap.docs[snap.docs.length - 1].id : null,
+    hasMore: snap.docs.length >= limit,
   };
 });
 

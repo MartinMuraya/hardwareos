@@ -43,6 +43,7 @@ class _BranchesScreenState extends State<BranchesScreen> {
     final nameCtrl = TextEditingController();
     final addrCtrl = TextEditingController();
     final phoneCtrl = TextEditingController();
+    final bizId = context.read<AuthProvider>().businessId;
     final result = await showDialog<bool>(
       context: context,
       builder: (dCtx) => AlertDialog(
@@ -66,7 +67,7 @@ class _BranchesScreenState extends State<BranchesScreen> {
     if (result != true) return;
 
     try {
-      final bizId = context.read<AuthProvider>().businessId!;
+      if (bizId == null) return;
       await FunctionsService.call('createBranch', {
         'businessId': bizId,
         'name': nameCtrl.text.trim(),
@@ -75,9 +76,11 @@ class _BranchesScreenState extends State<BranchesScreen> {
       });
       _load();
     } on FunctionsException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
+        );
+      }
     }
   }
 
@@ -182,9 +185,9 @@ class _BranchCard extends StatelessWidget {
                   style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant))),
             ])),
             if (!branch.active)
-              _Badge(label: 'INACTIVE', color: AppColors.error)
+              const _Badge(label: 'INACTIVE', color: AppColors.error)
             else
-              _Badge(label: 'ACTIVE', color: AppColors.success),
+              const _Badge(label: 'ACTIVE', color: AppColors.success),
           ]),
         ),
       ),

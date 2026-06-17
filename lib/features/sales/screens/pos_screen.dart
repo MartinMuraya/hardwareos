@@ -340,7 +340,7 @@ class _POSScreenState extends State<POSScreen> {
           ),
           const SizedBox(height: 16),
           Text(isOffline ? 'Sale Saved Offline' : 'Sale Complete!',
-            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
           if (isOffline) ...[
             const SizedBox(height: 4),
             Text('Will sync when online',
@@ -390,12 +390,14 @@ class _POSScreenState extends State<POSScreen> {
       final bytes = await ReceiptService.generateEscPos(_lastReceiptData!);
       final success = await ReceiptService.printViaBluetooth(bytes);
       if (!success && mounted) {
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('No Bluetooth printer found. Connect a printer and try again.')),
         );
       }
     } catch (e) {
       if (mounted) {
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Print failed: $e')),
         );

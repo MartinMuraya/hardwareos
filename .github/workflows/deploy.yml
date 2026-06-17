@@ -1,0 +1,44 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy-functions:
+    name: Deploy Cloud Functions
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./functions
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: ./functions/package-lock.json
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npx jest --passWithNoTests
+      - run: npx -y firebase-tools@latest deploy --only functions --project ${{ secrets.FIREBASE_PROJECT_ID }} --token ${{ secrets.FIREBASE_TOKEN }}
+
+  deploy-firestore:
+    name: Deploy Firestore Rules & Indexes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npx -y firebase-tools@latest deploy --only firestore:rules,firestore:indexes --project ${{ secrets.FIREBASE_PROJECT_ID }} --token ${{ secrets.FIREBASE_TOKEN }}
+
+  deploy-storage:
+    name: Deploy Storage Rules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npx -y firebase-tools@latest deploy --only storage --project ${{ secrets.FIREBASE_PROJECT_ID }} --token ${{ secrets.FIREBASE_TOKEN }}

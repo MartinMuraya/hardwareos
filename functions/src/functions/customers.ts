@@ -4,7 +4,7 @@
 
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
+import { assertBusinessMember, assertActiveSubscription, softDeleteResource } from "../middleware/checkPlanLimits";
 
 const db = () => admin.firestore();
 
@@ -53,6 +53,7 @@ export const createCustomer = onCall({ cors: true }, async (request) => {
     creditLimit: creditLimit ?? 0,
     currentBalance: 0,
     totalDebt: 0,
+    isActive: true,
     createdAt: now,
     updatedAt: now,
   });
@@ -79,6 +80,7 @@ export const getCustomers = onCall({ cors: true }, async (request) => {
     let query: admin.firestore.Query = db()
       .collection("customers")
       .where("businessId", "==", businessId)
+      .where("isActive", "==", true)
       .orderBy("fullName", "asc")
       .limit(Math.min(pageLimit, 100));
 
@@ -182,6 +184,33 @@ export const updateCustomer = onCall({ cors: true }, async (request) => {
   if (creditLimit !== undefined) updates.creditLimit = creditLimit;
 
   await db().collection("customers").doc(customerId).update(updates);
+
+  return { success: true };
+});
+
+// -----------------------------------------------------------
+// deleteCustomer
+// Soft-deletes a customer by setting isActive to false.
+// -----------------------------------------------------------
+export const deleteCustomer = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
+
+  const { businessId, customerId } = request.data as {
+    businessId: string;
+    customerId: string;
+  };
+
+  if (!businessId || !customerId) {
+    throw new HttpsError("invalid-argument", "businessId and customerId are required.");
+  }
+
+  await softDeleteResource({
+    businessId,
+    resourceId: customerId,
+    collection: "customers",
+    callerUid: request.auth.uid,
+    targetType: "customers",
+  });
 
   return { success: true };
 });

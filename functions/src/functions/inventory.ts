@@ -8,6 +8,7 @@ import {
   assertBusinessMember,
   assertActiveSubscription,
   assertProductLimit,
+  softDeleteResource,
 } from "../middleware/checkPlanLimits";
 
 const db = () => admin.firestore();
@@ -69,6 +70,7 @@ export const createProduct = onCall({ cors: true }, async (request) => {
     costPrice: Number(costPrice),
     sellingPrice: Number(sellingPrice),
     reorderLevel: Math.floor(reorderLevel) || 5,
+    isActive: true,
     createdAt: now,
     updatedAt: now,
   });
@@ -91,6 +93,33 @@ export const createProduct = onCall({ cors: true }, async (request) => {
   await batch.commit();
 
   return { success: true, productId: productRef.id };
+});
+
+// -----------------------------------------------------------
+// deleteProduct
+// Soft-deletes a product by setting isActive to false.
+// -----------------------------------------------------------
+export const deleteProduct = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
+
+  const { businessId, productId } = request.data as {
+    businessId: string;
+    productId: string;
+  };
+
+  if (!businessId || !productId) {
+    throw new HttpsError("invalid-argument", "businessId and productId are required.");
+  }
+
+  await softDeleteResource({
+    businessId,
+    resourceId: productId,
+    collection: "products",
+    callerUid: request.auth.uid,
+    targetType: "products",
+  });
+
+  return { success: true };
 });
 
 // -----------------------------------------------------------
@@ -192,6 +221,7 @@ export const getProducts = onCall({ cors: true }, async (request) => {
   let query: admin.firestore.Query = db()
     .collection("products")
     .where("businessId", "==", businessId)
+    .where("isActive", "==", true)
     .orderBy("name")
     .limit(Math.min(pageLimit, 100));
 
@@ -224,6 +254,7 @@ export const getLowStockProducts = onCall({ cors: true }, async (request) => {
   const snap = await db()
     .collection("products")
     .where("businessId", "==", businessId)
+    .where("isActive", "==", true)
     .orderBy("quantity")
     .limit(20)
     .get();

@@ -4,7 +4,7 @@
 
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
+import { assertBusinessMember, assertActiveSubscription, softDeleteResource } from "../middleware/checkPlanLimits";
 
 const db = () => admin.firestore();
 
@@ -44,6 +44,7 @@ export const createSupplier = onCall({ cors: true }, async (request) => {
     contactPerson: contactPerson?.trim() || "",
     paymentTerms: paymentTerms?.trim() || "30 days",
     currentBalance: 0,
+    isActive: true,
     createdAt: now,
     updatedAt: now,
   });
@@ -70,6 +71,7 @@ export const getSuppliers = onCall({ cors: true }, async (request) => {
     let query: admin.firestore.Query = db()
       .collection("suppliers")
       .where("businessId", "==", businessId)
+      .where("isActive", "==", true)
       .orderBy("name", "asc")
       .limit(Math.min(pageLimit, 100));
 
@@ -167,6 +169,33 @@ export const updateSupplier = onCall({ cors: true }, async (request) => {
   if (paymentTerms !== undefined) updates.paymentTerms = paymentTerms.trim();
 
   await db().collection("suppliers").doc(supplierId).update(updates);
+
+  return { success: true };
+});
+
+// -----------------------------------------------------------
+// deleteSupplier
+// Soft-deletes a supplier by setting isActive to false.
+// -----------------------------------------------------------
+export const deleteSupplier = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
+
+  const { businessId, supplierId } = request.data as {
+    businessId: string;
+    supplierId: string;
+  };
+
+  if (!businessId || !supplierId) {
+    throw new HttpsError("invalid-argument", "businessId and supplierId are required.");
+  }
+
+  await softDeleteResource({
+    businessId,
+    resourceId: supplierId,
+    collection: "suppliers",
+    callerUid: request.auth.uid,
+    targetType: "suppliers",
+  });
 
   return { success: true };
 });

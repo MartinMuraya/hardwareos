@@ -295,7 +295,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Text('Branch Operations',
                           style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: theme.colorScheme.onSurface)),
                         const SizedBox(height: 4),
-                        Text('${_pendingTransfers} pending transfers',
+                        Text('$_pendingTransfers pending transfers',
                           style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
                       ])),
                       Icon(Icons.chevron_right_rounded, color: theme.hintColor),

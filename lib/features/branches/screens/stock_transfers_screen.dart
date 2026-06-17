@@ -139,9 +139,11 @@ class _StockTransfersScreenState extends State<StockTransfersScreen> {
             final name = nameCtrl.text.trim();
             final qty = int.tryParse(qtyCtrl.text) ?? 0;
             if (name.isEmpty || qty <= 0) {
-              if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(
-                const SnackBar(content: Text('Fill all fields')),
-              );
+              if (ctx.mounted) {
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  const SnackBar(content: Text('Fill all fields')),
+                );
+              }
               return;
             }
             Navigator.pop(ctx);
@@ -162,9 +164,11 @@ class _StockTransfersScreenState extends State<StockTransfersScreen> {
                 _load();
               }
             } on FunctionsException catch (e) {
-              if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
-              );
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
+                );
+              }
             }
           }, child: const Text('Submit')),
         ],

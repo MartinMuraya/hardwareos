@@ -128,3 +128,6 @@ export async function assertFeatureEnabled(
     throw new HttpsError("resource-exhausted", UPGRADE_MESSAGES[feature]);
   }
 }
+
+// Re-export for convenience (shared soft-delete utility in deleteFunctions.ts)
+export { softDeleteResource } from "./deleteFunctions";

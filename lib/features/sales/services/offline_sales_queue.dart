@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/services/offline_service.dart';
+import '../../../core/services/failed_sync_service.dart';
 import '../../../core/providers/auth_provider.dart';
 
 enum SyncStatus { idle, syncing, error }
@@ -14,6 +15,7 @@ class OfflineSalesQueue extends ChangeNotifier {
   int _pendingPayments = 0;
   int _pendingInventory = 0;
   String? _lastError;
+  String? _lastBizId;
   Timer? _retryTimer;
   int _retryAttempt = 0;
 
@@ -24,6 +26,8 @@ class OfflineSalesQueue extends ChangeNotifier {
   int get totalPending => _pendingSales + _pendingPayments + _pendingInventory;
   String? get lastError => _lastError;
   bool get isSyncing => _status == SyncStatus.syncing;
+
+  final FailedSyncService _failedSync = FailedSyncService();
 
   void refresh() {
     _pendingSales = OfflineService.pendingSaleCount;
@@ -68,24 +72,25 @@ class OfflineSalesQueue extends ChangeNotifier {
     _lastError = null;
     notifyListeners();
 
+    final auth = context.read<AuthProvider>();
+    _lastBizId = auth.businessId;
+
     try {
-      await _syncSales(context);
-      await _syncPayments(context);
-      await _syncInventory(context);
+      await _syncSales(_lastBizId);
+      await _syncPayments(_lastBizId);
+      await _syncInventory(_lastBizId);
       _status = SyncStatus.idle;
       _retryAttempt = 0;
     } catch (e) {
       _status = SyncStatus.error;
       _lastError = e.toString();
-      _scheduleRetry(context);
+      _scheduleRetry();
     }
     refresh();
   }
 
-  Future<void> _syncSales(BuildContext context) async {
+  Future<void> _syncSales(String? bizId) async {
     final sales = OfflineService.getPendingSales();
-    final auth = context.read<AuthProvider>();
-    final bizId = auth.businessId;
 
     for (final sale in sales) {
       try {
@@ -98,17 +103,22 @@ class OfflineSalesQueue extends ChangeNotifier {
           sale.retryCount++;
           await OfflineService.enqueueSale(sale);
           await OfflineService.removeSale(sale.id);
-          throw e;
+          rethrow;
         }
         await OfflineService.removeSale(sale.id);
+        await _failedSync.addEntry(FailedSyncEntry(
+          id: sale.id,
+          type: 'sale',
+          data: sale.saleData,
+          createdAt: DateTime.now(),
+          reason: e.message,
+        ));
       }
     }
   }
 
-  Future<void> _syncPayments(BuildContext context) async {
+  Future<void> _syncPayments(String? bizId) async {
     final payments = OfflineService.getPendingPayments();
-    final auth = context.read<AuthProvider>();
-    final bizId = auth.businessId;
 
     for (final payment in payments) {
       try {
@@ -121,17 +131,22 @@ class OfflineSalesQueue extends ChangeNotifier {
           payment.retryCount++;
           await OfflineService.enqueuePayment(payment);
           await OfflineService.removePayment(payment.id);
-          throw e;
+          rethrow;
         }
         await OfflineService.removePayment(payment.id);
+        await _failedSync.addEntry(FailedSyncEntry(
+          id: payment.id,
+          type: 'payment',
+          data: payment.paymentData,
+          createdAt: DateTime.now(),
+          reason: e.message,
+        ));
       }
     }
   }
 
-  Future<void> _syncInventory(BuildContext context) async {
+  Future<void> _syncInventory(String? bizId) async {
     final updates = OfflineService.getPendingInventoryUpdates();
-    final auth = context.read<AuthProvider>();
-    final bizId = auth.businessId;
 
     for (final update in updates) {
       try {
@@ -144,14 +159,21 @@ class OfflineSalesQueue extends ChangeNotifier {
           update.retryCount++;
           await OfflineService.enqueueInventoryUpdate(update);
           await OfflineService.removeInventoryUpdate(update.id);
-          throw e;
+          rethrow;
         }
         await OfflineService.removeInventoryUpdate(update.id);
+        await _failedSync.addEntry(FailedSyncEntry(
+          id: update.id,
+          type: 'inventory',
+          data: update.updateData,
+          createdAt: DateTime.now(),
+          reason: e.message,
+        ));
       }
     }
   }
 
-  void _scheduleRetry(BuildContext context) {
+  void _scheduleRetry() {
     _retryTimer?.cancel();
     final delays = [10, 30, 60];
     final delay = _retryAttempt < delays.length
@@ -159,8 +181,28 @@ class OfflineSalesQueue extends ChangeNotifier {
         : delays.last;
     _retryAttempt++;
     _retryTimer = Timer(Duration(seconds: delay), () {
-      syncAll(context);
+      _autoRetry();
     });
+  }
+
+  Future<void> _autoRetry() async {
+    if (_status == SyncStatus.syncing) return;
+    _status = SyncStatus.syncing;
+    _lastError = null;
+    notifyListeners();
+
+    try {
+      await _syncSales(_lastBizId);
+      await _syncPayments(_lastBizId);
+      await _syncInventory(_lastBizId);
+      _status = SyncStatus.idle;
+      _retryAttempt = 0;
+    } catch (e) {
+      _status = SyncStatus.error;
+      _lastError = e.toString();
+      _scheduleRetry();
+    }
+    refresh();
   }
 
   @override

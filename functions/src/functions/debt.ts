@@ -399,11 +399,13 @@ export const getCustomerStatement = onCall({ cors: true }, async (request) => {
       throw new HttpsError("permission-denied", "Customer does not belong to your business.");
     }
 
+    // Load up to 1000 most recent transactions for statement
     const txSnap = await db()
       .collection("debtTransactions")
       .where("businessId", "==", businessId)
       .where("customerId", "==", customerId)
       .orderBy("createdAt", "asc")
+      .limit(1000)
       .get();
 
     const transactions = txSnap.docs.map((d) => ({

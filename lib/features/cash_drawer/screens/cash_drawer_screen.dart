@@ -169,19 +169,24 @@ class _CashDrawerScreenState extends State<CashDrawerScreen> {
 
     if (result == null) return;
     final float = double.tryParse(result) ?? 0;
-    if (float < 0) return;
+    // ignore: use_build_context_synchronously
+    final bizId = context.read<AuthProvider>().businessId;
+    if (bizId == null || float < 0) return;
 
     try {
-      final bizId = context.read<AuthProvider>().businessId!;
       await FunctionsService.call('openCashSession', {'businessId': bizId, 'openingFloat': float});
       _load();
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Session opened')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Session opened')),
+        );
+      }
     } on FunctionsException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
+        );
+      }
     }
   }
 
@@ -213,10 +218,11 @@ class _CashDrawerScreenState extends State<CashDrawerScreen> {
 
     if (result == null) return;
     final actual = double.tryParse(result) ?? 0;
-    if (actual < 0) return;
+    // ignore: use_build_context_synchronously
+    final bizId = context.read<AuthProvider>().businessId;
+    if (bizId == null || actual < 0) return;
 
     try {
-      final bizId = context.read<AuthProvider>().businessId!;
       final res = await FunctionsService.call('closeCashSession', {
         'businessId': bizId,
         'sessionId': session.id,
@@ -236,9 +242,11 @@ class _CashDrawerScreenState extends State<CashDrawerScreen> {
         );
       }
     } on FunctionsException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
+        );
+      }
     }
   }
 }

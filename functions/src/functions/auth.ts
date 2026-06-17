@@ -6,7 +6,7 @@ import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { TRIAL_DAYS } from "../config/planLimits";
 import { assertBusinessMember, assertUserLimit } from "../middleware/checkPlanLimits";
-import { assertCanManageRole } from "../middleware/securityMiddleware";
+import { assertCanManageRole, checkUserSession } from "../middleware/securityMiddleware";
 
 const db = () => admin.firestore();
 
@@ -160,7 +160,12 @@ export const getMyProfile = onCall({ cors: true }, async (request) => {
   }
 
   const userData = userSnap.data()!;
-  const bizSnap = await db().collection("businesses").doc(userData.businessId).get();
+  const businessId = userData.businessId;
+
+  // Session security check — revokes tokens if user disabled/role revoked/biz suspended/sub terminated
+  await checkUserSession(uid, businessId);
+
+  const bizSnap = await db().collection("businesses").doc(businessId).get();
 
   return {
     registered: true,
@@ -172,15 +177,20 @@ export const getMyProfile = onCall({ cors: true }, async (request) => {
 
 // -----------------------------------------------------------
 // getUsers
-// Retrieves all users associated with the given businessId.
+// Retrieves users associated with the given businessId.
 // Caller must be an owner or manager.
+// Supports cursor-based pagination via lastDocId.
 // -----------------------------------------------------------
 export const getUsers = onCall({ cors: true }, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "You must be logged in.");
   }
 
-  const { businessId } = request.data as { businessId: string };
+  const { businessId, lastDocId, pageSize } = request.data as {
+    businessId: string;
+    lastDocId?: string;
+    pageSize?: number;
+  };
   if (!businessId) {
     throw new HttpsError("invalid-argument", "businessId is required.");
   }
@@ -188,11 +198,19 @@ export const getUsers = onCall({ cors: true }, async (request) => {
   // Caller must be owner or manager to view the team list
   await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager"]);
 
-  const snap = await db()
+  const limit = Math.min(pageSize || 100, 200);
+  let query: admin.firestore.Query = db()
     .collection("users")
     .where("businessId", "==", businessId)
     .orderBy("createdAt", "desc")
-    .get();
+    .limit(limit);
+
+  if (lastDocId) {
+    const cursor = await db().collection("users").doc(lastDocId).get();
+    if (cursor.exists) query = query.startAfter(cursor);
+  }
+
+  const snap = await query.get();
 
   return {
     users: snap.docs.map((doc) => {
@@ -202,5 +220,7 @@ export const getUsers = onCall({ cors: true }, async (request) => {
         createdAt: (data.createdAt as admin.firestore.Timestamp)?.toDate()?.toISOString() || null,
       };
     }),
+    lastDocId: snap.docs.length > 0 ? snap.docs[snap.docs.length - 1].id : null,
+    hasMore: snap.docs.length >= limit,
   };
 });

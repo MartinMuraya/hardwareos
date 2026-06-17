@@ -4,11 +4,15 @@
 
 import * as admin from "firebase-admin";
 import { setGlobalOptions } from "firebase-functions/v2";
+import { initSentry } from "./middleware/sentry";
 
 setGlobalOptions({ maxInstances: 10 });
 
 // Initialize Firebase Admin SDK (once)
 admin.initializeApp();
+
+// Initialize Sentry with sanitization and PII protection
+initSentry(process.env.SENTRY_DSN);
 
 // Auth
 export { createBusiness, inviteUser, getMyProfile, getUsers } from "./functions/auth";
@@ -26,6 +30,7 @@ export {
   createProduct,
   updateProduct,
   addStock,
+  deleteProduct,
   getProducts,
   getLowStockProducts,
 } from "./functions/inventory";
@@ -92,6 +97,7 @@ export {
   getCustomers,
   getCustomer,
   updateCustomer,
+  deleteCustomer,
 } from "./functions/customers";
 
 export {
@@ -118,6 +124,7 @@ export {
   getSuppliers,
   getSupplier,
   updateSupplier,
+  deleteSupplier,
 } from "./functions/suppliers";
 
 export {
@@ -192,3 +199,6 @@ export {
   getSecurityMetrics,
   getSecurityEvents,
 } from "./functions/securityDashboard";
+
+// Failed Sync — Retry Scheduler (runs every 5 min)
+export { processFailedSyncRetries } from "./services/failedSyncQueue";

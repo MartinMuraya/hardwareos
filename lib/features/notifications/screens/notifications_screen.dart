@@ -60,13 +60,17 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         'settings': s.toMap(),
       });
       setState(() => _settings = s);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Settings saved')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Settings saved')),
+        );
+      }
     } on FunctionsException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
+        );
+      }
     }
   }
 
@@ -210,13 +214,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             DropdownMenuItem(value: 'meta_whatsapp', child: Text('Meta WhatsApp Business')),
           ],
           onChanged: (v) {
-            if (v != null) _updateSettings(NotificationSettings(
-              debtReminders: _settings.debtReminders,
-              lowStockAlerts: _settings.lowStockAlerts,
-              paymentNotifications: _settings.paymentNotifications,
-              quotationNotifications: _settings.quotationNotifications,
-              provider: v,
-            ));
+            if (v != null) {
+              _updateSettings(NotificationSettings(
+                debtReminders: _settings.debtReminders,
+                lowStockAlerts: _settings.lowStockAlerts,
+                paymentNotifications: _settings.paymentNotifications,
+                quotationNotifications: _settings.quotationNotifications,
+                provider: v,
+              ));
+            }
           },
         ),
         const SizedBox(height: 16),
@@ -226,10 +232,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             color: AppColors.info.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Row(children: [
-            const Icon(Icons.info_outline, color: AppColors.info, size: 18),
-            const SizedBox(width: 8),
-            const Expanded(child: Text('Set your Meta WhatsApp API keys:\nfirebase functions:secrets:set META_WA_TOKEN\nfirebase functions:secrets:set META_WA_PHONE_NUMBER_ID',
+          child: const Row(children: [
+            Icon(Icons.info_outline, color: AppColors.info, size: 18),
+            SizedBox(width: 8),
+            Expanded(child: Text('Set your Meta WhatsApp API keys:\nfirebase functions:secrets:set META_WA_TOKEN\nfirebase functions:secrets:set META_WA_PHONE_NUMBER_ID',
               style: TextStyle(fontSize: 11),
             )),
           ]),

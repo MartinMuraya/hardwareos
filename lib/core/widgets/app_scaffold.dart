@@ -208,11 +208,11 @@ class _AppScaffoldState extends State<AppScaffold> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               color: AppColors.warning.withValues(alpha: 0.15),
-              child: Row(
+              child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.wifi_off_rounded, size: 16, color: AppColors.warning),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Text('Offline Mode — sales will sync when connection restores',
                     style: TextStyle(color: AppColors.warning, fontSize: 12, fontWeight: FontWeight.w500)),
                 ],

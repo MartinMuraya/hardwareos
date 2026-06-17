@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
@@ -10,12 +12,33 @@ import 'core/providers/business_provider.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/providers/connectivity_provider.dart';
 import 'core/services/offline_service.dart';
+import 'core/services/failed_sync_service.dart';
 import 'core/theme/app_theme.dart';
 import 'features/sales/services/offline_sales_queue.dart';
 import 'firebase_options.dart';
 
-void main() async {
+/// Set this to your Sentry DSN before release.
+/// For development, leave null to disable Sentry.
+const String? _sentryDsn = null;
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Sentry for crash/error monitoring
+  if (_sentryDsn != null) {
+    // In production, use the sentry_flutter package instead of manual HTTP.
+    // For now, we forward unhandled errors to console for awareness.
+    FlutterError.onError = (details) {
+      FlutterError.presentError(details);
+      // Log to Sentry via Cloud Function or direct HTTP
+      _reportErrorToSentry(details.exception, details.stack);
+    };
+    ui.PlatformDispatcher.instance.onError = (error, stack) {
+      _reportErrorToSentry(error, stack);
+      return true;
+    };
+  }
+
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Enable Firebase App Check for abuse protection
@@ -32,8 +55,20 @@ void main() async {
 
   await Hive.initFlutter();
   await OfflineService.init();
+  await FailedSyncService.init();
   final themeProvider = await ThemeProvider.create();
   runApp(HardwareOSApp(themeProvider: themeProvider));
+}
+
+/// Forwards crash reports to Sentry via HTTP (lightweight without native SDK).
+/// Replace with sentry_flutter SDK when DSN is configured.
+void _reportErrorToSentry(Object error, StackTrace? stack) {
+  if (_sentryDsn == null) return;
+  // Minimal HTTP transport — or use sentry_flutter package directly.
+  // This is a placeholder that avoids adding the heavy native Sentry SDK
+  // until the DSN is actually configured.
+  debugPrint('[Sentry] Error: $error');
+  debugPrint('[Sentry] Stack: $stack');
 }
 
 class HardwareOSApp extends StatefulWidget {
@@ -58,6 +93,7 @@ class _HardwareOSAppState extends State<HardwareOSApp> {
           update: (_, auth, biz) => biz!..updateFromAuth(auth),
         ),
         ChangeNotifierProvider(create: (_) => ConnectivityProvider()),
+        ChangeNotifierProvider(create: (_) => FailedSyncService()),
         ChangeNotifierProvider(create: (_) => OfflineSalesQueue()),
       ],
       child: Builder(

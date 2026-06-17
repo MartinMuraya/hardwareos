@@ -53,7 +53,7 @@ pw.Widget _header(Quotation q) {
           ),
           pw.SizedBox(height: 4),
           pw.Text(q.quotationNumber,
-            style: pw.TextStyle(
+            style: const pw.TextStyle(
               fontSize: 14,
               color: PdfColors.grey700,
             ),
@@ -133,15 +133,15 @@ pw.Widget _customerInfo(Quotation q) {
               style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
             if (q.customerPhone.isNotEmpty)
               pw.Text(q.customerPhone,
-                style: pw.TextStyle(fontSize: 11, color: PdfColors.grey600)),
-          ],
-        ),
-        pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.end,
-          children: [
-            pw.Text('DATE',
-              style: pw.TextStyle(
-                fontSize: 11,
+                style: const pw.TextStyle(fontSize: 11, color: PdfColors.grey600)),
+            ],
+          ),
+          pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.end,
+            children: [
+              pw.Text('DATE',
+                style: pw.TextStyle(
+                  fontSize: 11,
                 fontWeight: pw.FontWeight.bold,
                 color: PdfColors.grey500,
               ),
@@ -171,7 +171,7 @@ pw.Widget _customerInfo(Quotation q) {
 
 pw.Widget _itemsTable(List<QuotationItem> items) {
   return pw.Table(
-    border: pw.TableBorder(
+    border: const pw.TableBorder(
       horizontalInside: pw.BorderSide(color: PdfColors.grey300),
       bottom: pw.BorderSide(color: PdfColors.grey300),
     ),
