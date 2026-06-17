@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/models/branch.dart';
@@ -19,6 +20,10 @@ class _BranchDetailScreenState extends State<BranchDetailScreen> {
   bool _loading = true;
   String? _error;
   List<Map<String, dynamic>> _pendingTransfers = [];
+  int _branchInventoryCount = 0;
+  double _branchSalesTotal = 0;
+  double _branchProfitTotal = 0;
+  final _fmt = NumberFormat.currency(locale: 'en_KE', symbol: 'KES ');
 
   @override
   void initState() {
@@ -54,6 +59,26 @@ class _BranchDetailScreenState extends State<BranchDetailScreen> {
           .toList();
       } catch (_) {}
 
+      // Load branch inventory count
+      try {
+        final invData = await FunctionsService.call('getBranchInventory', {
+          'businessId': bizId,
+          'branchId': widget.branchId,
+        });
+        _branchInventoryCount = ((invData['inventory'] as List?)?.length ?? 0);
+      } catch (_) {}
+
+      // Load branch performance
+      try {
+        final perfData = await FunctionsService.call('getBranchPerformance', {
+          'businessId': bizId,
+        });
+        final branches = perfData['branches'] as Map? ?? {};
+        final bData = branches[widget.branchId] as Map? ?? {};
+        _branchSalesTotal = (bData['sales'] as num?)?.toDouble() ?? 0;
+        _branchProfitTotal = (bData['profit'] as num?)?.toDouble() ?? 0;
+      } catch (_) {}
+
       if (mounted) setState(() { _loading = false; });
     } on FunctionsException catch (e) {
       if (mounted) setState(() { _error = e.message; _loading = false; });
@@ -66,7 +91,16 @@ class _BranchDetailScreenState extends State<BranchDetailScreen> {
     final padding = Responsive.padding(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(_branch?.name ?? 'Branch')),
+      appBar: AppBar(
+        title: Text(_branch?.name ?? 'Branch'),
+        actions: [
+          TextButton.icon(
+            onPressed: _showRequestTransferDialog,
+            icon: const Icon(Icons.swap_horiz_rounded, size: 18),
+            label: const Text('Request'),
+          ),
+        ],
+      ),
       body: LoadingOverlay(
         isLoading: _loading,
         child: _error != null
@@ -79,6 +113,31 @@ class _BranchDetailScreenState extends State<BranchDetailScreen> {
                       padding: EdgeInsets.all(padding),
                       children: [
                         _InfoCard(branch: _branch!, theme: theme),
+                        const SizedBox(height: 20),
+                        Text('Reports', style: theme.textTheme.titleLarge),
+                        const SizedBox(height: 12),
+                        Row(children: [
+                          Expanded(child: _StatCard(
+                            icon: Icons.trending_up_rounded,
+                            label: 'Sales',
+                            value: _fmt.format(_branchSalesTotal),
+                            color: AppColors.accent,
+                          )),
+                          const SizedBox(width: 12),
+                          Expanded(child: _StatCard(
+                            icon: Icons.inventory_2_rounded,
+                            label: 'Inventory',
+                            value: '$_branchInventoryCount items',
+                            color: AppColors.chartBlue,
+                          )),
+                          const SizedBox(width: 12),
+                          Expanded(child: _StatCard(
+                            icon: Icons.account_balance_wallet_rounded,
+                            label: 'Profit',
+                            value: _fmt.format(_branchProfitTotal),
+                            color: AppColors.success,
+                          )),
+                        ]),
                         const SizedBox(height: 20),
                         if (_pendingTransfers.isNotEmpty) ...[
                           Text('Pending Transfers', style: theme.textTheme.titleLarge),
@@ -115,6 +174,64 @@ class _BranchDetailScreenState extends State<BranchDetailScreen> {
         SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
       );
     }
+  }
+
+  void _showRequestTransferDialog() {
+    final productCtrl = TextEditingController();
+    final qtyCtrl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Request Stock Transfer'),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          TextField(
+            controller: productCtrl,
+            decoration: const InputDecoration(labelText: 'Product Name'),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: qtyCtrl,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(labelText: 'Quantity'),
+          ),
+        ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(onPressed: () async {
+            final name = productCtrl.text.trim();
+            final qty = int.tryParse(qtyCtrl.text) ?? 0;
+            if (name.isEmpty || qty <= 0) {
+              if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(
+                const SnackBar(content: Text('Fill in all fields')),
+              );
+              return;
+            }
+            Navigator.pop(ctx);
+            try {
+              final bizId = context.read<AuthProvider>().businessId!;
+              await FunctionsService.call('requestStockTransfer', {
+                'businessId': bizId,
+                'fromBranchId': _branch!.id,
+                'toBranchId': _branch!.id,
+                'productId': name,
+                'productName': name,
+                'quantity': qty,
+              });
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Transfer requested')),
+                );
+                _load();
+              }
+            } on FunctionsException catch (e) {
+              if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
+              );
+            }
+          }, child: const Text('Request')),
+        ],
+      ),
+    );
   }
 }
 
@@ -161,6 +278,34 @@ class _Row extends StatelessWidget {
     const SizedBox(width: 8),
     Text(text, style: theme.textTheme.bodyMedium),
   ]);
+}
+
+class _StatCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+  const _StatCard({required this.icon, required this.label, required this.value, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.dividerColor),
+      ),
+      child: Column(children: [
+        Icon(icon, color: color, size: 22),
+        const SizedBox(height: 8),
+        Text(value, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: theme.colorScheme.onSurface)),
+        const SizedBox(height: 2),
+        Text(label, style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurfaceVariant)),
+      ]),
+    );
+  }
 }
 
 class _InfoChip extends StatelessWidget {

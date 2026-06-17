@@ -57,9 +57,20 @@ class _StockTransfersScreenState extends State<StockTransfersScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Stock Transfers', style: theme.textTheme.displayMedium),
-              const SizedBox(height: 4),
-              Text('${_transfers.length} transfers', style: theme.textTheme.bodyMedium),
+              Row(children: [
+                Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('Stock Transfers', style: theme.textTheme.displayMedium),
+                    const SizedBox(height: 4),
+                    Text('${_transfers.length} transfers', style: theme.textTheme.bodyMedium),
+                  ]),
+                ),
+                FilledButton.icon(
+                  onPressed: _showRequestTransferDialog,
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('Request'),
+                ),
+              ]),
               const SizedBox(height: 12),
 
               Row(children: [
@@ -97,6 +108,66 @@ class _StockTransfersScreenState extends State<StockTransfersScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showRequestTransferDialog() {
+    final nameCtrl = TextEditingController();
+    final qtyCtrl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Request Stock Transfer'),
+        content: SingleChildScrollView(
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            TextField(
+              controller: nameCtrl,
+              decoration: const InputDecoration(labelText: 'Product Name'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: qtyCtrl,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'Quantity'),
+            ),
+          ]),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(onPressed: () async {
+            final name = nameCtrl.text.trim();
+            final qty = int.tryParse(qtyCtrl.text) ?? 0;
+            if (name.isEmpty || qty <= 0) {
+              if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(
+                const SnackBar(content: Text('Fill all fields')),
+              );
+              return;
+            }
+            Navigator.pop(ctx);
+            try {
+              final bizId = context.read<AuthProvider>().businessId!;
+              await FunctionsService.call('requestStockTransfer', {
+                'businessId': bizId,
+                'fromBranchId': '',
+                'toBranchId': '',
+                'productId': name,
+                'productName': name,
+                'quantity': qty,
+              });
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Transfer requested')),
+                );
+                _load();
+              }
+            } on FunctionsException catch (e) {
+              if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
+              );
+            }
+          }, child: const Text('Submit')),
+        ],
       ),
     );
   }

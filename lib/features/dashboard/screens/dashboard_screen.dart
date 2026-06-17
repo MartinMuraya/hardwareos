@@ -25,6 +25,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Map<String, dynamic>? _debtStats;
   Map<String, dynamic>? _adjStats;
   Map<String, dynamic>? _returnStats;
+  Map<String, dynamic>? _cashVariance;
+  Map<String, dynamic>? _branchPerformance;
+  int _pendingTransfers = 0;
   List<Map<String, dynamic>> _recentLogs = [];
   String? _error;
 
@@ -46,14 +49,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
         FunctionsService.call('getAdjustmentStats', {'businessId': businessId}),
         FunctionsService.call('getReturnStats', {'businessId': businessId}),
         FunctionsService.call('getRecentAuditLogs', {'businessId': businessId}),
+        FunctionsService.call('getCashVarianceReport', {'businessId': businessId}),
+        FunctionsService.call('getBranchPerformance', {'businessId': businessId}),
+        FunctionsService.call('getPendingTransfers', {'businessId': businessId}),
       ]);
       final data = results[0];
       final debt = results[1];
       final adj = results[2];
       final retStats = results[3];
       final logs = results[4];
+      final cashVar = results[5];
+      final branchPerf = results[6];
+      final pt = results[7];
       if (mounted) {
-        setState(() { _stats = data; _debtStats = debt; _adjStats = adj; _returnStats = retStats; _recentLogs = (logs['logs'] as List?)?.cast<Map<String, dynamic>>() ?? []; _loading = false; });
+        setState(() {
+          _stats = data; _debtStats = debt; _adjStats = adj; _returnStats = retStats;
+          _cashVariance = cashVar; _branchPerformance = branchPerf;
+          _pendingTransfers = (pt['pendingCount'] as num?)?.toInt() ?? 0;
+          _recentLogs = (logs['logs'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+          _loading = false;
+        });
         final sub = data['subscription'] as Map?;
         if (sub != null) {
           context.read<BusinessProvider>().setBusinessData({
@@ -201,6 +216,90 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ]),
                 const SizedBox(height: 12),
                 RecentSalesList(sales: recentSales, fmt: fmt),
+              ],
+
+              if (_cashVariance != null) ...[
+                _SectionHeader(title: 'Cash Drawer', theme: theme),
+                const SizedBox(height: 12),
+                InkWell(
+                  onTap: () => context.go('/cash-drawer'),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: theme.cardColor,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: theme.dividerColor),
+                    ),
+                    child: Row(children: [
+                      Container(
+                        width: 44, height: 44,
+                        decoration: BoxDecoration(
+                          color: AppColors.accent.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.monetization_on_rounded, color: AppColors.accent, size: 22),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text('Session Variance',
+                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: theme.colorScheme.onSurface)),
+                        const SizedBox(height: 4),
+                        Text('${_cashVariance!['sessionCount'] ?? 0} sessions today',
+                          style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
+                      ])),
+                      Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                        Text(fmt.format(_cashVariance!['totalVariance'] ?? 0),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800, fontSize: 16,
+                            color: ((_cashVariance!['totalVariance'] as num?) ?? 0) < 0
+                              ? AppColors.error : AppColors.success,
+                          )),
+                        const SizedBox(height: 4),
+                        Text('Tap to view',
+                          style: TextStyle(fontSize: 11, color: theme.hintColor)),
+                      ]),
+                    ]),
+                  ),
+                ),
+                const SizedBox(height: 28),
+              ],
+
+              if (_branchPerformance != null || _pendingTransfers > 0) ...[
+                _SectionHeader(title: 'Branches', theme: theme),
+                const SizedBox(height: 12),
+                InkWell(
+                  onTap: () => context.go('/branches'),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: theme.cardColor,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: theme.dividerColor),
+                    ),
+                    child: Row(children: [
+                      Container(
+                        width: 44, height: 44,
+                        decoration: BoxDecoration(
+                          color: AppColors.chartBlue.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.business_rounded, color: AppColors.chartBlue, size: 22),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text('Branch Operations',
+                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: theme.colorScheme.onSurface)),
+                        const SizedBox(height: 4),
+                        Text('${_pendingTransfers} pending transfers',
+                          style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
+                      ])),
+                      Icon(Icons.chevron_right_rounded, color: theme.hintColor),
+                    ]),
+                  ),
+                ),
+                const SizedBox(height: 28),
               ],
 
               if (_recentLogs.isNotEmpty) ...[

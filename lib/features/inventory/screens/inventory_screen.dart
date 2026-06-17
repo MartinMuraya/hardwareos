@@ -210,14 +210,28 @@ class _ProductCard extends StatelessWidget {
             border: Border.all(color: theme.dividerColor),
           ),
           child: Row(children: [
-            Container(
-              width: 44, height: 44,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(10),
+              Container(
+                width: 44, height: 44,
+                decoration: BoxDecoration(
+                  color: product.isBulkChild
+                    ? AppColors.warning.withValues(alpha: 0.1)
+                    : product.isBulkParent
+                      ? AppColors.chartPurple.withValues(alpha: 0.1)
+                      : theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  product.isBulkChild ? Icons.content_copy_rounded
+                    : product.isBulkParent ? Icons.inventory_rounded
+                    : Icons.hardware_rounded,
+                  color: product.isBulkChild
+                    ? AppColors.warning
+                    : product.isBulkParent
+                      ? AppColors.chartPurple
+                      : theme.colorScheme.onSurfaceVariant,
+                  size: 22,
+                ),
               ),
-              child: Icon(Icons.hardware_rounded, color: theme.colorScheme.onSurfaceVariant, size: 22),
-            ),
             const SizedBox(width: 14),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, 
@@ -233,6 +247,13 @@ class _ProductCard extends StatelessWidget {
                   if (product.sku.isNotEmpty) ...[
                     const SizedBox(width: 6),
                     _Chip(label: product.sku, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
+                  ],
+                  if (product.isBulkParent || product.isBulkChild) ...[
+                    const SizedBox(width: 6),
+                    _Chip(
+                      label: product.isBulkParent ? 'BULK' : 'Sub-unit',
+                      color: product.isBulkParent ? AppColors.chartPurple : AppColors.warning,
+                    ),
                   ],
                 ]),
               ]),

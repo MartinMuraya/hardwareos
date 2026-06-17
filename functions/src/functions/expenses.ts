@@ -19,8 +19,9 @@ export const EXPENSE_CATEGORIES = [
 export const createExpense = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
-  const { businessId, category, amount, note } = request.data as {
+  const { businessId, branchId, category, amount, note } = request.data as {
     businessId: string;
+    branchId?: string;
     category: string;
     amount: number;
     note?: string;
@@ -37,6 +38,7 @@ export const createExpense = onCall({ cors: true }, async (request) => {
   await expRef.set({
     id: expRef.id,
     businessId,
+    branchId: branchId || null,
     category: category.trim(),
     amount: Number(amount.toFixed(2)),
     note: note?.trim() || "",

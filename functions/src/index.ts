@@ -123,12 +123,17 @@ export {
   closeCashSession,
   getCashSessions,
   getCashVarianceReport,
+  calculateCashVariance,
+  getDailyCashReport,
+  getMonthlyCashReport,
 } from "./functions/cash_drawer";
 
 // Broken-Bulk Inventory
 export {
   bulkCreateProduct,
   autoConvertDuringSale,
+  validateConversion,
+  convertParentToChild,
 } from "./functions/bulk_inventory";
 
 // Multi-Branch Operations
@@ -142,6 +147,9 @@ export {
   getBranchInventory,
   getBranchPerformance,
   getPendingTransfers,
+  getSalesByBranch,
+  getBranchExpensesReport,
+  getBranchProfitReport,
 } from "./functions/branches";
 
 // WhatsApp Automation

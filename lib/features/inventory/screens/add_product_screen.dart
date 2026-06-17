@@ -25,11 +25,32 @@ class _AddProductScreenState extends State<AddProductScreen> {
   bool _isSubmitting = false;
   String? _error;
 
+  bool _isBulkEnabled = false;
+  bool _isBulkParent = true;
+  String? _parentProductId;
+  double? _conversionRatio;
+  String _baseUnit = '';
+  String _sellingUnit = '';
+  List<Map<String, dynamic>> _allProducts = [];
+  bool _loadingProducts = false;
+
   static const _categories = [
     'General', 'Plumbing', 'Electrical', 'Tools', 'Paint',
     'Fasteners', 'Lumber', 'Safety', 'Gardening', 'Roofing',
     'Tiles & Flooring', 'Other',
   ];
+
+  Future<void> _loadProducts() async {
+    if (_allProducts.isNotEmpty) return;
+    setState(() => _loadingProducts = true);
+    try {
+      final bizId = context.read<AuthProvider>().businessId!;
+      final data = await FunctionsService.call('getProducts', {'businessId': bizId, 'limit': 200});
+      final raw = (data['products'] as List?) ?? [];
+      _allProducts = raw.cast<Map<String, dynamic>>();
+    } catch (_) {}
+    setState(() => _loadingProducts = false);
+  }
 
   @override
   void dispose() {
@@ -51,7 +72,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
     setState(() { _isSubmitting = true; _error = null; });
     try {
       final bizId = context.read<AuthProvider>().businessId!;
-      await FunctionsService.call('createProduct', {
+      final baseParams = {
         'businessId':   bizId,
         'name':         _nameCtrl.text.trim(),
         'sku':          _skuCtrl.text.trim(),
@@ -60,7 +81,22 @@ class _AddProductScreenState extends State<AddProductScreen> {
         'costPrice':    double.parse(_costCtrl.text),
         'sellingPrice': double.parse(_priceCtrl.text),
         'reorderLevel': int.parse(_reorderCtrl.text),
-      });
+      };
+
+      if (_isBulkEnabled) {
+        await FunctionsService.call('bulkCreateProduct', {
+          ...baseParams,
+          'isBulkParent': _isBulkParent,
+          'isBulkChild': !_isBulkParent,
+          'parentProductId': _parentProductId,
+          'conversionRatio': _conversionRatio,
+          'baseUnit': _baseUnit.isEmpty ? null : _baseUnit,
+          'sellingUnit': _sellingUnit.isEmpty ? null : _sellingUnit,
+        });
+      } else {
+        await FunctionsService.call('createProduct', baseParams);
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Product added successfully!')));
@@ -195,6 +231,89 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           ),
                         ),
                       ]),
+                    ]),
+                    const SizedBox(height: 20),
+
+                    _Section(title: 'Bulk Configuration', theme: theme, children: [
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Enable Bulk Product'),
+                        subtitle: Text(_isBulkEnabled
+                          ? (_isBulkParent ? 'Configured as Bulk Parent' : 'Configured as Bulk Child')
+                          : 'Allow selling in sub-units'),
+                        value: _isBulkEnabled,
+                        onChanged: (v) => setState(() => _isBulkEnabled = v),
+                      ),
+                      if (_isBulkEnabled) ...[
+                        const SizedBox(height: 8),
+                        Row(children: [
+                          Expanded(
+                            child: ChoiceChip(
+                              label: const Text('Bulk Parent'),
+                              selected: _isBulkParent,
+                              onSelected: (v) => setState(() => _isBulkParent = true),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ChoiceChip(
+                              label: const Text('Bulk Child'),
+                              selected: !_isBulkParent,
+                              onSelected: (v) {
+                                setState(() => _isBulkParent = false);
+                                _loadProducts();
+                              },
+                            ),
+                          ),
+                        ]),
+                        if (!_isBulkParent) ...[
+                          const SizedBox(height: 14),
+                          DropdownButtonFormField<String>(
+                            value: _parentProductId,
+                            dropdownColor: theme.cardColor,
+                            style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 14),
+                            decoration: const InputDecoration(labelText: 'Parent Product'),
+                            items: _loadingProducts
+                              ? [const DropdownMenuItem(value: null, child: Text('Loading...'))]
+                              : _allProducts.map((p) => DropdownMenuItem(
+                                  value: p['id'] as String,
+                                  child: Text(p['name'] as String? ?? ''),
+                                )).toList(),
+                            onChanged: (v) => setState(() => _parentProductId = v),
+                            validator: (v) => _isBulkEnabled && !_isBulkParent && v == null ? 'Required' : null,
+                          ),
+                          const SizedBox(height: 14),
+                          TextFormField(
+                            keyboardType: TextInputType.number,
+                            style: TextStyle(color: theme.colorScheme.onSurface),
+                            decoration: const InputDecoration(
+                              labelText: 'Conversion Ratio (1 parent = ? child)',
+                              hintText: 'e.g. 12 for pieces per box',
+                            ),
+                            onChanged: (v) => _conversionRatio = double.tryParse(v),
+                            validator: (v) => _isBulkEnabled && !_isBulkParent && (v == null || double.tryParse(v) == null || double.parse(v) <= 0)
+                              ? 'Enter valid ratio > 0' : null,
+                          ),
+                        ],
+                        const SizedBox(height: 14),
+                        Row(children: [
+                          Expanded(
+                            child: TextFormField(
+                              style: TextStyle(color: theme.colorScheme.onSurface),
+                              decoration: const InputDecoration(labelText: 'Base Unit (e.g., Box)'),
+                              onChanged: (v) => _baseUnit = v,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: TextFormField(
+                              style: TextStyle(color: theme.colorScheme.onSurface),
+                              decoration: const InputDecoration(labelText: 'Selling Unit (e.g., Piece)'),
+                              onChanged: (v) => _sellingUnit = v,
+                            ),
+                          ),
+                        ]),
+                      ],
                     ]),
                     const SizedBox(height: 32),
 

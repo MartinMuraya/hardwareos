@@ -377,3 +377,131 @@ export const getPendingTransfers = onCall({ cors: true }, async (request) => {
     return { pendingCount: 0 };
   }
 });
+
+// -----------------------------------------------------------
+// getSalesByBranch — sales for a specific branch
+// -----------------------------------------------------------
+export const getSalesByBranch = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
+
+  const { businessId, branchId, limit: pageLimit = 50 } = request.data as {
+    businessId: string;
+    branchId: string;
+    limit?: number;
+  };
+
+  await assertBusinessMember(request.auth.uid, businessId);
+
+  try {
+    let query: admin.firestore.Query = db()
+      .collection("sales")
+      .where("businessId", "==", businessId)
+      .where("branchId", "==", branchId)
+      .orderBy("createdAt", "desc")
+      .limit(Math.min(pageLimit, 100));
+
+    const snap = await query.get();
+    return {
+      sales: snap.docs.map((d) => {
+        const data = d.data();
+        return {
+          ...data,
+          createdAt: (data.createdAt as admin.firestore.Timestamp).toDate().toISOString(),
+        };
+      }),
+      totalSales: snap.docs.reduce((sum, d) => sum + ((d.data().total as number) || 0), 0),
+      totalProfit: snap.docs.reduce((sum, d) => sum + ((d.data().profit as number) || 0), 0),
+      count: snap.docs.length,
+    };
+  } catch (e) {
+    return { sales: [], totalSales: 0, totalProfit: 0, count: 0 };
+  }
+});
+
+// -----------------------------------------------------------
+// getBranchExpensesReport — expenses for a specific branch
+// -----------------------------------------------------------
+export const getBranchExpensesReport = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
+
+  const { businessId, branchId, limit: pageLimit = 50 } = request.data as {
+    businessId: string;
+    branchId: string;
+    limit?: number;
+  };
+
+  await assertBusinessMember(request.auth.uid, businessId);
+
+  try {
+    let query: admin.firestore.Query = db()
+      .collection("expenses")
+      .where("businessId", "==", businessId)
+      .where("branchId", "==", branchId)
+      .orderBy("createdAt", "desc")
+      .limit(Math.min(pageLimit, 100));
+
+    const snap = await query.get();
+    return {
+      expenses: snap.docs.map((d) => {
+        const data = d.data();
+        return {
+          ...data,
+          createdAt: (data.createdAt as admin.firestore.Timestamp).toDate().toISOString(),
+        };
+      }),
+      totalExpenses: snap.docs.reduce((sum, d) => sum + ((d.data().amount as number) || 0), 0),
+      count: snap.docs.length,
+    };
+  } catch (e) {
+    return { expenses: [], totalExpenses: 0, count: 0 };
+  }
+});
+
+// -----------------------------------------------------------
+// getBranchProfitReport — net profit for a branch
+// -----------------------------------------------------------
+export const getBranchProfitReport = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
+
+  const { businessId, branchId } = request.data as {
+    businessId: string;
+    branchId: string;
+  };
+
+  await assertBusinessMember(request.auth.uid, businessId);
+
+  try {
+    // Get sales
+    const salesSnap = await db()
+      .collection("sales")
+      .where("businessId", "==", businessId)
+      .where("branchId", "==", branchId)
+      .get();
+
+    const totalRevenue = salesSnap.docs.reduce((sum, d) => sum + ((d.data().total as number) || 0), 0);
+    const totalProfit = salesSnap.docs.reduce((sum, d) => sum + ((d.data().profit as number) || 0), 0);
+    const salesCount = salesSnap.docs.length;
+
+    // Get expenses
+    const expSnap = await db()
+      .collection("expenses")
+      .where("businessId", "==", businessId)
+      .where("branchId", "==", branchId)
+      .get();
+
+    const totalExpenses = expSnap.docs.reduce((sum, d) => sum + ((d.data().amount as number) || 0), 0);
+
+    const netProfit = Number((totalProfit - totalExpenses).toFixed(2));
+
+    return {
+      branchId,
+      totalRevenue: Number(totalRevenue.toFixed(2)),
+      totalProfit: Number(totalProfit.toFixed(2)),
+      totalExpenses: Number(totalExpenses.toFixed(2)),
+      netProfit,
+      salesCount,
+    };
+  } catch (e) {
+    return { branchId, totalRevenue: 0, totalProfit: 0, totalExpenses: 0, netProfit: 0, salesCount: 0 };
+  }
+});

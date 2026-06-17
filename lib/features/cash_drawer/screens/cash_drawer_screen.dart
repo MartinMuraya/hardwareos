@@ -17,6 +17,7 @@ class CashDrawerScreen extends StatefulWidget {
 
 class _CashDrawerScreenState extends State<CashDrawerScreen> {
   List<CashSession> _sessions = [];
+  Map<String, dynamic>? _varianceReport;
   bool _loading = true;
   String? _error;
   final _fmt = NumberFormat.currency(locale: 'en_KE', symbol: 'KES ');
@@ -31,10 +32,15 @@ class _CashDrawerScreenState extends State<CashDrawerScreen> {
     setState(() { _loading = true; _error = null; });
     try {
       final bizId = context.read<AuthProvider>().businessId!;
-      final data = await FunctionsService.call('getCashSessions', {'businessId': bizId, 'limit': 100});
+      final results = await Future.wait([
+        FunctionsService.call('getCashSessions', {'businessId': bizId, 'limit': 100}),
+        FunctionsService.call('getCashVarianceReport', {'businessId': bizId}),
+      ]);
+      final data = results[0];
+      final varData = results[1];
       final raw = (data['sessions'] as List?) ?? [];
       final sessions = raw.map((e) => CashSession.fromMap(Map<String, dynamic>.from(e as Map))).toList();
-      if (mounted) setState(() { _sessions = sessions; _loading = false; });
+      if (mounted) setState(() { _sessions = sessions; _varianceReport = varData; _loading = false; });
     } on FunctionsException catch (e) {
       if (mounted) setState(() { _error = e.message; _loading = false; });
     }
@@ -77,6 +83,40 @@ class _CashDrawerScreenState extends State<CashDrawerScreen> {
                   ),
               ]),
               const SizedBox(height: 20),
+
+              if (_varianceReport != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: theme.cardColor,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: theme.dividerColor),
+                  ),
+                  child: Row(children: [
+                    Expanded(child: _ReportStat(
+                      label: 'Expected',
+                      value: _fmt.format(_varianceReport!['totalExpectedCash'] ?? 0),
+                      theme: theme,
+                    )),
+                    Container(width: 1, height: 32, color: theme.dividerColor),
+                    Expanded(child: _ReportStat(
+                      label: 'Actual',
+                      value: _fmt.format(_varianceReport!['totalActualCash'] ?? 0),
+                      theme: theme,
+                    )),
+                    Container(width: 1, height: 32, color: theme.dividerColor),
+                    Expanded(child: _ReportStat(
+                      label: 'Variance',
+                      value: _fmt.format(_varianceReport!['totalVariance'] ?? 0),
+                      color: ((_varianceReport!['totalVariance'] as num?) ?? 0) < 0
+                        ? AppColors.error : ((_varianceReport!['totalVariance'] as num?) ?? 0) > 0
+                          ? AppColors.warning : null,
+                      theme: theme,
+                    )),
+                  ]),
+                ),
+                const SizedBox(height: 16),
+              ],
 
               if (_error != null)
                 _ErrorBar(message: _error!, onRetry: _load, theme: theme),
@@ -264,6 +304,20 @@ class _LabeledValue extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
     Text(value, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: color)),
+    Text(label, style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant)),
+  ]);
+}
+
+class _ReportStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color? color;
+  final ThemeData theme;
+  const _ReportStat({required this.label, required this.value, this.color, required this.theme});
+  @override
+  Widget build(BuildContext context) => Column(children: [
+    Text(value, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: color ?? theme.colorScheme.onSurface)),
+    const SizedBox(height: 2),
     Text(label, style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant)),
   ]);
 }

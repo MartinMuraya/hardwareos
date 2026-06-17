@@ -250,3 +250,155 @@ export const getCashVarianceReport = onCall({ cors: true }, async (request) => {
     return { totalExpectedCash: 0, totalActualCash: 0, totalVariance: 0, sessionCount: 0 };
   }
 });
+
+// -----------------------------------------------------------
+// calculateCashVariance — Recalculate variance for a specific session
+// -----------------------------------------------------------
+export const calculateCashVariance = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
+
+  const { businessId, sessionId } = request.data as {
+    businessId: string;
+    sessionId: string;
+  };
+
+  await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager"]);
+
+  const snap = await db().collection("cashSessions").doc(sessionId).get();
+  if (!snap.exists) throw new HttpsError("not-found", "Session not found.");
+
+  const session = snap.data()!;
+  if (session.businessId !== businessId) throw new HttpsError("permission-denied", "Access denied.");
+
+  const openingFloat = session.openingFloat || 0;
+  const cashSales = session.cashSales || 0;
+  const cashRefunds = session.cashRefunds || 0;
+  const expectedCash = openingFloat + cashSales - cashRefunds;
+  const actualCash = session.actualCash || 0;
+  const variance = Number((actualCash - expectedCash).toFixed(2));
+
+  return {
+    sessionId,
+    openingFloat: Number(openingFloat.toFixed(2)),
+    cashSales: Number(cashSales.toFixed(2)),
+    cashRefunds: Number(cashRefunds.toFixed(2)),
+    expectedCash: Number(expectedCash.toFixed(2)),
+    actualCash: Number(actualCash.toFixed(2)),
+    variance,
+    status: session.status || "open",
+  };
+});
+
+// -----------------------------------------------------------
+// getDailyCashReport — Aggregated report for a specific day
+// -----------------------------------------------------------
+export const getDailyCashReport = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
+
+  const { businessId, date } = request.data as {
+    businessId: string;
+    date: string;
+  };
+
+  await assertBusinessMember(request.auth.uid, businessId);
+
+  try {
+    const d = new Date(date);
+    const startOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const endOfDay = new Date(startOfDay.getTime() + 86400000);
+
+    const snap = await db()
+      .collection("cashSessions")
+      .where("businessId", "==", businessId)
+      .where("openedAt", ">=", admin.firestore.Timestamp.fromDate(startOfDay))
+      .where("openedAt", "<", admin.firestore.Timestamp.fromDate(endOfDay))
+      .get();
+
+    let totalExpected = 0;
+    let totalActual = 0;
+    let totalVariance = 0;
+    let sessionCount = 0;
+    let openCount = 0;
+
+    snap.docs.forEach((d) => {
+      const data = d.data();
+      totalExpected += data.expectedCash || 0;
+      totalActual += data.actualCash || 0;
+      totalVariance += data.variance || 0;
+      sessionCount++;
+      if (data.status === "open") openCount++;
+    });
+
+    return {
+      date,
+      sessionCount,
+      openCount,
+      totalExpectedCash: Number(totalExpected.toFixed(2)),
+      totalActualCash: Number(totalActual.toFixed(2)),
+      totalVariance: Number(totalVariance.toFixed(2)),
+    };
+  } catch (e) {
+    return { date, sessionCount: 0, openCount: 0, totalExpectedCash: 0, totalActualCash: 0, totalVariance: 0 };
+  }
+});
+
+// -----------------------------------------------------------
+// getMonthlyCashReport — Aggregated report for a month
+// -----------------------------------------------------------
+export const getMonthlyCashReport = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
+
+  const { businessId, year, month } = request.data as {
+    businessId: string;
+    year: number;
+    month: number;
+  };
+
+  await assertBusinessMember(request.auth.uid, businessId);
+
+  try {
+    const startOfMonth = new Date(year, month - 1, 1);
+    const endOfMonth = new Date(year, month, 0, 23, 59, 59);
+
+    const snap = await db()
+      .collection("cashSessions")
+      .where("businessId", "==", businessId)
+      .where("openedAt", ">=", admin.firestore.Timestamp.fromDate(startOfMonth))
+      .where("openedAt", "<=", admin.firestore.Timestamp.fromDate(endOfMonth))
+      .get();
+
+    let totalExpected = 0;
+    let totalActual = 0;
+    let totalVariance = 0;
+    let sessionCount = 0;
+    const dailyMap: Record<string, { expected: number; actual: number; variance: number; count: number }> = {};
+
+    snap.docs.forEach((d) => {
+      const data = d.data();
+      totalExpected += data.expectedCash || 0;
+      totalActual += data.actualCash || 0;
+      totalVariance += data.variance || 0;
+      sessionCount++;
+
+      const openedAt = (data.openedAt as admin.firestore.Timestamp).toDate();
+      const dayKey = openedAt.toISOString().slice(0, 10);
+      if (!dailyMap[dayKey]) dailyMap[dayKey] = { expected: 0, actual: 0, variance: 0, count: 0 };
+      dailyMap[dayKey].expected += data.expectedCash || 0;
+      dailyMap[dayKey].actual += data.actualCash || 0;
+      dailyMap[dayKey].variance += data.variance || 0;
+      dailyMap[dayKey].count++;
+    });
+
+    return {
+      year,
+      month,
+      sessionCount,
+      totalExpectedCash: Number(totalExpected.toFixed(2)),
+      totalActualCash: Number(totalActual.toFixed(2)),
+      totalVariance: Number(totalVariance.toFixed(2)),
+      dailyBreakdown: dailyMap,
+    };
+  } catch (e) {
+    return { year, month, sessionCount: 0, totalExpectedCash: 0, totalActualCash: 0, totalVariance: 0, dailyBreakdown: {} };
+  }
+});

@@ -5,6 +5,7 @@
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
+import { performAutoConversion } from "./bulk_inventory";
 
 const db = () => admin.firestore();
 
@@ -29,8 +30,9 @@ export interface SaleItem {
 export const createSale = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
-  const { businessId, items, paymentMethod, note } = request.data as {
+  const { businessId, branchId, items, paymentMethod, note } = request.data as {
     businessId: string;
+    branchId?: string;
     items: SaleItem[];
     paymentMethod: "cash" | "mpesa" | "credit";
     note?: string;
@@ -70,10 +72,25 @@ export const createSale = onCall({ cors: true }, async (request) => {
       }
 
       if (product.quantity < item.quantity) {
-        throw new HttpsError(
-          "resource-exhausted",
-          `Insufficient stock for "${product.name}". Available: ${product.quantity}, Requested: ${item.quantity}.`
-        );
+        // Auto-convert from parent if this is a bulk child
+        if (product.isBulkChild && product.parentProductId && product.conversionRatio) {
+          const convs = await performAutoConversion(txn, businessId, [
+            { productId: item.productId, quantity: item.quantity },
+          ]);
+          if (convs.length > 0) {
+            const updatedSnap = await txn.get(productRefs[i]);
+            const updated = updatedSnap.data()!;
+            product.quantity = updated.quantity;
+            product.costPrice = updated.costPrice;
+            product.sellingPrice = updated.sellingPrice;
+          }
+        }
+        if (product.quantity < item.quantity) {
+          throw new HttpsError(
+            "resource-exhausted",
+            `Insufficient stock for "${product.name}". Available: ${product.quantity}, Requested: ${item.quantity}.`
+          );
+        }
       }
 
       const lineTotal = product.sellingPrice * item.quantity;
@@ -99,6 +116,7 @@ export const createSale = onCall({ cors: true }, async (request) => {
     txn.set(saleRef, {
       id: saleRef.id,
       businessId,
+      branchId: branchId || null,
       items: validatedItems,
       total: Number(total.toFixed(2)),
       totalCost: Number(totalCost.toFixed(2)),
