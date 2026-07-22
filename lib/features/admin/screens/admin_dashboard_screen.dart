@@ -61,6 +61,51 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     }
   }
 
+  Future<void> _showBroadcastDialog() async {
+    final titleCtrl = TextEditingController();
+    final msgCtrl = TextEditingController();
+    
+    final res = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Send Global Broadcast'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Title')),
+            const SizedBox(height: 12),
+            TextField(controller: msgCtrl, decoration: const InputDecoration(labelText: 'Message'), maxLines: 3),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Send'),
+          ),
+        ],
+      ),
+    );
+    
+    if (res != true) return;
+    
+    if (titleCtrl.text.isEmpty || msgCtrl.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill all fields')));
+      return;
+    }
+    
+    try {
+      await FunctionsService.call('createGlobalAnnouncement', {
+        'title': titleCtrl.text,
+        'message': msgCtrl.text,
+        'type': 'info',
+      });
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Broadcast sent successfully')));
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -163,6 +208,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             const SizedBox(height: 48),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _showBroadcastDialog,
+        icon: const Icon(Icons.campaign_rounded),
+        label: const Text('Broadcast'),
+        backgroundColor: AppColors.accent,
       ),
     );
   }

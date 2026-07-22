@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/empty_state.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
 
 class AdminBusinessesScreen extends StatefulWidget {
   const AdminBusinessesScreen({super.key});
@@ -47,6 +49,65 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
       _loadBusinesses();
     } catch (e) {
       if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    }
+  }
+
+  Future<void> _impersonateUser(String ownerUid) async {
+    if (ownerUid.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No owner UID attached to this business')));
+      return;
+    }
+    
+    setState(() => _loading = true);
+    try {
+      final res = await FunctionsService.call('adminImpersonateTenant', {'targetUserId': ownerUid});
+      final customToken = res['customToken'] as String;
+      
+      // Sign out of current admin session (locally only, custom token will sign us into new user)
+      await FirebaseAuth.instance.signOut();
+      await FirebaseAuth.instance.signInWithCustomToken(customToken);
+      
+      if (mounted) {
+        context.go('/dashboard');
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Impersonating user...')));
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    }
+  }
+
+  Future<void> _deleteBusiness(String businessId, String businessName) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Business?', style: TextStyle(color: AppColors.error)),
+        content: Text('Are you sure you want to hard delete "$businessName"?\n\nThis will permanently destroy all products, sales, and users associated with this business. This action CANNOT be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            child: const Text('Delete Permanently'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() => _loading = true);
+    try {
+      await FunctionsService.call('adminDeleteBusiness', {'businessId': businessId});
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Business permanently deleted.')));
+      _loadBusinesses();
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loading = false);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
       }
     }
@@ -143,14 +204,26 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
                               // Actions Menu
                               PopupMenuButton<String>(
                                 icon: const Icon(Icons.more_vert_rounded),
-                                onSelected: (value) => _updateStatus(biz['id'], value),
+                                onSelected: (value) {
+                                  if (value == 'impersonate') {
+                                    _impersonateUser(biz['ownerId'] ?? biz['ownerUid'] ?? '');
+                                  } else if (value == 'delete') {
+                                    _deleteBusiness(biz['id'], biz['name'] ?? 'Unknown Business');
+                                  } else {
+                                    _updateStatus(biz['id'], value);
+                                  }
+                                },
                                 itemBuilder: (context) => [
                                   if (status == 'pending' || status == 'suspended')
                                     const PopupMenuItem(value: 'approved', child: Text('Approve / Reactivate')),
                                   if (status == 'pending')
                                     const PopupMenuItem(value: 'rejected', child: Text('Reject Application')),
                                   if (status == 'approved')
-                                    const PopupMenuItem(value: 'suspended', child: Text('Suspend Business', style: TextStyle(color: AppColors.error))),
+                                    const PopupMenuItem(value: 'impersonate', child: Text('Log In As Business', style: TextStyle(color: AppColors.accent))),
+                                  if (status == 'approved')
+                                    const PopupMenuItem(value: 'suspended', child: Text('Suspend Business', style: TextStyle(color: AppColors.warning))),
+                                  const PopupMenuDivider(),
+                                  const PopupMenuItem(value: 'delete', child: Text('Delete Permanently', style: TextStyle(color: AppColors.error))),
                                 ],
                               ),
                             ],

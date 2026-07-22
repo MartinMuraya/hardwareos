@@ -42,6 +42,34 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     }
   }
 
+  Future<void> _grantSuperAdmin(String uid) async {
+    setState(() => _loading = true);
+    try {
+      await FunctionsService.call('adminGrantSuperAdmin', {'targetUid': uid});
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Granted Super Admin rights successfully.')));
+      _loadUsers();
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    }
+  }
+
+  Future<void> _revokeSuperAdmin(String uid) async {
+    setState(() => _loading = true);
+    try {
+      await FunctionsService.call('adminRevokeSuperAdmin', {'targetUid': uid});
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Revoked Super Admin rights successfully.')));
+      _loadUsers();
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    }
+  }
+
   Future<void> _editUser(Map<String, dynamic> user) async {
     final theme = Theme.of(context);
     String selectedRole = user['role'] ?? 'staff';
@@ -230,6 +258,18 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                             child: const Text('SUSPENDED', style: TextStyle(color: AppColors.error, fontSize: 10, fontWeight: FontWeight.bold)),
                                           ),
                                         ],
+                                        if (u['isSuperAdmin'] == true) ...[
+                                          const SizedBox(width: 8),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: Colors.purple.withValues(alpha: 0.1),
+                                              borderRadius: BorderRadius.circular(6),
+                                              border: Border.all(color: Colors.purple.withValues(alpha: 0.2)),
+                                            ),
+                                            child: const Text('SUPER ADMIN', style: TextStyle(color: Colors.purple, fontSize: 10, fontWeight: FontWeight.bold)),
+                                          ),
+                                        ],
                                         const SizedBox(width: 12),
                                         Text('Business: ${u['businessId']}',
                                           style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12)),
@@ -238,10 +278,21 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                   ],
                                 ),
                               ),
-                              IconButton(
-                                icon: Icon(Icons.edit_rounded, color: theme.colorScheme.onSurfaceVariant),
-                                onPressed: () => _editUser(u),
-                                tooltip: 'Edit User Settings',
+                              PopupMenuButton<String>(
+                                icon: Icon(Icons.more_vert_rounded, color: theme.colorScheme.onSurfaceVariant),
+                                onSelected: (value) {
+                                  if (value == 'edit') _editUser(u);
+                                  if (value == 'grant_sa') _grantSuperAdmin(u['uid']);
+                                  if (value == 'revoke_sa') _revokeSuperAdmin(u['uid']);
+                                },
+                                itemBuilder: (context) => [
+                                  const PopupMenuItem(value: 'edit', child: Text('Edit User')),
+                                  const PopupMenuDivider(),
+                                  if (u['isSuperAdmin'] != true)
+                                    const PopupMenuItem(value: 'grant_sa', child: Text('Grant Super Admin', style: TextStyle(color: Colors.purple))),
+                                  if (u['isSuperAdmin'] == true)
+                                    const PopupMenuItem(value: 'revoke_sa', child: Text('Revoke Super Admin', style: TextStyle(color: AppColors.error))),
+                                ],
                               ),
                             ],
                           ),

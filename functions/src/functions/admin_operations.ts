@@ -245,6 +245,9 @@ export const adminGetUsers = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 
+  const platformAdminsSnap = await db().collection("platformAdmins").get();
+  const superAdminIds = new Set(platformAdminsSnap.docs.map(d => d.id));
+
   const snap = await db().collection("users").limit(100).get();
 
   const users = await Promise.all(snap.docs.map(async doc => {
@@ -263,6 +266,7 @@ export const adminGetUsers = onCall({ cors: true }, async (request) => {
       role: data.role || "staff",
       businessId: data.businessId || "",
       disabled: authUser?.disabled || false,
+      isSuperAdmin: superAdminIds.has(doc.id),
       lastSignInTime: authUser?.metadata?.lastSignInTime || null,
       createdAt: (data.createdAt as admin.firestore.Timestamp)?.toDate()?.toISOString() || authUser?.metadata?.creationTime || null,
     };
@@ -376,4 +380,85 @@ export const adminUpdateSettings = onCall({ cors: true }, async (request) => {
   });
 
   return { success: true };
+});
+
+// ============================================================
+// 5. Tenant Impersonation & Broadcasts
+// ============================================================
+
+export const adminImpersonateTenant = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
+  await assertSuperAdmin(request.auth.uid);
+
+  const { targetUserId } = request.data as { targetUserId: string };
+  if (!targetUserId) {
+    throw new HttpsError("invalid-argument", "targetUserId is required");
+  }
+
+  // Create custom token for the target user
+  const customToken = await admin.auth().createCustomToken(targetUserId, {
+    impersonatedBy: request.auth.uid,
+  });
+
+  await db().collection("auditLogs").add({
+    action: "admin_impersonate_user",
+    targetId: targetUserId,
+    targetType: "user",
+    performedBy: request.auth.uid,
+    timestamp: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  return { customToken };
+});
+
+export const createGlobalAnnouncement = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
+  await assertSuperAdmin(request.auth.uid);
+
+  const { title, message, type } = request.data as { title: string; message: string; type: string };
+  if (!title || !message) {
+    throw new HttpsError("invalid-argument", "Title and message are required");
+  }
+
+  const announcementId = db().collection("systemAnnouncements").doc().id;
+  await db().collection("systemAnnouncements").doc(announcementId).set({
+    id: announcementId,
+    title,
+    message,
+    type: type || "info",
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    createdBy: request.auth.uid,
+  });
+
+  await db().collection("auditLogs").add({
+    action: "create_global_announcement",
+    targetId: announcementId,
+    targetType: "announcement",
+    performedBy: request.auth.uid,
+    timestamp: admin.firestore.FieldValue.serverTimestamp(),
+    details: { title, type },
+  });
+
+  return { success: true, announcementId };
+});
+
+export const adminGetSystemLogs = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
+  await assertSuperAdmin(request.auth.uid);
+
+  const { limit } = request.data as { limit?: number };
+  const numLimit = limit || 100;
+
+  const snap = await db().collection("auditLogs").orderBy("timestamp", "desc").limit(numLimit).get();
+  
+  const logs = snap.docs.map(doc => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      ...data,
+      timestamp: (data.timestamp as admin.firestore.Timestamp)?.toDate()?.toISOString(),
+    };
+  });
+
+  return { logs };
 });

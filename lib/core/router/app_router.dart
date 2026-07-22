@@ -13,6 +13,7 @@ import '../../features/sales/screens/sales_history_screen.dart';
 import '../../features/expenses/screens/expenses_screen.dart';
 import '../../features/expenses/screens/add_expense_screen.dart';
 import '../../features/reports/screens/reports_screen.dart';
+import '../../features/reports/screens/advanced_analytics_screen.dart';
 import '../../features/team/screens/team_screen.dart';
 import '../../features/admin/screens/admin_dashboard_screen.dart';
 import '../../features/admin/screens/admin_businesses_screen.dart';
@@ -22,6 +23,9 @@ import '../../features/admin/screens/admin_plans_screen.dart';
 import '../../features/admin/screens/admin_users_screen.dart';
 import '../../features/admin/screens/admin_settings_screen.dart';
 import '../../features/admin/screens/admin_security_screen.dart';
+import '../../features/admin/screens/admin_system_logs_screen.dart';
+import '../../features/admin/screens/admin_support_screen.dart';
+import '../../features/support/screens/support_screen.dart';
 import '../../features/admin/widgets/admin_scaffold.dart';
 import '../../features/auth/screens/pending_approval_screen.dart';
 import '../../features/auth/screens/email_verification_screen.dart';
@@ -45,9 +49,14 @@ import '../../features/audit/screens/audit_logs_screen.dart';
 import '../../features/returns/screens/returns_screen.dart';
 import '../../features/cash_drawer/screens/cash_drawer_screen.dart';
 import '../../features/branches/screens/branches_screen.dart';
+import '../../features/branches/screens/branch_detail_screen.dart';
 import '../../features/branches/screens/stock_transfers_screen.dart';
+import '../../features/profile/screens/profile_screen.dart';
+import '../../features/notifications/screens/notifications_screen.dart';
+import '../../features/ai_assistant/screens/ai_assistant_screen.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/app_scaffold.dart';
+import '../../features/auth/screens/auth_error_screen.dart';
 
 class AppRouter {
   static GoRouter createRouter(BuildContext context) {
@@ -71,7 +80,13 @@ class AppRouter {
             return '/verify-email';
           }
           if (authProvider.isEmailVerified && state.matchedLocation == '/verify-email') {
-            return '/dashboard';
+            return isRegistered ? null : '/register';
+          }
+
+          if (authProvider.profileLoadError != null && !isAuthRoute) {
+            // We failed to load profile data due to a network or backend error.
+            if (state.matchedLocation != '/auth-error') return '/auth-error';
+            return null;
           }
 
           if (authProvider.isSuperAdmin) {
@@ -130,6 +145,7 @@ class AppRouter {
         GoRoute(path: '/verify-email', builder: (_, __) => const EmailVerificationScreen()),
         GoRoute(path: '/forgot-password', builder: (_, __) => const ForgotPasswordScreen()),
         GoRoute(path: '/pending-approval', builder: (_, __) => const PendingApprovalScreen()),
+        GoRoute(path: '/auth-error', builder: (_, __) => const AuthErrorScreen()),
         
         // Super Admin Shell
         ShellRoute(
@@ -166,6 +182,14 @@ class AppRouter {
             GoRoute(
               path: '/admin/security',
               pageBuilder: (context, state) => const NoTransitionPage(child: AdminSecurityScreen()),
+            ),
+            GoRoute(
+              path: '/admin/system-logs',
+              pageBuilder: (context, state) => const NoTransitionPage(child: AdminSystemLogsScreen()),
+            ),
+            GoRoute(
+              path: '/admin/support',
+              pageBuilder: (context, state) => const NoTransitionPage(child: AdminSupportScreen()),
             ),
           ],
         ),
@@ -217,6 +241,10 @@ class AppRouter {
             GoRoute(
               path: '/reports',
               pageBuilder: (context, state) => const NoTransitionPage(child: ReportsScreen()),
+            ),
+            GoRoute(
+              path: '/advanced-analytics',
+              pageBuilder: (context, state) => const NoTransitionPage(child: AdvancedAnalyticsScreen()),
             ),
             GoRoute(
               path: '/team',
@@ -321,10 +349,34 @@ class AppRouter {
             GoRoute(
               path: '/branches',
               builder: (_, __) => const BranchesScreen(),
+              routes: [
+                GoRoute(
+                  path: ':branchId',
+                  builder: (_, state) => BranchDetailScreen(
+                    branchId: state.pathParameters['branchId']!,
+                  ),
+                ),
+              ],
             ),
             GoRoute(
               path: '/stock-transfers',
               builder: (_, __) => const StockTransfersScreen(),
+            ),
+            GoRoute(
+              path: '/notifications',
+              pageBuilder: (context, state) => const NoTransitionPage(child: NotificationsScreen()),
+            ),
+            GoRoute(
+              path: '/profile',
+              pageBuilder: (context, state) => const NoTransitionPage(child: ProfileScreen()),
+            ),
+            GoRoute(
+              path: '/ai-assistant',
+              pageBuilder: (context, state) => const NoTransitionPage(child: AIAssistantScreen()),
+            ),
+            GoRoute(
+              path: '/support',
+              pageBuilder: (context, state) => const NoTransitionPage(child: SupportScreen()),
             ),
           ],
         ),

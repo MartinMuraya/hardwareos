@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/empty_state.dart';
@@ -71,6 +72,8 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                           _buildDistributionSection(theme),
                           const SizedBox(height: 32),
                           _buildHealthSection(theme),
+                          const SizedBox(height: 32),
+                          _buildHistoricalCharts(theme),
                           const SizedBox(height: 32),
                           _buildComputedAt(theme),
                         ],
@@ -256,6 +259,143 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                     ),
                   ),
                 ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHistoricalCharts(ThemeData theme) {
+    final history = (_stats?['historicalMetrics'] as List?) ?? [];
+    if (history.isEmpty) return const SizedBox.shrink();
+
+    final List<FlSpot> mrrSpots = [];
+    final List<FlSpot> churnSpots = [];
+    final List<String> monthLabels = [];
+
+    for (int i = 0; i < history.length; i++) {
+      final data = history[i];
+      mrrSpots.add(FlSpot(i.toDouble(), (data['mrr'] as num?)?.toDouble() ?? 0));
+      churnSpots.add(FlSpot(i.toDouble(), ((data['churnRate'] as num?)?.toDouble() ?? 0) * 100)); // as %
+      monthLabels.add(data['month'] as String? ?? '');
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Historical Performance', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 16),
+        Container(
+          height: 300,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: theme.cardColor,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: theme.dividerColor),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Monthly Recurring Revenue (MRR) Growth', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              Expanded(
+                child: LineChart(
+                  LineChartData(
+                    gridData: FlGridData(show: true, drawVerticalLine: false, horizontalInterval: 10000),
+                    titlesData: FlTitlesData(
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 45,
+                          getTitlesWidget: (v, m) => Text(v.toInt().toString(), style: const TextStyle(fontSize: 10)),
+                        ),
+                      ),
+                      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          getTitlesWidget: (v, m) {
+                            if (v.toInt() >= 0 && v.toInt() < monthLabels.length) {
+                              return Padding(padding: const EdgeInsets.only(top: 8), child: Text(monthLabels[v.toInt()], style: const TextStyle(fontSize: 10)));
+                            }
+                            return const SizedBox.shrink();
+                          },
+                        ),
+                      ),
+                    ),
+                    borderData: FlBorderData(show: false),
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: mrrSpots,
+                        isCurved: true,
+                        color: AppColors.success,
+                        barWidth: 3,
+                        dotData: const FlDotData(show: true),
+                        belowBarData: BarAreaData(show: true, color: AppColors.success.withValues(alpha: 0.1)),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        Container(
+          height: 250,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: theme.cardColor,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: theme.dividerColor),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Churn Rate %', style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              Expanded(
+                child: LineChart(
+                  LineChartData(
+                    gridData: const FlGridData(show: true, drawVerticalLine: false),
+                    titlesData: FlTitlesData(
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 30,
+                          getTitlesWidget: (v, m) => Text('${v.toStringAsFixed(1)}%', style: const TextStyle(fontSize: 10)),
+                        ),
+                      ),
+                      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          getTitlesWidget: (v, m) {
+                            if (v.toInt() >= 0 && v.toInt() < monthLabels.length) {
+                              return Padding(padding: const EdgeInsets.only(top: 8), child: Text(monthLabels[v.toInt()], style: const TextStyle(fontSize: 10)));
+                            }
+                            return const SizedBox.shrink();
+                          },
+                        ),
+                      ),
+                    ),
+                    borderData: FlBorderData(show: false),
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: churnSpots,
+                        isCurved: true,
+                        color: AppColors.error,
+                        barWidth: 3,
+                        dotData: const FlDotData(show: true),
+                        belowBarData: BarAreaData(show: true, color: AppColors.error.withValues(alpha: 0.1)),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),

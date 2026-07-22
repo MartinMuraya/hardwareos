@@ -203,7 +203,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         Text('Provider', style: theme.textTheme.titleMedium),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
-          initialValue: _settings.provider,
+          value: _settings.provider,
           decoration: const InputDecoration(labelText: 'Messaging Provider'),
           items: const [
             DropdownMenuItem(value: 'africas_talking', child: Text("Africa's Talking")),

@@ -89,4 +89,60 @@ export const getPlatformStats = onCall({ cors: true }, async (request) => {
   };
 });
 
+// -----------------------------------------------------------
+// adminGrantSuperAdmin
+// -----------------------------------------------------------
+export const adminGrantSuperAdmin = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
+  await assertSuperAdmin(request.auth.uid);
+
+  const { targetUid } = request.data as { targetUid: string };
+  if (!targetUid) throw new HttpsError("invalid-argument", "targetUid is required");
+
+  const adminRef = db().collection("platformAdmins").doc(targetUid);
+  await adminRef.set({
+    addedAt: admin.firestore.FieldValue.serverTimestamp(),
+    addedBy: request.auth.uid,
+  });
+
+  await db().collection("auditLogs").add({
+    action: "grant_super_admin",
+    targetId: targetUid,
+    targetType: "user",
+    performedBy: request.auth.uid,
+    timestamp: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  return { success: true };
+});
+
+// -----------------------------------------------------------
+// adminRevokeSuperAdmin
+// -----------------------------------------------------------
+export const adminRevokeSuperAdmin = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
+  await assertSuperAdmin(request.auth.uid);
+
+  const { targetUid } = request.data as { targetUid: string };
+  if (!targetUid) throw new HttpsError("invalid-argument", "targetUid is required");
+
+  // Prevent self-revocation just to be safe
+  if (targetUid === request.auth.uid) {
+    throw new HttpsError("failed-precondition", "You cannot revoke your own super admin access.");
+  }
+
+  const adminRef = db().collection("platformAdmins").doc(targetUid);
+  await adminRef.delete();
+
+  await db().collection("auditLogs").add({
+    action: "revoke_super_admin",
+    targetId: targetUid,
+    targetType: "user",
+    performedBy: request.auth.uid,
+    timestamp: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  return { success: true };
+});
+
 

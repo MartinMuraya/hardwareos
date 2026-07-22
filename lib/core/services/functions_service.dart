@@ -24,15 +24,21 @@ class FunctionsService {
       final result = await fn.call(data);
       return Map<String, dynamic>.from(result.data as Map);
     } on FirebaseFunctionsException catch (e) {
+      String msg = e.message ?? 'An error occurred.';
+      if (e.code == 'internal' || msg.toLowerCase().contains('internal')) {
+        msg = 'Unable to connect to the backend server. Please check your connection or ensure backend services are running.';
+      } else if (e.code == 'unavailable') {
+        msg = 'The service is temporarily unavailable. Please try again later.';
+      }
       throw FunctionsException(
         code: e.code,
-        message: e.message ?? 'An error occurred.',
+        message: msg,
         details: e.details,
       );
     } catch (e) {
       throw FunctionsException(
         code: 'unknown',
-        message: e.toString(),
+        message: 'An unexpected network error occurred.',
       );
     }
   }

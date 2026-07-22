@@ -1,7 +1,8 @@
 import * as admin from "firebase-admin";
 import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
-import { MpesaProvider } from "../services/mpesaProvider";
+import { MpesaProvider, mpesaConsumerKey, mpesaConsumerSecret, mpesaPasskey } from "../services/mpesaProvider";
 import { assertBusinessMember } from "../middleware/checkPlanLimits";
+import { rateLimitCheck } from "../middleware/rateLimiter";
 
 const db = () => admin.firestore();
 
@@ -19,7 +20,7 @@ function computeNextExpiry(): admin.firestore.Timestamp {
 // -----------------------------------------------------------
 // createSubscriptionPayment
 // -----------------------------------------------------------
-export const createSubscriptionPayment = onCall({ cors: true }, async (request) => {
+export const createSubscriptionPayment = onCall({ cors: true, secrets: [mpesaConsumerKey, mpesaConsumerSecret, mpesaPasskey] }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
 
   const { businessId, planId, phoneNumber } = request.data as {
@@ -108,22 +109,30 @@ export const createSubscriptionPayment = onCall({ cors: true }, async (request) 
   // -----------------------------------------------------------
 
   try {
-    const stkRes = await mpesa.initiatePayment({
-      amount,
-      currency,
-      phoneNumber,
-      accountReference: (bizData.name || "HardwareOS").substring(0, 12),
-      transactionDesc: `HardwareOS ${planId}`,
-    });
+    let resolvedCheckoutId = checkoutRequestId;
+    let isSimulation = false;
 
-    const resolvedCheckoutId = stkRes.providerReference || checkoutRequestId;
+    // Check if we are using dummy keys to bypass real Safaricom calls
+    if (mpesaConsumerKey.value() === "dummy") {
+      isSimulation = true;
+      console.log("Using DUMMY M-Pesa keys. Bypassing real STK push.");
+    } else {
+      const stkRes = await mpesa.initiatePayment({
+        amount,
+        currency,
+        phoneNumber,
+        accountReference: (bizData.name || "HardwareOS").substring(0, 12),
+        transactionDesc: `HardwareOS ${planId}`,
+      });
+      resolvedCheckoutId = stkRes.providerReference || checkoutRequestId;
+    }
 
     // Update with real checkout request ID if returned
     await db().collection("subscriptions").doc(subscriptionId).update({
       checkoutRequestId: resolvedCheckoutId,
     });
 
-    return { success: true, checkoutRequestId: resolvedCheckoutId, isSimulation: false };
+    return { success: true, checkoutRequestId: resolvedCheckoutId, isSimulation };
   } catch (error: any) {
     console.error("Daraja Error:", error.response?.data || error.message);
     throw new HttpsError("internal", `Failed to invoke Safaricom STK Push: ${error.message}`);
@@ -134,8 +143,24 @@ export const createSubscriptionPayment = onCall({ cors: true }, async (request) 
 // mpesaCallback
 // webhook callback called directly by Safaricom
 // -----------------------------------------------------------
-export const mpesaCallback = onRequest({ cors: true }, async (req, res) => {
+export const mpesaCallback = onRequest({ cors: true, secrets: [mpesaConsumerKey, mpesaConsumerSecret, mpesaPasskey] }, async (req, res) => {
   try {
+    const clientIp = req.ip || req.headers["x-forwarded-for"]?.toString() || "unknown";
+    
+    // Rate limit the callback endpoint to prevent spam/DDoS
+    try {
+      await rateLimitCheck(clientIp, "mpesa_callback", 100, 15); // max 100 reqs per 15 mins per IP
+    } catch (e) {
+      res.status(429).send("Too many requests");
+      return;
+    }
+
+    // Optional: Basic IP Whitelisting for Safaricom (sandbox/prod ranges)
+    // 196.201.214.*, 196.201.213.* etc. In production, uncomment if strict isolation is needed.
+    // if (!clientIp.startsWith("196.201.") && clientIp !== "unknown") {
+    //   console.warn("M-Pesa callback from unrecognized IP:", clientIp);
+    // }
+
     const callbackData = req.body;
     console.log("M-Pesa Callback received:", JSON.stringify(callbackData));
 

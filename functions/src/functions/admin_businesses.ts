@@ -79,3 +79,73 @@ export const adminUpdateBusinessStatus = onCall({ cors: true }, async (request) 
 
   return { success: true };
 });
+
+// -----------------------------------------------------------
+// adminDeleteBusiness
+// Hard deletes a business and all its associated data
+// -----------------------------------------------------------
+export const adminDeleteBusiness = onCall({ cors: true, timeoutSeconds: 540 }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
+  await assertSuperAdmin(request.auth.uid);
+
+  const { businessId } = request.data as { businessId: string };
+  if (!businessId) {
+    throw new HttpsError("invalid-argument", "businessId is required");
+  }
+
+  // Define collections that have 'businessId' field
+  const collectionsToClean = [
+    "products",
+    "stockMovements",
+    "sales",
+    "expenses",
+    "suppliers",
+    "customers",
+    "branches",
+    "subscriptions",
+    "auditLogs",
+    "systemNotifications",
+    "stockTransfers",
+    "stockAdjustments",
+    "purchaseOrders",
+    "quotations",
+    "returns",
+  ];
+
+  const bulkWriter = db().bulkWriter();
+
+  // 1. Delete associated users (auth and firestore)
+  const usersSnap = await db().collection("users").where("businessId", "==", businessId).get();
+  for (const userDoc of usersSnap.docs) {
+    bulkWriter.delete(userDoc.ref);
+    try {
+      await admin.auth().deleteUser(userDoc.id);
+    } catch (e) {
+      console.warn(`Failed to delete auth user ${userDoc.id}`, e);
+    }
+  }
+
+  // 2. Delete all related documents in root collections
+  for (const collName of collectionsToClean) {
+    const snap = await db().collection(collName).where("businessId", "==", businessId).get();
+    snap.docs.forEach(doc => bulkWriter.delete(doc.ref));
+  }
+
+  // 3. Delete the business document itself
+  const bizRef = db().collection("businesses").doc(businessId);
+  bulkWriter.delete(bizRef);
+
+  await bulkWriter.close();
+
+  // Log action
+  await db().collection("auditLogs").add({
+    action: "admin_delete_business",
+    targetId: businessId,
+    targetType: "business",
+    performedBy: request.auth.uid,
+    timestamp: admin.firestore.FieldValue.serverTimestamp(),
+    details: { message: "Hard deleted business and all associated data." },
+  });
+
+  return { success: true };
+});

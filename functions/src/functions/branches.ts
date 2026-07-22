@@ -59,6 +59,26 @@ export const createBranch = onCall({ cors: true }, async (request) => {
 });
 
 // -----------------------------------------------------------
+// getBranch
+// -----------------------------------------------------------
+export const getBranch = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
+
+  const { businessId, branchId } = request.data as { businessId: string; branchId: string };
+  await assertBusinessMember(request.auth.uid, businessId);
+
+  const doc = await db().collection("branches").doc(branchId).get();
+  if (!doc.exists) throw new HttpsError("not-found", "Branch not found");
+  const data = doc.data()!;
+  if (data.businessId !== businessId) throw new HttpsError("permission-denied", "Unauthorized");
+
+  return {
+    ...data,
+    createdAt: (data.createdAt as admin.firestore.Timestamp)?.toDate()?.toISOString(),
+  };
+});
+
+// -----------------------------------------------------------
 // getBranches
 // -----------------------------------------------------------
 export const getBranches = onCall({ cors: true }, async (request) => {

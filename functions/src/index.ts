@@ -53,8 +53,8 @@ export { createPurchase, getPurchases } from "./functions/purchases";
 export { getDashboardStats, getReportStats, seedDemoData } from "./functions/dashboard";
 
 // Super Admin
-export { getPlatformStats } from "./functions/super_admin";
-export { adminGetAllBusinesses, adminUpdateBusinessStatus } from "./functions/admin_businesses";
+export { getPlatformStats, adminGrantSuperAdmin, adminRevokeSuperAdmin } from "./functions/super_admin";
+export { adminGetAllBusinesses, adminUpdateBusinessStatus, adminDeleteBusiness } from "./functions/admin_businesses";
 export {
   adminGetSubscriptions,
   adminUpdateSubscription,
@@ -67,7 +67,17 @@ export {
   adminGetSettings,
   adminUpdateSettings,
   getMySubscriptionPayments,
+  adminImpersonateTenant,
+  createGlobalAnnouncement,
+  adminGetSystemLogs,
 } from "./functions/admin_operations";
+
+// Support
+export {
+  createSupportTicket,
+  adminGetSupportTickets,
+  adminRespondToTicket,
+} from "./functions/support";
 
 // M-Pesa Billing
 export { createSubscriptionPayment, mpesaCallback, simulateMpesaCallback } from "./functions/mpesa_billing";
@@ -164,6 +174,7 @@ export {
 // Multi-Branch Operations
 export {
   createBranch,
+  getBranch,
   getBranches,
   updateBranch,
   requestStockTransfer,
@@ -192,3 +203,15 @@ export {
   getSecurityMetrics,
   getSecurityEvents,
 } from "./functions/securityDashboard";
+
+// AI Assistant
+export {
+  getAIInsights,
+  getAIQuickInsights,
+} from "./functions/ai_assistant";
+
+// Advanced Analytics
+export {
+  getAdvancedAnalytics,
+  getDemandForecast,
+} from "./functions/advanced_analytics";

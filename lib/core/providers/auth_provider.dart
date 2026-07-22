@@ -16,6 +16,7 @@ class AuthProvider extends ChangeNotifier {
   String? _businessStatus;
   Map<String, dynamic>? _userProfile;
   String? _errorMessage;
+  String? _profileLoadError; // tracks network/internal errors during profile fetch
 
   User?                  get user          => _user;
   AuthState              get state         => _state;
@@ -27,6 +28,7 @@ class AuthProvider extends ChangeNotifier {
   bool                   get isLoading     => _state == AuthState.loading;
   Map<String, dynamic>?  get userProfile   => _userProfile;
   String?                get errorMessage  => _errorMessage;
+  String?                get profileLoadError => _profileLoadError;
   String?                get businessId    => _userProfile?['businessId'] as String?;
   String?                get userRole      => _userProfile?['role'] as String?;
   String?                get subscriptionStatus => _userProfile?['subscriptionStatus'] as String?;
@@ -64,6 +66,7 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> _loadUserProfile() async {
+    _profileLoadError = null;
     try {
       final fn = FirebaseFunctions.instance.httpsCallable('getMyProfile');
       final result = await fn.call();
@@ -85,11 +88,18 @@ class AuthProvider extends ChangeNotifier {
         _businessStatus = null;
       }
       _state = AuthState.authenticated;
+    } on FirebaseFunctionsException catch (e) {
+      _isRegistered = false;
+      _isSuperAdmin = false;
+      _businessStatus = null;
+      _state = AuthState.authenticated;
+      _profileLoadError = e.message ?? 'An error occurred connecting to the server.';
     } catch (e) {
       _isRegistered = false;
       _isSuperAdmin = false;
       _businessStatus = null;
       _state = AuthState.authenticated;
+      _profileLoadError = 'An unexpected error occurred loading your profile.';
     }
   }
 
@@ -239,6 +249,7 @@ class AuthProvider extends ChangeNotifier {
 
   void clearError() {
     _errorMessage = null;
+    _profileLoadError = null;
     notifyListeners();
   }
 

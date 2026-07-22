@@ -1,4 +1,3 @@
-import axios from "axios";
 import {
   PaymentProvider,
   PaymentRequest,
@@ -6,46 +5,43 @@ import {
   PaymentCallbackData,
 } from "./paymentProvider";
 
+import { defineSecret, defineString } from "firebase-functions/params";
+
+export const mpesaConsumerKey = defineSecret("MPESA_CONSUMER_KEY");
+export const mpesaConsumerSecret = defineSecret("MPESA_CONSUMER_SECRET");
+export const mpesaPasskey = defineSecret("MPESA_PASSKEY");
+export const mpesaShortcode = defineString("MPESA_SHORTCODE", { default: "174379" });
+export const mpesaCallbackUrl = defineString("MPESA_CALLBACK_URL", { default: "https://mpesacallback-us-central1.run.app" });
+export const mpesaEnvironment = defineString("MPESA_ENVIRONMENT", { default: "sandbox" });
+
 export class MpesaProvider implements PaymentProvider {
   readonly name = "mpesa";
 
-  private consumerKey: string;
-  private consumerSecret: string;
-  private shortcode: string;
-  private passkey: string;
-  private callbackUrl: string;
-
-  private environment: "sandbox" | "production";
-  private baseUrl: string;
-
-  constructor() {
-    this.consumerKey = process.env.MPESA_CONSUMER_KEY || "";
-    this.consumerSecret = process.env.MPESA_CONSUMER_SECRET || "";
-    this.shortcode = process.env.MPESA_SHORTCODE || "174379";
-    this.passkey =
-      process.env.MPESA_PASSKEY ||
-      "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919";
-    this.callbackUrl =
-      process.env.MPESA_CALLBACK_URL ||
-      `https://mpesacallback-us-central1.run.app`;
-    this.environment =
-      (process.env.MPESA_ENVIRONMENT as "sandbox" | "production") || "sandbox";
-    this.baseUrl =
-      this.environment === "production"
-        ? "https://api.safaricom.co.ke"
-        : "https://sandbox.safaricom.co.ke";
+  private get consumerKey(): string { return mpesaConsumerKey.value(); }
+  private get consumerSecret(): string { return mpesaConsumerSecret.value(); }
+  private get shortcode(): string { return mpesaShortcode.value(); }
+  private get passkey(): string { return mpesaPasskey.value(); }
+  private get callbackUrl(): string { return mpesaCallbackUrl.value(); }
+  private get environment(): string { return mpesaEnvironment.value(); }
+  private get baseUrl(): string {
+    return this.environment === "production"
+      ? "https://api.safaricom.co.ke"
+      : "https://sandbox.safaricom.co.ke";
   }
+
+  constructor() {}
 
   async initiatePayment(request: PaymentRequest): Promise<PaymentResponse> {
     const authHeader = Buffer.from(
       `${this.consumerKey}:${this.consumerSecret}`
     ).toString("base64");
 
-    const tokenRes = await axios.get(
+    const tokenRes = await fetch(
       `${this.baseUrl}/oauth/v1/generate?grant_type=client_credentials`,
       { headers: { Authorization: `Basic ${authHeader}` } }
     );
-    const accessToken = tokenRes.data.access_token;
+    const tokenData = await tokenRes.json() as any;
+    const accessToken = tokenData.access_token;
 
     const timestamp = new Date()
       .toISOString()
@@ -55,33 +51,40 @@ export class MpesaProvider implements PaymentProvider {
       `${this.shortcode}${this.passkey}${timestamp}`
     ).toString("base64");
 
-    const stkRes = await axios.post(
+    const stkRes = await fetch(
       `${this.baseUrl}/mpesa/stkpush/v1/processrequest`,
       {
-        BusinessShortCode: this.shortcode,
-        Password: password,
-        Timestamp: timestamp,
-        TransactionType: "CustomerPayBillOnline",
-        Amount: request.amount,
-        PartyA: request.phoneNumber,
-        PartyB: this.shortcode,
-        PhoneNumber: request.phoneNumber,
-        CallBackURL: this.callbackUrl,
-        AccountReference: request.accountReference.substring(0, 12),
-        TransactionDesc: request.transactionDesc.substring(0, 20),
-      },
-      { headers: { Authorization: `Bearer ${accessToken}` } }
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          BusinessShortCode: this.shortcode,
+          Password: password,
+          Timestamp: timestamp,
+          TransactionType: "CustomerPayBillOnline",
+          Amount: request.amount,
+          PartyA: request.phoneNumber,
+          PartyB: this.shortcode,
+          PhoneNumber: request.phoneNumber,
+          CallBackURL: this.callbackUrl,
+          AccountReference: request.accountReference.substring(0, 12),
+          TransactionDesc: request.transactionDesc.substring(0, 20),
+        }),
+      }
     );
+    const stkData = await stkRes.json() as any;
 
     const checkoutRequestId: string =
-      stkRes.data?.CheckoutRequestID ||
+      stkData?.CheckoutRequestID ||
       "ws_CO_" + Math.random().toString(36).substring(2, 15);
 
     return {
       success: true,
       transactionId: checkoutRequestId,
       providerReference: checkoutRequestId,
-      raw: stkRes.data,
+      raw: stkData,
     };
   }
 

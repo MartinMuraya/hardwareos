@@ -47,4 +47,21 @@ class BusinessProvider extends ChangeNotifier {
     _isLoading = val;
     notifyListeners();
   }
+
+  // Feature flags
+  bool hasFeature(String featureName) {
+    if (isPro) return true; // Pro has all features
+    
+    // Starter features
+    const starterFeatures = ['inventory', 'sales', 'reports', 'customers', 'suppliers', 'expenses'];
+    
+    return starterFeatures.contains(featureName);
+  }
+
+  // Testing helper
+  void updateMockPlan(String mockPlan) {
+    _businessData ??= {};
+    _businessData!['plan'] = mockPlan;
+    notifyListeners();
+  }
 }

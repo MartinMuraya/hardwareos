@@ -28,6 +28,8 @@ class _AppScaffoldState extends State<AppScaffold> {
     _NavItem(icon: Icons.store_rounded,        label: 'Suppliers',     route: '/suppliers'),
     _NavItem(icon: Icons.receipt_long_rounded, label: 'Purchases',     route: '/purchase-orders'),
     _NavItem(icon: Icons.bar_chart_rounded,    label: 'Reports',       route: '/reports'),
+    _NavItem(icon: Icons.insights_rounded,     label: 'Adv. Analytics',route: '/advanced-analytics'),
+    _NavItem(icon: Icons.auto_awesome_rounded, label: 'AI Assistant',  route: '/ai-assistant'),
     _NavItem(icon: Icons.people_rounded,       label: 'Team',          route: '/team'),
     _NavItem(icon: Icons.workspace_premium_rounded, label: 'Subscription', route: '/subscription'),
     _NavItem(icon: Icons.balance_rounded,       label: 'Stock Adj.',    route: '/stock-adjustments'),
@@ -36,6 +38,7 @@ class _AppScaffoldState extends State<AppScaffold> {
     _NavItem(icon: Icons.monetization_on_rounded, label: 'Cash Drawer', route: '/cash-drawer'),
     _NavItem(icon: Icons.business_rounded,       label: 'Branches',     route: '/branches'),
     _NavItem(icon: Icons.swap_horiz_rounded,     label: 'Transfers',    route: '/stock-transfers'),
+    _NavItem(icon: Icons.notifications_rounded,  label: 'Notifications',route: '/notifications'),
   ];
 
   // Primary items shown in bottom nav (mobile)
@@ -106,7 +109,7 @@ class _AppScaffoldState extends State<AppScaffold> {
                   ).toList(), selectedIdx),
                   const SizedBox(height: 8),
                   _buildSheetSection(ctx, 'Analytics & Admin', _moreItems.where(
-                    (i) => i.route == '/reports' || i.route == '/team' || i.route == '/subscription'
+                    (i) => i.route == '/reports' || i.route == '/advanced-analytics' || i.route == '/ai-assistant' || i.route == '/team' || i.route == '/subscription' || i.route == '/notifications'
                   ).toList(), selectedIdx),
                   const SizedBox(height: 8),
                   _buildSheetSection(ctx, 'Operations', _moreItems.where(
@@ -368,6 +371,15 @@ class _SideNav extends StatelessWidget {
                       onPressed: () => themeProvider.toggleTheme(!themeProvider.isDarkMode),
                       visualDensity: VisualDensity.compact,
                     ),
+                  IconButton(
+                    icon: const Icon(Icons.account_circle_rounded, size: 24),
+                    onPressed: () {
+                      if (isDrawer) Navigator.pop(context);
+                      context.go('/profile');
+                    },
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                  ),
                 ]),
                 const SizedBox(height: 12),
                 Text(businessName,

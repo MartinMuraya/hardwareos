@@ -93,6 +93,7 @@ class OfflineService {
   static const _cartBoxName = 'offline_cart';
   static const _draftBoxName = 'offline_draft';
   static const _customerBoxName = 'offline_customer';
+  static const _productsBoxName = 'offline_products';
 
   static late Box<String> _salesBox;
   static late Box<String> _paymentsBox;
@@ -100,6 +101,7 @@ class OfflineService {
   static late Box<String> _cartBox;
   static late Box<String> _draftBox;
   static late Box<String> _customerBox;
+  static late Box<String> _productsBox;
 
   static Future<void> init() async {
     _salesBox = await Hive.openBox<String>(_salesBoxName);
@@ -108,6 +110,7 @@ class OfflineService {
     _cartBox = await Hive.openBox<String>(_cartBoxName);
     _draftBox = await Hive.openBox<String>(_draftBoxName);
     _customerBox = await Hive.openBox<String>(_customerBoxName);
+    _productsBox = await Hive.openBox<String>(_productsBoxName);
   }
 
   static Future<void> clearAll() async {
@@ -117,6 +120,7 @@ class OfflineService {
     await _cartBox.clear();
     await _draftBox.clear();
     await _customerBox.clear();
+    await _productsBox.clear();
   }
 
   // ── Cart Persistence ──
@@ -221,4 +225,29 @@ class OfflineService {
   }
 
   static int get pendingInventoryCount => _inventoryBox.length;
+
+  // ── Products Cache ──
+
+  static Future<void> saveProducts(List<Map<String, dynamic>> products) async {
+    await _productsBox.put('products', jsonEncode(products));
+    await _productsBox.put('last_sync', DateTime.now().toIso8601String());
+  }
+
+  static List<Map<String, dynamic>> loadProducts() {
+    final raw = _productsBox.get('products');
+    if (raw == null) return [];
+    final list = jsonDecode(raw) as List;
+    return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+  }
+
+  static Future<void> clearProducts() async {
+    await _productsBox.delete('products');
+    await _productsBox.delete('last_sync');
+  }
+
+  static DateTime? get lastProductSyncAt {
+    final raw = _productsBox.get('last_sync');
+    if (raw == null) return null;
+    return DateTime.tryParse(raw);
+  }
 }

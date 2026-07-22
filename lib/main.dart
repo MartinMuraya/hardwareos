@@ -18,16 +18,13 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Enable Firebase App Check for abuse protection
-  // In production, use:
-  //   Android: AndroidProvider.playIntegrity (requires Play Integrity API)
-  //   iOS:     AppleProvider.deviceCheck or AppleProvider.appAttest
-  //   Web:     ReCaptchaV3Provider('your-recaptcha-site-key')
-  // For development, debug provider allows emulator traffic:
+  // Use environment variables for production keys
+  // e.g., --dart-define=RECAPTCHA_SITE_KEY=your_key
+  const recaptchaKey = String.fromEnvironment('RECAPTCHA_SITE_KEY', defaultValue: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'); // test key default
   await FirebaseAppCheck.instance.activate(
-    androidProvider: AndroidProvider.debug,
-    appleProvider: AppleProvider.debug,
-    webProvider: ReCaptchaV3Provider('recaptcha-v3-site-key'),
+    androidProvider: AndroidProvider.playIntegrity,
+    appleProvider: AppleProvider.appAttest,
+    webProvider: ReCaptchaV3Provider(recaptchaKey),
   );
 
   await Hive.initFlutter();

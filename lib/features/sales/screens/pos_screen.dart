@@ -13,6 +13,7 @@ import '../../../core/models/customer.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/responsive.dart';
 import '../../../core/widgets/loading_overlay.dart';
+import '../../../core/services/product_cache_service.dart';
 import '../services/offline_sales_queue.dart';
 
 class POSScreen extends StatefulWidget {
@@ -103,15 +104,39 @@ class _POSScreenState extends State<POSScreen> {
     setState(() { _loadingProducts = true; _error = null; });
     try {
       final bizId = context.read<AuthProvider>().businessId!;
-      final data  = await FunctionsService.call('getProducts', {'businessId': bizId, 'limit': 200});
-      final rawList = (data['products'] as List?) ?? [];
-      final prods = rawList
-          .map((e) => Product.fromMap(Map<String, dynamic>.from(e as Map)))
-          .where((p) => !p.isOutOfStock)
-          .toList();
+      final isOnline = context.read<ConnectivityProvider>().isOnline;
+      
+      if (isOnline) {
+        if (ProductCacheService.isCacheStale()) {
+          // Sync in background to update cache
+          ProductCacheService.syncProducts(bizId).catchError((_) {});
+        }
+      }
+
+      // Always load from cache first for fast offline capability, unless empty
+      var prods = ProductCacheService.getCachedProducts();
+      
+      if (prods.isEmpty && isOnline) {
+        // Fallback to direct fetch if cache is empty
+        final data  = await FunctionsService.call('getProducts', {'businessId': bizId, 'limit': 200});
+        final rawList = (data['products'] as List?) ?? [];
+        prods = rawList
+            .map((e) => Product.fromMap(Map<String, dynamic>.from(e as Map)))
+            .toList();
+        // Save to cache
+        OfflineService.saveProducts(prods.map((p) => {
+          'id': p.id, 'businessId': p.businessId, 'name': p.name, 'sku': p.sku, 'category': p.category, 
+          'quantity': p.quantity, 'costPrice': p.costPrice, 'sellingPrice': p.sellingPrice, 
+          'reorderLevel': p.reorderLevel, 'createdAt': p.createdAt.toIso8601String(), 'updatedAt': p.updatedAt.toIso8601String()
+        }).toList());
+      }
+      
+      // Filter out out-of-stock
+      prods = prods.where((p) => !p.isOutOfStock).toList();
+
       if (mounted) setState(() { _allProducts = prods; _filtered = prods; _loadingProducts = false; });
-    } on FunctionsException catch (e) {
-      if (mounted) setState(() { _error = e.message; _loadingProducts = false; });
+    } catch (e) {
+      if (mounted) setState(() { _error = e.toString(); _loadingProducts = false; });
     }
   }
 

@@ -89,7 +89,12 @@ The system is **multi-tenant**: each hardware store gets its own isolated enviro
 - Sales breakdown by payment method
 - Top-selling products
 - Expense breakdown by category
-- Interactive charts (fl_chart)
+- Interactive historical trend charts (fl_chart)
+
+### Support Ticketing
+- Built-in support desk for tenants
+- Create, view, and track support tickets
+- Direct resolution communication with platform administrators
 
 ### Team Management
 - View team members with role badges (Owner / Manager / Staff)
@@ -99,15 +104,16 @@ The system is **multi-tenant**: each hardware store gets its own isolated enviro
 ### Subscriptions & Billing
 - **14-day free trial** with full Pro access
 - Plans: Starter (KES 2,600/mo, 3 users) and Pro (KES 5,200/mo, unlimited)
-- M-Pesa STK Push payment integration
+- M-Pesa STK Push payment integration (Native fetch API)
 - Auto-detection of expired subscriptions with route guarding
 - Payment history with real-time confirmation via Firestore listener
-- Simulation mode for testing
+- Robust Simulation mode for testing (bypasses Daraja API when "dummy" key is used)
 
 ### Super Admin Panel
 - Platform-wide KPIs: total businesses, active/pending/suspended counts
-- Manage all businesses (approve, suspend)
-- Oversee subscriptions across tenants
+- Manage all businesses (approve, suspend, permanently delete)
+- Oversee subscriptions and simulate M-Pesa payments for testing
+- Centralised Support Helpdesk to respond to tenant tickets
 - CRUD subscription plans
 - User management (disable, role change, password reset)
 - System settings: maintenance mode, broadcast banners, alert levels, backup triggers
@@ -157,13 +163,14 @@ hardwareos/
 │   │   └── widgets/           # Shared widgets (scaffold, empty state, overlay)
 │   ├── features/
 │   │   ├── admin/             # Super admin dashboard & management
-│   │   ├── auth/              # Login, register, verification, password reset
+│   │   ├── auth/              # Login, register, verification, resilient routing
 │   │   ├── dashboard/         # KPI cards, quick actions, alerts
 │   │   ├── expenses/          # Expense tracking
 │   │   ├── inventory/         # Product management
-│   │   ├── reports/           # Analytics & charts
+│   │   ├── reports/           # Analytics, historical charts
 │   │   ├── sales/             # POS & sales history
 │   │   ├── subscription/      # Plan selection & payment
+│   │   ├── support/           # Helpdesk ticketing system
 │   │   └── team/              # Staff management
 │   └── main.dart
 ├── functions/
