@@ -33,6 +33,7 @@ export const createProduct = onCall({ cors: true }, async (request) => {
     sellingPrice: number;
     reorderLevel: number;
     barcodes?: string[];
+    branchId?: string;
   };
 
   if (!name || !businessId) throw new HttpsError("invalid-argument", "name and businessId required.");
@@ -44,12 +45,16 @@ export const createProduct = onCall({ cors: true }, async (request) => {
 
   // Check for duplicate SKU within business
   if (sku) {
-    const dupSnap = await db()
+    let query = db()
       .collection("products")
       .where("businessId", "==", businessId)
-      .where("sku", "==", sku.trim())
-      .limit(1)
-      .get();
+      .where("sku", "==", sku.trim());
+      
+    if (request.data.branchId) {
+      query = query.where("branchId", "==", request.data.branchId.trim());
+    }
+    
+    const dupSnap = await query.limit(1).get();
     if (!dupSnap.empty) {
       throw new HttpsError("already-exists", `SKU "${sku}" already exists in your inventory.`);
     }
@@ -71,6 +76,7 @@ export const createProduct = onCall({ cors: true }, async (request) => {
     sellingPrice: Number(sellingPrice),
     reorderLevel: Number(reorderLevel) || 5,
     barcodes: request.data.barcodes || [],
+    branchId: request.data.branchId?.trim() || null,
     createdAt: now,
     updatedAt: now,
   });
@@ -86,6 +92,7 @@ export const createProduct = onCall({ cors: true }, async (request) => {
       quantity: Number(quantity),
       reason: "Initial stock",
       referenceId: productRef.id,
+      branchId: request.data.branchId?.trim() || null,
       createdAt: now,
     });
   }
@@ -130,12 +137,13 @@ export const updateProduct = onCall({ cors: true }, async (request) => {
 export const addStock = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
-  const { businessId, productId, quantity, reason, referenceId } = request.data as {
+  const { businessId, productId, quantity, reason, referenceId, branchId } = request.data as {
     businessId: string;
     productId: string;
     quantity: number;
     reason: string;
     referenceId?: string;
+    branchId?: string;
   };
 
   if (!quantity || quantity <= 0) throw new HttpsError("invalid-argument", "Quantity must be > 0.");
@@ -168,6 +176,7 @@ export const addStock = onCall({ cors: true }, async (request) => {
     quantity: Number(quantity),
     reason: reason || "Stock addition",
     referenceId: referenceId || null,
+    branchId: branchId?.trim() || productSnap.data()!.branchId || null,
     createdAt: now,
   });
 
@@ -182,11 +191,12 @@ export const addStock = onCall({ cors: true }, async (request) => {
 export const getProducts = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
-  const { businessId, limit: pageLimit = 50, startAfter, category } = request.data as {
+  const { businessId, limit: pageLimit = 50, startAfter, category, branchId } = request.data as {
     businessId: string;
     limit?: number;
     startAfter?: string;
     category?: string;
+    branchId?: string;
   };
 
   await assertBusinessMember(request.auth.uid, businessId);
@@ -196,6 +206,16 @@ export const getProducts = onCall({ cors: true }, async (request) => {
     .where("businessId", "==", businessId)
     .orderBy("name")
     .limit(Math.min(pageLimit, 100));
+
+  if (branchId) {
+    // If branchId is provided, filter by it. This requires a composite index.
+    query = db()
+      .collection("products")
+      .where("businessId", "==", businessId)
+      .where("branchId", "==", branchId)
+      .orderBy("name")
+      .limit(Math.min(pageLimit, 100));
+  }
 
   if (category && category !== "All") {
     query = query.where("category", "==", category);
@@ -219,16 +239,26 @@ export const getProducts = onCall({ cors: true }, async (request) => {
 export const getLowStockProducts = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
-  const { businessId } = request.data as { businessId: string };
+  const { businessId, branchId } = request.data as { businessId: string; branchId?: string };
   await assertBusinessMember(request.auth.uid, businessId);
 
   // Firestore requires a composite index for this query
-  const snap = await db()
+  let query = db()
     .collection("products")
     .where("businessId", "==", businessId)
     .orderBy("quantity")
-    .limit(20)
-    .get();
+    .limit(20);
+    
+  if (branchId) {
+    query = db()
+      .collection("products")
+      .where("businessId", "==", businessId)
+      .where("branchId", "==", branchId)
+      .orderBy("quantity")
+      .limit(20);
+  }
+
+  const snap = await query.get();
 
   // Filter client-side to quantity <= reorderLevel
   const low = snap.docs
