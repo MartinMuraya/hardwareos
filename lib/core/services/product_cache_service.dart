@@ -1,5 +1,5 @@
 import 'package:cloud_functions/cloud_functions.dart';
-import '../../features/inventory/models/product.dart';
+import '../models/product.dart';
 import 'offline_service.dart';
 
 class ProductCacheService {
