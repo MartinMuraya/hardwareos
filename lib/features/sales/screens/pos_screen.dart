@@ -790,10 +790,6 @@ class _POSScreenState extends State<POSScreen> {
     ));
   }
 
-  void _showHardwareCalculators() {
-    showDialog(context: context, builder: (ctx) => const _HardwareCalculatorsDialog());
-  }
-
   @override
   Widget build(BuildContext context) {
     final isWide = MediaQuery.of(context).size.width >= 900;
