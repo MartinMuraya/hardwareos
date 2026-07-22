@@ -56,7 +56,7 @@ class _BarcodeListenerState extends State<BarcodeListener> {
     }
 
     final char = event.character;
-    if (char != null && char.isNotEmpty && !event.logicalKey.isControlCharacter) {
+    if (char != null && char.isNotEmpty) {
       final now = DateTime.now();
       if (_lastKeyPress != null && now.difference(_lastKeyPress!) > widget.bufferDuration) {
         // Too much time passed since last key press, clear buffer (probably a human typing)
