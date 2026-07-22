@@ -15,6 +15,10 @@ export interface SaleItem {
   quantity: number;
   sellingPrice: number;
   costPrice: number;
+  overridePrice?: number;
+  note?: string;
+  isPriceOverridden?: boolean;
+  overriddenBy?: string | null;
 }
 
 // -----------------------------------------------------------
