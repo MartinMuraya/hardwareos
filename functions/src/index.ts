@@ -218,6 +218,15 @@ export {
 
 // Storefront Stubs (To prevent deletion during deployment)
 export {
+  addToCart,
+  approveReturn,
+  cancelOrder,
+  checkSlugAvailability,
+  clearCart,
+  createDeliveryZone,
+  createOnlineOrder,
+  createStorefrontCategory,
+  deleteCart,
   deleteCustomer,
   deleteCustomerAddress,
   deleteDeliveryZone,
