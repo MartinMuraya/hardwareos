@@ -579,8 +579,8 @@ class _POSScreenState extends State<POSScreen> {
                 Navigator.pop(dialogContext);
                 _shareReceiptPdf();
               },
-              icon: const Icon(Icons.share_rounded, size: 16),
-              label: const Text('Share Invoice (PDF)'),
+              icon: const Icon(Icons.picture_as_pdf_rounded, size: 16),
+              label: const Text('Print A4 Invoice'),
             ),
           ],
           ElevatedButton(
@@ -813,7 +813,39 @@ class _POSScreenState extends State<POSScreen> {
             message: 'Processing sale...',
             child: Scaffold(
               backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-              body: isWide ? _wideLayout() : _narrowLayout(),
+              body: Column(
+                children: [
+                  if (!context.watch<ConnectivityProvider>().isOnline)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      color: AppColors.error,
+                      child: const Text(
+                        'You are currently OFFLINE - Sales will be saved locally and synced when online.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  if (context.watch<OfflineSalesQueue>().pendingSales > 0 && context.watch<ConnectivityProvider>().isOnline)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      color: AppColors.warning,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black)),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Syncing ${context.watch<OfflineSalesQueue>().pendingSales} offline sales to cloud...',
+                            style: const TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                  Expanded(child: isWide ? _wideLayout() : _narrowLayout()),
+                ],
+              ),
             ),
           ),
         ),

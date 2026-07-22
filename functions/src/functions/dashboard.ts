@@ -49,15 +49,25 @@ export const getDashboardStats = onCall({ cors: true }, async (request) => {
   let todayProfit = 0;
   let todaySalesCount = 0;
   const recentSales: unknown[] = [];
+  const itemCounts: Record<string, { name: string; qty: number; revenue: number }> = {};
 
   salesSnap.docs.forEach((doc, idx) => {
     const data = doc.data();
     todayRevenue += data.total || 0;
     todayProfit += data.profit || 0;
     todaySalesCount++;
+
+    (data.items || []).forEach((item: any) => {
+      if (!itemCounts[item.productId]) {
+        itemCounts[item.productId] = { name: item.name, qty: 0, revenue: 0 };
+      }
+      itemCounts[item.productId].qty += item.quantity || 1;
+      itemCounts[item.productId].revenue += (item.quantity || 1) * (item.price || 0);
+    });
+
     if (idx < 5) {
       recentSales.push({
-        id: data.id,
+        id: doc.id,
         total: data.total,
         profit: data.profit,
         itemCount: (data.items || []).length,
@@ -66,6 +76,10 @@ export const getDashboardStats = onCall({ cors: true }, async (request) => {
       });
     }
   });
+
+  const topProducts = Object.values(itemCounts)
+    .sort((a, b) => b.qty - a.qty)
+    .slice(0, 5);
 
   // Aggregate expenses
   let todayExpenses = 0;
@@ -112,6 +126,7 @@ export const getDashboardStats = onCall({ cors: true }, async (request) => {
     },
     lowStock,
     recentSales,
+    topProducts,
     subscription: {
       plan: bizData.plan,
       status: bizData.subscriptionStatus,

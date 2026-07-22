@@ -90,6 +90,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final theme = Theme.of(context);
     final kpis       = _stats?['kpis']        as Map?;
     final lowStock   = (_stats?['lowStock']    as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final topProducts= (_stats?['topProducts'] as List?)?.cast<Map<String, dynamic>>() ?? [];
     final recentSales= (_stats?['recentSales'] as List?)?.cast<Map<String, dynamic>>() ?? [];
     final sub        = _stats?['subscription'] as Map?;
     final fmt        = NumberFormat.currency(locale: 'en_KE', symbol: 'KES ');
@@ -163,6 +164,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ]),
                 const SizedBox(height: 12),
                 LowStockList(items: lowStock),
+                const SizedBox(height: 28),
+              ],
+
+              if (topProducts.isNotEmpty) ...[
+                _SectionHeader(title: 'Top Fast-Moving Items', theme: theme),
+                const SizedBox(height: 12),
+                _TopProductsList(items: topProducts, fmt: fmt),
                 const SizedBox(height: 28),
               ],
 
@@ -608,4 +616,44 @@ class _ErrorCard extends StatelessWidget {
       TextButton(onPressed: onRetry, child: const Text('Retry')),
     ]),
   );
+}
+
+class _TopProductsList extends StatelessWidget {
+  final List<Map<String, dynamic>> items;
+  final NumberFormat fmt;
+  const _TopProductsList({required this.items, required this.fmt});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.dividerColor),
+      ),
+      child: Column(
+        children: items.asMap().entries.map((entry) {
+          final idx = entry.key;
+          final item = entry.value;
+          final isLast = idx == items.length - 1;
+          
+          return Column(
+            children: [
+              ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                  child: Text('#${idx + 1}', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                ),
+                title: Text(item['name'] ?? 'Unknown Item', style: const TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: Text('${item['qty']} units sold', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+                trailing: Text(fmt.format(item['revenue'] ?? 0), style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.success)),
+              ),
+              if (!isLast) const Divider(height: 1),
+            ],
+          );
+        }).toList(),
+      ),
+    );
+  }
 }
