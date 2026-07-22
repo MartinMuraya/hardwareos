@@ -642,8 +642,8 @@ class _TopProductsList extends StatelessWidget {
             children: [
               ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                  child: Text('#${idx + 1}', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                  backgroundColor: AppColors.accent.withValues(alpha: 0.1),
+                  child: Text('#${idx + 1}', style: const TextStyle(color: AppColors.accent, fontWeight: FontWeight.bold)),
                 ),
                 title: Text(item['name'] ?? 'Unknown Item', style: const TextStyle(fontWeight: FontWeight.w600)),
                 subtitle: Text('${item['qty']} units sold', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
