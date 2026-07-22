@@ -15,12 +15,18 @@ import '../../../core/utils/responsive.dart';
 import '../../../core/widgets/loading_overlay.dart';
 import '../../../core/services/product_cache_service.dart';
 import '../services/offline_sales_queue.dart';
+import '../../../core/utils/barcode_listener.dart';
+import 'package:flutter/services.dart';
 
 class POSScreen extends StatefulWidget {
   const POSScreen({super.key});
   @override
   State<POSScreen> createState() => _POSScreenState();
 }
+
+class CheckoutIntent extends Intent { const CheckoutIntent(); static const key = CheckoutIntent(); }
+class ClearCartIntent extends Intent { const ClearCartIntent(); static const key = ClearCartIntent(); }
+class FocusSearchIntent extends Intent { const FocusSearchIntent(); static const key = FocusSearchIntent(); }
 
 class _POSScreenState extends State<POSScreen> {
   final List<_CartEntry> _cart = [];
@@ -34,6 +40,7 @@ class _POSScreenState extends State<POSScreen> {
   bool _loadingCustomers = false;
 
   final _searchCtrl  = TextEditingController();
+  final _searchFocusNode = FocusNode();
   List<Product> _allProducts = [];
   List<Product> _filtered    = [];
   bool _loadingProducts      = true;
@@ -96,38 +103,42 @@ class _POSScreenState extends State<POSScreen> {
   void _holdCart(BuildContext context) {
     if (_cart.isEmpty) return;
     final ctrl = TextEditingController();
-    showDialog(context: context, builder: (ctx) => AlertDialog(
-      title: const Text('Hold Cart'),
-      content: TextField(
-        controller: ctrl,
-        decoration: const InputDecoration(hintText: 'Customer name or reference', labelText: 'Reference'),
-        autofocus: true,
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-        ElevatedButton(
-          onPressed: () async {
-            final ref = ctrl.text.trim();
-            if (ref.isEmpty) return;
-            final id = 'draft_${DateTime.now().millisecondsSinceEpoch}';
-            final draftData = {
-              'id': id,
-              'reference': ref,
-              'timestamp': DateTime.now().toIso8601String(),
-              'items': _cart.map((e) => e.toMap()).toList(),
-            };
-            await OfflineService.saveDraftSale(id, draftData);
-            setState(() { _cart.clear(); });
-            _saveCart();
-            if (mounted) {
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Cart "$ref" held.')));
-            }
-          },
-          child: const Text('Hold Cart'),
+    showDialog(context: context, builder: (ctx) {
+      Future<void> submit() async {
+        final ref = ctrl.text.trim();
+        if (ref.isEmpty) return;
+        final id = 'draft_${DateTime.now().millisecondsSinceEpoch}';
+        final draftData = {
+          'id': id,
+          'reference': ref,
+          'timestamp': DateTime.now().toIso8601String(),
+          'items': _cart.map((e) => e.toMap()).toList(),
+        };
+        await OfflineService.saveDraftSale(id, draftData);
+        setState(() { _cart.clear(); });
+        _saveCart();
+        if (mounted) {
+          Navigator.pop(ctx);
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Cart "$ref" held.')));
+        }
+      }
+      return AlertDialog(
+        title: const Text('Hold Cart'),
+        content: TextField(
+          controller: ctrl,
+          decoration: const InputDecoration(hintText: 'Customer name or reference', labelText: 'Reference'),
+          autofocus: true,
+          onSubmitted: (_) => submit(),
         ),
-      ],
-    ));
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: submit,
+            child: const Text('Hold Cart'),
+          ),
+        ],
+      );
+    });
   }
 
   void _showHeldCarts(BuildContext context) {
@@ -248,6 +259,16 @@ class _POSScreenState extends State<POSScreen> {
     }
   }
 
+  bool _fuzzyMatch(String query, String target) {
+    if (target.contains(query)) return true;
+    int qIdx = 0;
+    for (int tIdx = 0; tIdx < target.length && qIdx < query.length; tIdx++) {
+      if (target[tIdx] == query[qIdx]) qIdx++;
+    }
+    // true if we matched most of the query (allowing up to 1 missing/wrong char for short words, 2 for long)
+    return qIdx >= query.length - (query.length > 5 ? 2 : 1);
+  }
+
   void _filter() {
     final q = _searchCtrl.text.toLowerCase().trim();
     if (q.isEmpty) {
@@ -261,7 +282,31 @@ class _POSScreenState extends State<POSScreen> {
         p.category.toLowerCase().contains(q) ||
         p.barcodes.any((b) => b.toLowerCase() == q)).toList();
 
-    setState(() => _filtered = matched);
+    if (matched.isEmpty && q.length > 2) {
+      // Fallback to fuzzy search on name
+      final fuzzy = _allProducts.where((p) => _fuzzyMatch(q, p.name.toLowerCase())).toList();
+      setState(() => _filtered = fuzzy);
+    } else {
+      setState(() => _filtered = matched);
+    }
+  }
+
+  void _handleBarcodeScanned(String barcode) {
+    final code = barcode.trim().toLowerCase();
+    if (code.isEmpty) return;
+
+    final match = _allProducts.where((p) => 
+      p.sku.toLowerCase() == code || 
+      p.barcodes.any((b) => b.toLowerCase() == code)
+    ).toList();
+
+    if (match.length == 1) {
+      _addToCart(match.first);
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Scanned: ${match.first.name}'), duration: const Duration(seconds: 1)));
+      }
+    }
   }
 
   void _onSearchSubmitted(String val) {
@@ -547,6 +592,13 @@ class _POSScreenState extends State<POSScreen> {
     );
   }
 
+  void _showHardwareCalculators() {
+    showDialog(
+      context: context,
+      builder: (ctx) => const _HardwareCalculatorsDialog(),
+    );
+  }
+
   Future<void> _printReceipt(BuildContext context) async {
     if (_lastReceiptData == null) return;
     try {
@@ -666,68 +718,75 @@ class _POSScreenState extends State<POSScreen> {
     bool isSaving = false;
 
     showDialog(context: context, builder: (ctx) => StatefulBuilder(
-      builder: (ctx, setDialogState) => AlertDialog(
-        title: const Text('New Customer'),
-        content: Column(mainAxisSize: MainAxisSize.min, children: [
-          TextField(
-            controller: nameCtrl,
-            decoration: const InputDecoration(labelText: 'Full Name'),
-            textCapitalization: TextCapitalization.words,
-            autofocus: true,
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: phoneCtrl,
-            decoration: const InputDecoration(labelText: 'Phone Number (e.g. 07...)'),
-            keyboardType: TextInputType.phone,
-          ),
-        ]),
-        actions: [
-          TextButton(onPressed: isSaving ? null : () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: isSaving ? null : () async {
-              final name = nameCtrl.text.trim();
-              final phone = phoneCtrl.text.trim();
-              if (name.isEmpty || phone.isEmpty) return;
+      builder: (ctx, setDialogState) {
+        Future<void> submit() async {
+          final name = nameCtrl.text.trim();
+          final phone = phoneCtrl.text.trim();
+          if (name.isEmpty || phone.isEmpty) return;
 
-              setDialogState(() => isSaving = true);
-              try {
-                final bizId = context.read<AuthProvider>().businessId!;
-                final res = await FunctionsService.call('createCustomer', {
-                  'businessId': bizId,
-                  'fullName': name,
-                  'phoneNumber': phone,
-                });
-                
-                final newId = res['customerId'] as String;
-                final newCustomer = Customer(
-                  id: newId, businessId: bizId, fullName: name, phoneNumber: phone,
-                  creditLimit: 0, currentBalance: 0, totalDebt: 0,
-                  createdAt: DateTime.now(), updatedAt: DateTime.now(),
-                );
+          setDialogState(() => isSaving = true);
+          try {
+            final bizId = context.read<AuthProvider>().businessId!;
+            final res = await FunctionsService.call('createCustomer', {
+              'businessId': bizId,
+              'fullName': name,
+              'phoneNumber': phone,
+            });
+            
+            final newId = res['customerId'] as String;
+            final newCustomer = Customer(
+              id: newId, businessId: bizId, fullName: name, phoneNumber: phone,
+              creditLimit: 0, currentBalance: 0, totalDebt: 0,
+              createdAt: DateTime.now(), updatedAt: DateTime.now(),
+            );
 
-                if (mounted) {
-                  setState(() {
-                    _customers.insert(0, newCustomer);
-                    _selectedCustomerId = newId;
-                    _selectedCustomerName = name;
-                  });
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Customer $name created!')));
-                }
-              } catch (e) {
-                if (mounted) {
-                  setDialogState(() => isSaving = false);
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
-                }
-              }
-            },
-            child: isSaving 
-                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Text('Create'),
-          ),
-        ],
-      ),
+            if (mounted) {
+              setState(() {
+                _customers.insert(0, newCustomer);
+                _selectedCustomerId = newId;
+                _selectedCustomerName = name;
+              });
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Customer $name created!')));
+            }
+          } catch (e) {
+            if (mounted) {
+              setDialogState(() => isSaving = false);
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+            }
+          }
+        }
+
+        return AlertDialog(
+          title: const Text('New Customer'),
+          content: Column(mainAxisSize: MainAxisSize.min, children: [
+            TextField(
+              controller: nameCtrl,
+              decoration: const InputDecoration(labelText: 'Full Name'),
+              textCapitalization: TextCapitalization.words,
+              textInputAction: TextInputAction.next,
+              autofocus: true,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: phoneCtrl,
+              decoration: const InputDecoration(labelText: 'Phone Number (e.g. 07...)'),
+              keyboardType: TextInputType.phone,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => submit(),
+            ),
+          ]),
+          actions: [
+            TextButton(onPressed: isSaving ? null : () => Navigator.pop(ctx), child: const Text('Cancel')),
+            ElevatedButton(
+              onPressed: isSaving ? null : submit,
+              child: isSaving 
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Text('Create'),
+            ),
+          ],
+        );
+      },
     ));
   }
 
@@ -738,12 +797,30 @@ class _POSScreenState extends State<POSScreen> {
   @override
   Widget build(BuildContext context) {
     final isWide = MediaQuery.of(context).size.width >= 900;
-    return LoadingOverlay(
-      isLoading: _processingCheckout,
-      message: 'Processing sale...',
-      child: Scaffold(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: isWide ? _wideLayout() : _narrowLayout(),
+    return Shortcuts(
+      shortcuts: <ShortcutActivator, Intent>{
+        LogicalKeySet(LogicalKeyboardKey.f9): CheckoutIntent.key,
+        LogicalKeySet(LogicalKeyboardKey.f12): ClearCartIntent.key,
+        LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyF): FocusSearchIntent.key,
+        LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.space): FocusSearchIntent.key,
+      },
+      child: Actions(
+        actions: <Type, Action<Intent>>{
+          CheckoutIntent: CallbackAction<CheckoutIntent>(onInvoke: (_) { if (!_processingCheckout) _checkout(); return null; }),
+          ClearCartIntent: CallbackAction<ClearCartIntent>(onInvoke: (_) { _clearCart(); return null; }),
+          FocusSearchIntent: CallbackAction<FocusSearchIntent>(onInvoke: (_) { FocusScope.of(context).requestFocus(_searchFocusNode); return null; }),
+        },
+        child: BarcodeListener(
+          onBarcodeScanned: _handleBarcodeScanned,
+          child: LoadingOverlay(
+            isLoading: _processingCheckout,
+            message: 'Processing sale...',
+            child: Scaffold(
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              body: isWide ? _wideLayout() : _narrowLayout(),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -788,6 +865,7 @@ class _POSScreenState extends State<POSScreen> {
         const SizedBox(height: 16),
         TextField(
           controller: _searchCtrl,
+          focusNode: _searchFocusNode,
           onSubmitted: _onSearchSubmitted,
           style: TextStyle(color: theme.colorScheme.onSurface),
           decoration: InputDecoration(
@@ -1135,23 +1213,26 @@ class _CartTile extends StatelessWidget {
 
   void _showEditQtyDialog(BuildContext context) {
     final ctrl = TextEditingController(text: entry.qty.toString());
+    void submit() {
+      final val = double.tryParse(ctrl.text);
+      if (val != null && val >= 0) {
+        onUpdate(entry.copyWith(qty: val));
+        Navigator.pop(context);
+      }
+    }
     showDialog(context: context, builder: (ctx) => AlertDialog(
       title: const Text('Edit Quantity'),
       content: TextField(
         controller: ctrl,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         decoration: const InputDecoration(labelText: 'Quantity'),
+        autofocus: true,
+        onSubmitted: (_) => submit(),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
         ElevatedButton(
-          onPressed: () {
-            final val = double.tryParse(ctrl.text);
-            if (val != null && val >= 0) {
-              onUpdate(entry.copyWith(qty: val));
-              Navigator.pop(ctx);
-            }
-          },
+          onPressed: submit,
           child: const Text('Save'),
         ),
       ],
@@ -1160,12 +1241,21 @@ class _CartTile extends StatelessWidget {
 
   void _showEditPriceDialog(BuildContext context) {
     final ctrl = TextEditingController(text: entry.appliedPrice.toStringAsFixed(2));
+    void submit() {
+      final val = double.tryParse(ctrl.text);
+      if (val != null && val >= 0) {
+        onUpdate(entry.copyWith(overridePrice: val));
+        Navigator.pop(context);
+      }
+    }
     showDialog(context: context, builder: (ctx) => AlertDialog(
       title: const Text('Override Price'),
       content: TextField(
         controller: ctrl,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         decoration: const InputDecoration(labelText: 'New Unit Price'),
+        autofocus: true,
+        onSubmitted: (_) => submit(),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
@@ -1177,13 +1267,7 @@ class _CartTile extends StatelessWidget {
           child: const Text('Reset', style: TextStyle(color: AppColors.error)),
         ),
         ElevatedButton(
-          onPressed: () {
-            final val = double.tryParse(ctrl.text);
-            if (val != null && val >= 0) {
-              onUpdate(entry.copyWith(overridePrice: val));
-              Navigator.pop(ctx);
-            }
-          },
+          onPressed: submit,
           child: const Text('Save'),
         ),
       ],
@@ -1192,20 +1276,24 @@ class _CartTile extends StatelessWidget {
 
   void _showNoteDialog(BuildContext context) {
     final ctrl = TextEditingController(text: entry.note ?? '');
+    void submit() {
+      onUpdate(entry.copyWith(note: ctrl.text.trim()));
+      Navigator.pop(context);
+    }
     showDialog(context: context, builder: (ctx) => AlertDialog(
       title: const Text('Item Note'),
       content: TextField(
         controller: ctrl,
         maxLines: 2,
         decoration: const InputDecoration(hintText: 'e.g. Cut into 2m pieces'),
+        autofocus: true,
+        textInputAction: TextInputAction.done,
+        onSubmitted: (_) => submit(),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
         ElevatedButton(
-          onPressed: () {
-            onUpdate(entry.copyWith(note: ctrl.text.trim()));
-            Navigator.pop(ctx);
-          },
+          onPressed: submit,
           child: const Text('Save'),
         ),
       ],
