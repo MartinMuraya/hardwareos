@@ -1,7 +1,12 @@
 import { onCall } from "firebase-functions/v2/https";
+import { onSchedule } from "firebase-functions/v2/scheduler";
 
 const makeStub = () => onCall(() => {
   return { status: "stubbed", message: "Function temporarily stubbed to prevent deletion during deployment." };
+});
+
+const makeScheduleStub = () => onSchedule("every 24 hours", () => {
+  console.log("Scheduled function temporarily stubbed to prevent deletion.");
 });
 
 export const deleteCustomer = makeStub();
@@ -30,20 +35,20 @@ export const getPublicProducts = makeStub();
 export const getPublicStorefront = makeStub();
 export const getStorefrontCategories = makeStub();
 export const getStorefrontSettings = makeStub();
-export const processFailedSyncRetries = makeStub();
+export const processFailedSyncRetries = makeScheduleStub();
 export const processRefund = makeStub();
-export const processStaleCheckouts = makeStub();
+export const processStaleCheckouts = makeScheduleStub();
 export const recordCheckoutAttempt = makeStub();
 export const rejectReturn = makeStub();
-export const releaseExpiredHolds = makeStub();
+export const releaseExpiredHolds = makeScheduleStub();
 export const releaseStockHold = makeStub();
 export const removeFromCart = makeStub();
 export const requestReturn = makeStub();
 export const resetCommerceTemplate = makeStub();
 export const retryCheckout = makeStub();
-export const rollupAnalytics = makeStub();
+export const rollupAnalytics = makeScheduleStub();
 export const saveCustomerAddress = makeStub();
-export const scanAbandonedCarts = makeStub();
+export const scanAbandonedCarts = makeScheduleStub();
 export const trackEvent = makeStub();
 export const updateCartQuantity = makeStub();
 export const updateCommerceTemplate = makeStub();
