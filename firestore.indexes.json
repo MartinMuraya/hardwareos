@@ -374,20 +374,6 @@
       ]
     },
     {
-      "collectionGroup": "loginAttempts",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "lockUntil", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "subscriptionStats",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "computedAt", "order": "DESCENDING" }
-      ]
-    },
-    {
       "collectionGroup": "auditLogs",
       "queryScope": "COLLECTION",
       "fields": [
