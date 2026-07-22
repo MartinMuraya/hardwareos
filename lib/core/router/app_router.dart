@@ -134,6 +134,32 @@ class AppRouter {
             if (isExpired && isProtectedRoute && !isSubscriptionRoute) {
               return '/subscription';
             }
+
+            final role = authProvider.userRole ?? 'staff';
+            final isSuperAdmin = authProvider.isSuperAdmin;
+            final isOwner = role == 'owner' || isSuperAdmin;
+            final isManager = role == 'manager' || isOwner;
+
+            // Restrict cashiers (staff) from sensitive routes
+            if (!isManager) {
+              final isStaffRoute = state.matchedLocation.startsWith('/dashboard') ||
+                                   state.matchedLocation.startsWith('/sales') ||
+                                   state.matchedLocation.startsWith('/customers') ||
+                                   state.matchedLocation.startsWith('/credit-ledger') ||
+                                   state.matchedLocation.startsWith('/quotations') ||
+                                   state.matchedLocation.startsWith('/returns') ||
+                                   state.matchedLocation.startsWith('/notifications') ||
+                                   state.matchedLocation.startsWith('/profile');
+              if (!isStaffRoute && isProtectedRoute) return '/dashboard';
+            }
+
+            // Restrict managers from owner routes (Team, Subscription, Branches)
+            if (!isOwner) {
+              final isOwnerRoute = state.matchedLocation.startsWith('/team') ||
+                                   state.matchedLocation.startsWith('/subscription') ||
+                                   state.matchedLocation.startsWith('/branches');
+              if (isOwnerRoute && isProtectedRoute) return '/dashboard';
+            }
           }
         }
         return null;

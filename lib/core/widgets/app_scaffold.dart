@@ -17,63 +17,75 @@ class AppScaffold extends StatefulWidget {
 }
 
 class _AppScaffoldState extends State<AppScaffold> {
-  static const _navItems = [
-    _NavItem(icon: Icons.dashboard_rounded,    label: 'Dashboard',     route: '/dashboard'),
-    _NavItem(icon: Icons.inventory_2_rounded,  label: 'Inventory',     route: '/inventory'),
-    _NavItem(icon: Icons.point_of_sale_rounded,label: 'Sales',         route: '/sales'),
-    _NavItem(icon: Icons.receipt_long_rounded, label: 'Expenses',      route: '/expenses'),
-    _NavItem(icon: Icons.people_rounded,       label: 'Customers',     route: '/customers'),
-    _NavItem(icon: Icons.account_balance_wallet_rounded, label: 'Credit', route: '/credit-ledger'),
-    _NavItem(icon: Icons.description_rounded,  label: 'Quotations',    route: '/quotations'),
-    _NavItem(icon: Icons.store_rounded,        label: 'Suppliers',     route: '/suppliers'),
-    _NavItem(icon: Icons.receipt_long_rounded, label: 'Purchases',     route: '/purchase-orders'),
-    _NavItem(icon: Icons.bar_chart_rounded,    label: 'Reports',       route: '/reports'),
-    _NavItem(icon: Icons.insights_rounded,     label: 'Adv. Analytics',route: '/advanced-analytics'),
-    _NavItem(icon: Icons.auto_awesome_rounded, label: 'AI Assistant',  route: '/ai-assistant'),
-    _NavItem(icon: Icons.help_outline_rounded, label: 'Support',       route: '/support'),
-    _NavItem(icon: Icons.people_rounded,       label: 'Team',          route: '/team'),
-    _NavItem(icon: Icons.workspace_premium_rounded, label: 'Subscription', route: '/subscription'),
-    _NavItem(icon: Icons.balance_rounded,       label: 'Stock Adj.',    route: '/stock-adjustments'),
-    _NavItem(icon: Icons.history_rounded,       label: 'Audit Trail',   route: '/audit-logs'),
-    _NavItem(icon: Icons.replay_rounded,        label: 'Returns',       route: '/returns'),
-    _NavItem(icon: Icons.monetization_on_rounded, label: 'Cash Drawer', route: '/cash-drawer'),
-    _NavItem(icon: Icons.business_rounded,       label: 'Branches',     route: '/branches'),
-    _NavItem(icon: Icons.swap_horiz_rounded,     label: 'Transfers',    route: '/stock-transfers'),
-    _NavItem(icon: Icons.notifications_rounded,  label: 'Notifications',route: '/notifications'),
-  ];
+  List<_NavItem> _getNavItems(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+    final role = authProvider.userRole ?? 'staff';
+    final isSuperAdmin = authProvider.isSuperAdmin;
+    final isOwner = role == 'owner' || isSuperAdmin;
+    final isManager = role == 'manager' || isOwner;
 
-  // Primary items shown in bottom nav (mobile)
-  static const _primaryNav = [
-    _NavItem(icon: Icons.dashboard_rounded,    label: 'Dashboard',     route: '/dashboard'),
-    _NavItem(icon: Icons.point_of_sale_rounded,label: 'Sales',         route: '/sales'),
-    _NavItem(icon: Icons.inventory_2_rounded,  label: 'Inventory',     route: '/inventory'),
-    _NavItem(icon: Icons.receipt_long_rounded, label: 'Expenses',      route: '/expenses'),
-  ];
+    return [
+      const _NavItem(icon: Icons.dashboard_rounded,    label: 'Dashboard',     route: '/dashboard'),
+      if (isManager) const _NavItem(icon: Icons.inventory_2_rounded,  label: 'Inventory',     route: '/inventory'),
+      const _NavItem(icon: Icons.point_of_sale_rounded,label: 'Sales',         route: '/sales'),
+      if (isManager) const _NavItem(icon: Icons.receipt_long_rounded, label: 'Expenses',      route: '/expenses'),
+      const _NavItem(icon: Icons.people_rounded,       label: 'Customers',     route: '/customers'),
+      const _NavItem(icon: Icons.account_balance_wallet_rounded, label: 'Credit', route: '/credit-ledger'),
+      const _NavItem(icon: Icons.description_rounded,  label: 'Quotations',    route: '/quotations'),
+      if (isManager) const _NavItem(icon: Icons.store_rounded,        label: 'Suppliers',     route: '/suppliers'),
+      if (isManager) const _NavItem(icon: Icons.receipt_long_rounded, label: 'Purchases',     route: '/purchase-orders'),
+      if (isManager) const _NavItem(icon: Icons.bar_chart_rounded,    label: 'Reports',       route: '/reports'),
+      if (isManager) const _NavItem(icon: Icons.insights_rounded,     label: 'Adv. Analytics',route: '/advanced-analytics'),
+      if (isManager) const _NavItem(icon: Icons.auto_awesome_rounded, label: 'AI Assistant',  route: '/ai-assistant'),
+      const _NavItem(icon: Icons.help_outline_rounded, label: 'Support',       route: '/support'),
+      if (isOwner)   const _NavItem(icon: Icons.people_rounded,       label: 'Team',          route: '/team'),
+      if (isOwner)   const _NavItem(icon: Icons.workspace_premium_rounded, label: 'Subscription', route: '/subscription'),
+      if (isManager) const _NavItem(icon: Icons.balance_rounded,       label: 'Stock Adj.',    route: '/stock-adjustments'),
+      if (isManager) const _NavItem(icon: Icons.history_rounded,       label: 'Audit Trail',   route: '/audit-logs'),
+      const _NavItem(icon: Icons.replay_rounded,        label: 'Returns',       route: '/returns'),
+      if (isManager) const _NavItem(icon: Icons.monetization_on_rounded, label: 'Cash Drawer', route: '/cash-drawer'),
+      if (isOwner)   const _NavItem(icon: Icons.business_rounded,       label: 'Branches',     route: '/branches'),
+      if (isManager) const _NavItem(icon: Icons.swap_horiz_rounded,     label: 'Transfers',    route: '/stock-transfers'),
+      const _NavItem(icon: Icons.notifications_rounded,  label: 'Notifications',route: '/notifications'),
+    ];
+  }
 
-  // Items shown in the "More" bottom sheet (mobile)
-  List<_NavItem> get _moreItems => _navItems.where(
-    (item) => !_primaryNav.any((p) => p.route == item.route)
-  ).toList();
+  List<_NavItem> _getPrimaryNav(BuildContext context) {
+    return _getNavItems(context).where((i) => 
+      i.route == '/dashboard' || i.route == '/sales' || i.route == '/inventory' || i.route == '/expenses'
+    ).toList();
+  }
+
+  List<_NavItem> _getMoreItems(BuildContext context) {
+    final primary = _getPrimaryNav(context);
+    return _getNavItems(context).where(
+      (item) => !primary.any((p) => p.route == item.route)
+    ).toList();
+  }
 
   int _selectedIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
-    for (int i = 0; i < _navItems.length; i++) {
-      if (location.startsWith(_navItems[i].route)) return i;
+    final navItems = _getNavItems(context);
+    for (int i = 0; i < navItems.length; i++) {
+      if (location.startsWith(navItems[i].route)) return i;
     }
     return 0;
   }
 
   int _mobileNavIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
-    for (int i = 0; i < _primaryNav.length; i++) {
-      if (location.startsWith(_primaryNav[i].route)) return i;
+    final primary = _getPrimaryNav(context);
+    for (int i = 0; i < primary.length; i++) {
+      if (location.startsWith(primary[i].route)) return i;
     }
-    return _primaryNav.length;
+    return primary.length;
   }
 
   void _openMoreSheet(BuildContext context) {
     final selectedIdx = _selectedIndex(context);
     final theme = Theme.of(context);
+    final moreItems = _getMoreItems(context);
+    
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -101,23 +113,23 @@ class _AppScaffoldState extends State<AppScaffold> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  _buildSheetSection(ctx, 'Customers & Credit', _moreItems.where(
+                  _buildSheetSection(ctx, 'Customers & Credit', moreItems.where(
                     (i) => i.route == '/customers' || i.route == '/credit-ledger'
                   ).toList(), selectedIdx),
                   const SizedBox(height: 8),
-                  _buildSheetSection(ctx, 'Orders & Documents', _moreItems.where(
+                  _buildSheetSection(ctx, 'Orders & Documents', moreItems.where(
                     (i) => i.route == '/quotations' || i.route == '/suppliers' || i.route == '/purchase-orders'
                   ).toList(), selectedIdx),
                   const SizedBox(height: 8),
-                  _buildSheetSection(ctx, 'Analytics & Admin', _moreItems.where(
+                  _buildSheetSection(ctx, 'Analytics & Admin', moreItems.where(
                     (i) => i.route == '/reports' || i.route == '/advanced-analytics' || i.route == '/ai-assistant' || i.route == '/team' || i.route == '/subscription' || i.route == '/notifications'
                   ).toList(), selectedIdx),
                   const SizedBox(height: 8),
-                  _buildSheetSection(ctx, 'Operations', _moreItems.where(
+                  _buildSheetSection(ctx, 'Operations', moreItems.where(
                     (i) => i.route == '/stock-adjustments' || i.route == '/returns' || i.route == '/audit-logs' || i.route == '/cash-drawer'
                   ).toList(), selectedIdx),
                   const SizedBox(height: 8),
-                  _buildSheetSection(ctx, 'Multi-Branch', _moreItems.where(
+                  _buildSheetSection(ctx, 'Multi-Branch', moreItems.where(
                     (i) => i.route == '/branches' || i.route == '/stock-transfers'
                   ).toList(), selectedIdx),
 
@@ -147,18 +159,22 @@ class _AppScaffoldState extends State<AppScaffold> {
           ),
         ),
         ...items.map((item) {
-          final idx = _navItems.indexOf(item);
-          final selected = selectedIdx == idx;
+          final navItems = _getNavItems(context);
+          final idx = navItems.indexOf(item);
+          final isSelected = selectedIdx == idx;
+          
           return ListTile(
-            leading: Icon(item.icon, color: selected ? AppColors.accent : null),
-            title: Text(item.label,
+            leading: Icon(item.icon, color: isSelected ? AppColors.accent : theme.colorScheme.onSurfaceVariant),
+            title: Text(item.label, 
               style: TextStyle(
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                color: selected ? AppColors.accent : null,
+                color: isSelected ? AppColors.accent : theme.colorScheme.onSurface,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
-            trailing: selected ? const Icon(Icons.check_rounded, color: AppColors.accent, size: 18) : null,
+            selected: isSelected,
+            selectedTileColor: AppColors.accent.withValues(alpha: 0.1),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
             onTap: () {
               Navigator.pop(context);
               context.go(item.route);
@@ -186,7 +202,7 @@ class _AppScaffoldState extends State<AppScaffold> {
       drawer: !isDesktop ? Drawer(
         child: _SideNav(
           selectedIndex: selectedIdx,
-          navItems: _navItems,
+          navItems: _getNavItems(context),
           businessName: biz.businessName ?? 'HardwareOS',
           userRole: auth.userRole ?? 'staff',
           plan: biz.plan ?? 'free',
@@ -196,7 +212,7 @@ class _AppScaffoldState extends State<AppScaffold> {
         ),
       ) : null,
       appBar: !isDesktop ? AppBar(
-        title: Text(_navItems[selectedIdx].label),
+        title: Text(_getNavItems(context)[selectedIdx].label),
         actions: [
           IconButton(
             icon: Icon(themeProvider.isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded),
@@ -227,7 +243,7 @@ class _AppScaffoldState extends State<AppScaffold> {
           if (isDesktop)
             _SideNav(
               selectedIndex: selectedIdx,
-              navItems: _navItems,
+              navItems: _getNavItems(context),
               businessName: biz.businessName ?? 'HardwareOS',
               userRole: auth.userRole ?? 'staff',
               plan: biz.plan ?? 'free',
@@ -238,7 +254,7 @@ class _AppScaffoldState extends State<AppScaffold> {
             NavigationRail(
               extended: false,
               selectedIndex: selectedIdx,
-              onDestinationSelected: (i) => context.go(_navItems[i].route),
+              onDestinationSelected: (i) => context.go(_getNavItems(context)[i].route),
               leading: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Container(
@@ -267,7 +283,7 @@ class _AppScaffoldState extends State<AppScaffold> {
                   ],
                 ),
               ),
-              destinations: _navItems.map((item) => NavigationRailDestination(
+              destinations: _getNavItems(context).map((item) => NavigationRailDestination(
                 icon: Icon(item.icon),
                 selectedIcon: Icon(item.icon, color: AppColors.accent),
                 label: Text(item.label),
@@ -281,29 +297,34 @@ class _AppScaffoldState extends State<AppScaffold> {
       ),
       bottomNavigationBar: isMobile ? SizedBox(
         height: 80,
-        child: NavigationBar(
-          selectedIndex: _mobileNavIndex(context),
-          onDestinationSelected: (i) {
-            if (i < _primaryNav.length) {
-              context.go(_primaryNav[i].route);
-            } else {
-              _openMoreSheet(context);
-            }
-          },
-          height: 80,
-          labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
-          destinations: [
-            ..._primaryNav.map((item) => NavigationDestination(
-              icon: Icon(item.icon),
-              selectedIcon: Icon(item.icon, color: AppColors.accent),
-              label: item.label,
-            )),
-            const NavigationDestination(
-              icon: Icon(Icons.more_horiz_rounded),
-              selectedIcon: Icon(Icons.more_horiz_rounded, color: AppColors.accent),
-              label: 'More',
-            ),
-          ],
+        child: Builder(
+          builder: (context) {
+            final primaryNav = _getPrimaryNav(context);
+            return NavigationBar(
+              selectedIndex: _mobileNavIndex(context),
+              onDestinationSelected: (i) {
+                if (i < primaryNav.length) {
+                  context.go(primaryNav[i].route);
+                } else {
+                  _openMoreSheet(context);
+                }
+              },
+              height: 80,
+              labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+              destinations: [
+                ...primaryNav.map((item) => NavigationDestination(
+                  icon: Icon(item.icon),
+                  selectedIcon: Icon(item.icon, color: AppColors.accent),
+                  label: item.label,
+                )),
+                const NavigationDestination(
+                  icon: Icon(Icons.more_horiz_rounded),
+                  selectedIcon: Icon(Icons.more_horiz_rounded, color: AppColors.accent),
+                  label: 'More',
+                ),
+              ],
+            );
+          }
         ),
       ) : null,
     );
