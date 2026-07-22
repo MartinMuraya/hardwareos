@@ -26,7 +26,7 @@ class ProductCacheService {
   /// Gets products from Hive cache
   static List<Product> getCachedProducts() {
     final rawList = OfflineService.loadProducts();
-    return rawList.map((e) => Product.fromJson(e)).toList();
+    return rawList.map((e) => Product.fromMap(e as Map<String, dynamic>)).toList();
   }
 
   /// Checks if cache is stale (older than 15 minutes)

@@ -198,7 +198,7 @@ class _StatusBadge extends StatelessWidget {
       case 'open': color = AppColors.warning; break;
       case 'answered': color = AppColors.success; break;
       case 'closed': color = Colors.grey; break;
-      default: color = AppColors.primary;
+      default: color = AppColors.accent;
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

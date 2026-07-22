@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/business_provider.dart';
 import '../../../core/providers/theme_provider.dart';
