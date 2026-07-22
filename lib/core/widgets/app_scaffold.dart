@@ -30,6 +30,7 @@ class _AppScaffoldState extends State<AppScaffold> {
     _NavItem(icon: Icons.bar_chart_rounded,    label: 'Reports',       route: '/reports'),
     _NavItem(icon: Icons.insights_rounded,     label: 'Adv. Analytics',route: '/advanced-analytics'),
     _NavItem(icon: Icons.auto_awesome_rounded, label: 'AI Assistant',  route: '/ai-assistant'),
+    _NavItem(icon: Icons.help_outline_rounded, label: 'Support',       route: '/support'),
     _NavItem(icon: Icons.people_rounded,       label: 'Team',          route: '/team'),
     _NavItem(icon: Icons.workspace_premium_rounded, label: 'Subscription', route: '/subscription'),
     _NavItem(icon: Icons.balance_rounded,       label: 'Stock Adj.',    route: '/stock-adjustments'),

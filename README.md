@@ -17,190 +17,141 @@
 
 ---
 
-## Overview
+## 📖 Deep System Overview & Analysis
 
-HardwareOS is a purpose-built ERP platform for hardware and building-material retailers in East Africa. It replaces fragmented workflows (paper ledgers, separate POS systems, manual stock tracking) with a unified, cloud-based solution accessible from any device.
+HardwareOS is a robust, cloud-based ERP and POS platform specifically designed for hardware and building-material retailers in East Africa. It is designed to replace fragmented legacy workflows—such as paper ledgers, isolated desktop POS systems, and manual inventory tracking—with a unified omnichannel experience.
 
-The system is **multi-tenant**: each hardware store gets its own isolated environment under a subscription plan, while a central super-admin panel manages the entire platform.
+The system is built on a **multi-tenant architecture**. Each registered hardware store operates within its own strictly isolated data environment under a tiered subscription plan. Simultaneously, platform owners govern the entire ecosystem through an omnipresent Super Admin control plane.
+
+HardwareOS utilizes a highly secure **"Function-as-a-Service" (FaaS) data mutation pattern**. Client applications (Web, Android, Windows) have *zero* write access directly to the database. All writes are routed through Firebase Cloud Functions (HTTPS Callables), which act as middleware to enforce authentication, business logic, role-based access control (RBAC), and subscription limits.
 
 ---
 
-## Architecture
+## 🏗️ Architectural Topology
 
-```
-┌─────────────────────────────────────────────────────┐
-│                   Flutter Client                      │
-│  (Web / Android / Windows — responsive Material 3)   │
-│                                                      │
-│  ┌─────────┐  ┌──────────┐  ┌────────────────────┐  │
-│  │Provider  │  │ Riverpod │  │ go_router          │  │
-│  │(auth,    │  │(subscrip-│  │(auth guards,       │  │
-│  │ business,│  │ tions)   │  │ ShellRoutes)       │  │
-│  │ theme)   │  │          │  │                    │  │
-│  └─────────┘  └──────────┘  └────────────────────┘  │
-└───────────────────┬─────────────────────────────────┘
-                    │ HTTPS Callable Functions
-                    ▼
-┌─────────────────────────────────────────────────────┐
-│              Firebase Cloud Functions                 │
-│  (TypeScript — 10 function modules)                  │
-│                                                      │
-│  auth │ inventory │ sales │ expenses │ dashboard     │
-│  reports │ mpesa_billing │ super_admin │ ...         │
-└───────────────────┬─────────────────────────────────┘
-                    │ Admin SDK
-                    ▼
-┌─────────────────────────────────────────────────────┐
-│                   Cloud Firestore                     │
-│  (Strict security — writes only through functions)   │
-│                                                      │
-│  Users │ Businesses │ Products │ Sales │ Expenses    │
-│  Subscriptions │ Plans │ Notifications               │
-└─────────────────────────────────────────────────────┘
+```text
+┌─────────────────────────────────────────────────────────┐
+│                      Flutter Client                     │
+│    (Web / Android / Windows — Material 3 Design)        │
+│                                                         │
+│  State Management: Provider (Auth, Theme) + Riverpod    │
+│  Routing: go_router (Auth guards, ShellRoutes)          │
+└────────────────────────┬────────────────────────────────┘
+                         │ 1. HTTPS Callable Requests
+                         ▼
+┌─────────────────────────────────────────────────────────┐
+│               Firebase Cloud Functions (Node.js)        │
+│                                                         │
+│  [Auth] [Inventory] [Sales] [Expenses] [Dashboard]      │
+│  [M-Pesa Billing] [Super Admin] [Support] [AI] [Audit]  │
+└────────────────────────┬────────────────────────────────┘
+                         │ 2. Server-side Validation & Execution
+                         ▼
+┌─────────────────────────────────────────────────────────┐
+│                   Cloud Firestore                       │
+│  Strict Security Rules (Read-Only for Clients)          │
+│                                                         │
+│  Users | Businesses | Products | Sales | Expenses       │
+│  Subscriptions | Support Tickets | System Logs | ...    │
+└─────────────────────────────────────────────────────────┘
 ```
 
-**Key principle:** The client never writes directly to Firestore. Every data mutation goes through an HTTPS Callable Function, enforcing authentication, authorization, plan limits, and data validation server-side.
+---
+
+## 🚀 Core Modules & Capabilities
+
+The system is divided into over 20 highly specialized modules inside the Flutter application. 
+
+### 1. Point of Sale (POS) & Sales Management
+- **Omni-platform POS**: Fast checkout interface supporting barcode scanning and manual search.
+- **Offline Resilience**: Sales can be queued offline and synchronized automatically when internet connectivity is restored.
+- **Payment Types**: Cash, M-Pesa, and Credit (debt tracking).
+- **Receipts**: Generates digital receipts with automatic PDF creation.
+- **Sales History**: Search, refund, and review historical transactions.
+
+### 2. Comprehensive Inventory & Supply Chain
+- **Product Management**: Full catalog tracking with SKU, categorisation, buying/selling prices, and reorder levels.
+- **Purchase Orders (POs)**: Create and track purchase orders sent to suppliers.
+- **Suppliers**: Manage supplier directories and their related POs.
+- **Stock Adjustments**: Record manual stock corrections (damage, loss, manual counts).
+- **Branch Management**: Multi-branch support allowing stock transfers between physical store locations.
+
+### 3. CRM & Debt Management
+- **Customer Directory**: Track all customers and their contact information.
+- **Credit Ledgers**: Advanced debt tracking. Allows cashiers to sell on credit, track outstanding balances, and record debt repayments over time.
+- **Customer Statements**: Generate full account statements for credit buyers.
+
+### 4. Financial Tracking
+- **Expenses**: Categorised business expenses (payroll, rent, utilities).
+- **Cash Drawer**: Track shifts, opening balances, cash drops, and closing balances for strict employee financial accountability.
+
+### 5. Quotations & Returns
+- **Quotations**: Draft proforma invoices for contractors. Convert quotations directly to active sales when approved.
+- **Returns**: Dedicated module to process customer returns and restock items back into inventory automatically.
+
+### 6. Advanced Analytics & AI
+- **Dashboard**: Real-time KPI cards, low stock alerts, pending sync indicators, and recent sales feeds.
+- **Interactive Reports**: Powered by `fl_chart`, visualize Profit & Loss, sales by payment methods, and historical trends over Today, This Week, or This Month.
+- **Gemini AI Assistant**: Powered by Google's Gemini LLM. Analyzes the last 30 days of the business's sales, expenses, and inventory to generate executive insights, risk warnings, and concrete recommendations.
+
+### 7. Support & Auditing
+- **Helpdesk Ticketing**: Tenants can open support tickets directly in the app. Super Admins reply and resolve them centrally.
+- **Audit Logs**: Every mutation (sale, edit, delete) is logged. Business owners can review the exact timestamp and user responsible for any action.
+
+### 8. Team & RBAC
+- Role-Based Access Control: Owner, Manager, and Staff roles.
+- Owners can invite users via email, who then accept the invite to join the tenant's workspace.
+
+### 9. Subscriptions & M-Pesa Billing
+- **14-day Free Trial**: Automated onboarding into a Pro trial.
+- **Tiered Plans**: Starter (KES 2,600/mo, 3 users) and Pro (KES 5,200/mo, unlimited).
+- **M-Pesa STK Push**: Native Safaricom Daraja API integration.
+- **Simulation Mode**: By setting the `MPESA_CONSUMER_KEY` to `"dummy"`, developers can fully simulate the STK push and payment success/failure lifecycle without incurring real charges.
+- **Guarded Routing**: If a subscription expires, `go_router` forcefully redirects the entire tenant to the billing screen.
+
+### 10. The Super Admin Control Plane
+- Exclusive dashboard for the platform owners.
+- Platform KPIs (total MRR, active businesses).
+- Complete oversight to approve, suspend, or permanently delete tenant businesses.
+- Ability to monitor system logs and manage the global Support Helpdesk.
+- Manage global subscription plans.
 
 ---
 
-## Features
+## 🔒 Security & Data Integrity
 
-### Point of Sale
-- Product search with real-time filtering
-- Cart management with quantity controls
-- Payment methods: Cash, M-Pesa, Credit
-- Receipt dialog with checkout summary
-- Full sales history with search
-
-### Inventory Management
-- Full CRUD with fields: name, SKU, category, quantity, cost/selling price, reorder level
-- Stock status indicators: Good / Low / Critical
-- Filter by category
-- Low-stock alerts on dashboard
-
-### Expenses
-- Categorised expense tracking
-- Infinite-scroll pagination
-- Add expense with amount, category, notes
-
-### Reports & Analytics
-- Period-based reporting (Today / This Week / This Month)
-- Profit & Loss statement
-- Sales breakdown by payment method
-- Top-selling products
-- Expense breakdown by category
-- Interactive historical trend charts (fl_chart)
-
-### Support Ticketing
-- Built-in support desk for tenants
-- Create, view, and track support tickets
-- Direct resolution communication with platform administrators
-
-### Team Management
-- View team members with role badges (Owner / Manager / Staff)
-- Invite new members via dialog
-- Role-based access control
-
-### Subscriptions & Billing
-- **14-day free trial** with full Pro access
-- Plans: Starter (KES 2,600/mo, 3 users) and Pro (KES 5,200/mo, unlimited)
-- M-Pesa STK Push payment integration (Native fetch API)
-- Auto-detection of expired subscriptions with route guarding
-- Payment history with real-time confirmation via Firestore listener
-- Robust Simulation mode for testing (bypasses Daraja API when "dummy" key is used)
-
-### Super Admin Panel
-- Platform-wide KPIs: total businesses, active/pending/suspended counts
-- Manage all businesses (approve, suspend, permanently delete)
-- Oversee subscriptions and simulate M-Pesa payments for testing
-- Centralised Support Helpdesk to respond to tenant tickets
-- CRUD subscription plans
-- User management (disable, role change, password reset)
-- System settings: maintenance mode, broadcast banners, alert levels, backup triggers
-
-### Feature Gating by Plan
-
-| Feature | Trial / Starter | Pro |
-|---|---|---|
-| Core (POS, Inventory, Expenses, Reports) | ✓ | ✓ |
-| Team (3 users) | ✓ | Unlimited |
-| AI Assistant | ✗ | ✓ |
-| WhatsApp Integration | ✗ | ✓ |
-| Advanced Analytics | ✗ | ✓ |
-| Demand Forecasting | ✗ | ✓ |
+1. **Client Read-Only Firestore Rules**: The `firestore.rules` file enforces that clients can only *read* documents belonging to their `businessId`. All `write`, `update`, and `delete` operations are strictly blocked from the client.
+2. **Resilient Authentication**: Built-in fallback routing handles network timeouts and Firebase internal identity errors (such as `invalid-credential` mapping) to prevent infinite routing loops on the client.
+3. **Server-Side Validation**: Cloud Functions verify the user's Auth token, confirm their role within the specific business, and execute the database writes securely on the backend.
 
 ---
 
-## Tech Stack
+## 🛠️ Technology Stack
 
 | Layer | Technology |
 |---|---|
-| **Frontend** | Flutter 3.38 / Dart 3.10 |
-| **Backend** | Firebase Cloud Functions (TypeScript) |
-| **Database** | Cloud Firestore |
-| **Auth** | Firebase Auth (Email/Password + Google Sign-In) |
-| **Payments** | Safaricom M-Pesa STK Push |
-| **State** | Provider + Riverpod |
-| **Routing** | go_router with ShellRoute |
-| **UI** | Material Design 3, Google Fonts (Inter), fl_chart |
-| **Storage** | Firebase Storage (profile pictures) |
-| **Infrastructure** | Firebase Hosting, Firestore Security Rules |
+| **Frontend UI/UX** | Flutter 3.38, Dart 3.10, Material 3, fl_chart |
+| **State & Routing** | Provider, Riverpod, go_router |
+| **Backend Logic** | Firebase Cloud Functions v2 (Node.js, TypeScript) |
+| **Database** | Cloud Firestore (NoSQL) |
+| **Authentication** | Firebase Auth (Email/Password) |
+| **Billing Integration** | Safaricom M-Pesa Daraja API |
+| **AI Integration** | Google Gemini LLM API |
 
 ---
 
-## Project Structure
-
-```
-hardwareos/
-├── lib/
-│   ├── core/
-│   │   ├── models/            # Data models (business, product, sale, etc.)
-│   │   ├── providers/         # State management (auth, business, theme)
-│   │   ├── services/          # Functions service, feature access, plan seeder
-│   │   ├── router/            # go_router configuration with guards
-│   │   ├── theme/             # Colors, light/dark themes
-│   │   ├── utils/             # Responsive layout helpers
-│   │   └── widgets/           # Shared widgets (scaffold, empty state, overlay)
-│   ├── features/
-│   │   ├── admin/             # Super admin dashboard & management
-│   │   ├── auth/              # Login, register, verification, resilient routing
-│   │   ├── dashboard/         # KPI cards, quick actions, alerts
-│   │   ├── expenses/          # Expense tracking
-│   │   ├── inventory/         # Product management
-│   │   ├── reports/           # Analytics, historical charts
-│   │   ├── sales/             # POS & sales history
-│   │   ├── subscription/      # Plan selection & payment
-│   │   ├── support/           # Helpdesk ticketing system
-│   │   └── team/              # Staff management
-│   └── main.dart
-├── functions/
-│   └── src/
-│       ├── config/            # Plan limits configuration
-│       ├── functions/         # Cloud Function modules (10 modules)
-│       ├── middleware/        # Function middleware
-│       └── index.ts           # Function entry point
-├── web/                       # Web-specific files
-├── assets/                    # Images and icons
-├── firebase.json              # Firebase project config
-├── firestore.rules            # Security rules
-└── pubspec.yaml
-```
-
----
-
-## Getting Started
+## ⚙️ Local Setup & Deployment
 
 ### Prerequisites
 - Flutter SDK 3.0+
-- Node.js 18+
-- A Firebase project with billing enabled (for Cloud Functions)
+- Node.js 18+ (Node 20 recommended)
 - Firebase CLI (`npm install -g firebase-tools`)
 
-### Setup
+### Getting Started
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-org/hardwareos.git
+git clone https://github.com/MartinMuraya/hardwareos.git
 cd hardwareos
 
 # 2. Install Flutter dependencies
@@ -211,94 +162,31 @@ cd functions
 npm install
 cd ..
 
-# 4. Configure Firebase
-#    - Copy your firebase_options.dart to lib/
-#    - Copy google-services.json to android/app/
-#    - Update .env or config with your M-Pesa credentials (for production)
+# 4. Configure Firebase Secrets (For Deployment)
+firebase secrets:set MPESA_CONSUMER_KEY (use "dummy" for simulation)
+firebase secrets:set MPESA_CONSUMER_SECRET
+firebase secrets:set GEMINI_API_KEY (use "dummy" for simulation)
 
-# 5. Start Firebase emulators
-firebase emulators:start
-
-# 6. Run the app
-flutter run
+# 5. Run the Flutter App
+flutter run -d chrome --web-header='Cross-Origin-Opener-Policy: same-origin-allow-popups'
 ```
 
-### Environment
-The project uses Firebase emulators for local development. The emulator suite includes:
-- **Auth** (port 9099)
-- **Functions** (port 5001)
-- **Firestore** (port 8080)
-- **Hosting** (port 5000)
-- **UI** (port 4000)
-
----
-
-## Configuration
-
-### Web
-Google Sign-In on web requires the `Cross-Origin-Opener-Policy` header:
-```json
-// firebase.json
-{
-  "headers": [{
-    "source": "**",
-    "headers": [
-      { "key": "Cross-Origin-Opener-Policy", "value": "same-origin-allow-popups" },
-      { "key": "Cross-Origin-Embedder-Policy", "value": "unsafe-none" }
-    ]
-  }]
-}
-```
-
-For the Flutter dev server:
-```bash
-flutter run --web-header='Cross-Origin-Opener-Policy: same-origin-allow-popups'
-```
-
-### M-Pesa
-Subscription payments use Safaricom's M-Pesa STK Push API. The system includes a simulation mode for testing without real credentials. Configure production credentials in your Cloud Functions environment.
-
----
-
-## Deployment
+### Production Deployment
 
 ```bash
-# Build the Flutter web app
+# Deploy all Firebase Cloud Functions
+npm --prefix functions run build
+firebase deploy --only functions
+
+# Deploy Firebase Firestore Rules
+firebase deploy --only firestore:rules
+
+# Build and deploy Flutter Web App
 flutter build web
-
-# Deploy Firebase resources
-firebase deploy --only hosting,functions,firestore
-
-# Deploy a specific function
-firebase deploy --only functions:mpesaBilling
+firebase deploy --only hosting
 ```
 
 ---
 
-## Development Notes
-
-### State Management
-- **Provider** is used for global, app-wide state (auth, business, theme)
-- **Riverpod** is used for subscription/plan data that benefits from its auto-dispose and family modifiers
-
-### Routing Guards
-The `go_router` redirect logic enforces a strict flow:
-1. Not authenticated → `/login`
-2. Email not verified → `/verify-email`
-3. Business registration incomplete → `/register`
-4. Business pending approval → `/pending-approval`
-5. Subscription expired (on protected routes) → `/subscription`
-6. Super admin always redirected to `/admin/dashboard`
-
-### Responsive Design
-Breakpoints: mobile < 700px, tablet 700–1024px, desktop ≥ 1024px.
-Layouts adapt via the `Responsive` utility class — bottom navigation bar on mobile, `NavigationRail` on tablet, permanent sidebar on desktop.
-
-### Theming
-Full dark/light mode support with preference persisted to `SharedPreferences`. The amber/gold (`#FFB300`) accent color is consistent across both themes.
-
----
-
-## License
-
-This project is proprietary software. All rights reserved.
+## 📝 License
+This project is proprietary software belonging to Martin Muraya. All rights reserved.

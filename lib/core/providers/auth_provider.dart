@@ -256,13 +256,14 @@ class AuthProvider extends ChangeNotifier {
   String _mapAuthError(String code) {
     switch (code) {
       case 'user-not-found':
-      case 'wrong-password':      return 'Invalid email or password.';
+      case 'wrong-password':
+      case 'invalid-credential':  return 'Invalid email or password.';
       case 'email-already-in-use':return 'An account with this email already exists.';
       case 'weak-password':       return 'Password must be at least 8 characters with a mix of letters and numbers.';
       case 'invalid-email':       return 'Please enter a valid email address.';
       case 'too-many-requests':   return 'Too many attempts. Please try again later.';
       case 'network-request-failed': return 'Network error. Check your connection.';
-      default:                    return 'Authentication failed. Please try again.';
+      default:                    return 'Authentication failed. Please try again. (Code: $code)';
     }
   }
 }

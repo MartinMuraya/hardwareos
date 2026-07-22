@@ -87,6 +87,8 @@ class AdminScaffold extends StatelessWidget {
                 NavigationRailDestination(icon: Icon(Icons.people_rounded), label: Text('Users')),
                 NavigationRailDestination(icon: Icon(Icons.view_list_rounded), label: Text('Plans')),
                 NavigationRailDestination(icon: Icon(Icons.security_rounded), label: Text('Security')),
+                NavigationRailDestination(icon: Icon(Icons.support_agent_rounded), label: Text('Support')),
+                NavigationRailDestination(icon: Icon(Icons.history_edu_rounded), label: Text('Logs')),
                 NavigationRailDestination(icon: Icon(Icons.settings_rounded), label: Text('Settings')),
               ],
             ),
@@ -104,8 +106,10 @@ class AdminScaffold extends StatelessWidget {
     if (location.startsWith('/admin/analytics')) return 3;
     if (location.startsWith('/admin/users')) return 4;
     if (location.startsWith('/admin/plans')) return 5;
-    if (location.startsWith('/admin/security')) return 7;
-    if (location.startsWith('/admin/settings')) return 6;
+    if (location.startsWith('/admin/security')) return 6;
+    if (location.startsWith('/admin/support')) return 7;
+    if (location.startsWith('/admin/logs')) return 8;
+    if (location.startsWith('/admin/settings')) return 9;
     return 0;
   }
 
@@ -117,8 +121,10 @@ class AdminScaffold extends StatelessWidget {
       case 3: context.go('/admin/analytics'); break;
       case 4: context.go('/admin/users'); break;
       case 5: context.go('/admin/plans'); break;
-      case 6: context.go('/admin/settings'); break;
-      case 7: context.go('/admin/security'); break;
+      case 6: context.go('/admin/security'); break;
+      case 7: context.go('/admin/support'); break;
+      case 8: context.go('/admin/logs'); break;
+      case 9: context.go('/admin/settings'); break;
     }
   }
 }
@@ -249,6 +255,24 @@ class _Sidebar extends StatelessWidget {
                   onTap: () {
                     if (isDrawer) Navigator.pop(context);
                     context.go('/admin/settings');
+                  },
+                ),
+                _NavItem(
+                  icon: Icons.support_agent_rounded,
+                  label: 'Support Tickets',
+                  isSelected: location.startsWith('/admin/support'),
+                  onTap: () {
+                    if (isDrawer) Navigator.pop(context);
+                    context.go('/admin/support');
+                  },
+                ),
+                _NavItem(
+                  icon: Icons.history_edu_rounded,
+                  label: 'System Logs',
+                  isSelected: location.startsWith('/admin/logs'),
+                  onTap: () {
+                    if (isDrawer) Navigator.pop(context);
+                    context.go('/admin/logs');
                   },
                 ),
               ],
