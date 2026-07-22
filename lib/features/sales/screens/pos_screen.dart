@@ -61,7 +61,9 @@ class _POSScreenState extends State<POSScreen> {
       for (final item in saved) {
         final prodMap = item['product'] as Map<String, dynamic>;
         final qty = (item['qty'] as num).toDouble();
-        loaded.add(_CartEntry(product: Product.fromMap(prodMap), qty: qty));
+        final overridePrice = item['overridePrice'] != null ? (item['overridePrice'] as num).toDouble() : null;
+        final note = item['note'] as String?;
+        loaded.add(_CartEntry(product: Product.fromMap(prodMap), qty: qty, overridePrice: overridePrice, note: note));
       }
       _cart.addAll(loaded);
     }
@@ -85,8 +87,113 @@ class _POSScreenState extends State<POSScreen> {
           'updatedAt': e.product.updatedAt.toIso8601String(),
         },
         'qty': e.qty,
+        if (e.overridePrice != null) 'overridePrice': e.overridePrice,
+        if (e.note != null) 'note': e.note,
       }).toList(),
     );
+  }
+
+  void _holdCart(BuildContext context) {
+    if (_cart.isEmpty) return;
+    final ctrl = TextEditingController();
+    showDialog(context: context, builder: (ctx) => AlertDialog(
+      title: const Text('Hold Cart'),
+      content: TextField(
+        controller: ctrl,
+        decoration: const InputDecoration(hintText: 'Customer name or reference', labelText: 'Reference'),
+        autofocus: true,
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+        ElevatedButton(
+          onPressed: () async {
+            final ref = ctrl.text.trim();
+            if (ref.isEmpty) return;
+            final id = 'draft_${DateTime.now().millisecondsSinceEpoch}';
+            final draftData = {
+              'id': id,
+              'reference': ref,
+              'timestamp': DateTime.now().toIso8601String(),
+              'items': _cart.map((e) => e.toMap()).toList(),
+            };
+            await OfflineService.saveDraftSale(id, draftData);
+            setState(() { _cart.clear(); });
+            _saveCart();
+            if (mounted) {
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Cart "$ref" held.')));
+            }
+          },
+          child: const Text('Hold Cart'),
+        ),
+      ],
+    ));
+  }
+
+  void _showHeldCarts(BuildContext context) {
+    final drafts = OfflineService.getAllDrafts();
+    showDialog(context: context, builder: (ctx) => AlertDialog(
+      title: const Text('Held Carts'),
+      content: SizedBox(
+        width: 400,
+        height: 300,
+        child: drafts.isEmpty
+          ? const Center(child: Text('No held carts.'))
+          : ListView.builder(
+              itemCount: drafts.length,
+              itemBuilder: (_, i) {
+                final d = drafts[i];
+                final id = d['id'] as String;
+                final ref = d['reference'] as String;
+                final date = DateTime.parse(d['timestamp'] as String);
+                final items = d['items'] as List;
+                return ListTile(
+                  title: Text(ref, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle: Text('${items.length} items • ${DateFormat('MMM d, h:mm a').format(date)}'),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete, color: AppColors.error),
+                    onPressed: () async {
+                      await OfflineService.deleteDraftSale(id);
+                      Navigator.pop(ctx);
+                      _showHeldCarts(context); // Refresh
+                    },
+                  ),
+                  onTap: () async {
+                    // Restore cart
+                    setState(() {
+                      _cart.clear();
+                      for (final item in items) {
+                        final m = item as Map<String, dynamic>;
+                        // We need to fetch the Product from cache, or reconstruct it
+                        // Since we saved standard toMap() which doesn't have the full Product model,
+                        // Wait, _CartEntry.toMap() does not contain all Product details!
+                        // Ah, _CartEntry.toMap() only has productId, name, quantity, sellingPrice, costPrice, overridePrice, note
+                        // It does NOT have the full Product object. Let's fix this by finding it in _allProducts!
+                        final pId = m['productId'];
+                        final p = _allProducts.firstWhere(
+                          (p) => p.id == pId,
+                          orElse: () => Product.fromMap(m), // Fallback (missing some fields, but works for UI)
+                        );
+                        _cart.add(_CartEntry(
+                          product: p,
+                          qty: (m['quantity'] as num).toDouble(),
+                          overridePrice: m['overridePrice'] != null ? (m['overridePrice'] as num).toDouble() : null,
+                          note: m['note'] as String?,
+                        ));
+                      }
+                    });
+                    _saveCart();
+                    await OfflineService.deleteDraftSale(id);
+                    Navigator.pop(ctx);
+                  },
+                );
+              },
+            ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
+      ],
+    ));
   }
 
   Future<void> _loadCustomers() async {
@@ -185,17 +292,17 @@ class _POSScreenState extends State<POSScreen> {
     _saveCart();
   }
 
-  void _updateQty(String productId, double newQty) {
+  void _updateCartEntry(String productId, _CartEntry updated) {
     setState(() {
       final idx = _cart.indexWhere((e) => e.product.id == productId);
       if (idx >= 0) {
-        if (newQty <= 0) {
+        if (updated.qty <= 0) {
           _cart.removeAt(idx);
-        } else if (newQty <= _cart[idx].product.quantity) {
-          _cart[idx] = _cart[idx].copyWith(qty: newQty);
+        } else if (updated.qty <= _cart[idx].product.quantity) {
+          _cart[idx] = updated;
         } else {
           // cap at max qty
-          _cart[idx] = _cart[idx].copyWith(qty: _cart[idx].product.quantity);
+          _cart[idx] = updated.copyWith(qty: _cart[idx].product.quantity);
         }
       }
     });
@@ -265,7 +372,7 @@ class _POSScreenState extends State<POSScreen> {
             receiptNumber: result['saleId'] as String? ?? const Uuid().v4().substring(0, 8),
             items: _cart.map((e) => ReceiptItem(
               name: e.product.name, quantity: e.qty,
-              price: e.product.sellingPrice, subtotal: e.lineTotal,
+              price: e.appliedPrice, subtotal: e.lineTotal,
             )).toList(),
             subtotal: saleTotal,
             grandTotal: saleTotal,
@@ -489,6 +596,14 @@ class _POSScreenState extends State<POSScreen> {
                 child: Row(children: [
                   Text('Select Customer', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
                   const Spacer(),
+                  TextButton.icon(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _showCreateCustomerDialog();
+                    },
+                    icon: const Icon(Icons.add, size: 16),
+                    label: const Text('New'),
+                  ),
                   TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
                 ]),
               ),
@@ -545,6 +660,81 @@ class _POSScreenState extends State<POSScreen> {
     );
   }
 
+  void _showCreateCustomerDialog() {
+    final nameCtrl = TextEditingController();
+    final phoneCtrl = TextEditingController();
+    bool isSaving = false;
+
+    showDialog(context: context, builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setDialogState) => AlertDialog(
+        title: const Text('New Customer'),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          TextField(
+            controller: nameCtrl,
+            decoration: const InputDecoration(labelText: 'Full Name'),
+            textCapitalization: TextCapitalization.words,
+            autofocus: true,
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: phoneCtrl,
+            decoration: const InputDecoration(labelText: 'Phone Number (e.g. 07...)'),
+            keyboardType: TextInputType.phone,
+          ),
+        ]),
+        actions: [
+          TextButton(onPressed: isSaving ? null : () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: isSaving ? null : () async {
+              final name = nameCtrl.text.trim();
+              final phone = phoneCtrl.text.trim();
+              if (name.isEmpty || phone.isEmpty) return;
+
+              setDialogState(() => isSaving = true);
+              try {
+                final bizId = context.read<AuthProvider>().businessId!;
+                final res = await FunctionsService.call('createCustomer', {
+                  'businessId': bizId,
+                  'fullName': name,
+                  'phoneNumber': phone,
+                });
+                
+                final newId = res['customerId'] as String;
+                final newCustomer = Customer(
+                  id: newId, businessId: bizId, fullName: name, phoneNumber: phone,
+                  creditLimit: 0, currentBalance: 0, totalDebt: 0,
+                  createdAt: DateTime.now(), updatedAt: DateTime.now(),
+                );
+
+                if (mounted) {
+                  setState(() {
+                    _customers.insert(0, newCustomer);
+                    _selectedCustomerId = newId;
+                    _selectedCustomerName = name;
+                  });
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Customer $name created!')));
+                }
+              } catch (e) {
+                if (mounted) {
+                  setDialogState(() => isSaving = false);
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                }
+              }
+            },
+            child: isSaving 
+                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Text('Create'),
+          ),
+        ],
+      ),
+    ));
+  }
+
+  void _showHardwareCalculators() {
+    showDialog(context: context, builder: (ctx) => const _HardwareCalculatorsDialog());
+  }
+
   @override
   Widget build(BuildContext context) {
     final isWide = MediaQuery.of(context).size.width >= 900;
@@ -577,6 +767,18 @@ class _POSScreenState extends State<POSScreen> {
         Row(children: [
           Expanded(child: Text('POS — New Sale',
             style: theme.textTheme.displayMedium)),
+          TextButton.icon(
+            onPressed: () => _showHardwareCalculators(),
+            icon: const Icon(Icons.calculate_rounded, size: 16),
+            label: const Text('Calculators'),
+          ),
+          const SizedBox(width: 8),
+          TextButton.icon(
+            onPressed: () => _showHeldCarts(context),
+            icon: const Icon(Icons.inventory_2_rounded, size: 16),
+            label: const Text('Held Carts'),
+          ),
+          const SizedBox(width: 8),
           TextButton.icon(
             onPressed: () => context.go('/sales/history'),
             icon: const Icon(Icons.history_rounded, size: 16),
@@ -659,6 +861,14 @@ class _POSScreenState extends State<POSScreen> {
               ),
               const SizedBox(width: 8),
               IconButton(
+                icon: const Icon(Icons.pause_circle_outline, color: AppColors.accent),
+                onPressed: () => _holdCart(context),
+                tooltip: 'Hold Cart',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(width: 12),
+              IconButton(
                 icon: const Icon(Icons.delete_sweep_rounded, color: AppColors.error),
                 onPressed: _clearCart,
                 tooltip: 'Clear Cart',
@@ -687,8 +897,8 @@ class _POSScreenState extends State<POSScreen> {
                     final e = _cart[i];
                     return _CartTile(
                       entry: e, fmt: _fmt, theme: theme,
-                      onRemove:    () => _removeFromCart(e.product.id),
-                      onQtyChange: (q) => _updateQty(e.product.id, q),
+                      onRemove: () => _removeFromCart(e.product.id),
+                      onUpdate: (updated) => _updateCartEntry(e.product.id, updated),
                     );
                   },
                 ),
@@ -711,6 +921,32 @@ class _POSScreenState extends State<POSScreen> {
               selected: _paymentMethod, onTap: (v) => setState(() => _paymentMethod = v), theme: theme),
           ]),
           const SizedBox(height: 16),
+
+          if (_paymentMethod == 'cash') ...[
+            TextField(
+              controller: _amountPaidCtrl,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                hintText: 'Amount tendered (optional)',
+                prefixText: 'KES ',
+                prefixStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontWeight: FontWeight.w600),
+              ),
+            ),
+            const SizedBox(height: 6),
+            ValueListenableBuilder<TextEditingValue>(
+              valueListenable: _amountPaidCtrl,
+              builder: (context, val, child) {
+                final tendered = double.tryParse(val.text) ?? 0;
+                final change = tendered - _cartTotal;
+                if (tendered > 0 && change >= 0) {
+                  return Text('Change Due: ${_fmt.format(change)}',
+                    style: const TextStyle(color: AppColors.success, fontWeight: FontWeight.bold, fontSize: 16));
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+            const SizedBox(height: 12),
+          ],
 
           if (_paymentMethod == 'credit') ...[
             GestureDetector(
@@ -808,21 +1044,32 @@ class _POSScreenState extends State<POSScreen> {
 class _CartEntry {
   final Product product;
   final double qty;
-  _CartEntry({required this.product, required this.qty});
-  double get lineTotal  => product.sellingPrice * qty;
-  double get lineProfit => (product.sellingPrice - product.costPrice) * qty;
-  _CartEntry copyWith({Product? product, double? qty}) {
+  final double? overridePrice;
+  final String? note;
+  
+  _CartEntry({required this.product, required this.qty, this.overridePrice, this.note});
+  
+  double get appliedPrice => overridePrice ?? product.sellingPrice;
+  double get lineTotal  => appliedPrice * qty;
+  double get lineProfit => (appliedPrice - product.costPrice) * qty;
+  
+  _CartEntry copyWith({Product? product, double? qty, double? overridePrice, String? note}) {
     return _CartEntry(
       product: product ?? this.product,
       qty: qty ?? this.qty,
+      overridePrice: overridePrice ?? this.overridePrice,
+      note: note ?? this.note,
     );
   }
+  
   Map<String, dynamic> toMap() => {
     'productId':    product.id,
     'name':         product.name,
     'quantity':     qty,
-    'sellingPrice': product.sellingPrice,
+    'sellingPrice': appliedPrice,
     'costPrice':    product.costPrice,
+    if (overridePrice != null) 'overridePrice': overridePrice,
+    if (note != null && note!.isNotEmpty) 'note': note,
   };
 }
 
@@ -882,9 +1129,9 @@ class _CartTile extends StatelessWidget {
   final NumberFormat fmt;
   final ThemeData theme;
   final VoidCallback onRemove;
-  final ValueChanged<double> onQtyChange;
+  final ValueChanged<_CartEntry> onUpdate;
   const _CartTile({required this.entry, required this.fmt, required this.theme,
-    required this.onRemove, required this.onQtyChange});
+    required this.onRemove, required this.onUpdate});
 
   void _showEditQtyDialog(BuildContext context) {
     final ctrl = TextEditingController(text: entry.qty.toString());
@@ -901,9 +1148,63 @@ class _CartTile extends StatelessWidget {
           onPressed: () {
             final val = double.tryParse(ctrl.text);
             if (val != null && val >= 0) {
-              onQtyChange(val);
+              onUpdate(entry.copyWith(qty: val));
               Navigator.pop(ctx);
             }
+          },
+          child: const Text('Save'),
+        ),
+      ],
+    ));
+  }
+
+  void _showEditPriceDialog(BuildContext context) {
+    final ctrl = TextEditingController(text: entry.appliedPrice.toStringAsFixed(2));
+    showDialog(context: context, builder: (ctx) => AlertDialog(
+      title: const Text('Override Price'),
+      content: TextField(
+        controller: ctrl,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        decoration: const InputDecoration(labelText: 'New Unit Price'),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+        TextButton(
+          onPressed: () {
+             onUpdate(entry.copyWith(overridePrice: null)); // Clear override
+             Navigator.pop(ctx);
+          },
+          child: const Text('Reset', style: TextStyle(color: AppColors.error)),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            final val = double.tryParse(ctrl.text);
+            if (val != null && val >= 0) {
+              onUpdate(entry.copyWith(overridePrice: val));
+              Navigator.pop(ctx);
+            }
+          },
+          child: const Text('Save'),
+        ),
+      ],
+    ));
+  }
+
+  void _showNoteDialog(BuildContext context) {
+    final ctrl = TextEditingController(text: entry.note ?? '');
+    showDialog(context: context, builder: (ctx) => AlertDialog(
+      title: const Text('Item Note'),
+      content: TextField(
+        controller: ctrl,
+        maxLines: 2,
+        decoration: const InputDecoration(hintText: 'e.g. Cut into 2m pieces'),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+        ElevatedButton(
+          onPressed: () {
+            onUpdate(entry.copyWith(note: ctrl.text.trim()));
+            Navigator.pop(ctx);
           },
           child: const Text('Save'),
         ),
@@ -920,12 +1221,35 @@ class _CartTile extends StatelessWidget {
           style: TextStyle(fontWeight: FontWeight.w500, fontSize: 13,
             color: theme.colorScheme.onSurface),
           overflow: TextOverflow.ellipsis),
-        Text(fmt.format(entry.lineTotal),
-          style: const TextStyle(color: AppColors.accent,
-            fontSize: 12, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            GestureDetector(
+              onTap: () => _showEditPriceDialog(context),
+              child: Text(
+                fmt.format(entry.appliedPrice),
+                style: const TextStyle(color: AppColors.accent, fontSize: 12, fontWeight: FontWeight.w600, decoration: TextDecoration.underline, decorationColor: AppColors.accent, decorationStyle: TextDecorationStyle.dashed),
+              ),
+            ),
+            if (entry.overridePrice != null && entry.overridePrice != entry.product.sellingPrice) ...[
+              const SizedBox(width: 6),
+              Text(fmt.format(entry.product.sellingPrice),
+                style: TextStyle(color: theme.hintColor, fontSize: 10, decoration: TextDecoration.lineThrough)),
+            ],
+            const SizedBox(width: 12),
+            GestureDetector(
+              onTap: () => _showNoteDialog(context),
+              child: Icon(Icons.note_add_rounded, size: 14, color: entry.note != null && entry.note!.isNotEmpty ? AppColors.accent : theme.hintColor),
+            ),
+          ],
+        ),
+        if (entry.note != null && entry.note!.isNotEmpty) ...[
+          const SizedBox(height: 2),
+          Text(entry.note!, style: TextStyle(color: theme.hintColor, fontSize: 10, fontStyle: FontStyle.italic)),
+        ],
       ])),
       Row(children: [
-        _QtyBtn(icon: Icons.remove, onTap: () => onQtyChange(entry.qty - 1), theme: theme),
+        _QtyBtn(icon: Icons.remove, onTap: () => onUpdate(entry.copyWith(qty: entry.qty - 1)), theme: theme),
         GestureDetector(
           onTap: () => _showEditQtyDialog(context),
           child: Padding(
@@ -936,7 +1260,7 @@ class _CartTile extends StatelessWidget {
                 decoration: TextDecoration.underline)),
           ),
         ),
-        _QtyBtn(icon: Icons.add, onTap: () => onQtyChange(entry.qty + 1), theme: theme),
+        _QtyBtn(icon: Icons.add, onTap: () => onUpdate(entry.copyWith(qty: entry.qty + 1)), theme: theme),
       ]),
       const SizedBox(width: 6),
       GestureDetector(
@@ -1028,4 +1352,105 @@ class _ReceiptRow extends StatelessWidget {
         color: valueColor ?? theme.colorScheme.onSurface)),
     ]),
   );
+}
+
+class _HardwareCalculatorsDialog extends StatefulWidget {
+  const _HardwareCalculatorsDialog();
+  @override
+  State<_HardwareCalculatorsDialog> createState() => _HardwareCalculatorsDialogState();
+}
+
+class _HardwareCalculatorsDialogState extends State<_HardwareCalculatorsDialog> {
+  String _mode = 'Tile';
+  final _roomLCtrl = TextEditingController();
+  final _roomWCtrl = TextEditingController();
+  final _itemLCtrl = TextEditingController();
+  final _itemWCtrl = TextEditingController();
+  final _coverageCtrl = TextEditingController(); // for paint
+  
+  double? _resultQty;
+  double? _resultArea;
+
+  void _calculate() {
+    setState(() {
+      _resultQty = null;
+      _resultArea = null;
+      final rl = double.tryParse(_roomLCtrl.text) ?? 0;
+      final rw = double.tryParse(_roomWCtrl.text) ?? 0;
+      if (rl <= 0 || rw <= 0) return;
+      
+      final roomArea = rl * rw;
+      _resultArea = roomArea;
+
+      if (_mode == 'Tile') {
+        final il = double.tryParse(_itemLCtrl.text) ?? 0;
+        final iw = double.tryParse(_itemWCtrl.text) ?? 0;
+        if (il > 0 && iw > 0) {
+          // item dimensions in cm, convert to meters
+          final itemArea = (il / 100) * (iw / 100);
+          _resultQty = roomArea / itemArea;
+        }
+      } else if (_mode == 'Paint') {
+        final coverage = double.tryParse(_coverageCtrl.text) ?? 10; // default 10 sqm per liter
+        if (coverage > 0) {
+          _resultQty = roomArea / coverage;
+        }
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text('Hardware Calculators', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          DropdownButton<String>(
+            value: _mode,
+            items: ['Tile', 'Paint'].map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
+            onChanged: (v) {
+              if (v != null) setState(() { _mode = v; _resultQty = null; _resultArea = null; });
+            },
+          ),
+        ],
+      ),
+      content: SizedBox(
+        width: 350,
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Row(children: [
+            Expanded(child: TextField(controller: _roomLCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Room Length (m)'), onChanged: (_) => _calculate())),
+            const SizedBox(width: 12),
+            Expanded(child: TextField(controller: _roomWCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Room Width (m)'), onChanged: (_) => _calculate())),
+          ]),
+          const SizedBox(height: 16),
+          if (_mode == 'Tile') ...[
+            Row(children: [
+              Expanded(child: TextField(controller: _itemLCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Tile Length (cm)'), onChanged: (_) => _calculate())),
+              const SizedBox(width: 12),
+              Expanded(child: TextField(controller: _itemWCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Tile Width (cm)'), onChanged: (_) => _calculate())),
+            ]),
+          ] else if (_mode == 'Paint') ...[
+            TextField(controller: _coverageCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Coverage (sqm per L) - Default 10'), onChanged: (_) => _calculate()),
+          ],
+          const SizedBox(height: 24),
+          if (_resultArea != null)
+            Text('Total Area: ${_resultArea!.toStringAsFixed(2)} sqm', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          if (_resultQty != null)
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: AppColors.accent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+              child: Text(
+                _mode == 'Tile' ? 'Tiles Needed: ${_resultQty!.ceil()} (approx)' : 'Paint Needed: ${_resultQty!.toStringAsFixed(1)} Liters',
+                style: const TextStyle(color: AppColors.accent, fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+        ]),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+      ],
+    );
+  }
 }

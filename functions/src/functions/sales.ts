@@ -42,8 +42,9 @@ export const createSale = onCall({ cors: true }, async (request) => {
     throw new HttpsError("invalid-argument", "Sale must have at least one item.");
   }
 
-  await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager", "staff"]);
   await assertActiveSubscription(businessId);
+  const userData = await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager", "staff"]);
+  const isManager = userData.role === "owner" || userData.role === "manager";
 
   // Run everything in a Firestore transaction for atomicity
   const result = await db().runTransaction(async (txn) => {
@@ -93,7 +94,14 @@ export const createSale = onCall({ cors: true }, async (request) => {
         }
       }
 
-      const lineTotal = product.sellingPrice * item.quantity;
+      // Check for price overrides
+      const hasOverride = item.overridePrice !== undefined && item.overridePrice !== product.sellingPrice;
+      if (hasOverride && !isManager) {
+        throw new HttpsError("permission-denied", `Only managers can override prices. (Attempted on "${product.name}")`);
+      }
+      const appliedPrice = hasOverride ? item.overridePrice : product.sellingPrice;
+
+      const lineTotal = appliedPrice * item.quantity;
       const lineCost = product.costPrice * item.quantity;
 
       total += lineTotal;
@@ -103,8 +111,11 @@ export const createSale = onCall({ cors: true }, async (request) => {
         productId: item.productId,
         name: product.name,
         quantity: item.quantity,
-        sellingPrice: product.sellingPrice,
+        sellingPrice: appliedPrice,
         costPrice: product.costPrice,
+        isPriceOverridden: hasOverride,
+        overriddenBy: hasOverride ? request.auth!.uid : null,
+        note: item.note || "",
       });
     }
 

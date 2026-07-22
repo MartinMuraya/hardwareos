@@ -26,7 +26,7 @@ export const createCreditSale = onCall({ cors: true }, async (request) => {
     businessId: string;
     customerId: string;
     customerName: string;
-    items: { productId: string; name: string; quantity: number; sellingPrice: number; costPrice: number }[];
+    items: { productId: string; name: string; quantity: number; sellingPrice: number; costPrice: number; overridePrice?: number; note?: string }[];
     amountPaid?: number;
     note?: string;
   };
@@ -35,8 +35,9 @@ export const createCreditSale = onCall({ cors: true }, async (request) => {
     throw new HttpsError("invalid-argument", "Customer and at least one item are required.");
   }
 
-  await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager", "staff"]);
   await assertActiveSubscription(businessId);
+  const userData = await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager", "staff"]);
+  const isManager = userData.role === "owner" || userData.role === "manager";
 
   const result = await db().runTransaction(async (txn) => {
     // 1. Validate customer exists and belongs to business
@@ -76,15 +77,25 @@ export const createCreditSale = onCall({ cors: true }, async (request) => {
         );
       }
 
-      total += product.sellingPrice * item.quantity;
+      // Check for price overrides
+      const hasOverride = item.overridePrice !== undefined && item.overridePrice !== product.sellingPrice;
+      if (hasOverride && !isManager) {
+        throw new HttpsError("permission-denied", `Only managers can override prices. (Attempted on "${product.name}")`);
+      }
+      const appliedPrice = hasOverride ? item.overridePrice : product.sellingPrice;
+
+      total += appliedPrice * item.quantity;
       totalCost += product.costPrice * item.quantity;
 
       validatedItems.push({
         productId: item.productId,
         name: product.name,
         quantity: item.quantity,
-        sellingPrice: product.sellingPrice,
+        sellingPrice: appliedPrice,
         costPrice: product.costPrice,
+        isPriceOverridden: hasOverride,
+        overriddenBy: hasOverride ? request.auth!.uid : null,
+        note: item.note || "",
       });
     }
 

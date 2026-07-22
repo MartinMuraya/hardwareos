@@ -26,7 +26,7 @@ export const createCustomer = onCall({ cors: true }, async (request) => {
     throw new HttpsError("invalid-argument", "Full name and phone number are required.");
   }
 
-  await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager"]);
+  await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager", "staff"]);
   await assertActiveSubscription(businessId);
 
   // Check duplicate phone number within this business

@@ -142,18 +142,16 @@ class OfflineService {
 
   // ── Draft Sale ──
 
-  static Future<void> saveDraftSale(Map<String, dynamic> draft) async {
-    await _draftBox.put('draft', jsonEncode(draft));
+  static Future<void> saveDraftSale(String id, Map<String, dynamic> draft) async {
+    await _draftBox.put(id, jsonEncode(draft));
   }
 
-  static Map<String, dynamic>? loadDraftSale() {
-    final raw = _draftBox.get('draft');
-    if (raw == null) return null;
-    return Map<String, dynamic>.from(jsonDecode(raw) as Map);
+  static List<Map<String, dynamic>> getAllDrafts() {
+    return _draftBox.values.map((raw) => Map<String, dynamic>.from(jsonDecode(raw) as Map)).toList();
   }
 
-  static Future<void> clearDraftSale() async {
-    await _draftBox.delete('draft');
+  static Future<void> deleteDraftSale(String id) async {
+    await _draftBox.delete(id);
   }
 
   // ── Customer Selection ──

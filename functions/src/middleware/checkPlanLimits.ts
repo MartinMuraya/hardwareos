@@ -31,7 +31,7 @@ export async function assertBusinessMember(
   uid: string,
   businessId: string,
   allowedRoles: string[] = ["owner", "manager", "staff"]
-): Promise<void> {
+): Promise<admin.firestore.DocumentData> {
   const userSnap = await db().collection("users").doc(uid).get();
   if (!userSnap.exists) {
     throw new HttpsError("unauthenticated", "User profile not found.");
@@ -46,6 +46,7 @@ export async function assertBusinessMember(
       `This action requires one of: ${allowedRoles.join(", ")}.`
     );
   }
+  return userData;
 }
 
 /** Enforce: subscription is active (not expired or grace_period) — for write operations */
