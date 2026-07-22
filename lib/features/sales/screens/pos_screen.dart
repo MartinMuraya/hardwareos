@@ -1189,10 +1189,10 @@ class _ProductTile extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('KES ${product.sellingPrice.toStringAsFixed(0)}',
+                Text('KES ${product.sellingPrice.toStringAsFixed(0)}${product.sellingUnit != null ? ' / ${product.sellingUnit}' : ''}',
                   style: const TextStyle(color: AppColors.accent,
                     fontWeight: FontWeight.w700, fontSize: 14)),
-                Text('Stock: ${product.quantity}',
+                Text('Stock: ${product.quantity}${product.sellingUnit != null ? ' ${product.sellingUnit}' : ''}',
                   style: TextStyle(color: theme.hintColor, fontSize: 11)),
               ],
             ),
@@ -1342,7 +1342,7 @@ class _CartTile extends StatelessWidget {
           onTap: () => _showEditQtyDialog(context),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Text(entry.qty.toStringAsFixed(entry.qty.truncateToDouble() == entry.qty ? 0 : 2),
+            child: Text('${entry.qty.toStringAsFixed(entry.qty.truncateToDouble() == entry.qty ? 0 : 2)}${entry.product.sellingUnit != null ? ' ${entry.product.sellingUnit}' : ''}',
               style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15,
                 color: theme.colorScheme.onSurface,
                 decoration: TextDecoration.underline)),
@@ -1455,34 +1455,74 @@ class _HardwareCalculatorsDialogState extends State<_HardwareCalculatorsDialog> 
   final _itemLCtrl = TextEditingController();
   final _itemWCtrl = TextEditingController();
   final _coverageCtrl = TextEditingController(); // for paint
+  final _wireWeightCtrl = TextEditingController();
+  final _wireBaseWeightCtrl = TextEditingController(text: '2.0'); // kg per 100m
+  final _wattsCtrl = TextEditingController();
+  final _voltsCtrl = TextEditingController(text: '240');
+  final _pricePerUnitCtrl = TextEditingController(); // for room wiring estimator
   
   double? _resultQty;
   double? _resultArea;
+  String? _complexResult;
 
   void _calculate() {
     setState(() {
       _resultQty = null;
       _resultArea = null;
+      _complexResult = null;
+
+      if (_mode == 'Wire (Weight to Length)') {
+        final weight = double.tryParse(_wireWeightCtrl.text) ?? 0;
+        final base = double.tryParse(_wireBaseWeightCtrl.text) ?? 0;
+        if (weight > 0 && base > 0) {
+          _resultQty = (weight / base) * 100;
+        }
+        return;
+      } else if (_mode == 'Breaker Load') {
+        final watts = double.tryParse(_wattsCtrl.text) ?? 0;
+        final volts = double.tryParse(_voltsCtrl.text) ?? 240;
+        if (watts > 0 && volts > 0) {
+          final amps = watts / volts;
+          final breaker = amps * 1.25; // 25% safety margin
+          _complexResult = 'Load: ${amps.toStringAsFixed(1)} A\nRecommended Breaker: ${breaker.ceil()} A';
+        }
+        return;
+      }
+
       final rl = double.tryParse(_roomLCtrl.text) ?? 0;
       final rw = double.tryParse(_roomWCtrl.text) ?? 0;
       if (rl <= 0 || rw <= 0) return;
       
       final roomArea = rl * rw;
+      final perimeter = 2 * (rl + rw);
       _resultArea = roomArea;
 
       if (_mode == 'Tile') {
         final il = double.tryParse(_itemLCtrl.text) ?? 0;
         final iw = double.tryParse(_itemWCtrl.text) ?? 0;
         if (il > 0 && iw > 0) {
-          // item dimensions in cm, convert to meters
           final itemArea = (il / 100) * (iw / 100);
           _resultQty = roomArea / itemArea;
         }
       } else if (_mode == 'Paint') {
-        final coverage = double.tryParse(_coverageCtrl.text) ?? 10; // default 10 sqm per liter
+        final coverage = double.tryParse(_coverageCtrl.text) ?? 10;
         if (coverage > 0) {
           _resultQty = roomArea / coverage;
         }
+      } else if (_mode == 'Room Wiring') {
+        final wireNeeded = perimeter * 3; // Approx 3 runs around the room
+        final sockets = (perimeter / 3).ceil(); // 1 socket every 3m
+        final switches = 1 + (roomArea / 15).floor(); // 1 switch per 15sqm
+        final lights = (roomArea / 10).ceil(); // 1 light per 10sqm
+        final pricePerMeter = double.tryParse(_pricePerUnitCtrl.text) ?? 0;
+        
+        String res = 'Wire needed: ${wireNeeded.toStringAsFixed(1)} m\n'
+            'Sockets needed: $sockets\n'
+            'Switches: $switches, Lights: $lights';
+        if (pricePerMeter > 0) {
+          res += '\n\nEst Wire Cost: KES ${(wireNeeded * pricePerMeter).toStringAsFixed(0)}';
+        }
+        _complexResult = res;
       }
     });
   }
@@ -1496,9 +1536,10 @@ class _HardwareCalculatorsDialogState extends State<_HardwareCalculatorsDialog> 
           const Text('Hardware Calculators', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           DropdownButton<String>(
             value: _mode,
-            items: ['Tile', 'Paint'].map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
+            items: ['Tile', 'Paint', 'Wire (Weight to Length)', 'Breaker Load', 'Room Wiring']
+                .map((m) => DropdownMenuItem(value: m, child: Text(m, style: const TextStyle(fontSize: 14)))).toList(),
             onChanged: (v) {
-              if (v != null) setState(() { _mode = v; _resultQty = null; _resultArea = null; });
+              if (v != null) setState(() { _mode = v; _resultQty = null; _resultArea = null; _complexResult = null; _calculate(); });
             },
           ),
         ],
@@ -1506,13 +1547,27 @@ class _HardwareCalculatorsDialogState extends State<_HardwareCalculatorsDialog> 
       content: SizedBox(
         width: 350,
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Row(children: [
-            Expanded(child: TextField(controller: _roomLCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Room Length (m)'), onChanged: (_) => _calculate())),
-            const SizedBox(width: 12),
-            Expanded(child: TextField(controller: _roomWCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Room Width (m)'), onChanged: (_) => _calculate())),
-          ]),
-          const SizedBox(height: 16),
-          if (_mode == 'Tile') ...[
+          if (_mode == 'Tile' || _mode == 'Paint' || _mode == 'Room Wiring') ...[
+            Row(children: [
+              Expanded(child: TextField(controller: _roomLCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Room Length (m)'), onChanged: (_) => _calculate())),
+              const SizedBox(width: 12),
+              Expanded(child: TextField(controller: _roomWCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Room Width (m)'), onChanged: (_) => _calculate())),
+            ]),
+            const SizedBox(height: 16),
+          ],
+          if (_mode == 'Wire (Weight to Length)') ...[
+            Row(children: [
+              Expanded(child: TextField(controller: _wireWeightCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Coil Weight (kg)'), onChanged: (_) => _calculate())),
+              const SizedBox(width: 12),
+              Expanded(child: TextField(controller: _wireBaseWeightCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Standard (kg/100m)'), onChanged: (_) => _calculate())),
+            ]),
+          ] else if (_mode == 'Breaker Load') ...[
+            Row(children: [
+              Expanded(child: TextField(controller: _wattsCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Total Watts (W)'), onChanged: (_) => _calculate())),
+              const SizedBox(width: 12),
+              Expanded(child: TextField(controller: _voltsCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Voltage (V)'), onChanged: (_) => _calculate())),
+            ]),
+          ] else if (_mode == 'Tile') ...[
             Row(children: [
               Expanded(child: TextField(controller: _itemLCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Tile Length (cm)'), onChanged: (_) => _calculate())),
               const SizedBox(width: 12),
@@ -1520,6 +1575,8 @@ class _HardwareCalculatorsDialogState extends State<_HardwareCalculatorsDialog> 
             ]),
           ] else if (_mode == 'Paint') ...[
             TextField(controller: _coverageCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Coverage (sqm per L) - Default 10'), onChanged: (_) => _calculate()),
+          ] else if (_mode == 'Room Wiring') ...[
+            TextField(controller: _pricePerUnitCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Wire Price per Meter (optional)'), onChanged: (_) => _calculate()),
           ],
           const SizedBox(height: 24),
           if (_resultArea != null)
@@ -1530,9 +1587,18 @@ class _HardwareCalculatorsDialogState extends State<_HardwareCalculatorsDialog> 
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(color: AppColors.accent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
               child: Text(
-                _mode == 'Tile' ? 'Tiles Needed: ${_resultQty!.ceil()} (approx)' : 'Paint Needed: ${_resultQty!.toStringAsFixed(1)} Liters',
+                _mode == 'Tile' ? 'Tiles Needed: ${_resultQty!.ceil()} (approx)' : 
+                _mode == 'Paint' ? 'Paint Needed: ${_resultQty!.toStringAsFixed(1)} Liters' :
+                'Estimated Length: ${_resultQty!.toStringAsFixed(1)} meters',
                 style: const TextStyle(color: AppColors.accent, fontSize: 18, fontWeight: FontWeight.bold),
               ),
+            ),
+          if (_complexResult != null)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: AppColors.accent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+              child: Text(_complexResult!, style: const TextStyle(color: AppColors.accent, fontSize: 15, fontWeight: FontWeight.w600, height: 1.4)),
             ),
         ]),
       ),
