@@ -270,6 +270,7 @@ class _POSScreenState extends State<POSScreen> {
             subtotal: saleTotal,
             grandTotal: saleTotal,
             paymentMethod: _paymentMethod,
+            customerName: _paymentMethod == 'credit' ? _selectedCustomerName : null,
           );
           _showReceiptDialog(saleTotal, saleProfit, outstanding: outstanding, amountPaid: amountPaid);
           _clearAfterCheckout();
@@ -303,6 +304,7 @@ class _POSScreenState extends State<POSScreen> {
             subtotal: total,
             grandTotal: total,
             paymentMethod: _paymentMethod,
+            customerName: _paymentMethod == 'credit' ? _selectedCustomerName : null,
           );
           _showReceiptDialog(total, profit, isOffline: true);
           _clearAfterCheckout();
@@ -366,6 +368,7 @@ class _POSScreenState extends State<POSScreen> {
         subtotal: total,
         grandTotal: total,
         paymentMethod: _paymentMethod,
+        customerName: _paymentMethod == 'credit' ? _selectedCustomerName : null,
       );
       _showReceiptDialog(total, profit, isOffline: true);
       _clearAfterCheckout();
@@ -417,7 +420,7 @@ class _POSScreenState extends State<POSScreen> {
                 _printReceipt(context);
               },
               icon: const Icon(Icons.print_rounded, size: 16),
-              label: const Text('Print'),
+              label: const Text('Print (Thermal)'),
             ),
             TextButton.icon(
               onPressed: () {
@@ -425,7 +428,7 @@ class _POSScreenState extends State<POSScreen> {
                 _shareReceiptPdf();
               },
               icon: const Icon(Icons.share_rounded, size: 16),
-              label: const Text('Share PDF'),
+              label: const Text('Share Invoice (PDF)'),
             ),
           ],
           ElevatedButton(
@@ -459,13 +462,10 @@ class _POSScreenState extends State<POSScreen> {
   Future<void> _shareReceiptPdf() async {
     if (_lastReceiptData == null) return;
     try {
-      await ReceiptService.sharePdf(_lastReceiptData!);
+      final qrUrl = 'https://hwos.app/receipts/${_lastReceiptData!.receiptNumber}';
+      await ReceiptService.sharePdf(_lastReceiptData!, isA4: true, qrData: qrUrl);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Share failed: $e')),
-        );
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error sharing PDF: $e')));
     }
   }
 

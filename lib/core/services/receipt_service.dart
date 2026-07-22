@@ -18,6 +18,7 @@ class ReceiptData {
   final double tax;
   final double grandTotal;
   final String paymentMethod;
+  final String? customerName;
 
   const ReceiptData({
     required this.storeName,
@@ -31,6 +32,7 @@ class ReceiptData {
     this.tax = 0,
     required this.grandTotal,
     required this.paymentMethod,
+    this.customerName,
   });
 }
 
@@ -201,8 +203,157 @@ class ReceiptService {
     await socket.close();
   }
 
-  static Future<void> sharePdf(ReceiptData data) async {
-    final pdfBytes = await generatePdf(data);
-    await Printing.sharePdf(bytes: pdfBytes, filename: 'receipt_${data.receiptNumber}.pdf');
+  static Future<Uint8List> generateA4Invoice(ReceiptData data, {String? qrData}) async {
+    final doc = pw.Document();
+    doc.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(40),
+        build: (context) => [
+          // Header
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(data.storeName, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 24)),
+                  pw.SizedBox(height: 4),
+                  if (data.storePhone.isNotEmpty)
+                    pw.Text('Phone: ${data.storePhone}', style: const pw.TextStyle(fontSize: 12)),
+                ],
+              ),
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.end,
+                children: [
+                  pw.Text('INVOICE', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 28, color: PdfColors.blueGrey800)),
+                  pw.SizedBox(height: 8),
+                  pw.Text('Date: ${data.date.day}/${data.date.month}/${data.date.year}', style: const pw.TextStyle(fontSize: 12)),
+                  pw.Text('Invoice No: ${data.receiptNumber}', style: const pw.TextStyle(fontSize: 12)),
+                ],
+              ),
+            ],
+          ),
+          pw.SizedBox(height: 30),
+          
+          // Billed To
+          if (data.customerName != null && data.customerName!.isNotEmpty) ...[
+            pw.Text('Billed To:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 14, color: PdfColors.grey700)),
+            pw.SizedBox(height: 4),
+            pw.Text(data.customerName!, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16)),
+            pw.SizedBox(height: 30),
+          ],
+
+          // Items Table
+          pw.TableHelper.fromTextArray(
+            context: context,
+            border: pw.TableBorder.all(color: PdfColors.grey300, width: 1),
+            headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
+            headerDecoration: const pw.BoxDecoration(color: PdfColors.blueGrey800),
+            cellAlignment: pw.Alignment.centerRight,
+            cellAlignments: {
+              0: pw.Alignment.centerLeft,
+              1: pw.Alignment.centerRight,
+              2: pw.Alignment.centerRight,
+              3: pw.Alignment.centerRight,
+            },
+            data: <List<String>>[
+              <String>['Description', 'Qty', 'Unit Price', 'Total'],
+              ...data.items.map((item) => [
+                    item.name,
+                    item.quantity.toString(),
+                    item.price.toStringAsFixed(2),
+                    item.subtotal.toStringAsFixed(2),
+                  ]),
+            ],
+          ),
+          pw.SizedBox(height: 20),
+
+          // Totals
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.end,
+            children: [
+              pw.Container(
+                width: 200,
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.end,
+                  children: [
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Text('Subtotal:'),
+                        pw.Text(data.subtotal.toStringAsFixed(2)),
+                      ],
+                    ),
+                    if (data.discount > 0) ...[
+                      pw.SizedBox(height: 4),
+                      pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                        children: [
+                          pw.Text('Discount:'),
+                          pw.Text('-${data.discount.toStringAsFixed(2)}'),
+                        ],
+                      ),
+                    ],
+                    if (data.tax > 0) ...[
+                      pw.SizedBox(height: 4),
+                      pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                        children: [
+                          pw.Text('Tax:'),
+                          pw.Text(data.tax.toStringAsFixed(2)),
+                        ],
+                      ),
+                    ],
+                    pw.Divider(),
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Text('Grand Total:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16)),
+                        pw.Text(data.grandTotal.toStringAsFixed(2), style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          pw.SizedBox(height: 30),
+
+          // Footer & QR Code
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: pw.CrossAxisAlignment.end,
+            children: [
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text('Payment Method: ${data.paymentMethod.toUpperCase()}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                  pw.SizedBox(height: 8),
+                  pw.Text('Thank you for your business!', style: const pw.TextStyle(color: PdfColors.grey700)),
+                ],
+              ),
+              if (qrData != null)
+                pw.Container(
+                  width: 80,
+                  height: 80,
+                  child: pw.BarcodeWidget(
+                    barcode: pw.Barcode.qrCode(),
+                    data: qrData,
+                    color: PdfColors.black,
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+    return doc.save();
+  }
+
+  static Future<void> sharePdf(ReceiptData data, {bool isA4 = false, String? qrData}) async {
+    final pdfBytes = isA4 ? await generateA4Invoice(data, qrData: qrData) : await generatePdf(data);
+    await Printing.sharePdf(bytes: pdfBytes, filename: 'invoice_${data.receiptNumber}.pdf');
   }
 }
