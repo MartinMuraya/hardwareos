@@ -75,7 +75,7 @@ class AuthRepository {
       final XFile? image = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
       if (image == null) return null;
 
-      final ext = image.path.split('.').last;
+      final ext = image.name.split('.').last;
       final ref = _storage.ref().child('users/$userId/profile_${const Uuid().v4()}.$ext');
       
       if (kIsWeb) {

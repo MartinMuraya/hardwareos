@@ -36,6 +36,27 @@ class AdminScaffold extends StatelessWidget {
             onPressed: () => themeProvider.toggleTheme(!themeProvider.isDarkMode),
           ),
           const SizedBox(width: 8),
+          GestureDetector(
+            onTap: () => context.go('/profile'),
+            child: CircleAvatar(
+              radius: 16,
+              backgroundColor: theme.colorScheme.primaryContainer,
+              backgroundImage: context.read<AuthProvider>().photoUrl != null
+                  ? NetworkImage(context.read<AuthProvider>().photoUrl!)
+                  : null,
+              child: context.read<AuthProvider>().photoUrl == null
+                  ? Text(
+                      context.read<AuthProvider>().user?.displayName?.substring(0, 1).toUpperCase() ?? 'U',
+                      style: TextStyle(
+                        color: theme.colorScheme.onPrimaryContainer,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
+                  : null,
+            ),
+          ),
+          const SizedBox(width: 16),
         ],
       ) : null,
       body: Row(

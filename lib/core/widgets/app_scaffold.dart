@@ -372,14 +372,26 @@ class _SideNav extends StatelessWidget {
                       onPressed: () => themeProvider.toggleTheme(!themeProvider.isDarkMode),
                       visualDensity: VisualDensity.compact,
                     ),
-                  IconButton(
-                    icon: const Icon(Icons.account_circle_rounded, size: 24),
-                    onPressed: () {
+                  GestureDetector(
+                    onTap: () {
                       if (isDrawer) Navigator.pop(context);
                       context.go('/profile');
                     },
-                    visualDensity: VisualDensity.compact,
-                    padding: EdgeInsets.zero,
+                    child: CircleAvatar(
+                      radius: 16,
+                      backgroundColor: theme.colorScheme.primaryContainer,
+                      backgroundImage: auth.photoUrl != null ? NetworkImage(auth.photoUrl!) : null,
+                      child: auth.photoUrl == null
+                          ? Text(
+                              auth.user?.displayName?.substring(0, 1).toUpperCase() ?? 'U',
+                              style: TextStyle(
+                                color: theme.colorScheme.onPrimaryContainer,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            )
+                          : null,
+                    ),
                   ),
                 ]),
                 const SizedBox(height: 12),
