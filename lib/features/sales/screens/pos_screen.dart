@@ -60,7 +60,7 @@ class _POSScreenState extends State<POSScreen> {
       final loaded = <_CartEntry>[];
       for (final item in saved) {
         final prodMap = item['product'] as Map<String, dynamic>;
-        final qty = item['qty'] as int;
+        final qty = (item['qty'] as num).toDouble();
         loaded.add(_CartEntry(product: Product.fromMap(prodMap), qty: qty));
       }
       _cart.addAll(loaded);
@@ -80,6 +80,7 @@ class _POSScreenState extends State<POSScreen> {
           'costPrice': e.product.costPrice,
           'sellingPrice': e.product.sellingPrice,
           'reorderLevel': e.product.reorderLevel,
+          'barcodes': e.product.barcodes,
           'createdAt': e.product.createdAt.toIso8601String(),
           'updatedAt': e.product.updatedAt.toIso8601String(),
         },
@@ -127,7 +128,7 @@ class _POSScreenState extends State<POSScreen> {
         OfflineService.saveProducts(prods.map((p) => {
           'id': p.id, 'businessId': p.businessId, 'name': p.name, 'sku': p.sku, 'category': p.category, 
           'quantity': p.quantity, 'costPrice': p.costPrice, 'sellingPrice': p.sellingPrice, 
-          'reorderLevel': p.reorderLevel, 'createdAt': p.createdAt.toIso8601String(), 'updatedAt': p.updatedAt.toIso8601String()
+          'reorderLevel': p.reorderLevel, 'barcodes': p.barcodes, 'createdAt': p.createdAt.toIso8601String(), 'updatedAt': p.updatedAt.toIso8601String()
         }).toList());
       }
       
@@ -141,15 +142,28 @@ class _POSScreenState extends State<POSScreen> {
   }
 
   void _filter() {
-    final q = _searchCtrl.text.toLowerCase();
-    setState(() {
-      _filtered = q.isEmpty
-          ? _allProducts
-          : _allProducts.where((p) =>
-              p.name.toLowerCase().contains(q) ||
-              p.sku.toLowerCase().contains(q) ||
-              p.category.toLowerCase().contains(q)).toList();
-    });
+    final q = _searchCtrl.text.toLowerCase().trim();
+    if (q.isEmpty) {
+      setState(() => _filtered = _allProducts);
+      return;
+    }
+
+    final matched = _allProducts.where((p) =>
+        p.name.toLowerCase().contains(q) ||
+        p.sku.toLowerCase().contains(q) ||
+        p.category.toLowerCase().contains(q) ||
+        p.barcodes.any((b) => b.toLowerCase() == q)).toList();
+
+    setState(() => _filtered = matched);
+  }
+
+  void _onSearchSubmitted(String val) {
+    if (_filtered.length == 1) {
+      // Auto-add if exact single match
+      _addToCart(_filtered.first);
+      _searchCtrl.clear();
+      _filter();
+    }
   }
 
   void _addToCart(Product p) {
@@ -171,7 +185,7 @@ class _POSScreenState extends State<POSScreen> {
     _saveCart();
   }
 
-  void _updateQty(String productId, int newQty) {
+  void _updateQty(String productId, double newQty) {
     setState(() {
       final idx = _cart.indexWhere((e) => e.product.id == productId);
       if (idx >= 0) {
@@ -179,8 +193,22 @@ class _POSScreenState extends State<POSScreen> {
           _cart.removeAt(idx);
         } else if (newQty <= _cart[idx].product.quantity) {
           _cart[idx] = _cart[idx].copyWith(qty: newQty);
+        } else {
+          // cap at max qty
+          _cart[idx] = _cart[idx].copyWith(qty: _cart[idx].product.quantity);
         }
       }
+    });
+    _saveCart();
+  }
+
+  void _clearCart() {
+    setState(() {
+      _cart.clear();
+      _paymentMethod = 'cash';
+      _selectedCustomerId = null;
+      _selectedCustomerName = '';
+      _amountPaidCtrl.clear();
     });
     _saveCart();
   }
@@ -558,9 +586,10 @@ class _POSScreenState extends State<POSScreen> {
         const SizedBox(height: 16),
         TextField(
           controller: _searchCtrl,
+          onSubmitted: _onSearchSubmitted,
           style: TextStyle(color: theme.colorScheme.onSurface),
           decoration: InputDecoration(
-            hintText: 'Search products...',
+            hintText: 'Search products or scan barcode...',
             prefixIcon: const Icon(Icons.search, size: 18),
             suffixIcon: _searchCtrl.text.isNotEmpty
                 ? IconButton(
@@ -619,14 +648,24 @@ class _POSScreenState extends State<POSScreen> {
           Text('Cart', style: theme.textTheme.headlineMedium),
           const Spacer(),
           if (_cart.isNotEmpty)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: AppColors.accent, borderRadius: BorderRadius.circular(20)),
-              child: Text('${_cart.length}',
-                style: TextStyle(color: theme.colorScheme.onPrimary,
-                  fontWeight: FontWeight.w800, fontSize: 12)),
-            ),
+            Row(children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.accent, borderRadius: BorderRadius.circular(20)),
+                child: Text('${_cart.length}',
+                  style: TextStyle(color: theme.colorScheme.onPrimary,
+                    fontWeight: FontWeight.w800, fontSize: 12)),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.delete_sweep_rounded, color: AppColors.error),
+                onPressed: _clearCart,
+                tooltip: 'Clear Cart',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ]),
         ]),
         const SizedBox(height: 16),
 
@@ -768,11 +807,16 @@ class _POSScreenState extends State<POSScreen> {
 
 class _CartEntry {
   final Product product;
-  final int qty;
-  const _CartEntry({required this.product, required this.qty});
+  final double qty;
+  _CartEntry({required this.product, required this.qty});
   double get lineTotal  => product.sellingPrice * qty;
   double get lineProfit => (product.sellingPrice - product.costPrice) * qty;
-  _CartEntry copyWith({int? qty}) => _CartEntry(product: product, qty: qty ?? this.qty);
+  _CartEntry copyWith({Product? product, double? qty}) {
+    return _CartEntry(
+      product: product ?? this.product,
+      qty: qty ?? this.qty,
+    );
+  }
   Map<String, dynamic> toMap() => {
     'productId':    product.id,
     'name':         product.name,
@@ -838,9 +882,34 @@ class _CartTile extends StatelessWidget {
   final NumberFormat fmt;
   final ThemeData theme;
   final VoidCallback onRemove;
-  final ValueChanged<int> onQtyChange;
+  final ValueChanged<double> onQtyChange;
   const _CartTile({required this.entry, required this.fmt, required this.theme,
     required this.onRemove, required this.onQtyChange});
+
+  void _showEditQtyDialog(BuildContext context) {
+    final ctrl = TextEditingController(text: entry.qty.toString());
+    showDialog(context: context, builder: (ctx) => AlertDialog(
+      title: const Text('Edit Quantity'),
+      content: TextField(
+        controller: ctrl,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        decoration: const InputDecoration(labelText: 'Quantity'),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+        ElevatedButton(
+          onPressed: () {
+            final val = double.tryParse(ctrl.text);
+            if (val != null && val >= 0) {
+              onQtyChange(val);
+              Navigator.pop(ctx);
+            }
+          },
+          child: const Text('Save'),
+        ),
+      ],
+    ));
+  }
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -857,11 +926,15 @@ class _CartTile extends StatelessWidget {
       ])),
       Row(children: [
         _QtyBtn(icon: Icons.remove, onTap: () => onQtyChange(entry.qty - 1), theme: theme),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: Text('${entry.qty}',
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15,
-              color: theme.colorScheme.onSurface)),
+        GestureDetector(
+          onTap: () => _showEditQtyDialog(context),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Text(entry.qty.toStringAsFixed(entry.qty.truncateToDouble() == entry.qty ? 0 : 2),
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15,
+                color: theme.colorScheme.onSurface,
+                decoration: TextDecoration.underline)),
+          ),
         ),
         _QtyBtn(icon: Icons.add, onTap: () => onQtyChange(entry.qty + 1), theme: theme),
       ]),
@@ -869,7 +942,7 @@ class _CartTile extends StatelessWidget {
       GestureDetector(
         onTap: onRemove,
         child: Icon(Icons.delete_outline_rounded,
-          color: theme.hintColor, size: 18)),
+          color: AppColors.error.withValues(alpha: 0.8), size: 20)),
     ]),
   );
 }

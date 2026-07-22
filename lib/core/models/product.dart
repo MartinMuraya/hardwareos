@@ -4,10 +4,11 @@ class Product {
   final String name;
   final String sku;
   final String category;
-  final int quantity;
+  final double quantity;
   final double costPrice;
   final double sellingPrice;
-  final int reorderLevel;
+  final double reorderLevel;
+  final List<String> barcodes;
   final bool isBulkParent;
   final bool isBulkChild;
   final String? parentProductId;
@@ -27,6 +28,7 @@ class Product {
     required this.costPrice,
     required this.sellingPrice,
     required this.reorderLevel,
+    this.barcodes = const [],
     this.isBulkParent = false,
     this.isBulkChild = false,
     this.parentProductId,
@@ -44,10 +46,11 @@ class Product {
       name:         map['name'] as String,
       sku:          map['sku'] as String? ?? '',
       category:     map['category'] as String? ?? 'General',
-      quantity:     ((map['quantity'] ?? 0) as num).toInt(),
+      quantity:     ((map['quantity'] ?? 0) as num).toDouble(),
       costPrice:    ((map['costPrice'] ?? map['buyingPrice'] ?? 0) as num).toDouble(),
       sellingPrice: ((map['sellingPrice'] ?? 0) as num).toDouble(),
-      reorderLevel: ((map['reorderLevel'] ?? 0) as num).toInt(),
+      reorderLevel: ((map['reorderLevel'] ?? 0) as num).toDouble(),
+      barcodes:     (map['barcodes'] as List?)?.map((e) => e.toString()).toList() ?? [],
       isBulkParent: map['isBulkParent'] == true,
       isBulkChild: map['isBulkChild'] == true,
       parentProductId: map['parentProductId'] as String?,
@@ -72,12 +75,13 @@ class Product {
     return '';
   }
 
-  Product copyWith({int? quantity}) {
+  Product copyWith({double? quantity, List<String>? barcodes}) {
     return Product(
       id: id, businessId: businessId, name: name, sku: sku,
       category: category, costPrice: costPrice, sellingPrice: sellingPrice,
       reorderLevel: reorderLevel, createdAt: createdAt, updatedAt: updatedAt,
       quantity: quantity ?? this.quantity,
+      barcodes: barcodes ?? this.barcodes,
       isBulkParent: isBulkParent, isBulkChild: isBulkChild,
       parentProductId: parentProductId, conversionRatio: conversionRatio,
       baseUnit: baseUnit, sellingUnit: sellingUnit,

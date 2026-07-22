@@ -32,6 +32,7 @@ export const createProduct = onCall({ cors: true }, async (request) => {
     costPrice: number;
     sellingPrice: number;
     reorderLevel: number;
+    barcodes?: string[];
   };
 
   if (!name || !businessId) throw new HttpsError("invalid-argument", "name and businessId required.");
@@ -65,10 +66,11 @@ export const createProduct = onCall({ cors: true }, async (request) => {
     name: name.trim(),
     sku: sku?.trim() || "",
     category: category?.trim() || "General",
-    quantity: Math.floor(quantity),
+    quantity: Number(quantity),
     costPrice: Number(costPrice),
     sellingPrice: Number(sellingPrice),
-    reorderLevel: Math.floor(reorderLevel) || 5,
+    reorderLevel: Number(reorderLevel) || 5,
+    barcodes: request.data.barcodes || [],
     createdAt: now,
     updatedAt: now,
   });
@@ -81,7 +83,7 @@ export const createProduct = onCall({ cors: true }, async (request) => {
       businessId,
       productId: productRef.id,
       type: "IN",
-      quantity: Math.floor(quantity),
+      quantity: Number(quantity),
       reason: "Initial stock",
       referenceId: productRef.id,
       createdAt: now,
@@ -152,7 +154,7 @@ export const addStock = onCall({ cors: true }, async (request) => {
 
   // Increment stock
   batch.update(db().collection("products").doc(productId), {
-    quantity: admin.firestore.FieldValue.increment(Math.floor(quantity)),
+    quantity: admin.firestore.FieldValue.increment(Number(quantity)),
     updatedAt: now,
   });
 
@@ -163,7 +165,7 @@ export const addStock = onCall({ cors: true }, async (request) => {
     businessId,
     productId,
     type: "IN",
-    quantity: Math.floor(quantity),
+    quantity: Number(quantity),
     reason: reason || "Stock addition",
     referenceId: referenceId || null,
     createdAt: now,

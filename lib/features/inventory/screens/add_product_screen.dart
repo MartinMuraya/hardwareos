@@ -21,6 +21,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _costCtrl    = TextEditingController();
   final _priceCtrl   = TextEditingController();
   final _reorderCtrl = TextEditingController(text: '5');
+  final _barcodesCtrl = TextEditingController();
   String _category   = 'General';
   bool _isSubmitting = false;
   String? _error;
@@ -54,7 +55,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
   @override
   void dispose() {
-    for (final c in [_nameCtrl, _skuCtrl, _qtyCtrl, _costCtrl, _priceCtrl, _reorderCtrl]) {
+    for (final c in [_nameCtrl, _skuCtrl, _qtyCtrl, _costCtrl, _priceCtrl, _reorderCtrl, _barcodesCtrl]) {
       c.dispose();
     }
     super.dispose();
@@ -77,10 +78,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
         'name':         _nameCtrl.text.trim(),
         'sku':          _skuCtrl.text.trim(),
         'category':     _category,
-        'quantity':     int.parse(_qtyCtrl.text),
+        'quantity':     double.parse(_qtyCtrl.text),
         'costPrice':    double.parse(_costCtrl.text),
         'sellingPrice': double.parse(_priceCtrl.text),
-        'reorderLevel': int.parse(_reorderCtrl.text),
+        'reorderLevel': double.parse(_reorderCtrl.text),
+        'barcodes':     _barcodesCtrl.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
       };
 
       if (_isBulkEnabled) {
@@ -153,7 +155,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: DropdownButtonFormField<String>(
-                            initialValue: _category,
+                            value: _category,
                             dropdownColor: theme.cardColor,
                             style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 14),
                             decoration: const InputDecoration(labelText: 'Category'),
@@ -163,6 +165,12 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           ),
                         ),
                       ]),
+                      const SizedBox(height: 14),
+                      TextFormField(
+                        controller: _barcodesCtrl,
+                        style: TextStyle(color: theme.colorScheme.onSurface),
+                        decoration: const InputDecoration(labelText: 'Barcodes (Comma separated)'),
+                      ),
                     ]),
                     const SizedBox(height: 20),
 
@@ -171,7 +179,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         Expanded(
                           child: TextFormField(
                             controller: _costCtrl,
-                            keyboardType: TextInputType.number,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
                             style: TextStyle(color: theme.colorScheme.onSurface),
                             decoration: const InputDecoration(labelText: 'Cost Price (KES)'),
                             onChanged: (_) => setState(() {}),
@@ -185,7 +193,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         Expanded(
                           child: TextFormField(
                             controller: _priceCtrl,
-                            keyboardType: TextInputType.number,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
                             style: TextStyle(color: theme.colorScheme.onSurface),
                             decoration: const InputDecoration(labelText: 'Selling Price (KES)'),
                             onChanged: (_) => setState(() {}),
@@ -208,11 +216,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         Expanded(
                           child: TextFormField(
                             controller: _qtyCtrl,
-                            keyboardType: TextInputType.number,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
                             style: TextStyle(color: theme.colorScheme.onSurface),
                             decoration: const InputDecoration(labelText: 'Initial Quantity'),
                             validator: (v) {
-                              final n = int.tryParse(v ?? '');
+                              final n = double.tryParse(v ?? '');
                               return n == null || n < 0 ? 'Enter valid quantity' : null;
                             },
                           ),
@@ -221,11 +229,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         Expanded(
                           child: TextFormField(
                             controller: _reorderCtrl,
-                            keyboardType: TextInputType.number,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
                             style: TextStyle(color: theme.colorScheme.onSurface),
                             decoration: const InputDecoration(labelText: 'Reorder Level'),
                             validator: (v) {
-                              final n = int.tryParse(v ?? '');
+                              final n = double.tryParse(v ?? '');
                               return n == null || n < 0 ? 'Enter valid number' : null;
                             },
                           ),
