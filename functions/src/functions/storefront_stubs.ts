@@ -9,6 +9,15 @@ const makeScheduleStub = () => onSchedule("every 24 hours", () => {
   console.log("Scheduled function temporarily stubbed to prevent deletion.");
 });
 
+export const addToCart = makeStub();
+export const approveReturn = makeStub();
+export const cancelOrder = makeStub();
+export const checkSlugAvailability = makeStub();
+export const clearCart = makeStub();
+export const createDeliveryZone = makeStub();
+export const createOnlineOrder = makeStub();
+export const createStorefrontCategory = makeStub();
+export const deleteCart = makeStub();
 export const deleteCustomer = makeStub();
 export const deleteCustomerAddress = makeStub();
 export const deleteDeliveryZone = makeStub();
