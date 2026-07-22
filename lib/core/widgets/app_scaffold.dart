@@ -335,6 +335,7 @@ class _SideNav extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final themeProvider = context.watch<ThemeProvider>();
+    final auth = context.watch<AuthProvider>();
 
     return Container(
       width: 260,
