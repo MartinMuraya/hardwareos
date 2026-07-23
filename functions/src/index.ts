@@ -102,6 +102,11 @@ export {
   adminGetBusinessHistory,
 } from "./functions/subscriptionHistory";
 
+export {
+  initiateStkPush,
+  mpesaCallback,
+} from "./functions/mpesa";
+
 // Customers & Debt
 export {
   createCustomer,
