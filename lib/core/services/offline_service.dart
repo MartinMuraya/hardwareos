@@ -86,6 +86,35 @@ class PendingInventoryUpdate {
     );
 }
 
+class PendingStorefrontOrder {
+  final String id;
+  final Map<String, dynamic> orderData;
+  final DateTime createdAt;
+  int retryCount;
+
+  PendingStorefrontOrder({
+    required this.id,
+    required this.orderData,
+    required this.createdAt,
+    this.retryCount = 0,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'orderData': orderData,
+    'createdAt': createdAt.toIso8601String(),
+    'retryCount': retryCount,
+  };
+
+  factory PendingStorefrontOrder.fromJson(Map<String, dynamic> json) =>
+    PendingStorefrontOrder(
+      id: json['id'] as String,
+      orderData: Map<String, dynamic>.from(json['orderData'] as Map),
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      retryCount: json['retryCount'] as int? ?? 0,
+    );
+}
+
 class OfflineService {
   static const _salesBoxName = 'offline_sales';
   static const _paymentsBoxName = 'offline_payments';
@@ -94,6 +123,8 @@ class OfflineService {
   static const _draftBoxName = 'offline_draft';
   static const _customerBoxName = 'offline_customer';
   static const _productsBoxName = 'offline_products';
+  static const _storefrontCartBoxName = 'offline_storefront_cart';
+  static const _storefrontOrdersBoxName = 'offline_storefront_orders';
 
   static late Box<String> _salesBox;
   static late Box<String> _paymentsBox;
@@ -102,6 +133,8 @@ class OfflineService {
   static late Box<String> _draftBox;
   static late Box<String> _customerBox;
   static late Box<String> _productsBox;
+  static late Box<String> _storefrontCartBox;
+  static late Box<String> _storefrontOrdersBox;
 
   static Future<void> init() async {
     _salesBox = await Hive.openBox<String>(_salesBoxName);
@@ -111,6 +144,8 @@ class OfflineService {
     _draftBox = await Hive.openBox<String>(_draftBoxName);
     _customerBox = await Hive.openBox<String>(_customerBoxName);
     _productsBox = await Hive.openBox<String>(_productsBoxName);
+    _storefrontCartBox = await Hive.openBox<String>(_storefrontCartBoxName);
+    _storefrontOrdersBox = await Hive.openBox<String>(_storefrontOrdersBoxName);
   }
 
   static Future<void> clearAll() async {
@@ -121,6 +156,8 @@ class OfflineService {
     await _draftBox.clear();
     await _customerBox.clear();
     await _productsBox.clear();
+    await _storefrontCartBox.clear();
+    await _storefrontOrdersBox.clear();
   }
 
   // ── Cart Persistence ──
@@ -139,6 +176,41 @@ class OfflineService {
   static Future<void> clearCart() async {
     await _cartBox.delete('cart');
   }
+
+  // ── Storefront Cart Persistence ──
+
+  static Future<void> saveStorefrontCart(String tenantSlug, List<Map<String, dynamic>> cartItems) async {
+    await _storefrontCartBox.put(tenantSlug, jsonEncode(cartItems));
+  }
+
+  static List<Map<String, dynamic>> loadStorefrontCart(String tenantSlug) {
+    final raw = _storefrontCartBox.get(tenantSlug);
+    if (raw == null) return [];
+    final list = jsonDecode(raw) as List;
+    return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+  }
+
+  static Future<void> clearStorefrontCart(String tenantSlug) async {
+    await _storefrontCartBox.delete(tenantSlug);
+  }
+
+  // ── Pending Storefront Orders Queue ──
+
+  static Future<void> enqueueStorefrontOrder(PendingStorefrontOrder order) async {
+    await _storefrontOrdersBox.put(order.id, jsonEncode(order.toJson()));
+  }
+
+  static List<PendingStorefrontOrder> getPendingStorefrontOrders() {
+    return _storefrontOrdersBox.values.map((raw) =>
+      PendingStorefrontOrder.fromJson(Map<String, dynamic>.from(jsonDecode(raw) as Map))
+    ).toList();
+  }
+
+  static Future<void> removeStorefrontOrder(String id) async {
+    await _storefrontOrdersBox.delete(id);
+  }
+
+  static int get pendingStorefrontOrderCount => _storefrontOrdersBox.length;
 
   // ── Draft Sale ──
 

@@ -17,6 +17,18 @@
 
 ---
 
+## 🌍 Real-World Application & Problem Solving
+
+Hardware stores in East Africa typically rely on fragmented, legacy workflows: physical paper ledgers, isolated desktop POS systems, manual inventory tracking, and disconnected debt collection. 
+
+**HardwareOS solves these problems by providing:**
+- **Centralized Inventory Control:** Preventing stockouts and employee theft through rigorous audit logs, multi-branch tracking, and strict role-based access.
+- **Unified Debt Management:** Over 60% of hardware sales in the region are on credit. The system explicitly tracks customer debt, generates statements, and tracks partial repayments over time.
+- **Mobility & Offline Resilience:** Staff can process sales on smartphones or tablets, even when internet connectivity drops, preventing business halts during outages.
+- **Automated M-Pesa Integration:** Native mobile money payments and automated subscription billing via Safaricom Daraja API.
+
+---
+
 ## 📖 Deep System Overview & Analysis
 
 HardwareOS is a robust, cloud-based ERP and POS platform specifically designed for hardware and building-material retailers in East Africa. It is designed to replace fragmented legacy workflows—such as paper ledgers, isolated desktop POS systems, and manual inventory tracking—with a unified omnichannel experience.
@@ -58,6 +70,19 @@ HardwareOS utilizes a highly secure **"Function-as-a-Service" (FaaS) data mutati
 
 ---
 
+## 🏃 How to Use the System (Quick Overview)
+
+1. **Onboarding:** A hardware store owner registers their business, initiating a 14-day Pro trial. They set up branches and configure basic settings.
+2. **Inventory Import:** The owner uploads their existing product catalog via the Bulk Import (CSV/Excel) tool or adds items manually.
+3. **Team Setup:** The owner invites Cashiers and Managers via email. RBAC ensures staff can only ring up sales and cannot alter historical records.
+4. **Daily Operations:**
+   - **Sales/POS:** Cashiers scan items or search the catalog to process cash, M-Pesa, or credit sales. Digital receipts are generated.
+   - **Purchases:** Managers create Purchase Orders for suppliers to restock inventory.
+   - **Expenses:** Staff log daily operational expenses (transport, utilities) from the cash drawer.
+5. **Reporting & AI Insights:** At the end of the day or month, the owner checks the Dashboard and uses the Gemini AI Assistant to analyze sales velocity, profitability, and identify slow-moving stock.
+
+---
+
 ## 🚀 Core Modules & Capabilities
 
 The system is divided into over 20 highly specialized modules inside the Flutter application. 
@@ -84,10 +109,10 @@ The system is divided into over 20 highly specialized modules inside the Flutter
 ### 4. Financial Tracking
 - **Expenses**: Categorised business expenses (payroll, rent, utilities).
 - **Cash Drawer**: Track shifts, opening balances, cash drops, and closing balances for strict employee financial accountability.
-
-### 5. Quotations & Returns
-- **Quotations**: Draft proforma invoices for contractors. Convert quotations directly to active sales when approved.
-- **Returns**: Dedicated module to process customer returns and restock items back into inventory automatically.
+- **B2B Quotations & Invoicing:** Instantly convert quotations into formal invoices, track payments against specific documents, and manage custom credit limits for trusted contractors.
+- **Double-Entry Accounting Engine:** Fully compliant General Ledger with Chart of Accounts and real-time Trial Balance. All POS transactions and expenses automatically balance Debits and Credits via atomic Firestore transactions.
+- **Comprehensive HR & Payroll:** Structured employee management, timesheets, and automated payroll processing with configurable statutory deductions (PAYE, NHIF, NSSF). Directly integrates with the accounting engine to log salary expenses and tax liabilities.
+- **Multi-Branch Capability:** Manage several store locations under a single business umbrella. Transfer stock between branches with automated transit tracking and branch-specific profit & loss statements.
 
 ### 6. Advanced Analytics & AI
 - **Dashboard**: Real-time KPI cards, low stock alerts, pending sync indicators, and recent sales feeds.
@@ -137,6 +162,17 @@ The system is divided into over 20 highly specialized modules inside the Flutter
 | **Authentication** | Firebase Auth (Email/Password) |
 | **Billing Integration** | Safaricom M-Pesa Daraja API |
 | **AI Integration** | Google Gemini LLM API |
+
+---
+
+## 🚧 Development Roadmap & Missing Structures
+
+While HardwareOS covers a vast Enterprise ERP feature set, the following areas are identified for future expansion:
+
+- **E-Commerce & Online Storefronts:** Currently, backend APIs (`storefront_stubs.ts`) exist as placeholders. The roadmap includes exposing a B2B/B2C storefront for contractors to order materials online directly from the hardware store.
+- **Advanced Tax Integration (KRA TIMS):** Expanding the current Double-Entry Accounting Ledger to automatically transmit and sign electronic tax invoices directly with the revenue authority.
+- **Advanced Hardware Integrations:** Integrating with digital weighing scales (for items sold by weight like nails/cement) and specialized barcode label printers.
+- **Testing & CI/CD Maturity:** Implementing comprehensive end-to-end integration testing and expanding the GitHub Actions pipeline with staging environments and automated test gates.
 
 ---
 

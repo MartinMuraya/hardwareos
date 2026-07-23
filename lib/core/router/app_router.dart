@@ -10,6 +10,7 @@ import '../../features/inventory/screens/add_product_screen.dart';
 import '../../features/inventory/screens/product_detail_screen.dart';
 import '../../features/sales/screens/pos_screen.dart';
 import '../../features/sales/screens/sales_history_screen.dart';
+import '../../features/sales/screens/online_orders_screen.dart';
 import '../../features/expenses/screens/expenses_screen.dart';
 import '../../features/expenses/screens/add_expense_screen.dart';
 import '../../features/reports/screens/reports_screen.dart';
@@ -57,6 +58,9 @@ import '../../features/ai_assistant/screens/ai_assistant_screen.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/app_scaffold.dart';
 import '../../features/auth/screens/auth_error_screen.dart';
+import '../../features/storefront/screens/storefront_app_screen.dart';
+import '../../features/accounting/screens/accounting_dashboard_screen.dart';
+import '../../features/hr/screens/hr_dashboard_screen.dart';
 
 class AppRouter {
   static GoRouter createRouter(BuildContext context) {
@@ -72,8 +76,9 @@ class AppRouter {
                                 state.matchedLocation == '/register' ||
                                 state.matchedLocation == '/forgot-password';
         final isSubscriptionRoute = state.matchedLocation == '/subscription';
+        final isStorefrontRoute = state.matchedLocation.startsWith('/store');
 
-        if (!isAuthenticated && !isAuthRoute) return '/login';
+        if (!isAuthenticated && !isAuthRoute && !isStorefrontRoute) return '/login';
 
         if (isAuthenticated) {
           if (!authProvider.isEmailVerified && state.matchedLocation != '/verify-email') {
@@ -165,6 +170,14 @@ class AppRouter {
         return null;
       },
       routes: [
+        // Storefront (Public)
+        GoRoute(
+          path: '/store/:tenantSlug',
+          builder: (_, state) => StorefrontAppScreen(
+            tenantSlug: state.pathParameters['tenantSlug']!,
+          ),
+        ),
+
         // Auth
         GoRoute(path: '/login',    builder: (_, __) => const LoginScreen()),
         GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
@@ -252,6 +265,10 @@ class AppRouter {
                   path: 'history',
                   builder: (_, __) => const SalesHistoryScreen(),
                 ),
+                GoRoute(
+                  path: 'online-orders',
+                  builder: (_, __) => const OnlineOrdersScreen(),
+                ),
               ],
             ),
             GoRoute(
@@ -263,6 +280,16 @@ class AppRouter {
                   builder: (_, __) => const AddExpenseScreen(),
                 ),
               ],
+            ),
+            // Accounting
+            GoRoute(
+              path: '/accounting',
+              builder: (_, __) => const AccountingDashboardScreen(),
+            ),
+            // HR & Payroll
+            GoRoute(
+              path: '/hr',
+              builder: (_, __) => const HrDashboardScreen(),
             ),
             GoRoute(
               path: '/reports',

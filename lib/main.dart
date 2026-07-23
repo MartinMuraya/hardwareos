@@ -12,6 +12,8 @@ import 'core/providers/connectivity_provider.dart';
 import 'core/services/offline_service.dart';
 import 'core/theme/app_theme.dart';
 import 'features/sales/services/offline_sales_queue.dart';
+import 'features/accounting/providers/accounting_provider.dart';
+import 'features/hr/providers/hr_provider.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -53,6 +55,24 @@ class _HardwareOSAppState extends State<HardwareOSApp> {
         ChangeNotifierProxyProvider<AuthProvider, BusinessProvider>(
           create: (_) => BusinessProvider(),
           update: (_, auth, biz) => biz!..updateFromAuth(auth),
+        ),
+        ChangeNotifierProxyProvider<AuthProvider, AccountingProvider>(
+          create: (_) => AccountingProvider(businessId: ''),
+          update: (_, auth, acc) {
+            if (auth.businessId != null && auth.businessId != acc?.businessId) {
+              return AccountingProvider(businessId: auth.businessId!);
+            }
+            return acc ?? AccountingProvider(businessId: '');
+          },
+        ),
+        ChangeNotifierProxyProvider<AuthProvider, HrProvider>(
+          create: (_) => HrProvider(businessId: ''),
+          update: (_, auth, hr) {
+            if (auth.businessId != null && auth.businessId != hr?.businessId) {
+              return HrProvider(businessId: auth.businessId!);
+            }
+            return hr ?? HrProvider(businessId: '');
+          },
         ),
         ChangeNotifierProvider(create: (_) => ConnectivityProvider()),
         ChangeNotifierProvider(create: (_) => OfflineSalesQueue()),

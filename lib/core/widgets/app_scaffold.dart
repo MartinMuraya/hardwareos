@@ -40,6 +40,8 @@ class _AppScaffoldState extends State<AppScaffold> {
       const _NavItem(icon: Icons.help_outline_rounded, label: 'Support',       route: '/support'),
       if (isOwner)   const _NavItem(icon: Icons.people_rounded,       label: 'Team',          route: '/team'),
       if (isOwner)   const _NavItem(icon: Icons.workspace_premium_rounded, label: 'Subscription', route: '/subscription'),
+      if (isOwner)   const _NavItem(icon: Icons.badge_rounded,             label: 'HR & Payroll', route: '/hr'),
+      if (isManager) const _NavItem(icon: Icons.account_balance_rounded,   label: 'Accounting',    route: '/accounting'),
       if (isManager) const _NavItem(icon: Icons.balance_rounded,       label: 'Stock Adj.',    route: '/stock-adjustments'),
       if (isManager) const _NavItem(icon: Icons.history_rounded,       label: 'Audit Trail',   route: '/audit-logs'),
       const _NavItem(icon: Icons.replay_rounded,        label: 'Returns',       route: '/returns'),
@@ -122,11 +124,11 @@ class _AppScaffoldState extends State<AppScaffold> {
                   ).toList(), selectedIdx),
                   const SizedBox(height: 8),
                   _buildSheetSection(ctx, 'Analytics & Admin', moreItems.where(
-                    (i) => i.route == '/reports' || i.route == '/advanced-analytics' || i.route == '/ai-assistant' || i.route == '/team' || i.route == '/subscription' || i.route == '/notifications'
+                    (i) => i.route == '/reports' || i.route == '/advanced-analytics' || i.route == '/ai-assistant' || i.route == '/team' || i.route == '/subscription' || i.route == '/notifications' || i.route == '/accounting'
                   ).toList(), selectedIdx),
                   const SizedBox(height: 8),
                   _buildSheetSection(ctx, 'Operations', moreItems.where(
-                    (i) => i.route == '/stock-adjustments' || i.route == '/returns' || i.route == '/audit-logs' || i.route == '/cash-drawer'
+                    (i) => i.route == '/stock-adjustments' || i.route == '/returns' || i.route == '/audit-logs' || i.route == '/cash-drawer' || i.route == '/hr'
                   ).toList(), selectedIdx),
                   const SizedBox(height: 8),
                   _buildSheetSection(ctx, 'Multi-Branch', moreItems.where(

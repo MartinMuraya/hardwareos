@@ -41,9 +41,13 @@ export const createBusiness = onCall({ cors: true }, async (request) => {
 
   // Create business document
   const businessRef = db().collection("businesses").doc();
+  const baseSlug = businessName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const tenantSlug = `${baseSlug}-${businessRef.id.substring(0, 6)}`;
+
   batch.set(businessRef, {
     id: businessRef.id,
     name: businessName.trim(),
+    tenantSlug,
     plan: "free",
     status: "pending",
     active: false,

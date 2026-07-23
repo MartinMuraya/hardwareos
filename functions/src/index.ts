@@ -216,6 +216,37 @@ export {
   getDemandForecast,
 } from "./functions/advanced_analytics";
 
+// Storefront (Real Implementation)
+export {
+  getPublicStorefront,
+  getPublicProducts,
+  getStorefrontCategories,
+  createOnlineOrder,
+  approveOnlineOrder,
+  rejectOnlineOrder,
+} from "./functions/storefront";
+
+// Accounting
+export {
+  initializeChartOfAccounts,
+  getChartOfAccounts,
+  postManualJournalEntry,
+  getTrialBalance,
+  migrateHistoricalData,
+} from "./functions/accounting";
+
+// HR & Payroll
+export {
+  saveHrSettings,
+  getHrSettings,
+  createEmployee,
+  updateEmployee,
+  submitTimesheet,
+  processLeave,
+  generatePayroll,
+  processPayroll,
+} from "./functions/hr";
+
 // Storefront Stubs (To prevent deletion during deployment)
 export {
   addToCart,
@@ -224,7 +255,6 @@ export {
   checkSlugAvailability,
   clearCart,
   createDeliveryZone,
-  createOnlineOrder,
   createStorefrontCategory,
   deleteCart,
   deleteCustomer,
@@ -249,9 +279,6 @@ export {
   getOrderReturns,
   getPublicCategories,
   getPublicProductDetails,
-  getPublicProducts,
-  getPublicStorefront,
-  getStorefrontCategories,
   getStorefrontSettings,
   processFailedSyncRetries,
   processRefund,

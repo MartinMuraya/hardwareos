@@ -6,6 +6,7 @@ import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
 import { performAutoConversion } from "./bulk_inventory";
+import { postJournalEntryHelper, JournalLine } from "./accounting";
 
 const db = () => admin.firestore();
 
@@ -162,8 +163,41 @@ export const createSale = onCall({ cors: true }, async (request) => {
         quantity: item.quantity,
         reason: "Sale",
         referenceId: saleRef.id,
+        branchId: branchId || null,
         createdAt: now,
       });
+    }
+
+    // 4. Double-Entry Accounting Integration
+    const accountsSnap = await txn.get(db().collection("chart_of_accounts").where("businessId", "==", businessId));
+    if (!accountsSnap.empty) {
+      const accounts = accountsSnap.docs.map(d => d.data());
+      const getAcc = (name: string) => accounts.find(a => a.name === name)?.id;
+      
+      const cashAcc = getAcc("Cash in Hand");
+      const mpesaAcc = getAcc("M-Pesa Account");
+      const arAcc = getAcc("Accounts Receivable");
+      const salesAcc = getAcc("Sales Revenue");
+      const cogsAcc = getAcc("Cost of Goods Sold (COGS)");
+      const invAcc = getAcc("Inventory");
+
+      if (cashAcc && salesAcc && cogsAcc && invAcc && mpesaAcc && arAcc) {
+        let assetAcc = cashAcc;
+        if (paymentMethod === "mpesa") assetAcc = mpesaAcc;
+        if (paymentMethod === "credit") assetAcc = arAcc;
+
+        const lines: JournalLine[] = [
+          { accountId: assetAcc, debit: total, credit: 0 },
+          { accountId: salesAcc, debit: 0, credit: total }
+        ];
+
+        if (totalCost > 0) {
+          lines.push({ accountId: cogsAcc, debit: totalCost, credit: 0 });
+          lines.push({ accountId: invAcc, debit: 0, credit: totalCost });
+        }
+
+        postJournalEntryHelper(txn, businessId, saleRef.id, `Sale ${paymentMethod}`, lines, now);
+      }
     }
 
     return {

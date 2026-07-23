@@ -23,6 +23,7 @@ export const createProduct = onCall({ cors: true }, async (request) => {
   const {
     businessId, name, sku, category,
     quantity, costPrice, sellingPrice, reorderLevel,
+    isPublishedOnline, images, description
   } = request.data as {
     businessId: string;
     name: string;
@@ -34,6 +35,9 @@ export const createProduct = onCall({ cors: true }, async (request) => {
     reorderLevel: number;
     barcodes?: string[];
     branchId?: string;
+    isPublishedOnline?: boolean;
+    images?: string[];
+    description?: string;
   };
 
   if (!name || !businessId) throw new HttpsError("invalid-argument", "name and businessId required.");
@@ -77,6 +81,9 @@ export const createProduct = onCall({ cors: true }, async (request) => {
     reorderLevel: Number(reorderLevel) || 5,
     barcodes: request.data.barcodes || [],
     branchId: request.data.branchId?.trim() || null,
+    isPublishedOnline: !!isPublishedOnline,
+    images: images || [],
+    description: description?.trim() || "",
     createdAt: now,
     updatedAt: now,
   });

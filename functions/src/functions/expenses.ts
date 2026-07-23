@@ -5,6 +5,7 @@
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
+import { postJournalEntryHelper, JournalLine } from "./accounting";
 
 const db = () => admin.firestore();
 
@@ -34,19 +35,41 @@ export const createExpense = onCall({ cors: true }, async (request) => {
   await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager"]);
   await assertActiveSubscription(businessId);
 
-  const expRef = db().collection("expenses").doc();
-  await expRef.set({
-    id: expRef.id,
-    businessId,
-    branchId: branchId || null,
-    category: category.trim(),
-    amount: Number(amount.toFixed(2)),
-    note: note?.trim() || "",
-    createdBy: request.auth.uid,
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  const now = admin.firestore.FieldValue.serverTimestamp();
+  
+  await db().runTransaction(async (txn) => {
+    const expRef = db().collection("expenses").doc();
+    txn.set(expRef, {
+      id: expRef.id,
+      businessId,
+      branchId: branchId || null,
+      category: category.trim(),
+      amount: Number(amount.toFixed(2)),
+      note: note?.trim() || "",
+      createdBy: request.auth!.uid,
+      createdAt: now,
+    });
+
+    const accountsSnap = await txn.get(db().collection("chart_of_accounts").where("businessId", "==", businessId));
+    if (!accountsSnap.empty) {
+      const accounts = accountsSnap.docs.map(d => d.data());
+      const getAcc = (name: string) => accounts.find(a => a.name === name)?.id;
+      
+      const cashAcc = getAcc("Cash in Hand");
+      const genExpAcc = getAcc("General Expenses");
+      const catAcc = getAcc(`${category.trim()} Expense`) || genExpAcc;
+
+      if (cashAcc && catAcc) {
+        const lines: JournalLine[] = [
+          { accountId: catAcc, debit: Number(amount.toFixed(2)), credit: 0 },
+          { accountId: cashAcc, debit: 0, credit: Number(amount.toFixed(2)) }
+        ];
+        postJournalEntryHelper(txn, businessId, expRef.id, `Expense: ${category}`, lines);
+      }
+    }
   });
 
-  return { success: true, expenseId: expRef.id };
+  return { success: true };
 });
 
 // -----------------------------------------------------------
