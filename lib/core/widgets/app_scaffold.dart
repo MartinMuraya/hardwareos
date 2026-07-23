@@ -441,19 +441,23 @@ class _SideNav extends StatelessWidget {
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
-                      value: context.watch<LocaleProvider>().locale.languageCode,
+                      value: context.watch<LocaleProvider>().locale.toString(),
                       isDense: true,
                       icon: const Icon(Icons.language, size: 16),
                       style: theme.textTheme.bodySmall,
                       onChanged: (val) {
                         if (val != null) {
-                          context.read<LocaleProvider>().setLocale(Locale(val));
+                          if (val == 'sw_KE') {
+                            context.read<LocaleProvider>().setLocale(const Locale('sw', 'KE'));
+                          } else {
+                            context.read<LocaleProvider>().setLocale(Locale(val));
+                          }
                         }
                       },
                       items: const [
                         DropdownMenuItem(value: 'en', child: Text('English')),
                         DropdownMenuItem(value: 'sw', child: Text('Swahili')),
-                        DropdownMenuItem(value: 'sheng', child: Text('Sheng')),
+                        DropdownMenuItem(value: 'sw_KE', child: Text('Sheng')),
                       ],
                     ),
                   ),

@@ -102,7 +102,7 @@ class _HardwareOSAppState extends State<HardwareOSApp> {
                 supportedLocales: const [
                   Locale('en'), // English
                   Locale('sw'), // Swahili
-                  Locale('sheng'), // Sheng
+                  Locale('sw', 'KE'), // Sheng
                 ],
                 routerConfig: _router!,
               );
