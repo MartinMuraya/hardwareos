@@ -261,6 +261,12 @@ export {
   checkSlugAvailability,
 } from "./functions/storefront";
 
+// Tax API
+export {
+  getTaxSettings,
+  updateTaxSettings,
+} from "./functions/tax";
+
 // Storefront Stubs (To prevent deletion during deployment)
 export {
   addToCart,

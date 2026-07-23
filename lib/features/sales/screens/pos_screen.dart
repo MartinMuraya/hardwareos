@@ -425,6 +425,9 @@ class _POSScreenState extends State<POSScreen> {
             grandTotal: saleTotal,
             paymentMethod: _paymentMethod,
             customerName: _paymentMethod == 'credit' ? _selectedCustomerName : null,
+            kraPin: result['kraPin'] as String?,
+            timsCuInvoiceNumber: result['timsCuInvoiceNumber'] as String?,
+            timsQrCode: result['timsQrCode'] as String?,
           );
           _showReceiptDialog(saleTotal, saleProfit, outstanding: outstanding, amountPaid: amountPaid);
           _clearAfterCheckout();

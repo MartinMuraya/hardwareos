@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/services/functions_service.dart';
+import '../../../core/services/receipt_service.dart';
 import '../../../core/models/sale.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/responsive.dart';
@@ -182,9 +183,42 @@ class _SaleCard extends StatelessWidget {
               Text(fmt.format(sale.profit), style: const TextStyle(color: AppColors.success, fontWeight: FontWeight.w600, fontSize: 12)),
             ],
           ),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: OutlinedButton.icon(
+              icon: const Icon(Icons.print, size: 16),
+              label: const Text('Receipt'),
+              onPressed: () => _printReceipt(context, sale),
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  Future<void> _printReceipt(BuildContext context, SaleModel sale) async {
+    final auth = context.read<AuthProvider>();
+    final data = ReceiptData(
+      storeName: auth.userProfile?['businessName'] as String? ?? 'Hardware Store',
+      storePhone: auth.userProfile?['phone'] as String? ?? '',
+      date: sale.createdAt,
+      cashier: sale.cashierName ?? 'Staff',
+      receiptNumber: sale.id,
+      items: sale.items.map((e) => ReceiptItem(
+        name: e.name,
+        quantity: e.quantity,
+        price: e.sellingPrice,
+        subtotal: e.lineTotal,
+      )).toList(),
+      subtotal: sale.total,
+      grandTotal: sale.total,
+      paymentMethod: sale.paymentMethod,
+      customerName: sale.customerName,
+      timsCuInvoiceNumber: sale.toMap()['timsCuInvoiceNumber'] as String?,
+      timsQrCode: sale.toMap()['timsQrCode'] as String?,
+    );
+    await ReceiptService.sharePdf(data, isA4: true, qrData: data.timsQrCode);
   }
 }
 

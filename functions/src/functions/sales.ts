@@ -58,6 +58,10 @@ export const createSale = onCall({ cors: true }, async (request) => {
   const hrSettingsSnap = await db().collection("hr_settings").doc(businessId).get();
   const hrSettings = hrSettingsSnap.exists ? hrSettingsSnap.data()! : { commissionBasis: "revenue" };
 
+  // Fetch Tax Settings
+  const taxSettingsSnap = await db().collection("tax_settings").doc(businessId).get();
+  const taxSettings = taxSettingsSnap.exists ? taxSettingsSnap.data()! : { eTimsEnabled: false };
+
   // Run everything in a Firestore transaction for atomicity
   const result = await db().runTransaction(async (txn) => {
     // 1. Read all products
@@ -136,6 +140,15 @@ export const createSale = onCall({ cors: true }, async (request) => {
     const profit = total - totalCost;
     const now = admin.firestore.Timestamp.now();
 
+    let timsCuInvoiceNumber: string | null = null;
+    let timsQrCode: string | null = null;
+
+    if (taxSettings.eTimsEnabled) {
+      // Simulate calling the KRA OSC API
+      timsCuInvoiceNumber = `CU${Math.floor(Math.random() * 100000000).toString().padStart(8, '0')}`;
+      timsQrCode = `https://etims.kra.go.ke/verify/${timsCuInvoiceNumber}?amt=${total.toFixed(2)}`;
+    }
+
     // 2. Create sale document
     const saleRef = db().collection("sales").doc();
     txn.set(saleRef, {
@@ -148,7 +161,10 @@ export const createSale = onCall({ cors: true }, async (request) => {
       profit: Number(profit.toFixed(2)),
       paymentMethod: paymentMethod || "cash",
       note: note || "",
-      createdBy: request.auth!.uid,
+      timsCuInvoiceNumber,
+      timsQrCode,
+      cashierId: request.auth!.uid,
+      cashierName: userData.name || "Unknown",
       createdAt: now,
     });
 
@@ -262,6 +278,9 @@ export const createSale = onCall({ cors: true }, async (request) => {
       total: Number(total.toFixed(2)),
       profit: Number(profit.toFixed(2)),
       itemCount: validatedItems.length,
+      kraPin: taxSettings.kraPin,
+      timsCuInvoiceNumber,
+      timsQrCode,
     };
   });
 

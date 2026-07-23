@@ -19,6 +19,9 @@ class ReceiptData {
   final double grandTotal;
   final String paymentMethod;
   final String? customerName;
+  final String? kraPin;
+  final String? timsCuInvoiceNumber;
+  final String? timsQrCode;
 
   const ReceiptData({
     required this.storeName,
@@ -33,6 +36,9 @@ class ReceiptData {
     required this.grandTotal,
     required this.paymentMethod,
     this.customerName,
+    this.kraPin,
+    this.timsCuInvoiceNumber,
+    this.timsQrCode,
   });
 }
 
@@ -62,6 +68,10 @@ class ReceiptService {
       data.storeName,
       styles: const PosStyles(align: PosAlign.center, bold: true, height: PosTextSize.size2, width: PosTextSize.size2),
     );
+
+    if (data.kraPin != null && data.kraPin!.isNotEmpty) {
+      bytes += generator.text('PIN: ${data.kraPin}', styles: const PosStyles(align: PosAlign.center));
+    }
 
     if (data.storePhone.isNotEmpty) {
       bytes += generator.text(
@@ -116,7 +126,17 @@ class ReceiptService {
 
     bytes += generator.text('Payment: ${data.paymentMethod.toUpperCase()}', styles: const PosStyles(align: PosAlign.center));
     bytes += generator.emptyLines(1);
-    bytes += generator.text('Thank You For Shopping', styles: const PosStyles(align: PosAlign.center, bold: true));
+    bytes += generator.text('Thank you for your business!', styles: const PosStyles(align: PosAlign.center, bold: true));
+    
+    if (data.timsCuInvoiceNumber != null && data.timsQrCode != null) {
+      bytes += generator.emptyLines(1);
+      bytes += generator.text('--- eTIMS RECEIPT ---', styles: const PosStyles(align: PosAlign.center, bold: true));
+      bytes += generator.text('CU Invoice No:', styles: const PosStyles(align: PosAlign.center));
+      bytes += generator.text(data.timsCuInvoiceNumber!, styles: const PosStyles(align: PosAlign.center, bold: true));
+      bytes += generator.emptyLines(1);
+      bytes += generator.qrcode(data.timsQrCode!, size: QRSize.Size5);
+    }
+
     bytes += generator.emptyLines(2);
     bytes += generator.cut();
 
@@ -220,6 +240,8 @@ class ReceiptService {
                 children: [
                   pw.Text(data.storeName, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 24)),
                   pw.SizedBox(height: 4),
+                  if (data.kraPin != null && data.kraPin!.isNotEmpty)
+                    pw.Text('KRA PIN: ${data.kraPin}', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
                   if (data.storePhone.isNotEmpty)
                     pw.Text('Phone: ${data.storePhone}', style: const pw.TextStyle(fontSize: 12)),
                 ],
@@ -334,15 +356,25 @@ class ReceiptService {
                   pw.Text('Thank you for your business!', style: const pw.TextStyle(color: PdfColors.grey700)),
                 ],
               ),
-              if (qrData != null)
-                pw.Container(
-                  width: 80,
-                  height: 80,
-                  child: pw.BarcodeWidget(
-                    barcode: pw.Barcode.qrCode(),
-                    data: qrData,
-                    color: PdfColors.black,
-                  ),
+              if (data.timsQrCode != null || qrData != null)
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.end,
+                  children: [
+                    if (data.timsCuInvoiceNumber != null) ...[
+                      pw.Text('eTIMS CU Invoice No:', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+                      pw.Text(data.timsCuInvoiceNumber!, style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
+                      pw.SizedBox(height: 4),
+                    ],
+                    pw.Container(
+                      width: 80,
+                      height: 80,
+                      child: pw.BarcodeWidget(
+                        barcode: pw.Barcode.qrCode(),
+                        data: data.timsQrCode ?? qrData!,
+                        color: PdfColors.black,
+                      ),
+                    ),
+                  ],
                 ),
             ],
           ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/accounting_provider.dart';
+import 'tax_settings_screen.dart';
 
 class AccountingDashboardScreen extends StatefulWidget {
   const AccountingDashboardScreen({super.key});
@@ -23,7 +24,7 @@ class _AccountingDashboardScreenState extends State<AccountingDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('General Ledger'),
@@ -31,6 +32,7 @@ class _AccountingDashboardScreenState extends State<AccountingDashboardScreen> {
             tabs: [
               Tab(text: 'Trial Balance & P&L'),
               Tab(text: 'Chart of Accounts'),
+              Tab(text: 'Tax & eTIMS'),
             ],
           ),
           actions: [
@@ -48,6 +50,7 @@ class _AccountingDashboardScreenState extends State<AccountingDashboardScreen> {
           children: [
             _TrialBalanceTab(),
             _ChartOfAccountsTab(),
+            TaxSettingsScreen(),
           ],
         ),
         floatingActionButton: FloatingActionButton.extended(
