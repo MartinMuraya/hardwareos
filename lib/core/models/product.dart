@@ -11,6 +11,7 @@ class Product {
   final List<String> barcodes;
   final bool isBulkParent;
   final bool isBulkChild;
+  final bool isWeighed;
   final String? parentProductId;
   final double? conversionRatio;
   final String? baseUnit;
@@ -31,6 +32,7 @@ class Product {
     this.barcodes = const [],
     this.isBulkParent = false,
     this.isBulkChild = false,
+    this.isWeighed = false,
     this.parentProductId,
     this.conversionRatio,
     this.baseUnit,
@@ -53,6 +55,7 @@ class Product {
       barcodes:     (map['barcodes'] as List?)?.map((e) => e.toString()).toList() ?? [],
       isBulkParent: map['isBulkParent'] == true,
       isBulkChild: map['isBulkChild'] == true,
+      isWeighed: map['isWeighed'] == true,
       parentProductId: map['parentProductId'] as String?,
       conversionRatio: (map['conversionRatio'] as num?)?.toDouble(),
       baseUnit: map['baseUnit'] as String?,
@@ -83,6 +86,7 @@ class Product {
       quantity: quantity ?? this.quantity,
       barcodes: barcodes ?? this.barcodes,
       isBulkParent: isBulkParent, isBulkChild: isBulkChild,
+      isWeighed: isWeighed,
       parentProductId: parentProductId, conversionRatio: conversionRatio,
       baseUnit: baseUnit, sellingUnit: sellingUnit,
     );

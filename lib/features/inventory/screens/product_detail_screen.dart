@@ -6,6 +6,7 @@ import '../../../core/models/product.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/responsive.dart';
 import '../../../core/widgets/loading_overlay.dart';
+import '../../../core/services/barcode_print_service.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final String productId;
@@ -130,6 +131,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         appBar: AppBar(
           title: Text(p?.name ?? 'Product'),
           actions: [
+            if (p != null)
+              IconButton(
+                icon: const Icon(Icons.print_rounded),
+                tooltip: 'Print Barcode Label',
+                onPressed: () async {
+                  final bizName = context.read<AuthProvider>().userProfile?['businessName'] as String? ?? 'Hardware Store';
+                  try {
+                    await BarcodePrintService.printLabel(p, bizName);
+                  } catch (e) {
+                    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Print Error: $e')));
+                  }
+                },
+              ),
             if (p != null)
               IconButton(
                 icon: const Icon(Icons.add_box_outlined),

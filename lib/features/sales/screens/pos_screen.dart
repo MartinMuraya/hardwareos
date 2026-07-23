@@ -16,6 +16,7 @@ import '../../../core/widgets/loading_overlay.dart';
 import '../../../core/services/product_cache_service.dart';
 import '../services/offline_sales_queue.dart';
 import '../../../core/utils/barcode_listener.dart';
+import '../../../core/services/web_serial_service.dart';
 import 'package:flutter/services.dart';
 
 class POSScreen extends StatefulWidget {
@@ -1328,6 +1329,50 @@ class _CartTile extends StatelessWidget {
     ));
   }
 
+  Future<void> _readScale(BuildContext context) async {
+    final service = WebSerialService.instance;
+    final isSupported = await service.isSupported();
+    if (!isSupported) {
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Web Serial API not supported in this browser. Please use Chrome/Edge.')));
+      return;
+    }
+
+    try {
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select the weighing scale COM port...')));
+      await service.requestPort();
+      
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Connected to scale. Reading weight...')));
+      
+      final stream = service.readData();
+      String buffer = '';
+      
+      final sub = stream.listen((data) {
+        buffer += data;
+        // Looking for a continuous number, e.g., ST,GS,+  001.25 kg
+        // A simple regex to find the first decimal number in the stream output
+        final regex = RegExp(r'(\d+\.\d+)');
+        final match = regex.firstMatch(buffer);
+        if (match != null) {
+          final weight = double.tryParse(match.group(1) ?? '');
+          if (weight != null && weight > 0) {
+            onUpdate(entry.copyWith(qty: weight));
+            service.closePort();
+            if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Weight Captured: $weight ${entry.product.sellingUnit ?? 'Kg'}')));
+          }
+        }
+        if (buffer.length > 100) buffer = buffer.substring(buffer.length - 50); // prevent buffer overflow
+      });
+
+      // Auto close after 10 seconds if no weight found
+      Future.delayed(const Duration(seconds: 10), () {
+        service.closePort();
+      });
+      
+    } catch (e) {
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Scale Error: $e'), backgroundColor: Colors.red));
+    }
+  }
+
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 10),
@@ -1362,6 +1407,24 @@ class _CartTile extends StatelessWidget {
         if (entry.note != null && entry.note!.isNotEmpty) ...[
           const SizedBox(height: 2),
           Text(entry.note!, style: TextStyle(color: theme.hintColor, fontSize: 10, fontStyle: FontStyle.italic)),
+        ],
+        if (entry.product.isWeighed) ...[
+          const SizedBox(height: 4),
+          GestureDetector(
+            onTap: () => _readScale(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(color: AppColors.accent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4), border: Border.all(color: AppColors.accent)),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.scale_rounded, size: 12, color: AppColors.accent),
+                  SizedBox(width: 4),
+                  Text('Read Scale', style: TextStyle(fontSize: 10, color: AppColors.accent, fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+          ),
         ],
       ])),
       Row(children: [
