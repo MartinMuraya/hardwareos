@@ -134,7 +134,7 @@ class ReceiptService {
       bytes += generator.text('CU Invoice No:', styles: const PosStyles(align: PosAlign.center));
       bytes += generator.text(data.timsCuInvoiceNumber!, styles: const PosStyles(align: PosAlign.center, bold: true));
       bytes += generator.emptyLines(1);
-      bytes += generator.qrcode(data.timsQrCode!, size: QRSize.Size5);
+      bytes += generator.qrcode(data.timsQrCode!, size: QRSize.size5);
     }
 
     bytes += generator.emptyLines(2);

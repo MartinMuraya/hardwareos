@@ -197,7 +197,7 @@ class _SaleCard extends StatelessWidget {
     );
   }
 
-  Future<void> _printReceipt(BuildContext context, SaleModel sale) async {
+  Future<void> _printReceipt(BuildContext context, Sale sale) async {
     final auth = context.read<AuthProvider>();
     final data = ReceiptData(
       storeName: auth.userProfile?['businessName'] as String? ?? 'Hardware Store',

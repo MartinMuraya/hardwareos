@@ -1,0 +1,12 @@
+{
+  "dashboard": "Base",
+  "pos": "Kuuza",
+  "inventory": "Mzigo",
+  "accounting": "Hesabu",
+  "expenses": "Matumizi",
+  "reports": "Ripo",
+  "customers": "Mawania",
+  "checkout": "Maliza",
+  "total": "Jumla",
+  "pay": "Chapaa"
+}

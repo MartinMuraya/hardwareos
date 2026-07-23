@@ -4,6 +4,7 @@
 
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
+import * as nodemailer from "nodemailer";
 import { TRIAL_DAYS } from "../config/planLimits";
 import { assertBusinessMember, assertUserLimit } from "../middleware/checkPlanLimits";
 import { assertCanManageRole } from "../middleware/securityMiddleware";
@@ -71,6 +72,33 @@ export const createBusiness = onCall({ cors: true }, async (request) => {
   });
 
   await batch.commit();
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || "smtp.gmail.com",
+      port: parseInt(process.env.SMTP_PORT || "587"),
+      secure: process.env.SMTP_SECURE === "true",
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: `"HardwareOS System" <${process.env.SMTP_USER || "noreply@hardwareos.app"}>`,
+      to: process.env.SUPER_ADMIN_EMAIL || "superadmin@example.com",
+      subject: `[HardwareOS] New Registration: ${businessName.trim()}`,
+      text: `A new hardware store has registered on HardwareOS.\n\nBusiness Name: ${businessName.trim()}\nTenant Slug: ${tenantSlug}\nOwner Email: ${request.auth.token.email}\nBusiness ID: ${businessRef.id}\n\nPlease verify this business in the Super Admin Dashboard.`,
+    };
+
+    if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+      await transporter.sendMail(mailOptions);
+    } else {
+      console.warn("SMTP credentials not configured. Skipping Super Admin registration alert email.");
+    }
+  } catch (err) {
+    console.error("Failed to send Super Admin alert:", err);
+  }
 
   return {
     businessId: businessRef.id,

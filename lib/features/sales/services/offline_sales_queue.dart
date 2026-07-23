@@ -32,6 +32,13 @@ class OfflineSalesQueue extends ChangeNotifier {
     notifyListeners();
   }
 
+  List<PendingSale> get pendingSalesList => OfflineService.getPendingSales();
+
+  Future<void> removeSale(String id) async {
+    await OfflineService.removeSale(id);
+    refresh();
+  }
+
   Future<void> enqueueOfflineSale(Map<String, dynamic> saleData) async {
     final sale = PendingSale(
       id: 'offline_${const Uuid().v4()}',

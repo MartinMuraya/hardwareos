@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/business_provider.dart';
 import '../providers/theme_provider.dart';
+import '../providers/locale_provider.dart';
 import '../providers/connectivity_provider.dart';
 import '../theme/app_colors.dart';
 import '../utils/responsive.dart';
@@ -430,6 +431,32 @@ class _SideNav extends StatelessWidget {
                   const SizedBox(width: 8),
                   _RoleBadge(role: userRole),
                 ]),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: context.watch<LocaleProvider>().locale.languageCode,
+                      isDense: true,
+                      icon: const Icon(Icons.language, size: 16),
+                      style: theme.textTheme.bodySmall,
+                      onChanged: (val) {
+                        if (val != null) {
+                          context.read<LocaleProvider>().setLocale(Locale(val));
+                        }
+                      },
+                      items: const [
+                        DropdownMenuItem(value: 'en', child: Text('English')),
+                        DropdownMenuItem(value: 'sw', child: Text('Swahili')),
+                        DropdownMenuItem(value: 'sheng', child: Text('Sheng')),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),

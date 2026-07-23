@@ -17,6 +17,8 @@ import '../../../core/services/product_cache_service.dart';
 import '../services/offline_sales_queue.dart';
 import '../../../core/utils/barcode_listener.dart';
 import '../../../core/services/web_serial_service.dart';
+import '../../../core/widgets/empty_state.dart';
+import 'offline_queue_screen.dart';
 import 'package:flutter/services.dart';
 
 class POSScreen extends StatefulWidget {
@@ -843,9 +845,21 @@ class _POSScreenState extends State<POSScreen> {
                         children: [
                           const SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black)),
                           const SizedBox(width: 8),
+                          const SizedBox(width: 8),
                           Text(
-                            'Syncing ${context.watch<OfflineSalesQueue>().pendingSales} offline sales to cloud...',
+                            '${context.watch<OfflineSalesQueue>().pendingSales} offline sales pending...',
                             style: const TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(width: 12),
+                          TextButton(
+                            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const OfflineQueueScreen())),
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.black,
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: const Text('VIEW QUEUE', style: TextStyle(decoration: TextDecoration.underline, fontSize: 12, fontWeight: FontWeight.w900)),
                           ),
                         ],
                       ),

@@ -1,0 +1,12 @@
+{
+  "dashboard": "Dashibodi",
+  "pos": "Uuzaji (POS)",
+  "inventory": "Stoo",
+  "accounting": "Uhasibu",
+  "expenses": "Matumizi",
+  "reports": "Ripoti",
+  "customers": "Wateja",
+  "checkout": "Kamilisha",
+  "total": "Jumla",
+  "pay": "Lipa"
+}

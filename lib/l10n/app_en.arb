@@ -1,0 +1,12 @@
+{
+  "dashboard": "Dashboard",
+  "pos": "Point of Sale",
+  "inventory": "Inventory",
+  "accounting": "Accounting",
+  "expenses": "Expenses",
+  "reports": "Reports",
+  "customers": "Customers",
+  "checkout": "Checkout",
+  "total": "Total",
+  "pay": "Pay"
+}

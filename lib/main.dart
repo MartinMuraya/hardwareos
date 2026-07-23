@@ -8,6 +8,7 @@ import 'core/router/app_router.dart';
 import 'core/providers/auth_provider.dart';
 import 'core/providers/business_provider.dart';
 import 'core/providers/theme_provider.dart';
+import 'core/providers/locale_provider.dart';
 import 'core/providers/connectivity_provider.dart';
 import 'core/services/offline_service.dart';
 import 'core/theme/app_theme.dart';
@@ -15,6 +16,8 @@ import 'features/sales/services/offline_sales_queue.dart';
 import 'features/accounting/providers/accounting_provider.dart';
 import 'features/hr/providers/hr_provider.dart';
 import 'firebase_options.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -76,18 +79,31 @@ class _HardwareOSAppState extends State<HardwareOSApp> {
         ),
         ChangeNotifierProvider(create: (_) => ConnectivityProvider()),
         ChangeNotifierProvider(create: (_) => OfflineSalesQueue()),
+        ChangeNotifierProvider(create: (_) => LocaleProvider()),
       ],
       child: Builder(
         builder: (context) {
           _router ??= AppRouter.createRouter(context);
-          return Consumer<ThemeProvider>(
-            builder: (context, themeProvider, child) {
+          return Consumer2<ThemeProvider, LocaleProvider>(
+            builder: (context, themeProvider, localeProvider, child) {
               return MaterialApp.router(
                 title: 'HardwareOS',
                 debugShowCheckedModeBanner: false,
                 theme: AppTheme.lightTheme,
                 darkTheme: AppTheme.darkTheme,
                 themeMode: themeProvider.themeMode,
+                locale: localeProvider.locale,
+                localizationsDelegates: const [
+                  AppLocalizations.delegate,
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                ],
+                supportedLocales: const [
+                  Locale('en'), // English
+                  Locale('sw'), // Swahili
+                  Locale('sheng'), // Sheng
+                ],
                 routerConfig: _router!,
               );
             },
