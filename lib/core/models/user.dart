@@ -5,6 +5,8 @@ class User {
   final String displayName;
   final String email;
   final DateTime createdAt;
+  final double? commissionRate;
+  final double? commissionBalance;
 
   const User({
     required this.uid,
@@ -13,6 +15,8 @@ class User {
     required this.displayName,
     required this.email,
     required this.createdAt,
+    this.commissionRate,
+    this.commissionBalance,
   });
 
   factory User.fromMap(Map<String, dynamic> map) {
@@ -23,6 +27,8 @@ class User {
       displayName: map['displayName'] as String? ?? '',
       email:       map['email'] as String? ?? '',
       createdAt:   DateTime.tryParse(map['createdAt']?.toString() ?? '') ?? DateTime.now(),
+      commissionRate: (map['commissionRate'] as num?)?.toDouble(),
+      commissionBalance: (map['commissionBalance'] as num?)?.toDouble(),
     );
   }
 

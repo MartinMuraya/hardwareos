@@ -54,6 +54,10 @@ export const createSale = onCall({ cors: true }, async (request) => {
   const userData = await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager", "staff"]);
   const isManager = userData.role === "owner" || userData.role === "manager";
 
+  // Fetch HR Settings for commission basis
+  const hrSettingsSnap = await db().collection("hr_settings").doc(businessId).get();
+  const hrSettings = hrSettingsSnap.exists ? hrSettingsSnap.data()! : { commissionBasis: "revenue" };
+
   // Run everything in a Firestore transaction for atomicity
   const result = await db().runTransaction(async (txn) => {
     // 1. Read all products
@@ -147,6 +151,19 @@ export const createSale = onCall({ cors: true }, async (request) => {
       createdBy: request.auth!.uid,
       createdAt: now,
     });
+
+    // 2.5 Calculate & Accrue Commission
+    let commissionEarned = 0;
+    if (userData.commissionRate && userData.commissionRate > 0) {
+      const basisAmount = hrSettings.commissionBasis === "profit" ? profit : total;
+      if (basisAmount > 0) {
+        commissionEarned = Number((basisAmount * userData.commissionRate).toFixed(2));
+        const userRef = db().collection("users").doc(request.auth!.uid);
+        txn.update(userRef, {
+          commissionBalance: admin.firestore.FieldValue.increment(commissionEarned),
+        });
+      }
+    }
 
     // 3. Decrement stock + log movements
     for (let i = 0; i < validatedItems.length; i++) {

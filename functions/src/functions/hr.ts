@@ -15,6 +15,7 @@ export const saveHrSettings = onCall({ cors: true }, async (request) => {
     payeRate: number;
     nhifRate: number;
     nssfRate: number;
+    commissionBasis: "revenue" | "profit";
   };
   await assertBusinessMember(request.auth.uid, businessId, ["owner"]);
 
@@ -22,6 +23,7 @@ export const saveHrSettings = onCall({ cors: true }, async (request) => {
     payeRate: Number(payeRate) || 0,
     nhifRate: Number(nhifRate) || 0,
     nssfRate: Number(nssfRate) || 0,
+    commissionBasis: request.data.commissionBasis === "profit" ? "profit" : "revenue",
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 
@@ -35,7 +37,7 @@ export const getHrSettings = onCall({ cors: true }, async (request) => {
 
   const doc = await db().collection("hr_settings").doc(businessId).get();
   if (!doc.exists) {
-    return { payeRate: 30.0, nhifRate: 2.75, nssfRate: 6.0 }; // Default Kenyan simplified rates
+    return { payeRate: 30.0, nhifRate: 2.75, nssfRate: 6.0, commissionBasis: "revenue" }; // Default Kenyan simplified rates
   }
   return doc.data();
 });
@@ -233,6 +235,81 @@ export const processPayroll = onCall({ cors: true }, async (request) => {
       processedAt: admin.firestore.FieldValue.serverTimestamp(),
       processedBy: request.auth!.uid,
     });
+  });
+
+  return { success: true };
+});
+
+// -----------------------------------------------------------
+// Commissions
+// -----------------------------------------------------------
+export const payoutCommission = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
+  
+  const { businessId, targetUserId, amount } = request.data as {
+    businessId: string;
+    targetUserId: string;
+    amount: number;
+  };
+  
+  if (!businessId || !targetUserId || !amount || amount <= 0) {
+    throw new HttpsError("invalid-argument", "Missing required fields or invalid amount.");
+  }
+  
+  await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager"]);
+  await assertActiveSubscription(businessId);
+  
+  const userRef = db().collection("users").doc(targetUserId);
+  
+  await db().runTransaction(async (txn) => {
+    const userSnap = await txn.get(userRef);
+    if (!userSnap.exists) throw new HttpsError("not-found", "User not found.");
+    
+    const userData = userSnap.data()!;
+    if (userData.businessId !== businessId) {
+      throw new HttpsError("permission-denied", "User does not belong to your business.");
+    }
+    
+    const currentBalance = userData.commissionBalance || 0;
+    if (currentBalance < amount) {
+      throw new HttpsError("failed-precondition", "Insufficient commission balance.");
+    }
+    
+    // Decrement balance
+    txn.update(userRef, {
+      commissionBalance: admin.firestore.FieldValue.increment(-amount),
+    });
+    
+    // Create an expense record for the payout
+    const expenseRef = db().collection("expenses").doc();
+    const now = admin.firestore.Timestamp.now();
+    txn.set(expenseRef, {
+      id: expenseRef.id,
+      businessId,
+      category: "Payroll/Commissions",
+      amount: Number(amount),
+      description: `Commission Payout to ${userData.displayName || "Staff"}`,
+      createdBy: request.auth!.uid,
+      createdAt: now,
+    });
+    
+    // Log accounting entry
+    const accountsSnap = await txn.get(db().collection("chart_of_accounts").where("businessId", "==", businessId));
+    if (!accountsSnap.empty) {
+      const accounts = accountsSnap.docs.map(d => d.data());
+      const getAcc = (name: string) => accounts.find(a => a.name === name)?.id;
+      
+      const expAcc = getAcc("Payroll Expenses");
+      const cashAcc = getAcc("Cash in Drawer");
+      
+      if (expAcc && cashAcc) {
+        const lines: JournalLine[] = [
+          { accountId: expAcc, debit: Number(amount), credit: 0 },
+          { accountId: cashAcc, debit: 0, credit: Number(amount) },
+        ];
+        postJournalEntryHelper(txn, businessId, expenseRef.id, "Commission Payout", lines);
+      }
+    }
   });
 
   return { success: true };

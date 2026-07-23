@@ -2,11 +2,13 @@ class HrSettings {
   final double payeRate;
   final double nhifRate;
   final double nssfRate;
+  final String commissionBasis;
 
   HrSettings({
     this.payeRate = 30.0,
     this.nhifRate = 2.75,
     this.nssfRate = 6.0,
+    this.commissionBasis = 'revenue',
   });
 
   factory HrSettings.fromMap(Map<String, dynamic> map) {
@@ -14,6 +16,7 @@ class HrSettings {
       payeRate: (map['payeRate'] ?? 30.0).toDouble(),
       nhifRate: (map['nhifRate'] ?? 2.75).toDouble(),
       nssfRate: (map['nssfRate'] ?? 6.0).toDouble(),
+      commissionBasis: map['commissionBasis'] ?? 'revenue',
     );
   }
 }

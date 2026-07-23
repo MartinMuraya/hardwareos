@@ -11,7 +11,7 @@ setGlobalOptions({ maxInstances: 10 });
 admin.initializeApp();
 
 // Auth
-export { createBusiness, inviteUser, getMyProfile, getUsers } from "./functions/auth";
+export { createBusiness, inviteUser, updateStaff, getMyProfile, getUsers } from "./functions/auth";
 
 // Security - Login/Password Abuse Protection
 export {
@@ -251,6 +251,7 @@ export {
   processLeave,
   generatePayroll,
   processPayroll,
+  payoutCommission,
 } from "./functions/hr";
 
 // Storefront Stubs (To prevent deletion during deployment)

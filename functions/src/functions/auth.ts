@@ -93,11 +93,12 @@ export const inviteUser = onCall({ cors: true }, async (request) => {
     throw new HttpsError("unauthenticated", "You must be logged in.");
   }
 
-  const { targetUid, role, businessId, displayName } = request.data as {
+  const { targetUid, role, businessId, displayName, commissionRate } = request.data as {
     targetUid: string;
     role: "manager" | "staff";
     businessId: string;
     displayName: string;
+    commissionRate?: number;
   };
 
   if (!["manager", "staff"].includes(role)) {
@@ -132,10 +133,49 @@ export const inviteUser = onCall({ cors: true }, async (request) => {
     role,
     displayName: displayName || "",
     email: "",
+    commissionRate: commissionRate ? Number(commissionRate) : 0,
+    commissionBalance: 0,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 
   return { success: true, message: `User added as ${role}.` };
+});
+
+// -----------------------------------------------------------
+// updateStaff
+// Owner/Manager updates an existing staff member's role or commission.
+// -----------------------------------------------------------
+export const updateStaff = onCall({ cors: true }, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "You must be logged in.");
+  }
+
+  const { targetUid, role, businessId, commissionRate } = request.data as {
+    targetUid: string;
+    role: "manager" | "staff";
+    businessId: string;
+    commissionRate?: number;
+  };
+
+  if (!["manager", "staff"].includes(role)) {
+    throw new HttpsError("invalid-argument", "Role must be manager or staff.");
+  }
+
+  await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager"]);
+  await assertCanManageRole(request.auth.uid, businessId, role);
+
+  const targetSnap = await db().collection("users").doc(targetUid).get();
+  if (!targetSnap.exists || targetSnap.data()?.businessId !== businessId) {
+    throw new HttpsError("not-found", "User not found in your business.");
+  }
+
+  await db().collection("users").doc(targetUid).update({
+    role,
+    commissionRate: commissionRate !== undefined ? Number(commissionRate) : targetSnap.data()?.commissionRate || 0,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  return { success: true, message: "Staff updated successfully." };
 });
 
 // -----------------------------------------------------------

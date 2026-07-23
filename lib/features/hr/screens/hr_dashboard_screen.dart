@@ -4,6 +4,7 @@ import '../providers/hr_provider.dart';
 import 'employee_directory_tab.dart';
 import 'hr_settings_tab.dart';
 import 'payroll_tab.dart';
+import 'staff_commissions_tab.dart';
 
 class HrDashboardScreen extends StatefulWidget {
   const HrDashboardScreen({super.key});
@@ -16,7 +17,7 @@ class _HrDashboardScreenState extends State<HrDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('HR & Payroll'),
@@ -24,6 +25,7 @@ class _HrDashboardScreenState extends State<HrDashboardScreen> {
             tabs: [
               Tab(text: 'Employees'),
               Tab(text: 'Payroll'),
+              Tab(text: 'Commissions'),
               Tab(text: 'Settings'),
             ],
           ),
@@ -32,6 +34,7 @@ class _HrDashboardScreenState extends State<HrDashboardScreen> {
           children: [
             EmployeeDirectoryTab(),
             PayrollTab(),
+            StaffCommissionsTab(),
             HrSettingsTab(),
           ],
         ),

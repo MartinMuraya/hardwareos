@@ -14,6 +14,7 @@ class _HrSettingsTabState extends State<HrSettingsTab> {
   double _paye = 30.0;
   double _nhif = 2.75;
   double _nssf = 6.0;
+  String _commissionBasis = 'revenue';
 
   @override
   Widget build(BuildContext context) {
@@ -62,6 +63,23 @@ class _HrSettingsTabState extends State<HrSettingsTab> {
                 onSaved: (val) => _nssf = double.tryParse(val!) ?? 6.0,
               ),
               const SizedBox(height: 24),
+              Text('Sales Commissions', style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 8),
+              const Text('Should commissions be calculated as a percentage of Total Revenue, or Gross Profit?'),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: settings?.commissionBasis ?? _commissionBasis,
+                decoration: const InputDecoration(labelText: 'Commission Basis', border: OutlineInputBorder()),
+                items: const [
+                  DropdownMenuItem(value: 'revenue', child: Text('Total Revenue')),
+                  DropdownMenuItem(value: 'profit', child: Text('Gross Profit (Revenue - Cost)')),
+                ],
+                onChanged: (val) {
+                  if (val != null) setState(() => _commissionBasis = val);
+                },
+                onSaved: (val) => _commissionBasis = val ?? 'revenue',
+              ),
+              const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -70,7 +88,7 @@ class _HrSettingsTabState extends State<HrSettingsTab> {
                     if (!_formKey.currentState!.validate()) return;
                     _formKey.currentState!.save();
                     try {
-                      await provider.saveSettings(_paye, _nhif, _nssf);
+                      await provider.saveSettings(_paye, _nhif, _nssf, _commissionBasis);
                       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Settings saved successfully!')));
                     } catch (e) {
                       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));

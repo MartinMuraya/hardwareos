@@ -15,6 +15,7 @@ class InviteUserDialog extends StatefulWidget {
 class _InviteUserDialogState extends State<InviteUserDialog> {
   final _uidCtrl = TextEditingController();
   final _nameCtrl = TextEditingController();
+  final _commissionCtrl = TextEditingController(text: '0');
   String _role = 'staff';
   bool _loading = false;
   String? _error;
@@ -23,12 +24,14 @@ class _InviteUserDialogState extends State<InviteUserDialog> {
   void dispose() {
     _uidCtrl.dispose();
     _nameCtrl.dispose();
+    _commissionCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _invite() async {
     final uid = _uidCtrl.text.trim();
     final name = _nameCtrl.text.trim();
+    final commission = double.tryParse(_commissionCtrl.text.trim()) ?? 0.0;
 
     if (uid.isEmpty || name.isEmpty) {
       setState(() => _error = 'UID and Name are required.');
@@ -44,6 +47,7 @@ class _InviteUserDialogState extends State<InviteUserDialog> {
         'role': _role,
         'businessId': bizId,
         'displayName': name,
+        'commissionRate': commission / 100.0, // Convert percentage to decimal
       });
 
       if (mounted) {
@@ -86,6 +90,16 @@ class _InviteUserDialogState extends State<InviteUserDialog> {
               decoration: const InputDecoration(
                 labelText: 'Display Name',
                 hintText: 'e.g. John Doe',
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _commissionCtrl,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              style: TextStyle(color: theme.colorScheme.onSurface),
+              decoration: const InputDecoration(
+                labelText: 'Commission Rate (%)',
+                hintText: 'e.g. 2.5',
               ),
             ),
             const SizedBox(height: 16),

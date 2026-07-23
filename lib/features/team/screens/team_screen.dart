@@ -8,6 +8,7 @@ import '../../../core/utils/responsive.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/loading_overlay.dart';
 import '../widgets/invite_user_dialog.dart';
+import '../widgets/edit_staff_dialog.dart';
 
 class TeamScreen extends StatefulWidget {
   const TeamScreen({super.key});
@@ -126,7 +127,7 @@ class _TeamScreenState extends State<TeamScreen> {
                         child: ListView.separated(
                           itemCount: _team.length,
                           separatorBuilder: (_, __) => const SizedBox(height: 12),
-                          itemBuilder: (_, i) => _TeamMemberCard(user: _team[i], theme: theme),
+                          itemBuilder: (_, i) => _TeamMemberCard(user: _team[i], theme: theme, onRefresh: _loadTeam),
                         ),
                       ),
               ),
@@ -141,7 +142,8 @@ class _TeamScreenState extends State<TeamScreen> {
 class _TeamMemberCard extends StatelessWidget {
   final User user;
   final ThemeData theme;
-  const _TeamMemberCard({required this.user, required this.theme});
+  final VoidCallback onRefresh;
+  const _TeamMemberCard({required this.user, required this.theme, required this.onRefresh});
 
   @override
   Widget build(BuildContext context) {
@@ -152,15 +154,23 @@ class _TeamMemberCard extends StatelessWidget {
       default:        roleColor = theme.hintColor;
     }
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: theme.dividerColor),
-      ),
-      child: Row(
-        children: [
+    return InkWell(
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (_) => EditStaffDialog(user: user, onUserUpdated: onRefresh),
+        );
+      },
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: theme.dividerColor),
+        ),
+        child: Row(
+          children: [
           Container(
             width: 48,
             height: 48,
@@ -194,6 +204,13 @@ class _TeamMemberCard extends StatelessWidget {
                   Text(
                     user.email,
                     style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
+                  ),
+                ],
+                if (user.commissionRate != null && user.commissionRate! > 0) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    'Commission: ${(user.commissionRate! * 100).toStringAsFixed(1)}%',
+                    style: TextStyle(color: AppColors.chartGreen, fontSize: 13, fontWeight: FontWeight.bold),
                   ),
                 ],
               ],

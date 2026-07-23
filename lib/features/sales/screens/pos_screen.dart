@@ -417,7 +417,8 @@ class _POSScreenState extends State<POSScreen> {
             cashier: auth.user?.email ?? 'staff',
             receiptNumber: result['saleId'] as String? ?? const Uuid().v4().substring(0, 8),
             items: _cart.map((e) => ReceiptItem(
-              name: e.product.name, quantity: e.qty,
+              name: e.selectedUom != null && e.selectedUom != e.product.sellingUnit ? '${e.product.name} (${e.selectedUom})' : e.product.name,
+              quantity: e.qty,
               price: e.appliedPrice, subtotal: e.lineTotal,
             )).toList(),
             subtotal: saleTotal,
@@ -451,8 +452,9 @@ class _POSScreenState extends State<POSScreen> {
             cashier: auth.user?.email ?? 'staff',
             receiptNumber: saleId,
             items: _cart.map((e) => ReceiptItem(
-              name: e.product.name, quantity: e.qty,
-              price: e.product.sellingPrice, subtotal: e.lineTotal,
+              name: e.selectedUom != null && e.selectedUom != e.product.sellingUnit ? '${e.product.name} (${e.selectedUom})' : e.product.name,
+              quantity: e.qty,
+              price: e.appliedPrice, subtotal: e.lineTotal,
             )).toList(),
             subtotal: total,
             grandTotal: total,
@@ -515,8 +517,9 @@ class _POSScreenState extends State<POSScreen> {
         cashier: auth.user?.email ?? 'staff',
         receiptNumber: saleId,
         items: _cart.map((e) => ReceiptItem(
-          name: e.product.name, quantity: e.qty,
-          price: e.product.sellingPrice, subtotal: e.lineTotal,
+          name: e.selectedUom != null && e.selectedUom != e.product.sellingUnit ? '${e.product.name} (${e.selectedUom})' : e.product.name,
+          quantity: e.qty,
+          price: e.appliedPrice, subtotal: e.lineTotal,
         )).toList(),
         subtotal: total,
         grandTotal: total,
@@ -1138,8 +1141,36 @@ class _POSScreenState extends State<POSScreen> {
               color: theme.colorScheme.onSurface)),
         ])),
         ElevatedButton(
-          onPressed: _checkout,
-          child: const Text('Checkout'),
+          onPressed: () {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: theme.scaffoldBackgroundColor,
+              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+              builder: (ctx) => DraggableScrollableSheet(
+                initialChildSize: 0.9,
+                minChildSize: 0.5,
+                maxChildSize: 0.95,
+                expand: false,
+                builder: (_, scrollController) => Column(
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 12),
+                      width: 40, height: 4,
+                      decoration: BoxDecoration(color: theme.dividerColor, borderRadius: BorderRadius.circular(2)),
+                    ),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        controller: scrollController,
+                        child: _cartPanel(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+          child: const Text('View Cart'),
         ),
       ]),
     );
@@ -1153,28 +1184,48 @@ class _CartEntry {
   final double qty;
   final double? overridePrice;
   final String? note;
+  final String? selectedUom; // e.g., 'Piece', 'Carton'
+  final double uomMultiplier;
   
-  _CartEntry({required this.product, required this.qty, this.overridePrice, this.note});
+  _CartEntry({
+    required this.product,
+    required this.qty,
+    this.overridePrice,
+    this.note,
+    this.selectedUom,
+    this.uomMultiplier = 1.0,
+  });
   
-  double get appliedPrice => overridePrice ?? product.sellingPrice;
+  double get appliedPrice => overridePrice ?? (product.sellingPrice * uomMultiplier);
   double get lineTotal  => appliedPrice * qty;
-  double get lineProfit => (appliedPrice - product.costPrice) * qty;
+  double get lineProfit => (appliedPrice - (product.costPrice * uomMultiplier)) * qty;
   
-  _CartEntry copyWith({Product? product, double? qty, double? overridePrice, String? note}) {
+  _CartEntry copyWith({
+    Product? product,
+    double? qty,
+    double? overridePrice,
+    String? note,
+    String? selectedUom,
+    double? uomMultiplier,
+  }) {
     return _CartEntry(
       product: product ?? this.product,
       qty: qty ?? this.qty,
-      overridePrice: overridePrice ?? this.overridePrice,
+      overridePrice: overridePrice, // allow nulling out overridePrice
       note: note ?? this.note,
+      selectedUom: selectedUom ?? this.selectedUom,
+      uomMultiplier: uomMultiplier ?? this.uomMultiplier,
     );
   }
   
   Map<String, dynamic> toMap() => {
     'productId':    product.id,
-    'name':         product.name,
-    'quantity':     qty,
-    'sellingPrice': appliedPrice,
+    'name':         selectedUom != null && selectedUom != product.sellingUnit ? '${product.name} ($selectedUom)' : product.name,
+    'quantity':     qty * uomMultiplier, // Convert to base unit for inventory
+    'sellingPrice': appliedPrice / uomMultiplier, // Send base price
     'costPrice':    product.costPrice,
+    'displayQty':   qty,
+    'displayUnit':  selectedUom ?? product.sellingUnit,
     if (overridePrice != null) 'overridePrice': overridePrice,
     if (note != null && note!.isNotEmpty) 'note': note,
   };
@@ -1402,6 +1453,36 @@ class _CartTile extends StatelessWidget {
               onTap: () => _showNoteDialog(context),
               child: Icon(Icons.note_add_rounded, size: 14, color: entry.note != null && entry.note!.isNotEmpty ? AppColors.accent : theme.hintColor),
             ),
+            if (entry.product.uomConfig != null) ...[
+              const SizedBox(width: 12),
+              Container(
+                height: 24,
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: entry.selectedUom ?? entry.product.sellingUnit,
+                    isDense: true,
+                    iconSize: 14,
+                    style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurface, fontWeight: FontWeight.w600),
+                    items: [
+                      if (entry.product.sellingUnit != null)
+                        DropdownMenuItem(value: entry.product.sellingUnit, child: Text(entry.product.sellingUnit!)),
+                      DropdownMenuItem(value: entry.product.uomConfig!.purchaseUnit, child: Text(entry.product.uomConfig!.purchaseUnit)),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) {
+                        final mult = val == entry.product.uomConfig!.purchaseUnit ? entry.product.uomConfig!.conversionMultiplier : 1.0;
+                        onUpdate(entry.copyWith(selectedUom: val, uomMultiplier: mult));
+                      }
+                    },
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
         if (entry.note != null && entry.note!.isNotEmpty) ...[
@@ -1433,8 +1514,8 @@ class _CartTile extends StatelessWidget {
           onTap: () => _showEditQtyDialog(context),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Text('${entry.qty.toStringAsFixed(entry.qty.truncateToDouble() == entry.qty ? 0 : 2)}${entry.product.sellingUnit != null ? ' ${entry.product.sellingUnit}' : ''}',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15,
+            child: Text('${entry.qty.toStringAsFixed(entry.qty.truncateToDouble() == entry.qty ? 0 : 2)}',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16,
                 color: theme.colorScheme.onSurface,
                 decoration: TextDecoration.underline)),
           ),
@@ -1459,10 +1540,10 @@ class _QtyBtn extends StatelessWidget {
   Widget build(BuildContext context) => GestureDetector(
     onTap: onTap,
     child: Container(
-      width: 26, height: 26,
+      width: 36, height: 36, // Increased touch target for mobile
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(6)),
-      child: Icon(icon, size: 14, color: theme.colorScheme.onSurfaceVariant),
+        color: theme.colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(8)),
+      child: Icon(icon, size: 18, color: theme.colorScheme.onSurfaceVariant),
     ),
   );
 }
