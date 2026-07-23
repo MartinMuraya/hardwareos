@@ -5,6 +5,7 @@
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
+import { recordInventoryMovement, MovementType } from "./inventory_ledger";
 
 const db = () => admin.firestore();
 
@@ -81,16 +82,15 @@ export const createPurchase = onCall({ cors: true }, async (request) => {
       updatedAt: now,
     });
 
-    const movRef = db().collection("stockMovements").doc();
-    batch.set(movRef, {
-      id: movRef.id,
+    recordInventoryMovement(batch, {
       businessId,
       productId: item.productId,
-      type: "IN",
+      productName: item.name,
+      movementType: MovementType.PURCHASE,
       quantity: item.quantity,
-      reason: "Purchase",
+      costAtTime: item.costPrice,
       referenceId: purchaseRef.id,
-      createdAt: now,
+      performedBy: request.auth!.uid,
     });
   }
 

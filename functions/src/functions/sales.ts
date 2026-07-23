@@ -7,6 +7,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
 import { performAutoConversion } from "./bulk_inventory";
 import { postJournalEntryHelper, JournalLine } from "./accounting";
+import { recordInventoryMovement, MovementType } from "./inventory_ledger";
 
 const db = () => admin.firestore();
 
@@ -153,18 +154,17 @@ export const createSale = onCall({ cors: true }, async (request) => {
         updatedAt: now,
       });
 
-      // Log stock movement
-      const movRef = db().collection("stockMovements").doc();
-      txn.set(movRef, {
-        id: movRef.id,
+      // Write to Immutable Inventory Ledger
+      recordInventoryMovement(txn, {
         businessId,
-        productId: item.productId,
-        type: "OUT",
-        quantity: item.quantity,
-        reason: "Sale",
-        referenceId: saleRef.id,
         branchId: branchId || null,
-        createdAt: now,
+        productId: item.productId,
+        productName: item.name,
+        movementType: MovementType.SALE,
+        quantity: -item.quantity, // Outgoing
+        costAtTime: item.costPrice,
+        referenceId: saleRef.id,
+        performedBy: request.auth!.uid,
       });
     }
 

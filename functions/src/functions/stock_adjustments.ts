@@ -6,6 +6,7 @@
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
+import { recordInventoryMovement, MovementType } from "./inventory_ledger";
 
 const db = () => admin.firestore();
 
@@ -77,17 +78,17 @@ export const adjustInventoryStock = onCall({ cors: true }, async (request) => {
       updatedAt: now,
     });
 
-    // 3. Log stock movement
-    const movRef = db().collection("stockMovements").doc();
-    txn.set(movRef, {
-      id: movRef.id,
+    // 3. Log stock movement to Inventory Ledger
+    recordInventoryMovement(txn, {
       businessId,
       productId,
-      type: difference >= 0 ? "IN" : "OUT",
-      quantity: Math.abs(difference),
-      reason: `Adjustment: ${reason}`,
+      productName: product.name,
+      movementType: MovementType.ADJUSTMENT,
+      quantity: difference,
+      costAtTime: product.costPrice || 0,
       referenceId: adjRef.id,
-      createdAt: now,
+      reason: reason,
+      performedBy: request.auth!.uid,
     });
 
     // 4. Create audit trail

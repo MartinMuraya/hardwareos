@@ -122,6 +122,15 @@ export const processLeave = onCall({ cors: true }, async (request) => {
   return { success: true };
 });
 
+export function calculatePayslip(gross: number, rates: { payeRate: number, nhifRate: number, nssfRate: number }) {
+  const paye = gross * (rates.payeRate / 100);
+  const nhif = gross * (rates.nhifRate / 100);
+  const nssf = gross * (rates.nssfRate / 100);
+  const deds = paye + nhif + nssf;
+  const net = gross - deds;
+  return { paye, nhif, nssf, deductions: deds, netPay: net };
+}
+
 // -----------------------------------------------------------
 // Payroll Generation & Processing
 // -----------------------------------------------------------
@@ -132,7 +141,7 @@ export const generatePayroll = onCall({ cors: true }, async (request) => {
 
   // Fetch settings
   const settingsDoc = await db().collection("hr_settings").doc(businessId).get();
-  const settings = settingsDoc.exists ? settingsDoc.data()! : { payeRate: 30, nhifRate: 2.75, nssfRate: 6 };
+  const settings = settingsDoc.exists ? settingsDoc.data() as any : { payeRate: 30, nhifRate: 2.75, nssfRate: 6 };
 
   // Fetch active employees
   const empSnap = await db().collection("employees").where("businessId", "==", businessId).where("status", "==", "Active").get();
@@ -149,16 +158,11 @@ export const generatePayroll = onCall({ cors: true }, async (request) => {
     const emp = doc.data();
     const gross = emp.baseSalary;
     
-    const paye = gross * (settings.payeRate / 100);
-    const nhif = gross * (settings.nhifRate / 100);
-    const nssf = gross * (settings.nssfRate / 100);
-    
-    const deds = paye + nhif + nssf;
-    const net = gross - deds;
+    const { paye, nhif, nssf, deductions, netPay } = calculatePayslip(gross, settings);
 
     totalGross += gross;
-    totalDeductions += deds;
-    totalNetPay += net;
+    totalDeductions += deductions;
+    totalNetPay += netPay;
 
     const payslipRef = payrollRef.collection("payslips").doc(emp.id);
     batch.set(payslipRef, {
@@ -168,7 +172,7 @@ export const generatePayroll = onCall({ cors: true }, async (request) => {
       paye: Number(paye.toFixed(2)),
       nhif: Number(nhif.toFixed(2)),
       nssf: Number(nssf.toFixed(2)),
-      netPay: Number(net.toFixed(2)),
+      netPay: Number(netPay.toFixed(2)),
     });
   }
 

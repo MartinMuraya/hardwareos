@@ -5,6 +5,7 @@
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
+import { recordInventoryMovement, MovementType } from "./inventory_ledger";
 
 const db = () => admin.firestore();
 
@@ -248,6 +249,32 @@ export const approveStockTransfer = onCall({ cors: true }, async (request) => {
         createdAt: admin.firestore.Timestamp.now(),
       });
     }
+
+    // Write Ledger for Source Branch (OUT)
+    recordInventoryMovement(txn, {
+      businessId,
+      branchId: transfer.fromBranchId,
+      productId: transfer.productId,
+      productName: transfer.productName || "Unknown",
+      movementType: MovementType.TRANSFER_OUT,
+      quantity: -transfer.quantity,
+      costAtTime: 0, // Should ideally fetch cost from product, assuming 0 for branch transfers for now or query it
+      referenceId: transferId,
+      performedBy: request.auth!.uid,
+    });
+
+    // Write Ledger for Dest Branch (IN)
+    recordInventoryMovement(txn, {
+      businessId,
+      branchId: transfer.toBranchId,
+      productId: transfer.productId,
+      productName: transfer.productName || "Unknown",
+      movementType: MovementType.TRANSFER_IN,
+      quantity: transfer.quantity,
+      costAtTime: 0,
+      referenceId: transferId,
+      performedBy: request.auth!.uid,
+    });
 
     const now = admin.firestore.Timestamp.now();
     txn.update(db().collection("stockTransfers").doc(transferId), {

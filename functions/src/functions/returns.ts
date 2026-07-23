@@ -6,6 +6,7 @@
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
+import { recordInventoryMovement, MovementType } from "./inventory_ledger";
 
 const db = () => admin.firestore();
 
@@ -114,16 +115,16 @@ export const processReturn = onCall({ cors: true }, async (request) => {
       });
 
       // Stock movement (IN = returned to stock)
-      const movRef = db().collection("stockMovements").doc();
-      txn.set(movRef, {
-        id: movRef.id,
+      recordInventoryMovement(txn, {
         businessId,
         productId: item.productId,
-        type: "IN",
+        productName: item.name,
+        movementType: MovementType.RETURN,
         quantity: item.quantity,
-        reason: `Return: ${reason}`,
+        costAtTime: item.costPrice,
         referenceId: returnRef.id,
-        createdAt: now,
+        reason: reason,
+        performedBy: request.auth!.uid,
       });
     }
 

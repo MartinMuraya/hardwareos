@@ -40,6 +40,9 @@ export {
   getAdjustmentStats,
 } from "./functions/stock_adjustments";
 
+// Inventory Ledger
+export { migrateToLedger } from "./functions/inventory_ledger";
+
 // Sales
 export { createSale, getSales } from "./functions/sales";
 

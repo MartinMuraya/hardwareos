@@ -172,7 +172,6 @@ While HardwareOS covers a vast Enterprise ERP feature set, the following areas a
 - **E-Commerce & Online Storefronts:** Currently, backend APIs (`storefront_stubs.ts`) exist as placeholders. The roadmap includes exposing a B2B/B2C storefront for contractors to order materials online directly from the hardware store.
 - **Advanced Tax Integration (KRA TIMS):** Expanding the current Double-Entry Accounting Ledger to automatically transmit and sign electronic tax invoices directly with the revenue authority.
 - **Advanced Hardware Integrations:** Integrating with digital weighing scales (for items sold by weight like nails/cement) and specialized barcode label printers.
-- **Testing & CI/CD Maturity:** Implementing comprehensive end-to-end integration testing and expanding the GitHub Actions pipeline with staging environments and automated test gates.
 
 ---
 
