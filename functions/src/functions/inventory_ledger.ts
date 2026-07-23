@@ -24,6 +24,8 @@ export interface InventoryLedgerEntry {
   referenceId: string; // The ID of the Sale, Purchase Order, Return, or Adjustment
   performedBy: string; // UID of the user who performed the action
   reason?: string; // Optional reason (e.g., for adjustments)
+  batchNumber?: string; // If this movement was tied to a specific batch
+  serialNumbers?: string[]; // If this movement involved specific serial numbers
   timestamp: admin.firestore.Timestamp | admin.firestore.FieldValue;
 }
 

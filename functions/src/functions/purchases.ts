@@ -14,6 +14,9 @@ export interface PurchaseItem {
   name: string;
   quantity: number;
   costPrice: number;
+  batchNumber?: string;
+  expiryDate?: string;
+  serialNumbers?: string[];
 }
 
 // -----------------------------------------------------------
@@ -55,6 +58,9 @@ export const createPurchase = onCall({ cors: true }, async (request) => {
       name: productSnap.data()!.name,
       quantity: Math.floor(item.quantity),
       costPrice: Number(item.costPrice || productSnap.data()!.costPrice),
+      batchNumber: item.batchNumber?.trim(),
+      expiryDate: item.expiryDate?.trim(),
+      serialNumbers: item.serialNumbers?.filter(s => s.trim().length > 0),
     });
   }
 
@@ -82,6 +88,42 @@ export const createPurchase = onCall({ cors: true }, async (request) => {
       updatedAt: now,
     });
 
+    if (item.batchNumber) {
+      const batchRef = db().collection("product_batches").doc(`${item.productId}_${item.batchNumber}`);
+      batch.set(batchRef, {
+        id: batchRef.id,
+        businessId,
+        productId: item.productId,
+        batchNumber: item.batchNumber,
+        supplierId: supplierId || null,
+        supplierName: supplierName?.trim() || "Unknown",
+        purchaseCost: item.costPrice,
+        quantityRemaining: admin.firestore.FieldValue.increment(item.quantity),
+        expiryDate: item.expiryDate || null,
+        createdAt: now,
+        updatedAt: now,
+      }, { merge: true });
+    }
+
+    if (item.serialNumbers && item.serialNumbers.length > 0) {
+      if (item.serialNumbers.length !== item.quantity) {
+        throw new HttpsError("invalid-argument", `Provided ${item.serialNumbers.length} serials but quantity is ${item.quantity} for product ${item.name}.`);
+      }
+      for (const serial of item.serialNumbers) {
+        const serialRef = db().collection("product_serials").doc(`${item.productId}_${serial}`);
+        batch.set(serialRef, {
+          id: serialRef.id,
+          businessId,
+          productId: item.productId,
+          serialNumber: serial,
+          status: "Available",
+          purchaseId: purchaseRef.id,
+          createdAt: now,
+          updatedAt: now,
+        }, { merge: true }); // Merge in case it was a previously returned serial
+      }
+    }
+
     recordInventoryMovement(batch, {
       businessId,
       productId: item.productId,
@@ -91,6 +133,8 @@ export const createPurchase = onCall({ cors: true }, async (request) => {
       costAtTime: item.costPrice,
       referenceId: purchaseRef.id,
       performedBy: request.auth!.uid,
+      batchNumber: item.batchNumber,
+      serialNumbers: item.serialNumbers,
     });
   }
 

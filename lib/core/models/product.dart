@@ -1,3 +1,35 @@
+class UomConfig {
+  final String baseUnit;
+  final String purchaseUnit;
+  final String sellingUnit;
+  final double conversionMultiplier;
+
+  const UomConfig({
+    required this.baseUnit,
+    required this.purchaseUnit,
+    required this.sellingUnit,
+    required this.conversionMultiplier,
+  });
+
+  factory UomConfig.fromMap(Map<String, dynamic> map) {
+    return UomConfig(
+      baseUnit: map['baseUnit'] as String? ?? 'Piece',
+      purchaseUnit: map['purchaseUnit'] as String? ?? 'Piece',
+      sellingUnit: map['sellingUnit'] as String? ?? 'Piece',
+      conversionMultiplier: (map['conversionMultiplier'] as num?)?.toDouble() ?? 1.0,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'baseUnit': baseUnit,
+      'purchaseUnit': purchaseUnit,
+      'sellingUnit': sellingUnit,
+      'conversionMultiplier': conversionMultiplier,
+    };
+  }
+}
+
 class Product {
   final String id;
   final String businessId;
@@ -16,6 +48,9 @@ class Product {
   final double? conversionRatio;
   final String? baseUnit;
   final String? sellingUnit;
+  final bool trackBatches;
+  final bool trackSerials;
+  final UomConfig? uomConfig;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -37,6 +72,9 @@ class Product {
     this.conversionRatio,
     this.baseUnit,
     this.sellingUnit,
+    this.trackBatches = false,
+    this.trackSerials = false,
+    this.uomConfig,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -60,6 +98,9 @@ class Product {
       conversionRatio: (map['conversionRatio'] as num?)?.toDouble(),
       baseUnit: map['baseUnit'] as String?,
       sellingUnit: map['sellingUnit'] as String?,
+      trackBatches: map['trackBatches'] == true,
+      trackSerials: map['trackSerials'] == true,
+      uomConfig: map['uomConfig'] != null ? UomConfig.fromMap(Map<String, dynamic>.from(map['uomConfig'])) : null,
       createdAt:    DateTime.tryParse(map['createdAt']?.toString() ?? '') ?? DateTime.now(),
       updatedAt:    DateTime.tryParse(map['updatedAt']?.toString() ?? '') ?? DateTime.now(),
     );
@@ -89,6 +130,8 @@ class Product {
       isWeighed: isWeighed,
       parentProductId: parentProductId, conversionRatio: conversionRatio,
       baseUnit: baseUnit, sellingUnit: sellingUnit,
+      trackBatches: trackBatches, trackSerials: trackSerials,
+      uomConfig: uomConfig,
     );
   }
 }

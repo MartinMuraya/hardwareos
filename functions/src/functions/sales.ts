@@ -21,6 +21,8 @@ export interface SaleItem {
   note?: string;
   isPriceOverridden?: boolean;
   overriddenBy?: string | null;
+  serialNumbers?: string[]; // The exact serials being sold
+  batchAllocations?: { batchNumber: string; quantity: number }[]; // If manually specified
 }
 
 // -----------------------------------------------------------
@@ -122,6 +124,8 @@ export const createSale = onCall({ cors: true }, async (request) => {
         isPriceOverridden: hasOverride,
         overriddenBy: hasOverride ? request.auth!.uid : null,
         note: item.note || "",
+        serialNumbers: item.serialNumbers,
+        batchAllocations: item.batchAllocations,
       });
     }
 
@@ -154,18 +158,54 @@ export const createSale = onCall({ cors: true }, async (request) => {
         updatedAt: now,
       });
 
-      // Write to Immutable Inventory Ledger
-      recordInventoryMovement(txn, {
-        businessId,
-        branchId: branchId || null,
-        productId: item.productId,
-        productName: item.name,
-        movementType: MovementType.SALE,
-        quantity: -item.quantity, // Outgoing
-        costAtTime: item.costPrice,
-        referenceId: saleRef.id,
-        performedBy: request.auth!.uid,
-      });
+      if (item.serialNumbers && item.serialNumbers.length > 0) {
+        for (const serial of item.serialNumbers) {
+          const serialRef = db().collection("product_serials").doc(`${item.productId}_${serial}`);
+          txn.update(serialRef, {
+            status: "Sold",
+            saleId: saleRef.id,
+            updatedAt: now,
+          });
+        }
+      }
+
+      if (item.batchAllocations && item.batchAllocations.length > 0) {
+        for (const alloc of item.batchAllocations) {
+          const batchRef = db().collection("product_batches").doc(`${item.productId}_${alloc.batchNumber}`);
+          txn.update(batchRef, {
+            quantityRemaining: admin.firestore.FieldValue.increment(-alloc.quantity),
+            updatedAt: now,
+          });
+          
+          // Log movement for this specific batch
+          recordInventoryMovement(txn, {
+            businessId,
+            branchId: branchId || null,
+            productId: item.productId,
+            productName: item.name,
+            movementType: MovementType.SALE,
+            quantity: -alloc.quantity,
+            costAtTime: item.costPrice,
+            referenceId: saleRef.id,
+            performedBy: request.auth!.uid,
+            batchNumber: alloc.batchNumber,
+          });
+        }
+      } else {
+        // Write to Immutable Inventory Ledger (No specific batch)
+        recordInventoryMovement(txn, {
+          businessId,
+          branchId: branchId || null,
+          productId: item.productId,
+          productName: item.name,
+          movementType: MovementType.SALE,
+          quantity: -item.quantity, // Outgoing
+          costAtTime: item.costPrice,
+          referenceId: saleRef.id,
+          performedBy: request.auth!.uid,
+          serialNumbers: item.serialNumbers,
+        });
+      }
     }
 
     // 4. Double-Entry Accounting Integration
