@@ -19,6 +19,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
   final _idCtrl = TextEditingController();
   final _limitCtrl = TextEditingController();
   bool _submitting = false;
+  bool _isFundi = false;
   String? _error;
 
   @override
@@ -38,6 +39,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
         'phoneNumber': _phoneCtrl.text.trim(),
         'nationalId': _idCtrl.text.trim(),
         'creditLimit': double.tryParse(_limitCtrl.text.trim()) ?? 0,
+        'isFundi': _isFundi,
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -106,6 +108,16 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                     TextFormField(
                       controller: _idCtrl,
                       decoration: const InputDecoration(labelText: 'National ID (optional)', hintText: 'e.g. 12345678'),
+                    ),
+                  ])),
+                  const SizedBox(height: 20),
+                  _Section(label: 'Loyalty & Rewards', child: Column(children: [
+                    SwitchListTile(
+                      title: const Text('Is this customer a Fundi?'),
+                      subtitle: const Text('Fundis earn reward points on purchases.'),
+                      value: _isFundi,
+                      onChanged: (val) => setState(() => _isFundi = val),
+                      contentPadding: EdgeInsets.zero,
                     ),
                   ])),
                   const SizedBox(height: 20),

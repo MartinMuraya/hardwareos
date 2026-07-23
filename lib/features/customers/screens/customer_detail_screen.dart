@@ -179,6 +179,21 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                             const SizedBox(height: 2),
                             Text('ID: ${_customer!.nationalId}', style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
                           ],
+                          if (_customer!.isFundi) ...[
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(color: AppColors.accent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.star_rounded, color: AppColors.accent, size: 14),
+                                  const SizedBox(width: 4),
+                                  Text('Fundi • ${_customer!.loyaltyPoints.toInt()} pts', style: const TextStyle(color: AppColors.accent, fontSize: 12, fontWeight: FontWeight.w600)),
+                                ],
+                              ),
+                            ),
+                          ],
                         ])),
                       ]),
                       const SizedBox(height: 20),

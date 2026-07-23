@@ -44,6 +44,8 @@ class Sale {
   final DateTime createdAt;
   final String? cashierName;
   final String? customerName;
+  final double pointsEarned;
+  final double pointsRedeemed;
   final Map<String, dynamic>? metadata;
 
   const Sale({
@@ -57,6 +59,8 @@ class Sale {
     required this.createdAt,
     this.cashierName,
     this.customerName,
+    this.pointsEarned = 0,
+    this.pointsRedeemed = 0,
     this.metadata,
   });
 
@@ -73,6 +77,8 @@ class Sale {
       createdAt:     DateTime.tryParse(map['createdAt']?.toString() ?? '') ?? DateTime.now(),
       cashierName:   map['cashierName'] as String?,
       customerName:  map['customerName'] as String?,
+      pointsEarned:  ((map['pointsEarned'] ?? 0) as num).toDouble(),
+      pointsRedeemed: ((map['pointsRedeemed'] ?? 0) as num).toDouble(),
       metadata:      map['metadata'] as Map<String, dynamic>?,
     );
   }
@@ -89,6 +95,8 @@ class Sale {
       'createdAt': createdAt.toIso8601String(),
       'cashierName': cashierName,
       'customerName': customerName,
+      'pointsEarned': pointsEarned,
+      'pointsRedeemed': pointsRedeemed,
       'metadata': metadata,
       if (metadata?['timsCuInvoiceNumber'] != null) 'timsCuInvoiceNumber': metadata!['timsCuInvoiceNumber'],
       if (metadata?['timsQrCode'] != null) 'timsQrCode': metadata!['timsQrCode'],

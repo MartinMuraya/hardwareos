@@ -22,13 +22,14 @@ const db = () => admin.firestore();
 export const createCreditSale = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
-  const { businessId, customerId, customerName, items, amountPaid, note } = request.data as {
+  const { businessId, customerId, customerName, items, amountPaid, note, pointsRedeemed } = request.data as {
     businessId: string;
     customerId: string;
     customerName: string;
     items: { productId: string; name: string; quantity: number; sellingPrice: number; costPrice: number; overridePrice?: number; note?: string }[];
     amountPaid?: number;
     note?: string;
+    pointsRedeemed?: number;
   };
 
   if (!customerId || !items || items.length === 0) {
@@ -119,7 +120,7 @@ export const createCreditSale = onCall({ cors: true }, async (request) => {
 
     // 3. Create sale document
     const saleRef = db().collection("sales").doc();
-    txn.set(saleRef, {
+    const salePayload: any = {
       id: saleRef.id,
       businessId,
       customerId,
@@ -136,7 +137,15 @@ export const createCreditSale = onCall({ cors: true }, async (request) => {
       timsQrCode,
       createdBy: request.auth!.uid,
       createdAt: now,
-    });
+    };
+
+    let pointsEarned = 0;
+    if (customer.isFundi) {
+      pointsEarned = total / 100;
+      Object.assign(salePayload, { pointsEarned, pointsRedeemed: pointsRedeemed || 0 });
+    }
+
+    txn.set(saleRef, salePayload);
 
     // 4. Decrement stock + log movements
     for (let i = 0; i < validatedItems.length; i++) {
@@ -195,22 +204,32 @@ export const createCreditSale = onCall({ cors: true }, async (request) => {
     });
 
     // 7. Update customer balance
-    txn.update(db().collection("customers").doc(customerId), {
+    const custUpdate: any = {
       currentBalance: Number(newBalance.toFixed(2)),
       totalDebt: Number(newBalance.toFixed(2)),
       updatedAt: now,
-    });
+    };
+
+    if (customer.isFundi) {
+      const newLoyaltyPoints = (customer.loyaltyPoints || 0) - (pointsRedeemed || 0) + (total / 100);
+      if (newLoyaltyPoints < 0) {
+        throw new HttpsError("invalid-argument", "Not enough loyalty points.");
+      }
+      custUpdate.loyaltyPoints = newLoyaltyPoints;
+    }
+
+    txn.update(db().collection("customers").doc(customerId), custUpdate);
 
     return {
       saleId: saleRef.id,
       total: Number(total.toFixed(2)),
       profit: Number(profit.toFixed(2)),
-      amountPaid: Number(paid.toFixed(2)),
       outstanding: Number(outstanding.toFixed(2)),
-      itemCount: validatedItems.length,
+      amountPaid: Number(paid.toFixed(2)),
       kraPin: taxSettings.kraPin,
       timsCuInvoiceNumber,
       timsQrCode,
+      pointsEarned: customer.isFundi ? (total / 100) : undefined,
     };
   });
 

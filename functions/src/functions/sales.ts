@@ -38,12 +38,15 @@ export interface SaleItem {
 export const createSale = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
-  const { businessId, branchId, items, paymentMethod, note } = request.data as {
+  const { businessId, branchId, items, paymentMethod, note, customerId, customerName, pointsRedeemed } = request.data as {
     businessId: string;
     branchId?: string;
     items: SaleItem[];
     paymentMethod: "cash" | "mpesa" | "credit";
     note?: string;
+    customerId?: string;
+    customerName?: string;
+    pointsRedeemed?: number;
   };
 
   if (!items || items.length === 0) {
@@ -69,6 +72,15 @@ export const createSale = onCall({ cors: true }, async (request) => {
       db().collection("products").doc(item.productId)
     );
     const productSnaps = await Promise.all(productRefs.map((ref) => txn.get(ref)));
+
+    // Fetch customer if provided
+    let customerDoc: FirebaseFirestore.DocumentSnapshot | null = null;
+    if (customerId) {
+      customerDoc = await txn.get(db().collection("customers").doc(customerId));
+      if (!customerDoc.exists) {
+        throw new HttpsError("not-found", "Customer not found.");
+      }
+    }
 
     let total = 0;
     let totalCost = 0;
@@ -151,7 +163,7 @@ export const createSale = onCall({ cors: true }, async (request) => {
 
     // 2. Create sale document
     const saleRef = db().collection("sales").doc();
-    txn.set(saleRef, {
+    const salePayload: any = {
       id: saleRef.id,
       businessId,
       branchId: branchId || null,
@@ -166,7 +178,29 @@ export const createSale = onCall({ cors: true }, async (request) => {
       cashierId: request.auth!.uid,
       cashierName: userData.name || "Unknown",
       createdAt: now,
-    });
+      customerId: customerId || null,
+      customerName: customerName || null,
+    };
+
+    let pointsEarned = 0;
+    if (customerDoc && customerDoc.exists) {
+      const custData = customerDoc.data()!;
+      if (custData.isFundi) {
+        pointsEarned = total / 100;
+        const newLoyaltyPoints = (custData.loyaltyPoints || 0) - (pointsRedeemed || 0) + pointsEarned;
+        if (newLoyaltyPoints < 0) {
+          throw new HttpsError("invalid-argument", "Not enough loyalty points.");
+        }
+        txn.update(customerDoc.ref, {
+          loyaltyPoints: newLoyaltyPoints,
+          updatedAt: now,
+        });
+
+        Object.assign(salePayload, { pointsEarned, pointsRedeemed: pointsRedeemed || 0 });
+      }
+    }
+
+    txn.set(saleRef, salePayload);
 
     // 2.5 Calculate & Accrue Commission
     let commissionEarned = 0;
@@ -281,6 +315,7 @@ export const createSale = onCall({ cors: true }, async (request) => {
       kraPin: taxSettings.kraPin,
       timsCuInvoiceNumber,
       timsQrCode,
+      pointsEarned,
     };
   });
 

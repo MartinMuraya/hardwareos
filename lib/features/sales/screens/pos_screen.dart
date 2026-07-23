@@ -35,10 +35,11 @@ class _POSScreenState extends State<POSScreen> {
   final List<_CartEntry> _cart = [];
   String _paymentMethod = 'cash';
 
-  // Credit sale state
-  String? _selectedCustomerId;
-  String _selectedCustomerName = '';
+  // Customer & Credit state
+  Customer? _selectedCustomer;
   final _amountPaidCtrl = TextEditingController();
+  final _redeemPointsCtrl = TextEditingController();
+  double _pointsDiscount = 0;
   List<Customer> _customers = [];
   bool _loadingCustomers = false;
 
@@ -62,7 +63,7 @@ class _POSScreenState extends State<POSScreen> {
     _searchCtrl.addListener(_filter);
   }
   @override
-  void dispose() { _searchCtrl.dispose(); _amountPaidCtrl.dispose(); super.dispose(); }
+  void dispose() { _searchCtrl.dispose(); _amountPaidCtrl.dispose(); _redeemPointsCtrl.dispose(); super.dispose(); }
 
   void _loadSavedCart() {
     final saved = OfflineService.loadCart();
@@ -361,15 +362,16 @@ class _POSScreenState extends State<POSScreen> {
     setState(() {
       _cart.clear();
       _paymentMethod = 'cash';
-      _selectedCustomerId = null;
-      _selectedCustomerName = '';
+      _selectedCustomer = null;
+      _pointsDiscount = 0;
       _amountPaidCtrl.clear();
+      _redeemPointsCtrl.clear();
     });
     _saveCart();
   }
 
-  double get _cartTotal  => _cart.fold(0, (s, e) => s + e.lineTotal);
-  double get _cartProfit => _cart.fold(0, (s, e) => s + e.lineProfit);
+  double get _cartTotal  => _cart.fold(0, (s, e) => s + e.lineTotal) - _pointsDiscount;
+  double get _cartProfit => _cart.fold(0, (s, e) => s + e.lineProfit) - _pointsDiscount;
 
   Future<void> _checkout() async {
     if (_cart.isEmpty) return;
@@ -394,16 +396,20 @@ class _POSScreenState extends State<POSScreen> {
           final amountPaid = double.tryParse(_amountPaidCtrl.text.trim()) ?? 0;
           result = await FunctionsService.call('createCreditSale', {
             'businessId': bizId,
-            'customerId': _selectedCustomerId,
-            'customerName': _selectedCustomerName,
+            'customerId': _selectedCustomer?.id,
+            'customerName': _selectedCustomer?.fullName,
             'items': items,
             'amountPaid': amountPaid > 0 ? amountPaid : 0,
+            'pointsRedeemed': _pointsDiscount,
           });
         } else {
           result = await FunctionsService.call('createSale', {
             'businessId': bizId,
             'paymentMethod': _paymentMethod,
+            'customerId': _selectedCustomer?.id,
+            'customerName': _selectedCustomer?.fullName,
             'items': items,
+            'pointsRedeemed': _pointsDiscount,
           });
         }
 
@@ -412,6 +418,7 @@ class _POSScreenState extends State<POSScreen> {
           final saleProfit = (result['profit'] as num?)?.toDouble() ?? profit;
           final outstanding = (result['outstanding'] as num?)?.toDouble();
           final amountPaid = (result['amountPaid'] as num?)?.toDouble();
+          final pointsEarned = (result['pointsEarned'] as num?)?.toDouble();
           _lastReceiptData = ReceiptData(
             storeName: auth.userProfile?['businessName'] as String? ?? 'Hardware Store',
             storePhone: auth.userProfile?['phone'] as String? ?? '',
@@ -423,15 +430,16 @@ class _POSScreenState extends State<POSScreen> {
               quantity: e.qty,
               price: e.appliedPrice, subtotal: e.lineTotal,
             )).toList(),
-            subtotal: saleTotal,
+            subtotal: saleTotal + _pointsDiscount,
+            discount: _pointsDiscount > 0 ? _pointsDiscount : null,
             grandTotal: saleTotal,
             paymentMethod: _paymentMethod,
-            customerName: _paymentMethod == 'credit' ? _selectedCustomerName : null,
+            customerName: _selectedCustomer?.fullName,
             kraPin: result['kraPin'] as String?,
             timsCuInvoiceNumber: result['timsCuInvoiceNumber'] as String?,
             timsQrCode: result['timsQrCode'] as String?,
           );
-          _showReceiptDialog(saleTotal, saleProfit, outstanding: outstanding, amountPaid: amountPaid);
+          _showReceiptDialog(saleTotal, saleProfit, outstanding: outstanding, amountPaid: amountPaid, pointsEarned: pointsEarned);
           _clearAfterCheckout();
           _loadProducts();
         }
@@ -441,9 +449,12 @@ class _POSScreenState extends State<POSScreen> {
         final saleData = {
           'paymentMethod': _paymentMethod,
           'items': items,
+          if (_selectedCustomer != null) ...{
+            'customerId': _selectedCustomer?.id,
+            'customerName': _selectedCustomer?.fullName,
+          },
+          if (_pointsDiscount > 0) 'pointsRedeemed': _pointsDiscount,
           if (_paymentMethod == 'credit') ...{
-            'customerId': _selectedCustomerId,
-            'customerName': _selectedCustomerName,
             'amountPaid': double.tryParse(_amountPaidCtrl.text.trim()) ?? 0,
           },
         };
@@ -461,12 +472,13 @@ class _POSScreenState extends State<POSScreen> {
               quantity: e.qty,
               price: e.appliedPrice, subtotal: e.lineTotal,
             )).toList(),
-            subtotal: total,
+            subtotal: total + _pointsDiscount,
+            discount: _pointsDiscount > 0 ? _pointsDiscount : null,
             grandTotal: total,
             paymentMethod: _paymentMethod,
-            customerName: _paymentMethod == 'credit' ? _selectedCustomerName : null,
+            customerName: _selectedCustomer?.fullName,
           );
-          _showReceiptDialog(total, profit, isOffline: true);
+          _showReceiptDialog(total, profit, isOffline: true, pointsEarned: total / 100);
           _clearAfterCheckout();
         }
       }
@@ -485,9 +497,10 @@ class _POSScreenState extends State<POSScreen> {
     setState(() {
       _cart.clear();
       _processingCheckout = false;
-      _selectedCustomerId = null;
-      _selectedCustomerName = '';
+      _selectedCustomer = null;
+      _pointsDiscount = 0;
       _amountPaidCtrl.clear();
+      _redeemPointsCtrl.clear();
     });
     _saveCart();
   }
@@ -506,9 +519,12 @@ class _POSScreenState extends State<POSScreen> {
     final saleData = {
       'paymentMethod': _paymentMethod,
       'items': items,
+      if (_selectedCustomer != null) ...{
+        'customerId': _selectedCustomer?.id,
+        'customerName': _selectedCustomer?.fullName,
+      },
+      if (_pointsDiscount > 0) 'pointsRedeemed': _pointsDiscount,
       if (_paymentMethod == 'credit') ...{
-        'customerId': _selectedCustomerId,
-        'customerName': _selectedCustomerName,
         'amountPaid': double.tryParse(_amountPaidCtrl.text.trim()) ?? 0,
       },
     };
@@ -526,18 +542,19 @@ class _POSScreenState extends State<POSScreen> {
           quantity: e.qty,
           price: e.appliedPrice, subtotal: e.lineTotal,
         )).toList(),
-        subtotal: total,
+        subtotal: total + _pointsDiscount,
+        discount: _pointsDiscount > 0 ? _pointsDiscount : null,
         grandTotal: total,
         paymentMethod: _paymentMethod,
-        customerName: _paymentMethod == 'credit' ? _selectedCustomerName : null,
+        customerName: _selectedCustomer?.fullName,
       );
-      _showReceiptDialog(total, profit, isOffline: true);
+      _showReceiptDialog(total, profit, isOffline: true, pointsEarned: total / 100);
       _clearAfterCheckout();
     }
   }
 
   void _showReceiptDialog(double total, double profit,
-      {double? outstanding, double? amountPaid, bool isOffline = false}) {
+      {double? outstanding, double? amountPaid, bool isOffline = false, double? pointsEarned}) {
     final theme = Theme.of(context);
     showDialog(
       context: context,
@@ -567,6 +584,8 @@ class _POSScreenState extends State<POSScreen> {
           _ReceiptRow('Total',  _fmt.format(total), theme: theme),
           _ReceiptRow('Profit', _fmt.format(profit), valueColor: AppColors.success, theme: theme),
           _ReceiptRow('Method', _paymentMethod.toUpperCase(), theme: theme),
+          if (pointsEarned != null && pointsEarned > 0 && _selectedCustomer?.isFundi == true)
+            _ReceiptRow('Points Earned', '${pointsEarned.toInt()} pts', valueColor: AppColors.accent, theme: theme),
           if (amountPaid != null && amountPaid > 0)
             _ReceiptRow('Paid', _fmt.format(amountPaid), valueColor: AppColors.success, theme: theme),
           if (outstanding != null && outstanding > 0)
@@ -643,6 +662,7 @@ class _POSScreenState extends State<POSScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: theme.cardColor,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) {
         final searchCtrl = TextEditingController();
@@ -681,7 +701,7 @@ class _POSScreenState extends State<POSScreen> {
               ),
               const SizedBox(height: 8),
               SizedBox(
-                height: 300,
+                height: MediaQuery.of(context).size.height * 0.6,
                 child: _loadingCustomers
                     ? const Center(child: CircularProgressIndicator())
                     : filtered.isEmpty
@@ -703,10 +723,15 @@ class _POSScreenState extends State<POSScreen> {
                                     ? Text(_fmt.format(c.currentBalance),
                                         style: const TextStyle(color: AppColors.warning, fontWeight: FontWeight.w700, fontSize: 13))
                                     : null,
+                                  if (c.isFundi)
+                                    Text('${c.loyaltyPoints.toInt()} pts',
+                                        style: const TextStyle(color: AppColors.accent, fontWeight: FontWeight.w700, fontSize: 13)),
+                                ],
                                 onTap: () {
                                   setState(() {
-                                    _selectedCustomerId = c.id;
-                                    _selectedCustomerName = c.fullName;
+                                    _selectedCustomer = c;
+                                    _pointsDiscount = 0;
+                                    _redeemPointsCtrl.clear();
                                   });
                                   Navigator.pop(ctx);
                                 },
@@ -749,13 +774,14 @@ class _POSScreenState extends State<POSScreen> {
               createdAt: DateTime.now(), updatedAt: DateTime.now(),
             );
 
-            if (mounted) {
-              setState(() {
-                _customers.insert(0, newCustomer);
-                _selectedCustomerId = newId;
-                _selectedCustomerName = name;
-              });
-              Navigator.pop(ctx);
+              if (mounted) {
+                setState(() {
+                  _customers.insert(0, newCustomer);
+                  _selectedCustomer = newCustomer;
+                  _pointsDiscount = 0;
+                  _redeemPointsCtrl.clear();
+                });
+                Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Customer $name created!')));
             }
           } catch (e) {
@@ -1031,8 +1057,65 @@ class _POSScreenState extends State<POSScreen> {
                 ),
         ),
 
-        if (_cart.isNotEmpty) ...[
           Divider(height: 20, color: theme.dividerColor),
+          GestureDetector(
+            onTap: _showCustomerPicker,
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: theme.dividerColor)),
+              child: Row(children: [
+                Expanded(
+                  child: _selectedCustomer != null
+                      ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text('Customer', style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurfaceVariant)),
+                          Text(_selectedCustomer!.fullName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                          if (_selectedCustomer!.isFundi)
+                            Text('${_selectedCustomer!.loyaltyPoints.toInt()} pts available', style: const TextStyle(color: AppColors.accent, fontSize: 12, fontWeight: FontWeight.w600)),
+                        ])
+                      : Text('Select Customer (Optional)', style: TextStyle(color: theme.hintColor, fontSize: 13)),
+                ),
+                const Icon(Icons.arrow_drop_down_rounded, size: 20),
+                if (_selectedCustomer != null)
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 16),
+                    onPressed: () => setState(() {
+                      _selectedCustomer = null;
+                      _pointsDiscount = 0;
+                      _redeemPointsCtrl.clear();
+                    }),
+                    visualDensity: VisualDensity.compact,
+                  ),
+              ]),
+            ),
+          ),
+          if (_selectedCustomer != null && _selectedCustomer!.isFundi && _selectedCustomer!.loyaltyPoints > 0) ...[
+            const SizedBox(height: 10),
+            TextField(
+              controller: _redeemPointsCtrl,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                hintText: 'Redeem Points (Max ${_selectedCustomer!.loyaltyPoints.toInt()})',
+                prefixIcon: const Icon(Icons.star_rounded, color: AppColors.accent, size: 18),
+                suffixIcon: TextButton(
+                  onPressed: () {
+                    final pts = double.tryParse(_redeemPointsCtrl.text.trim()) ?? 0;
+                    if (pts > _selectedCustomer!.loyaltyPoints) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Not enough points')));
+                      return;
+                    }
+                    setState(() {
+                      _pointsDiscount = pts;
+                    });
+                  },
+                  child: const Text('Apply'),
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
           Text('Payment Method',
             style: TextStyle(color: theme.colorScheme.onSurfaceVariant,
               fontSize: 12, fontWeight: FontWeight.w600)),
@@ -1076,28 +1159,6 @@ class _POSScreenState extends State<POSScreen> {
           ],
 
           if (_paymentMethod == 'credit') ...[
-            GestureDetector(
-              onTap: _showCustomerPicker,
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: theme.dividerColor)),
-                child: Row(children: [
-                  Expanded(
-                    child: _selectedCustomerId != null
-                        ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text('Customer', style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurfaceVariant)),
-                            Text(_selectedCustomerName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                          ])
-                        : Text('Select Customer *', style: TextStyle(color: theme.hintColor, fontSize: 13)),
-                  ),
-                  const Icon(Icons.arrow_drop_down_rounded, size: 20),
-                ]),
-              ),
-            ),
-            const SizedBox(height: 10),
             TextField(
               controller: _amountPaidCtrl,
               keyboardType: TextInputType.number,
@@ -1115,12 +1176,18 @@ class _POSScreenState extends State<POSScreen> {
             decoration: BoxDecoration(
               color: theme.colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(12)),
             child: Column(children: [
-              _TotalRow('Subtotal', _fmt.format(_cartTotal), theme: theme),
+              _TotalRow('Subtotal', _fmt.format(_cartTotal + _pointsDiscount), theme: theme),
+              if (_pointsDiscount > 0) ...[
+                const SizedBox(height: 4),
+                _TotalRow('Points Discount', '-${_fmt.format(_pointsDiscount)}', color: AppColors.accent, theme: theme),
+                const SizedBox(height: 4),
+                _TotalRow('New Total', _fmt.format(_cartTotal), theme: theme),
+              ],
               const SizedBox(height: 4),
               _TotalRow('Profit',   _fmt.format(_cartProfit), color: AppColors.success, theme: theme),
-              if (_paymentMethod == 'credit' && _selectedCustomerId != null) ...[
+              if (_selectedCustomer != null) ...[
                 const SizedBox(height: 4),
-                _TotalRow('Customer', _selectedCustomerName, color: AppColors.accent, theme: theme),
+                _TotalRow('Customer', _selectedCustomer!.fullName, color: AppColors.accent, theme: theme),
               ],
             ]),
           ),

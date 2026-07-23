@@ -14,12 +14,13 @@ const db = () => admin.firestore();
 export const createCustomer = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
-  const { businessId, fullName, phoneNumber, nationalId, creditLimit } = request.data as {
+  const { businessId, fullName, phoneNumber, nationalId, creditLimit, isFundi } = request.data as {
     businessId: string;
     fullName: string;
     phoneNumber: string;
     nationalId?: string;
     creditLimit?: number;
+    isFundi?: boolean;
   };
 
   if (!fullName || !phoneNumber) {
@@ -53,6 +54,8 @@ export const createCustomer = onCall({ cors: true }, async (request) => {
     creditLimit: creditLimit ?? 0,
     currentBalance: 0,
     totalDebt: 0,
+    isFundi: isFundi ?? false,
+    loyaltyPoints: 0,
     createdAt: now,
     updatedAt: now,
   });
