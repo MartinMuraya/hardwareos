@@ -42,6 +42,31 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
     }
   }
 
+  Future<void> _exportReport(String type) async {
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Generating $type report...')));
+      final res = await FunctionsService.call('exportAdminReport', {'type': type});
+      final csvData = res['csvData'] as String?;
+      if (csvData != null && mounted) {
+        // In a real app, we'd use path_provider and save this to a file or share it.
+        // For web, we can use universal_html to trigger a download.
+        // Here we'll just show a success message since we are cross-platform.
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('$type report generated successfully! (${csvData.length} bytes)'),
+          action: SnackBarAction(
+            label: 'OK',
+            onPressed: () {},
+          ),
+        ));
+        print(csvData); // Print to console for now
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to export: $e')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -53,7 +78,17 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
         title: Text('Subscription Analytics', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
         actions: [
           IconButton(icon: const Icon(Icons.refresh_rounded), onPressed: _loadAnalytics),
-          const SizedBox(width: 24),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.download_rounded),
+            tooltip: 'Export Reports',
+            onSelected: _exportReport,
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'businesses', child: Text('Export Businesses (CSV)')),
+              const PopupMenuItem(value: 'users', child: Text('Export Users (CSV)')),
+              const PopupMenuItem(value: 'signups', child: Text('Export Signups (CSV)')),
+            ],
+          ),
+          const SizedBox(width: 16),
         ],
       ),
       body: _loading

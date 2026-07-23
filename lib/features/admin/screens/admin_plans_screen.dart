@@ -89,6 +89,11 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
     bool reportsEnabled = plan?['reportsEnabled'] ?? true;
     bool aiEnabled = plan?['aiEnabled'] ?? false;
     bool whatsappEnabled = plan?['whatsappEnabled'] ?? false;
+    bool etimsEnabled = plan?['etimsEnabled'] ?? false;
+    bool storefrontEnabled = plan?['storefrontEnabled'] ?? false;
+    bool multiLanguageEnabled = plan?['multiLanguageEnabled'] ?? false;
+    bool receiptPrintingEnabled = plan?['receiptPrintingEnabled'] ?? true;
+    bool advancedAnalyticsEnabled = plan?['advancedAnalyticsEnabled'] ?? false;
 
     final result = await showDialog<bool>(
       context: context,
@@ -156,6 +161,36 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
                         activeColor: AppColors.accent,
                         onChanged: (val) => setCheckState(() => whatsappEnabled = val ?? false),
                       ),
+                      CheckboxListTile(
+                        title: const Text('eTIMS Integration Enabled'),
+                        value: etimsEnabled,
+                        activeColor: AppColors.accent,
+                        onChanged: (val) => setCheckState(() => etimsEnabled = val ?? false),
+                      ),
+                      CheckboxListTile(
+                        title: const Text('B2B/B2C Storefront Enabled'),
+                        value: storefrontEnabled,
+                        activeColor: AppColors.accent,
+                        onChanged: (val) => setCheckState(() => storefrontEnabled = val ?? false),
+                      ),
+                      CheckboxListTile(
+                        title: const Text('Multi-Language Support Enabled'),
+                        value: multiLanguageEnabled,
+                        activeColor: AppColors.accent,
+                        onChanged: (val) => setCheckState(() => multiLanguageEnabled = val ?? false),
+                      ),
+                      CheckboxListTile(
+                        title: const Text('Receipt Printing Enabled'),
+                        value: receiptPrintingEnabled,
+                        activeColor: AppColors.accent,
+                        onChanged: (val) => setCheckState(() => receiptPrintingEnabled = val ?? true),
+                      ),
+                      CheckboxListTile(
+                        title: const Text('Advanced Analytics Enabled'),
+                        value: advancedAnalyticsEnabled,
+                        activeColor: AppColors.accent,
+                        onChanged: (val) => setCheckState(() => advancedAnalyticsEnabled = val ?? false),
+                      ),
                     ],
                   );
                 },
@@ -184,6 +219,11 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
           'reportsEnabled': reportsEnabled,
           'aiEnabled': aiEnabled,
           'whatsappEnabled': whatsappEnabled,
+          'etimsEnabled': etimsEnabled,
+          'storefrontEnabled': storefrontEnabled,
+          'multiLanguageEnabled': multiLanguageEnabled,
+          'receiptPrintingEnabled': receiptPrintingEnabled,
+          'advancedAnalyticsEnabled': advancedAnalyticsEnabled,
         };
 
         if (isNew) {
@@ -234,7 +274,7 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
                         maxCrossAxisExtent: 400,
                         crossAxisSpacing: 20,
                         mainAxisSpacing: 20,
-                        mainAxisExtent: 320,
+                        mainAxisExtent: 500,
                       ),
                       itemCount: _plans.length,
                       itemBuilder: (context, i) {
@@ -272,17 +312,29 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
                                 style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13)),
                               Divider(height: 24, color: theme.dividerColor),
                               Expanded(
-                                child: Column(
-                                  children: [
-                                    _LimitRow(icon: Icons.inventory_2_rounded, label: 'Products Limit',
-                                      value: p['maxProducts'] == -1 ? 'Unlimited' : '${p['maxProducts']}', theme: theme),
-                                    _LimitRow(icon: Icons.people_rounded, label: 'Users Limit',
-                                      value: p['maxUsers'] == -1 ? 'Unlimited' : '${p['maxUsers']}', theme: theme),
-                                    _LimitRow(icon: Icons.auto_awesome_rounded, label: 'AI Assistance',
-                                      value: p['aiEnabled'] == true ? 'Yes' : 'No', theme: theme),
-                                    _LimitRow(icon: Icons.chat_rounded, label: 'WhatsApp Bot',
-                                      value: p['whatsappEnabled'] == true ? 'Yes' : 'No', theme: theme),
-                                  ],
+                                child: SingleChildScrollView(
+                                  child: Column(
+                                    children: [
+                                      _LimitRow(icon: Icons.inventory_2_rounded, label: 'Products Limit',
+                                        value: p['maxProducts'] == -1 ? 'Unlimited' : '${p['maxProducts']}', theme: theme),
+                                      _LimitRow(icon: Icons.people_rounded, label: 'Users Limit',
+                                        value: p['maxUsers'] == -1 ? 'Unlimited' : '${p['maxUsers']}', theme: theme),
+                                      _LimitRow(icon: Icons.receipt_long_rounded, label: 'eTIMS Integr.',
+                                        value: p['etimsEnabled'] == true ? 'Yes' : 'No', theme: theme),
+                                      _LimitRow(icon: Icons.storefront_rounded, label: 'Storefront',
+                                        value: p['storefrontEnabled'] == true ? 'Yes' : 'No', theme: theme),
+                                      _LimitRow(icon: Icons.translate_rounded, label: 'Multi-Lang',
+                                        value: p['multiLanguageEnabled'] == true ? 'Yes' : 'No', theme: theme),
+                                      _LimitRow(icon: Icons.print_rounded, label: 'Receipt Printing',
+                                        value: p['receiptPrintingEnabled'] == true ? 'Yes' : 'No', theme: theme),
+                                      _LimitRow(icon: Icons.analytics_rounded, label: 'Adv. Analytics',
+                                        value: p['advancedAnalyticsEnabled'] == true ? 'Yes' : 'No', theme: theme),
+                                      _LimitRow(icon: Icons.auto_awesome_rounded, label: 'AI Assistance',
+                                        value: p['aiEnabled'] == true ? 'Yes' : 'No', theme: theme),
+                                      _LimitRow(icon: Icons.chat_rounded, label: 'WhatsApp Bot',
+                                        value: p['whatsappEnabled'] == true ? 'Yes' : 'No', theme: theme),
+                                    ],
+                                  ),
                                 ),
                               ),
                               Row(

@@ -15,6 +15,11 @@ export interface PlanConfig {
   aiEnabled: boolean;
   whatsappEnabled: boolean;
   maxDailySales: number; // -1 = unlimited
+  etimsEnabled: boolean;
+  storefrontEnabled: boolean;
+  multiLanguageEnabled: boolean;
+  receiptPrintingEnabled: boolean;
+  advancedAnalyticsEnabled: boolean;
 }
 
 export const PLAN_LIMITS: Record<Plan, PlanConfig> = {
@@ -25,6 +30,11 @@ export const PLAN_LIMITS: Record<Plan, PlanConfig> = {
     aiEnabled: false,
     whatsappEnabled: false,
     maxDailySales: -1,
+    etimsEnabled: false,
+    storefrontEnabled: false,
+    multiLanguageEnabled: false,
+    receiptPrintingEnabled: true,
+    advancedAnalyticsEnabled: false,
   },
   starter: {
     maxProducts: 500,
@@ -33,6 +43,11 @@ export const PLAN_LIMITS: Record<Plan, PlanConfig> = {
     aiEnabled: false,
     whatsappEnabled: false,
     maxDailySales: -1,
+    etimsEnabled: true,
+    storefrontEnabled: true,
+    multiLanguageEnabled: true,
+    receiptPrintingEnabled: true,
+    advancedAnalyticsEnabled: false,
   },
   pro: {
     maxProducts: -1,
@@ -41,6 +56,11 @@ export const PLAN_LIMITS: Record<Plan, PlanConfig> = {
     aiEnabled: true,
     whatsappEnabled: true,
     maxDailySales: -1,
+    etimsEnabled: true,
+    storefrontEnabled: true,
+    multiLanguageEnabled: true,
+    receiptPrintingEnabled: true,
+    advancedAnalyticsEnabled: true,
   },
 };
 
@@ -55,6 +75,14 @@ export const UPGRADE_MESSAGES: Record<string, string> = {
     "AI features are available on the Pro plan. Upgrade to unlock AI insights.",
   whatsappEnabled:
     "WhatsApp integration is available on the Pro plan.",
+  etimsEnabled:
+    "eTIMS integration is available on Starter and Pro plans. Upgrade to automate KRA reporting.",
+  storefrontEnabled:
+    "B2B/B2C Storefront is available on Starter and Pro plans.",
+  multiLanguageEnabled:
+    "Multi-Language support (Swahili, Sheng) is available on Starter and Pro plans.",
+  advancedAnalyticsEnabled:
+    "Advanced Analytics are available exclusively on the Pro plan.",
   expired:
     "Your subscription has expired. Please renew to continue using HardwareOS.",
   gracePeriod:

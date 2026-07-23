@@ -266,3 +266,6 @@ export {
   getTaxSettings,
   updateTaxSettings,
 } from "./functions/tax";
+
+// Admin Reports
+export { exportAdminReport } from "./functions/admin_reports";

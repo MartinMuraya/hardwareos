@@ -97,7 +97,61 @@ export const createBusiness = onCall({ cors: true }, async (request) => {
       console.warn("SMTP credentials not configured. Skipping Super Admin registration alert email.");
     }
   } catch (err) {
-    console.error("Failed to send Super Admin alert:", err);
+    console.error("Failed to send Super Admin alert email:", err);
+  }
+
+  // --------------------------------------------------------------------------
+  // SUPER ADMIN PUSH NOTIFICATIONS (TELEGRAM / SMS / WHATSAPP)
+  // --------------------------------------------------------------------------
+  const messageBody = `🚨 *New HardwareOS Registration*\n\n*Business:* ${businessName.trim()}\n*Email:* ${request.auth.token.email}\n*Status:* Pending Approval`;
+
+  // 1. Telegram Integration (100% Free Instant Push)
+  const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
+  const telegramChatId = process.env.TELEGRAM_CHAT_ID;
+
+  if (telegramBotToken && telegramChatId) {
+    try {
+      const fetch = require("node-fetch");
+      await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: telegramChatId,
+          text: messageBody,
+          parse_mode: "Markdown",
+        }),
+      });
+      console.log("Telegram Super Admin alert sent.");
+    } catch (err) {
+      console.error("Failed to send Telegram alert:", err);
+    }
+  }
+
+  // 2. Africa's Talking SMS Skeleton
+  const atApiKey = process.env.AT_API_KEY;
+  const atUsername = process.env.AT_USERNAME;
+  const adminPhone = process.env.SUPER_ADMIN_PHONE;
+  if (atApiKey && atUsername && adminPhone) {
+    console.log("Mocking Africa's Talking SMS to:", adminPhone);
+    // TODO: Initialize Africa's Talking SDK and send SMS
+    // const credentials = { apiKey: atApiKey, username: atUsername };
+    // const AfricasTalking = require('africastalking')(credentials);
+    // const sms = AfricasTalking.SMS;
+    // await sms.send({ to: [adminPhone], message: messageBody });
+  }
+
+  // 3. WhatsApp Business API / Twilio Skeleton
+  const twilioSid = process.env.TWILIO_ACCOUNT_SID;
+  const twilioAuth = process.env.TWILIO_AUTH_TOKEN;
+  if (twilioSid && twilioAuth && adminPhone) {
+    console.log("Mocking Twilio WhatsApp message to:", adminPhone);
+    // TODO: Initialize Twilio SDK and send WhatsApp
+    // const client = require('twilio')(twilioSid, twilioAuth);
+    // await client.messages.create({
+    //   body: messageBody,
+    //   from: 'whatsapp:+14155238886',
+    //   to: `whatsapp:${adminPhone}`
+    // });
   }
 
   return {
