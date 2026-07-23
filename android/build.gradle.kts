@@ -15,6 +15,9 @@ subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
+
+apply(from = "namespace_fix.gradle")
+
 subprojects {
     project.evaluationDependsOn(":app")
 }
@@ -22,5 +25,3 @@ subprojects {
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
-
-apply(from = "namespace_fix.gradle")
