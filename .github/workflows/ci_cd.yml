@@ -118,4 +118,4 @@ jobs:
         run: npm run build
         
       - name: Deploy to Firebase (Hosting, Functions, Firestore Rules)
-        run: firebase deploy --token ${{ secrets.FIREBASE_TOKEN }} --non-interactive
+        run: firebase deploy --token ${{ secrets.FIREBASE_TOKEN }} --non-interactive --force
