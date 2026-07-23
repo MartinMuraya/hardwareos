@@ -17,7 +17,7 @@ import 'features/accounting/providers/accounting_provider.dart';
 import 'features/hr/providers/hr_provider.dart';
 import 'firebase_options.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'l10n/app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

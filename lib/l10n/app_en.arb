@@ -1,4 +1,5 @@
 {
+  "@@locale": "en",
   "dashboard": "Dashboard",
   "pos": "Point of Sale",
   "inventory": "Inventory",
