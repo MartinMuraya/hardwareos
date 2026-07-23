@@ -1,0 +1,11 @@
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty("android")) {
+            if (project.name == "blue_thermal_printer") {
+                project.android {
+                    namespace "id.kakzaki.blue_thermal_printer"
+                }
+            }
+        }
+    }
+}
