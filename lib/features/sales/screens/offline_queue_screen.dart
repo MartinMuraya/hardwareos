@@ -21,7 +21,7 @@ class _OfflineQueueScreenState extends State<OfflineQueueScreen> {
     setState(() => _isSyncing = true);
     try {
       final queue = context.read<OfflineSalesQueue>();
-      await queue.syncPendingSales(context);
+      await queue.syncAll(context);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Sync completed successfully')),

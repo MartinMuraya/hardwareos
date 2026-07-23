@@ -42,6 +42,9 @@ class Sale {
   final String paymentMethod;
   final String note;
   final DateTime createdAt;
+  final String? cashierName;
+  final String? customerName;
+  final Map<String, dynamic>? metadata;
 
   const Sale({
     required this.id,
@@ -52,6 +55,9 @@ class Sale {
     required this.paymentMethod,
     required this.note,
     required this.createdAt,
+    this.cashierName,
+    this.customerName,
+    this.metadata,
   });
 
   factory Sale.fromMap(Map<String, dynamic> map) {
@@ -65,6 +71,27 @@ class Sale {
       paymentMethod: map['paymentMethod'] as String? ?? 'cash',
       note:          map['note'] as String? ?? '',
       createdAt:     DateTime.tryParse(map['createdAt']?.toString() ?? '') ?? DateTime.now(),
+      cashierName:   map['cashierName'] as String?,
+      customerName:  map['customerName'] as String?,
+      metadata:      map['metadata'] as Map<String, dynamic>?,
     );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'businessId': businessId,
+      'items': items.map((x) => x.toMap()).toList(),
+      'total': total,
+      'profit': profit,
+      'paymentMethod': paymentMethod,
+      'note': note,
+      'createdAt': createdAt.toIso8601String(),
+      'cashierName': cashierName,
+      'customerName': customerName,
+      'metadata': metadata,
+      if (metadata?['timsCuInvoiceNumber'] != null) 'timsCuInvoiceNumber': metadata!['timsCuInvoiceNumber'],
+      if (metadata?['timsQrCode'] != null) 'timsQrCode': metadata!['timsQrCode'],
+    };
   }
 }

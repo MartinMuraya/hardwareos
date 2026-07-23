@@ -207,7 +207,7 @@ class _SaleCard extends StatelessWidget {
       receiptNumber: sale.id,
       items: sale.items.map((e) => ReceiptItem(
         name: e.name,
-        quantity: e.quantity,
+        quantity: e.quantity.toDouble(),
         price: e.sellingPrice,
         subtotal: e.lineTotal,
       )).toList(),
