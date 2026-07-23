@@ -119,10 +119,10 @@ class Product {
     return '';
   }
 
-  Product copyWith({double? quantity, List<String>? barcodes}) {
+  Product copyWith({double? quantity, List<String>? barcodes, double? sellingPrice}) {
     return Product(
       id: id, businessId: businessId, name: name, sku: sku,
-      category: category, costPrice: costPrice, sellingPrice: sellingPrice,
+      category: category, costPrice: costPrice, sellingPrice: sellingPrice ?? this.sellingPrice,
       reorderLevel: reorderLevel, createdAt: createdAt, updatedAt: updatedAt,
       quantity: quantity ?? this.quantity,
       barcodes: barcodes ?? this.barcodes,

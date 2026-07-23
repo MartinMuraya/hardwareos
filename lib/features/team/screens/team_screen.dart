@@ -235,6 +235,7 @@ class _TeamMemberCard extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 }

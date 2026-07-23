@@ -25,8 +25,8 @@ class ProductLedgerScreen extends StatelessWidget {
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('inventory_ledger')
-            .where('businessId', '==', businessId)
-            .where('productId', '==', productId)
+            .where('businessId', isEqualTo: businessId)
+            .where('productId', isEqualTo: productId)
             .orderBy('timestamp', descending: true)
             .limit(100)
             .snapshots(),

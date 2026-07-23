@@ -1,5 +1,7 @@
+// ignore_for_file: avoid_web_libraries_in_flutter, deprecated_member_use
 import 'dart:async';
 import 'dart:html' as html;
+// ignore: uri_does_not_exist
 import 'dart:js_util' as js_util;
 import 'dart:typed_data';
 import 'web_serial_service.dart';

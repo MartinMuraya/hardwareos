@@ -1381,7 +1381,7 @@ class _CartTile extends StatelessWidget {
   }
 
   Future<void> _readScale(BuildContext context) async {
-    final service = WebSerialService.instance;
+    final service = getWebSerialService();
     final isSupported = await service.isSupported();
     if (!isSupported) {
       if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Web Serial API not supported in this browser. Please use Chrome/Edge.')));

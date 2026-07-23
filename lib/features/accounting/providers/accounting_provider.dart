@@ -41,7 +41,7 @@ class AccountingProvider extends ChangeNotifier {
       final res = await FunctionsService.call('getChartOfAccounts', {
         'businessId': businessId,
       });
-      final List accs = res.data['accounts'] ?? [];
+      final List accs = res['accounts'] ?? [];
       _accounts = accs.map((e) => AccountModel.fromMap(e, e['id'])).toList();
       _error = null;
     } catch (e) {
@@ -58,7 +58,7 @@ class AccountingProvider extends ChangeNotifier {
       final res = await FunctionsService.call('getTrialBalance', {
         'businessId': businessId,
       });
-      _trialBalance = TrialBalance.fromMap(res.data);
+      _trialBalance = TrialBalance.fromMap(res);
       _error = null;
     } catch (e) {
       _error = e.toString();

@@ -115,7 +115,7 @@ class _AIIntelligenceScreenState extends State<AIIntelligenceScreen> {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -125,8 +125,8 @@ class _AIIntelligenceScreenState extends State<AIIntelligenceScreen> {
                           data: _reportMarkdown!,
                           selectable: true,
                           styleSheet: MarkdownStyleSheet(
-                            h1: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.primary),
-                            h2: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                            h1: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.accent),
+                            h2: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.black87),
                             p: const TextStyle(fontSize: 16, height: 1.5),
                             listBullet: const TextStyle(fontSize: 16),
                           ),
@@ -136,7 +136,7 @@ class _AIIntelligenceScreenState extends State<AIIntelligenceScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.auto_awesome, size: 80, color: AppColors.primary.withOpacity(0.5)),
+                            Icon(Icons.auto_awesome, size: 80, color: AppColors.accent.withValues(alpha: 0.5)),
                             const SizedBox(height: 24),
                             Text(
                               'Ready for AI Analysis',
@@ -145,7 +145,7 @@ class _AIIntelligenceScreenState extends State<AIIntelligenceScreen> {
                             const SizedBox(height: 12),
                             const Text(
                               'Generate a mathematically-backed report on your stock health.',
-                              style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+                              style: TextStyle(color: Colors.black54, fontSize: 16),
                             ),
                             const SizedBox(height: 32),
                             ElevatedButton.icon(

@@ -22,7 +22,7 @@ class HrProvider extends ChangeNotifier {
     _setLoading(true);
     try {
       final res = await FunctionsService.call('getHrSettings', {'businessId': businessId});
-      _settings = HrSettings.fromMap(res.data);
+      _settings = HrSettings.fromMap(res);
       _error = null;
     } catch (e) {
       _error = e.toString();
