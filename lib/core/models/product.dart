@@ -50,6 +50,7 @@ class Product {
   final String? sellingUnit;
   final bool trackBatches;
   final bool trackSerials;
+  final bool isPublishedOnline;
   final UomConfig? uomConfig;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -74,6 +75,7 @@ class Product {
     this.sellingUnit,
     this.trackBatches = false,
     this.trackSerials = false,
+    this.isPublishedOnline = false,
     this.uomConfig,
     required this.createdAt,
     required this.updatedAt,
@@ -100,6 +102,7 @@ class Product {
       sellingUnit: map['sellingUnit'] as String?,
       trackBatches: map['trackBatches'] == true,
       trackSerials: map['trackSerials'] == true,
+      isPublishedOnline: map['isPublishedOnline'] == true,
       uomConfig: map['uomConfig'] != null ? UomConfig.fromMap(Map<String, dynamic>.from(map['uomConfig'])) : null,
       createdAt:    DateTime.tryParse(map['createdAt']?.toString() ?? '') ?? DateTime.now(),
       updatedAt:    DateTime.tryParse(map['updatedAt']?.toString() ?? '') ?? DateTime.now(),
@@ -119,7 +122,7 @@ class Product {
     return '';
   }
 
-  Product copyWith({double? quantity, List<String>? barcodes, double? sellingPrice}) {
+  Product copyWith({double? quantity, List<String>? barcodes, double? sellingPrice, bool? isPublishedOnline}) {
     return Product(
       id: id, businessId: businessId, name: name, sku: sku,
       category: category, costPrice: costPrice, sellingPrice: sellingPrice ?? this.sellingPrice,
@@ -131,6 +134,7 @@ class Product {
       parentProductId: parentProductId, conversionRatio: conversionRatio,
       baseUnit: baseUnit, sellingUnit: sellingUnit,
       trackBatches: trackBatches, trackSerials: trackSerials,
+      isPublishedOnline: isPublishedOnline ?? this.isPublishedOnline,
       uomConfig: uomConfig,
     );
   }

@@ -254,12 +254,18 @@ export {
   payoutCommission,
 } from "./functions/hr";
 
+// Storefront API
+export {
+  getStorefrontSettings,
+  updateStorefrontSettings,
+  checkSlugAvailability,
+} from "./functions/storefront";
+
 // Storefront Stubs (To prevent deletion during deployment)
 export {
   addToCart,
   approveReturn,
   cancelOrder,
-  checkSlugAvailability,
   clearCart,
   createDeliveryZone,
   createStorefrontCategory,
@@ -286,7 +292,6 @@ export {
   getOrderReturns,
   getPublicCategories,
   getPublicProductDetails,
-  getStorefrontSettings,
   processFailedSyncRetries,
   processRefund,
   processStaleCheckouts,
@@ -307,5 +312,4 @@ export {
   updateDeliveryZone,
   updateOrderStatus,
   updateStorefrontCategory,
-  updateStorefrontSettings,
 } from "./functions/storefront_stubs";

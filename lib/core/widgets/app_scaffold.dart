@@ -40,6 +40,7 @@ class _AppScaffoldState extends State<AppScaffold> {
       const _NavItem(icon: Icons.help_outline_rounded, label: 'Support',       route: '/support'),
       if (isOwner)   const _NavItem(icon: Icons.people_rounded,       label: 'Team',          route: '/team'),
       if (isOwner)   const _NavItem(icon: Icons.workspace_premium_rounded, label: 'Subscription', route: '/subscription'),
+      if (isManager) const _NavItem(icon: Icons.storefront_outlined,  label: 'Storefront',    route: '/storefront-settings'),
       if (isOwner)   const _NavItem(icon: Icons.badge_rounded,             label: 'HR & Payroll', route: '/hr'),
       if (isManager) const _NavItem(icon: Icons.account_balance_rounded,   label: 'Accounting',    route: '/accounting'),
       if (isManager) const _NavItem(icon: Icons.balance_rounded,       label: 'Stock Adj.',    route: '/stock-adjustments'),

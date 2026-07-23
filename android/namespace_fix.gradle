@@ -1,11 +1,19 @@
-subprojects {
-    afterEvaluate { project ->
-        if (project.hasProperty("android")) {
-            if (project.name == "blue_thermal_printer") {
-                project.android {
+subprojects { subproject ->
+    def applyNamespace = {
+        if (subproject.name == "blue_thermal_printer") {
+            if (subproject.hasProperty("android")) {
+                subproject.android {
                     namespace "id.kakzaki.blue_thermal_printer"
                 }
             }
+        }
+    }
+
+    if (subproject.state.executed) {
+        applyNamespace()
+    } else {
+        subproject.afterEvaluate {
+            applyNamespace()
         }
     }
 }

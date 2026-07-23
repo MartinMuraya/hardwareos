@@ -260,8 +260,62 @@ class _DetailCard extends StatelessWidget {
       _Row('Selling Price', 'KES ${product.sellingPrice.toStringAsFixed(2)}', theme: theme),
       const _HDivider(),
       _Row('Margin',        '${product.margin.toStringAsFixed(1)}%', theme: theme),
+      const _HDivider(),
+      _StorefrontToggle(product: product, theme: theme),
     ]),
   );
+}
+
+class _StorefrontToggle extends StatefulWidget {
+  final Product product;
+  final ThemeData theme;
+  const _StorefrontToggle({required this.product, required this.theme});
+
+  @override
+  State<_StorefrontToggle> createState() => _StorefrontToggleState();
+}
+
+class _StorefrontToggleState extends State<_StorefrontToggle> {
+  bool _updating = false;
+
+  Future<void> _toggle(bool value) async {
+    setState(() => _updating = true);
+    try {
+      await FunctionsService.call('updateProduct', {
+        'businessId': widget.product.businessId,
+        'productId': widget.product.id,
+        'updates': {
+          'isPublishedOnline': value,
+        },
+      });
+      // The Product Cache/Listener will automatically refresh the UI when the document updates
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update visibility: $e')));
+    } finally {
+      if (mounted) setState(() => _updating = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('Storefront Visibility', style: TextStyle(color: widget.theme.colorScheme.onSurfaceVariant, fontSize: 14)),
+          if (_updating)
+            const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
+          else
+            Switch(
+              value: widget.product.isPublishedOnline,
+              onChanged: _toggle,
+              activeColor: AppColors.accent,
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 class _Row extends StatelessWidget {

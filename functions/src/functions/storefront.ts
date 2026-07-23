@@ -1,5 +1,6 @@
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
 
 const db = () => admin.firestore();
 
@@ -280,4 +281,80 @@ export const rejectOnlineOrder = onCall({ cors: true }, async (request) => {
   });
 
   return { success: true };
+});
+
+// -----------------------------------------------------------
+// getStorefrontSettings
+// Returns the storefront configuration for a specific business.
+// -----------------------------------------------------------
+export const getStorefrontSettings = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
+  
+  const { businessId } = request.data as { businessId: string };
+  if (!businessId) throw new HttpsError("invalid-argument", "businessId required.");
+  
+  await assertBusinessMember(request.auth.uid, businessId);
+  
+  const doc = await db().collection("storefronts").doc(businessId).get();
+  return doc.data() || null;
+});
+
+// -----------------------------------------------------------
+// updateStorefrontSettings
+// Updates the storefront configuration for a specific business.
+// -----------------------------------------------------------
+export const updateStorefrontSettings = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
+  
+  const { businessId, name, tenantSlug, active } = request.data as {
+    businessId: string;
+    name: string;
+    tenantSlug: string;
+    active: boolean;
+  };
+  
+  if (!businessId || !tenantSlug) throw new HttpsError("invalid-argument", "Missing parameters.");
+  
+  await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager"]);
+  await assertActiveSubscription(businessId);
+  
+  // Verify slug is unique (or belongs to this business)
+  const slugQuery = await db().collection("storefronts").where("tenantSlug", "==", tenantSlug).get();
+  for (const doc of slugQuery.docs) {
+    if (doc.id !== businessId) {
+      throw new HttpsError("already-exists", "This Store URL Slug is already taken.");
+    }
+  }
+
+  const now = admin.firestore.FieldValue.serverTimestamp();
+  
+  await db().collection("storefronts").doc(businessId).set({
+    businessId,
+    name: name || "",
+    tenantSlug,
+    active: !!active,
+    updatedAt: now,
+  }, { merge: true });
+
+  return { success: true };
+});
+
+// -----------------------------------------------------------
+// checkSlugAvailability
+// Checks if a requested tenant slug is available.
+// -----------------------------------------------------------
+export const checkSlugAvailability = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
+  
+  const { slug, businessId } = request.data as { slug: string; businessId: string };
+  if (!slug) return { available: false };
+  
+  const slugQuery = await db().collection("storefronts").where("tenantSlug", "==", slug).get();
+  for (const doc of slugQuery.docs) {
+    if (doc.id !== businessId) {
+      return { available: false };
+    }
+  }
+  
+  return { available: true };
 });

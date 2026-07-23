@@ -59,6 +59,7 @@ import '../providers/auth_provider.dart';
 import '../widgets/app_scaffold.dart';
 import '../../features/auth/screens/auth_error_screen.dart';
 import '../../features/storefront/screens/storefront_app_screen.dart';
+import '../../features/storefront/screens/storefront_management_screen.dart';
 import '../../features/accounting/screens/accounting_dashboard_screen.dart';
 import '../../features/hr/screens/hr_dashboard_screen.dart';
 
@@ -133,7 +134,7 @@ class AppRouter {
                                      state.matchedLocation.startsWith('/returns') ||
                                      state.matchedLocation.startsWith('/cash-drawer') ||
                                      state.matchedLocation.startsWith('/branches') ||
-                                     state.matchedLocation.startsWith('/stock-transfers') ||
+                                     state.matchedLocation.startsWith('/storefront-settings') ||
                                      state.matchedLocation.startsWith('/stock-transfers');
 
             if (isExpired && isProtectedRoute && !isSubscriptionRoute) {
@@ -240,6 +241,10 @@ class AppRouter {
             GoRoute(
               path: '/dashboard',
               builder: (_, __) => const DashboardScreen(),
+            ),
+            GoRoute(
+              path: '/storefront-settings',
+              builder: (_, __) => const StorefrontManagementScreen(),
             ),
             GoRoute(
               path: '/inventory',

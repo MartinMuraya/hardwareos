@@ -32,6 +32,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
   double? _conversionRatio;
   String _baseUnit = '';
   String _sellingUnit = '';
+  bool _isPublishedOnline = false;
   List<Map<String, dynamic>> _allProducts = [];
   bool _loadingProducts = false;
 
@@ -83,6 +84,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
         'sellingPrice': double.parse(_priceCtrl.text),
         'reorderLevel': double.parse(_reorderCtrl.text),
         'barcodes':     _barcodesCtrl.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
+        'isPublishedOnline': _isPublishedOnline,
       };
 
       if (_isBulkEnabled) {
@@ -239,6 +241,18 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           ),
                         ),
                       ]),
+                    ]),
+                    const SizedBox(height: 20),
+
+                    _Section(title: 'E-Commerce', theme: theme, children: [
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Publish to Online Storefront'),
+                        subtitle: const Text('Make this product visible to public customers'),
+                        value: _isPublishedOnline,
+                        onChanged: (v) => setState(() => _isPublishedOnline = v),
+                        activeColor: AppColors.accent,
+                      ),
                     ]),
                     const SizedBox(height: 20),
 
