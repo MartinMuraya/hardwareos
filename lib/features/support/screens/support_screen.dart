@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../../../core/services/functions_service.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/empty_state.dart';
 
 class SupportScreen extends StatefulWidget {

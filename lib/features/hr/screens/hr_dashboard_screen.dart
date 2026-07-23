@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../providers/hr_provider.dart';
+
 import 'employee_directory_tab.dart';
 import 'hr_settings_tab.dart';
 import 'payroll_tab.dart';

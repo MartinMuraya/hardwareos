@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../core/providers/business_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/responsive.dart';
-import '../../../core/widgets/loading_overlay.dart';
+
 
 class AdvancedAnalyticsScreen extends StatefulWidget {
   const AdvancedAnalyticsScreen({super.key});
@@ -123,7 +123,7 @@ class _AdvancedAnalyticsScreenState extends State<AdvancedAnalyticsScreen> {
       );
     }
 
-    final currencyFmt = NumberFormat.currency(symbol: 'KES ', decimalDigits: 0);
+
     final trends = List<Map<String, dynamic>>.from(_data!['salesTrend'] as List);
     final margins = List<Map<String, dynamic>>.from(_data!['margins'] as List);
     final forecasts = List<Map<String, dynamic>>.from(_forecast!['forecast'] as List);
