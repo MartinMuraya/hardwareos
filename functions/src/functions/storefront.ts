@@ -22,6 +22,11 @@ export const getPublicStorefront = onCall({ cors: true }, async (request) => {
     name: biz.name,
     tenantSlug: biz.tenantSlug,
     active: biz.active,
+    logoUrl: biz.logoUrl,
+    bannerUrl: biz.bannerUrl,
+    primaryColor: biz.primaryColor,
+    whatsappNumber: biz.whatsappNumber,
+    deliveryZones: biz.deliveryZones || [],
   };
 });
 
@@ -86,68 +91,81 @@ export const getStorefrontCategories = onCall({ cors: true }, async (request) =>
 // Temporarily decrements stock (Hold) until approved by the merchant.
 // -----------------------------------------------------------
 export const createOnlineOrder = onCall({ cors: true }, async (request) => {
-  const { businessId, items, customerName, customerPhone, address, note } = request.data as {
-    businessId: string;
-    items: Array<{ productId: string; quantity: number }>;
-    customerName: string;
-    customerPhone: string;
-    address: string;
-    note?: string;
-  };
-
-  if (!businessId || !items || items.length === 0 || !customerName || !customerPhone) {
-    throw new HttpsError("invalid-argument", "Missing required order details.");
-  }
-
-  const result = await db().runTransaction(async (txn) => {
-    const productRefs = items.map(item => db().collection("products").doc(item.productId));
-    const productSnaps = await Promise.all(productRefs.map(ref => txn.get(ref)));
-
-    let total = 0;
-    const validatedItems = [];
-
-    for (let i = 0; i < items.length; i++) {
-      const snap = productSnaps[i];
-      const item = items[i];
-
-      if (!snap.exists) throw new HttpsError("not-found", `Product ${item.productId} not found.`);
-      const product = snap.data()!;
-      
-      if (product.businessId !== businessId || !product.isPublishedOnline) {
-        throw new HttpsError("permission-denied", "Product is not available for online ordering.");
-      }
-
-      if (product.quantity < item.quantity) {
-        throw new HttpsError("resource-exhausted", `Insufficient stock for "${product.name}".`);
-      }
-
-      const lineTotal = product.sellingPrice * item.quantity;
-      total += lineTotal;
-
-      validatedItems.push({
-        productId: item.productId,
-        name: product.name,
-        quantity: item.quantity,
-        sellingPrice: product.sellingPrice,
-        costPrice: product.costPrice,
-      });
+    const { businessId, items, customerName, customerPhone, address, note, deliveryZoneId, deliveryFee, triggerMpesa } = request.data as {
+      businessId: string;
+      items: Array<{ productId: string; quantity: number }>;
+      customerName: string;
+      customerPhone: string;
+      address: string;
+      note?: string;
+      deliveryZoneId?: string;
+      deliveryFee?: number;
+      triggerMpesa?: boolean;
+    };
+  
+    if (!businessId || !items || items.length === 0 || !customerName || !customerPhone) {
+      throw new HttpsError("invalid-argument", "Missing required order details.");
     }
 
-    const orderRef = db().collection("online_orders").doc();
-    const now = admin.firestore.Timestamp.now();
+    // Rate limiting logic or quick checks could go here.
+  
+    const result = await db().runTransaction(async (txn) => {
+      const productRefs = items.map(item => db().collection("products").doc(item.productId));
+      const productSnaps = await Promise.all(productRefs.map(ref => txn.get(ref)));
+  
+      let total = 0;
+      const validatedItems = [];
+  
+      for (let i = 0; i < items.length; i++) {
+        const snap = productSnaps[i];
+        const item = items[i];
+  
+        if (!snap.exists) throw new HttpsError("not-found", `Product ${item.productId} not found.`);
+        const product = snap.data()!;
+        
+        if (product.businessId !== businessId || !product.isPublishedOnline) {
+          throw new HttpsError("permission-denied", "Product is not available for online ordering.");
+        }
+  
+        if (product.quantity < item.quantity) {
+          throw new HttpsError("resource-exhausted", `Insufficient stock for "${product.name}".`);
+        }
+  
+        const lineTotal = product.sellingPrice * item.quantity;
+        total += lineTotal;
+  
+        validatedItems.push({
+          productId: item.productId,
+          name: product.name,
+          quantity: item.quantity,
+          sellingPrice: product.sellingPrice,
+          costPrice: product.costPrice,
+        });
+      }
 
-    txn.set(orderRef, {
-      id: orderRef.id,
-      businessId,
-      items: validatedItems,
-      total: Number(total.toFixed(2)),
-      customerName,
-      customerPhone,
-      address,
-      note: note || "",
-      status: "pending", // pending -> approved -> completed
-      createdAt: now,
-    });
+      if (deliveryFee) {
+        total += deliveryFee;
+      }
+  
+      const orderRef = db().collection("online_orders").doc();
+      const now = admin.firestore.Timestamp.now();
+      const checkoutRequestId = triggerMpesa ? "ws_CO_" + Math.random().toString(36).substring(2, 15) : null;
+  
+      txn.set(orderRef, {
+        id: orderRef.id,
+        businessId,
+        items: validatedItems,
+        total: Number(total.toFixed(2)),
+        customerName,
+        customerPhone,
+        address,
+        note: note || "",
+        status: triggerMpesa ? "pending_payment" : "pending", // pending_payment means waiting for M-Pesa
+        deliveryZoneId: deliveryZoneId || null,
+        deliveryFee: deliveryFee || 0,
+        checkoutRequestId,
+        createdAt: now,
+      });
 
     // Decrement stock (Hold)
     for (let i = 0; i < validatedItems.length; i++) {
@@ -167,12 +185,48 @@ export const createOnlineOrder = onCall({ cors: true }, async (request) => {
         referenceId: orderRef.id,
         createdAt: now,
       });
+      }
+  
+      return { 
+        success: true, 
+        orderId: orderRef.id,
+        total: Number(total.toFixed(2)),
+        checkoutRequestId,
+      };
+    }) as { success: boolean; orderId: string; total: number; checkoutRequestId: string | null };
+
+    if (triggerMpesa && result.checkoutRequestId) {
+      // Import MpesaProvider locally to avoid circular dependency issues at top level if any
+      const { MpesaProvider, mpesaConsumerKey } = require("../services/mpesaProvider");
+      const mpesa = new MpesaProvider();
+      
+      const bizDoc = await db().collection("businesses").doc(businessId).get();
+      const bizName = bizDoc.data()?.name || "HardwareOS";
+      
+      try {
+        if (mpesaConsumerKey.value() !== "dummy") {
+          const stkRes = await mpesa.initiatePayment({
+            amount: result.total || 1,
+            currency: "KES",
+            phoneNumber: customerPhone,
+            accountReference: bizName.substring(0, 12),
+            transactionDesc: `Order ${result.orderId.substring(0,8)}`,
+          });
+          
+          if (stkRes.providerReference) {
+             await db().collection("online_orders").doc(result.orderId).update({
+               checkoutRequestId: stkRes.providerReference,
+             });
+             result.checkoutRequestId = stkRes.providerReference;
+          }
+        }
+      } catch (err: any) {
+        console.error("M-Pesa Storefront Push failed:", err);
+        // We do not throw here, the order remains in pending_payment.
+      }
     }
 
-    return { orderId: orderRef.id, total };
-  });
-
-  return { success: true, ...result };
+    return result;
 });
 
 // -----------------------------------------------------------
@@ -306,11 +360,19 @@ export const getStorefrontSettings = onCall({ cors: true }, async (request) => {
 export const updateStorefrontSettings = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
   
-  const { businessId, name, tenantSlug, active } = request.data as {
+  const { 
+    businessId, name, tenantSlug, active, 
+    logoUrl, bannerUrl, primaryColor, whatsappNumber, deliveryZones 
+  } = request.data as {
     businessId: string;
     name: string;
     tenantSlug: string;
     active: boolean;
+    logoUrl?: string;
+    bannerUrl?: string;
+    primaryColor?: string;
+    whatsappNumber?: string;
+    deliveryZones?: Array<{ id: string; name: string; fee: number }>;
   };
   
   if (!businessId || !tenantSlug) throw new HttpsError("invalid-argument", "Missing parameters.");
@@ -328,13 +390,21 @@ export const updateStorefrontSettings = onCall({ cors: true }, async (request) =
 
   const now = admin.firestore.FieldValue.serverTimestamp();
   
-  await db().collection("storefronts").doc(businessId).set({
+  const updateData: any = {
     businessId,
     name: name || "",
     tenantSlug,
     active: !!active,
     updatedAt: now,
-  }, { merge: true });
+  };
+  
+  if (logoUrl !== undefined) updateData.logoUrl = logoUrl;
+  if (bannerUrl !== undefined) updateData.bannerUrl = bannerUrl;
+  if (primaryColor !== undefined) updateData.primaryColor = primaryColor;
+  if (whatsappNumber !== undefined) updateData.whatsappNumber = whatsappNumber;
+  if (deliveryZones !== undefined) updateData.deliveryZones = deliveryZones;
+
+  await db().collection("storefronts").doc(businessId).set(updateData, { merge: true });
 
   return { success: true };
 });

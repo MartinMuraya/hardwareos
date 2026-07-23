@@ -29,6 +29,7 @@ class _AppScaffoldState extends State<AppScaffold> {
       const _NavItem(icon: Icons.dashboard_rounded,    label: 'Dashboard',     route: '/dashboard'),
       if (isManager) const _NavItem(icon: Icons.inventory_2_rounded,  label: 'Inventory',     route: '/inventory'),
       const _NavItem(icon: Icons.point_of_sale_rounded,label: 'Sales',         route: '/sales'),
+      if (isManager) const _NavItem(icon: Icons.shopping_basket_rounded, label: 'Online Orders', route: '/online-orders'),
       if (isManager) const _NavItem(icon: Icons.receipt_long_rounded, label: 'Expenses',      route: '/expenses'),
       const _NavItem(icon: Icons.people_rounded,       label: 'Customers',     route: '/customers'),
       const _NavItem(icon: Icons.account_balance_wallet_rounded, label: 'Credit', route: '/credit-ledger'),

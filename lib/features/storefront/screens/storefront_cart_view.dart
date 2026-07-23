@@ -149,6 +149,23 @@ class _StorefrontCartViewState extends State<StorefrontCartView> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                const Text('Subtotal:', style: TextStyle(fontSize: 16)),
+                Text('\$${provider.cartSubtotal.toStringAsFixed(2)}', style: const TextStyle(fontSize: 16)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (provider.selectedZone != null)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Delivery Fee:', style: TextStyle(fontSize: 16)),
+                  Text('\$${provider.selectedZone!.fee.toStringAsFixed(2)}', style: const TextStyle(fontSize: 16)),
+                ],
+              ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
                 const Text('Total Price:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 Text('\$${provider.cartTotal.toStringAsFixed(2)}', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green)),
               ],
@@ -166,12 +183,35 @@ class _StorefrontCartViewState extends State<StorefrontCartView> {
             const SizedBox(height: 16),
             
             TextFormField(
-              decoration: const InputDecoration(labelText: 'Phone Number *', border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                labelText: 'M-Pesa Phone Number *', 
+                border: OutlineInputBorder(),
+                helperText: 'Must be an active M-Pesa number (e.g. 254700000000)'
+              ),
+              keyboardType: TextInputType.phone,
               validator: (val) => val == null || val.isEmpty ? 'Required' : null,
               onSaved: (val) => _customerPhone = val!,
             ),
             const SizedBox(height: 16),
             
+            if (provider.storeInfo?.deliveryZones.isNotEmpty == true)
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(labelText: 'Delivery Zone *', border: OutlineInputBorder()),
+                value: provider.selectedZone?.id,
+                items: provider.storeInfo!.deliveryZones.map((z) => DropdownMenuItem(
+                  value: z.id,
+                  child: Text('${z.name} (+\$${z.fee.toStringAsFixed(2)})'),
+                )).toList(),
+                onChanged: (val) {
+                  if (val != null) {
+                    final zone = provider.storeInfo!.deliveryZones.firstWhere((z) => z.id == val);
+                    provider.setDeliveryZone(zone);
+                  }
+                },
+                validator: (val) => val == null ? 'Please select a delivery zone' : null,
+              ),
+            const SizedBox(height: 16),
+
             TextFormField(
               decoration: const InputDecoration(labelText: 'Delivery Address *', border: OutlineInputBorder()),
               maxLines: 3,
@@ -194,7 +234,7 @@ class _StorefrontCartViewState extends State<StorefrontCartView> {
                 onPressed: _isCheckingOut ? null : () => _handleCheckout(provider),
                 child: _isCheckingOut
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Place Order', style: TextStyle(fontSize: 18)),
+                    : const Text('Pay with M-Pesa & Place Order', style: TextStyle(fontSize: 16, color: Colors.white)),
               ),
             ),
           ],

@@ -180,8 +180,52 @@ export const mpesaCallback = onRequest({ cors: true, secrets: [mpesaConsumerKey,
       .get();
 
     if (subSnap.empty) {
-      console.error(`Subscription record with checkoutRequestId ${CheckoutRequestID} not found.`);
-      res.status(404).send("CheckoutRequestID not found");
+      // It might be an online order
+      const orderSnap = await db()
+        .collection("online_orders")
+        .where("checkoutRequestId", "==", CheckoutRequestID)
+        .limit(1)
+        .get();
+
+      if (orderSnap.empty) {
+        console.error(`Record with checkoutRequestId ${CheckoutRequestID} not found.`);
+        res.status(404).send("CheckoutRequestID not found");
+        return;
+      }
+
+      const orderDoc = orderSnap.docs[0];
+      
+      let mpesaReceipt = "";
+      if (ResultCode === 0) {
+        const metadataItems = stkCallback?.CallbackMetadata?.Item || [];
+        for (const item of metadataItems) {
+          if (item.Name === "MpesaReceiptNumber") {
+            mpesaReceipt = item.Value;
+          }
+        }
+      }
+
+      const callbackResult = await mpesa.processCallback({
+        providerReference: CheckoutRequestID,
+        resultCode: ResultCode || 1,
+        resultDesc: ResultDesc || "",
+        receiptNumber: mpesaReceipt,
+      });
+
+      if (callbackResult.success) {
+        await orderDoc.ref.update({
+          status: "pending",
+          mpesaReceipt: callbackResult.receiptNumber,
+          paidAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        res.status(200).send("Order Paid");
+      } else {
+        await orderDoc.ref.update({
+          status: "payment_failed",
+          failureReason: ResultDesc,
+        });
+        res.status(200).send("Order Payment Failed");
+      }
       return;
     }
 

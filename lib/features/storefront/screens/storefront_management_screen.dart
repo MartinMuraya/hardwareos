@@ -18,6 +18,11 @@ class _StorefrontManagementScreenState extends State<StorefrontManagementScreen>
   final _formKey = GlobalKey<FormState>();
   final _slugCtrl = TextEditingController();
   final _nameCtrl = TextEditingController();
+  final _logoUrlCtrl = TextEditingController();
+  final _bannerUrlCtrl = TextEditingController();
+  final _primaryColorCtrl = TextEditingController(text: '#1E88E5');
+  final _whatsappCtrl = TextEditingController();
+  List<DeliveryZone> _deliveryZones = [];
 
   bool _loading = true;
   bool _saving = false;
@@ -36,6 +41,10 @@ class _StorefrontManagementScreenState extends State<StorefrontManagementScreen>
   void dispose() {
     _slugCtrl.dispose();
     _nameCtrl.dispose();
+    _logoUrlCtrl.dispose();
+    _bannerUrlCtrl.dispose();
+    _primaryColorCtrl.dispose();
+    _whatsappCtrl.dispose();
     super.dispose();
   }
 
@@ -45,12 +54,16 @@ class _StorefrontManagementScreenState extends State<StorefrontManagementScreen>
       final bizId = context.read<AuthProvider>().businessId!;
       final res = await FunctionsService.call('getStorefrontSettings', {'businessId': bizId});
       
-      // If no settings exist yet, the backend might return null or an empty object
       if (res.isNotEmpty && res['tenantSlug'] != null) {
         _currentInfo = StorefrontInfo.fromJson(Map<String, dynamic>.from(res));
         _slugCtrl.text = _currentInfo!.tenantSlug;
         _nameCtrl.text = _currentInfo!.name;
         _active = _currentInfo!.active;
+        _logoUrlCtrl.text = _currentInfo!.logoUrl ?? '';
+        _bannerUrlCtrl.text = _currentInfo!.bannerUrl ?? '';
+        _primaryColorCtrl.text = _currentInfo!.primaryColor ?? '#1E88E5';
+        _whatsappCtrl.text = _currentInfo!.whatsappNumber ?? '';
+        _deliveryZones = List.from(_currentInfo!.deliveryZones);
       } else {
         // Initialize with default business name
         _nameCtrl.text = context.read<AuthProvider>().userProfile?['businessName'] as String? ?? '';
@@ -84,6 +97,11 @@ class _StorefrontManagementScreenState extends State<StorefrontManagementScreen>
         'name': _nameCtrl.text.trim(),
         'tenantSlug': slug,
         'active': _active,
+        'logoUrl': _logoUrlCtrl.text.trim().isEmpty ? null : _logoUrlCtrl.text.trim(),
+        'bannerUrl': _bannerUrlCtrl.text.trim().isEmpty ? null : _bannerUrlCtrl.text.trim(),
+        'primaryColor': _primaryColorCtrl.text.trim(),
+        'whatsappNumber': _whatsappCtrl.text.trim().isEmpty ? null : _whatsappCtrl.text.trim(),
+        'deliveryZones': _deliveryZones.map((z) => z.toJson()).toList(),
       });
 
       if (mounted) {
@@ -228,6 +246,109 @@ class _StorefrontManagementScreenState extends State<StorefrontManagementScreen>
                                 return null;
                               },
                             ),
+                            const SizedBox(height: 24),
+
+                            const Divider(height: 48),
+                            Text('Visual Customization', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 16),
+
+                            TextFormField(
+                              controller: _logoUrlCtrl,
+                              style: TextStyle(color: theme.colorScheme.onSurface),
+                              decoration: const InputDecoration(
+                                labelText: 'Logo Image URL',
+                                helperText: 'Provide a link to your business logo.',
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+
+                            TextFormField(
+                              controller: _bannerUrlCtrl,
+                              style: TextStyle(color: theme.colorScheme.onSurface),
+                              decoration: const InputDecoration(
+                                labelText: 'Banner Image URL',
+                                helperText: 'Appears at the top of your catalog.',
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+
+                            TextFormField(
+                              controller: _primaryColorCtrl,
+                              style: TextStyle(color: theme.colorScheme.onSurface),
+                              decoration: const InputDecoration(
+                                labelText: 'Brand Color (Hex)',
+                                helperText: 'e.g. #FF5722',
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+
+                            TextFormField(
+                              controller: _whatsappCtrl,
+                              style: TextStyle(color: theme.colorScheme.onSurface),
+                              decoration: const InputDecoration(
+                                labelText: 'WhatsApp Number',
+                                helperText: 'Include country code, e.g., 254700000000. Leave blank to hide.',
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+
+                            const Divider(height: 48),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('Delivery Zones', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                                TextButton.icon(
+                                  icon: const Icon(Icons.add, size: 16),
+                                  label: const Text('Add Zone'),
+                                  onPressed: () {
+                                    setState(() {
+                                      _deliveryZones.add(DeliveryZone(id: DateTime.now().millisecondsSinceEpoch.toString(), name: 'New Zone', fee: 0));
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            if (_deliveryZones.isEmpty)
+                              const Text('No delivery zones added. Storefront will be Click & Collect only.', style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey))
+                            else
+                              ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: _deliveryZones.length,
+                                itemBuilder: (context, index) {
+                                  final zone = _deliveryZones[index];
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 8.0),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          flex: 2,
+                                          child: TextFormField(
+                                            initialValue: zone.name,
+                                            decoration: const InputDecoration(labelText: 'Zone Name (e.g. Nairobi CBD)'),
+                                            onChanged: (v) => _deliveryZones[index] = DeliveryZone(id: zone.id, name: v, fee: zone.fee),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: TextFormField(
+                                            initialValue: zone.fee.toString(),
+                                            decoration: const InputDecoration(labelText: 'Fee (KES)'),
+                                            keyboardType: TextInputType.number,
+                                            onChanged: (v) => _deliveryZones[index] = DeliveryZone(id: zone.id, name: zone.name, fee: double.tryParse(v) ?? 0),
+                                          ),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.delete, color: Colors.red),
+                                          onPressed: () => setState(() => _deliveryZones.removeAt(index)),
+                                        )
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+
                             const SizedBox(height: 48),
 
                             SizedBox(

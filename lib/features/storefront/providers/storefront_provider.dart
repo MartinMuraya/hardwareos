@@ -27,7 +27,16 @@ class StorefrontProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  double get cartTotal => _cart.fold(0, (sum, item) => sum + (item.product.sellingPrice * item.quantity));
+  DeliveryZone? _selectedZone;
+  DeliveryZone? get selectedZone => _selectedZone;
+
+  void setDeliveryZone(DeliveryZone? zone) {
+    _selectedZone = zone;
+    notifyListeners();
+  }
+
+  double get cartSubtotal => _cart.fold(0, (sum, item) => sum + (item.product.sellingPrice * item.quantity));
+  double get cartTotal => cartSubtotal + (_selectedZone?.fee ?? 0.0);
   int get cartItemCount => _cart.fold(0, (sum, item) => sum + item.quantity);
 
   Future<void> _init() async {
@@ -124,23 +133,19 @@ class StorefrontProvider extends ChangeNotifier {
       'customerPhone': customerPhone,
       'address': address,
       'note': note,
+      'deliveryZoneId': _selectedZone?.id,
+      'deliveryFee': _selectedZone?.fee ?? 0.0,
+      'total': cartTotal,
+      'triggerMpesa': true, // The backend will trigger STK push
     };
 
     try {
-      // Attempt online checkout
-      await FunctionsService.call('createOnlineOrder', orderData);
+      // Attempt online checkout. Backend should return orderId and stk_push status
+      final res = await FunctionsService.call('createOnlineOrder', orderData);
       clearCart();
     } on FunctionsException catch (e) {
-      // If network fails, queue it for offline sync
       if (e.code == 'unavailable' || e.code == 'deadline-exceeded') {
-        final pendingOrder = PendingStorefrontOrder(
-          id: 'ord_${const Uuid().v4()}',
-          orderData: orderData,
-          createdAt: DateTime.now(),
-        );
-        await OfflineService.enqueueStorefrontOrder(pendingOrder);
-        clearCart();
-        // The sync daemon will push it later when online
+        throw Exception('Network error. Cannot initiate M-Pesa payment right now.');
       } else {
         rethrow;
       }
