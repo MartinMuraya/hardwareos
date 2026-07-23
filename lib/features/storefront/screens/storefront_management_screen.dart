@@ -46,7 +46,7 @@ class _StorefrontManagementScreenState extends State<StorefrontManagementScreen>
       final res = await FunctionsService.call('getStorefrontSettings', {'businessId': bizId});
       
       // If no settings exist yet, the backend might return null or an empty object
-      if (res != null && res.isNotEmpty && res['tenantSlug'] != null) {
+      if (res.isNotEmpty && res['tenantSlug'] != null) {
         _currentInfo = StorefrontInfo.fromJson(Map<String, dynamic>.from(res));
         _slugCtrl.text = _currentInfo!.tenantSlug;
         _nameCtrl.text = _currentInfo!.name;
@@ -139,7 +139,7 @@ class _StorefrontManagementScreenState extends State<StorefrontManagementScreen>
                         padding: const EdgeInsets.all(24),
                         margin: const EdgeInsets.only(bottom: 24),
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)]),
+                          gradient: LinearGradient(colors: [theme.primaryColor, theme.primaryColor.withValues(alpha: 0.8)]),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Row(
@@ -158,8 +158,8 @@ class _StorefrontManagementScreenState extends State<StorefrontManagementScreen>
                             ),
                             ElevatedButton.icon(
                               onPressed: _openStorefront,
-                              icon: const Icon(Icons.open_in_new_rounded, size: 16, color: AppColors.primary),
-                              label: const Text('Visit Store', style: TextStyle(color: AppColors.primary)),
+                              icon: Icon(Icons.open_in_new_rounded, size: 16, color: theme.primaryColor),
+                              label: Text('Visit Store', style: TextStyle(color: theme.primaryColor)),
                               style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
                             ),
                           ],
