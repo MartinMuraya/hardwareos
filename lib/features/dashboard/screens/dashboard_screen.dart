@@ -13,6 +13,7 @@ import '../widgets/plan_status_banner.dart';
 import '../widgets/low_stock_list.dart';
 import '../widgets/recent_sales_list.dart';
 import '../widgets/pending_sync_card.dart';
+import '../../inventory/screens/ai_intelligence_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -118,6 +119,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Text(DateFormat('EEEE, MMM d').format(DateTime.now()),
                       style: theme.textTheme.bodyMedium),
                   ]),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.auto_awesome, color: Colors.purple),
+                  onPressed: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const AIIntelligenceScreen()));
+                  },
+                  tooltip: 'AI Inventory Intelligence',
                 ),
                 IconButton(
                   icon: const Icon(Icons.refresh_rounded),

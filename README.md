@@ -95,10 +95,13 @@ The system is divided into over 20 highly specialized modules inside the Flutter
 - **Sales History**: Search, refund, and review historical transactions.
 
 ### 2. Comprehensive Inventory & Supply Chain
-- **Product Management**: Full catalog tracking with SKU, categorisation, buying/selling prices, and reorder levels.
+- **Immutable Inventory Ledger**: Replaces traditional "quantity" integers with a strict, double-entry style immutable ledger. All stock movements (Sales, Purchases, Returns, Adjustments) are appended as historical records, ensuring mathematically perfect, tamper-proof audits.
+- **Product Management & UOM**: Full catalog tracking utilizing a powerful **Single-Document Unit of Measure (UOM)** architecture. A single product natively tracks `baseUnit`, `purchaseUnit`, `sellingUnit`, and dynamic `conversionMultipliers` (e.g. buying a box of 100 nails, selling individually).
+- **Batch & Lot Tracking**: Perfect for perishable goods like paint or cement. Purchases create distinct batch records tracking expiration dates and cost, while sales automatically decrement stock from specific batches using FIFO logic.
+- **Serial Number Tracking**: Mandatory serial capture on high-value items (like generators). The system tracks exact lifecycle states ("Available" to "Sold") for warranty enforcement.
 - **Purchase Orders (POs)**: Create and track purchase orders sent to suppliers.
 - **Suppliers**: Manage supplier directories and their related POs.
-- **Stock Adjustments**: Record manual stock corrections (damage, loss, manual counts).
+- **Stock Adjustments**: Record manual stock corrections (damage, loss, manual counts) which write securely to the immutable ledger.
 - **Branch Management**: Multi-branch support allowing stock transfers between physical store locations.
 
 ### 3. CRM & Debt Management
@@ -114,10 +117,10 @@ The system is divided into over 20 highly specialized modules inside the Flutter
 - **Comprehensive HR & Payroll:** Structured employee management, timesheets, and automated payroll processing with configurable statutory deductions (PAYE, NHIF, NSSF). Directly integrates with the accounting engine to log salary expenses and tax liabilities.
 - **Multi-Branch Capability:** Manage several store locations under a single business umbrella. Transfer stock between branches with automated transit tracking and branch-specific profit & loss statements.
 
-### 6. Advanced Analytics & AI
+### 6. Advanced Analytics & AI (Powered by Gemini)
 - **Dashboard**: Real-time KPI cards, low stock alerts, pending sync indicators, and recent sales feeds.
 - **Interactive Reports**: Powered by `fl_chart`, visualize Profit & Loss, sales by payment methods, and historical trends over Today, This Week, or This Month.
-- **Gemini AI Assistant**: Powered by Google's Gemini LLM. Analyzes the last 30 days of the business's sales, expenses, and inventory to generate executive insights, risk warnings, and concrete recommendations.
+- **Gemini AI Inventory Intelligence**: An embedded `analyzeInventoryHealth` engine powered by **Google Gemini 2.5 Flash**. Operating strictly as a "Senior Supply Chain Analyst", the AI ingests active ledger data and sales velocity to output mathematically-backed Markdown reports detailing Reorder Recommendations, Dead Stock Alerts, and Margin Anomalies.
 
 ### 7. Support & Auditing
 - **Helpdesk Ticketing**: Tenants can open support tickets directly in the app. Super Admins reply and resolve them centrally.

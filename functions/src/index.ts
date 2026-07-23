@@ -43,6 +43,9 @@ export {
 // Inventory Ledger
 export { migrateToLedger } from "./functions/inventory_ledger";
 
+// AI Intelligence
+export { analyzeInventoryHealth } from "./functions/ai";
+
 // Sales
 export { createSale, getSales } from "./functions/sales";
 
