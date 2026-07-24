@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 
 class LabelSettingsScreen extends StatefulWidget {
@@ -57,6 +58,16 @@ class _LabelSettingsScreenState extends State<LabelSettingsScreen> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            } else {
+              GoRouter.of(context).go('/dashboard');
+            }
+          },
+        ),
         title: Text('Barcode Label Settings', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
       ),
       body: _loading

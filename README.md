@@ -125,9 +125,16 @@ HardwareOS utilizes a highly secure **"Function-as-a-Service" (FaaS) data mutati
 - **General Ledger**: Chart of Accounts with real-time Trial Balance.
 - **HR & Payroll Engine**: Statutory deductions (PAYE, NHIF, NSSF) linked directly to accounting liabilities.
 
-### 8. Gemini AI Assistant & Advanced Analytics
-- **Executive Insights**: Powered by Google Gemini API for cash flow optimization, inventory health reports, and demand forecasting.
-- **Interactive Reports**: Powered by `fl_chart` for Profit & Loss, sales breakdown, and payment trends.
+### 8. Gemini AI Business Analyst & Autonomous Workflows
+- **Senior Retail Analyst Intelligence**: Advanced Cloud Function endpoint (`runAIBusinessAnalyst`) powered by Google Gemini API. Analyzes real-time sales velocity, product run-out dates, profit variances, supplier performance, and detects inventory shrinkage anomalies.
+- **Executive Analytical Workflows**:
+  - *"Which products will run out next week?"*
+  - *"Why did profit decrease this month?"*
+  - *"Which supplier should I reorder from?"*
+  - *"Detect suspicious inventory adjustments."*
+  - *"Forecast next month's revenue."*
+  - *"Recommend optimal reorder quantities (EOQ)."*
+- **Autonomous Workflow & Human Approval Gate**: The AI Analyst generates structured action proposals (e.g. `draft_purchase_order`, `update_reorder_level`). Managers inspect and approve proposed actions via a one-click human-in-the-loop gate (`approveAIDraftedAction`), automatically creating official purchase order documents without manual typing.
 
 ---
 

@@ -13,6 +13,94 @@ async function assertSuperAdmin(uid: string) {
   }
 }
 
+// -----------------------------------------------------------
+// adminGetPlanConfigs & adminSavePlanConfig
+// Super Admin Subscription Plan CRUD Operations
+// -----------------------------------------------------------
+export const adminGetPlanConfigs = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
+  await assertSuperAdmin(request.auth.uid);
+
+  const snap = await db().collection("subscription_plan_configs").get();
+
+  if (snap.empty) {
+    return {
+      plans: [
+        {
+          id: "free",
+          name: "Free Trial",
+          priceKes: 0,
+          maxProducts: 50,
+          maxUsers: 1,
+          aiBasicEnabled: false,
+          aiAnalystEnabled: false,
+          whatsappEnabled: false,
+          reportsEnabled: true,
+          etimsEnabled: false,
+          storefrontEnabled: false,
+          advancedAnalyticsEnabled: false,
+        },
+        {
+          id: "starter",
+          name: "Starter Plan",
+          priceKes: 2600,
+          maxProducts: 500,
+          maxUsers: 5,
+          aiBasicEnabled: true,
+          aiAnalystEnabled: false,
+          whatsappEnabled: false,
+          reportsEnabled: true,
+          etimsEnabled: true,
+          storefrontEnabled: true,
+          advancedAnalyticsEnabled: false,
+        },
+        {
+          id: "pro",
+          name: "Pro Enterprise",
+          priceKes: 5200,
+          maxProducts: -1,
+          maxUsers: -1,
+          aiBasicEnabled: true,
+          aiAnalystEnabled: true,
+          whatsappEnabled: true,
+          reportsEnabled: true,
+          etimsEnabled: true,
+          storefrontEnabled: true,
+          advancedAnalyticsEnabled: true,
+        },
+      ],
+    };
+  }
+
+  const plans = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  return { plans };
+});
+
+export const adminSavePlanConfig = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
+  await assertSuperAdmin(request.auth.uid);
+
+  const { planId, config } = request.data as { planId: string; config: Record<string, any> };
+  if (!planId || !config) {
+    throw new HttpsError("invalid-argument", "planId and config object required.");
+  }
+
+  const planRef = db().collection("subscription_plan_configs").doc(planId);
+  const now = admin.firestore.FieldValue.serverTimestamp();
+
+  await planRef.set(
+    {
+      ...config,
+      id: planId,
+      updatedAt: now,
+      updatedBy: request.auth.uid,
+    },
+    { merge: true }
+  );
+
+  return { success: true, message: `Plan ${planId} configuration saved successfully.` };
+});
+
 // ============================================================
 // 1. Subscription Management
 // ============================================================

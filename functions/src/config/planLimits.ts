@@ -12,7 +12,8 @@ export interface PlanConfig {
   maxProducts: number; // -1 = unlimited
   maxUsers: number;    // -1 = unlimited
   reportsEnabled: boolean;
-  aiEnabled: boolean;
+  aiBasicEnabled: boolean;
+  aiAnalystEnabled: boolean;
   whatsappEnabled: boolean;
   maxDailySales: number; // -1 = unlimited
   etimsEnabled: boolean;
@@ -27,7 +28,8 @@ export const PLAN_LIMITS: Record<Plan, PlanConfig> = {
     maxProducts: 50,
     maxUsers: 1,
     reportsEnabled: true,
-    aiEnabled: false,
+    aiBasicEnabled: false,
+    aiAnalystEnabled: false,
     whatsappEnabled: false,
     maxDailySales: -1,
     etimsEnabled: false,
@@ -40,7 +42,8 @@ export const PLAN_LIMITS: Record<Plan, PlanConfig> = {
     maxProducts: 500,
     maxUsers: 5,
     reportsEnabled: true,
-    aiEnabled: false,
+    aiBasicEnabled: true,
+    aiAnalystEnabled: false,
     whatsappEnabled: false,
     maxDailySales: -1,
     etimsEnabled: true,
@@ -53,7 +56,8 @@ export const PLAN_LIMITS: Record<Plan, PlanConfig> = {
     maxProducts: -1,
     maxUsers: -1,
     reportsEnabled: true,
-    aiEnabled: true,
+    aiBasicEnabled: true,
+    aiAnalystEnabled: true,
     whatsappEnabled: true,
     maxDailySales: -1,
     etimsEnabled: true,
@@ -71,8 +75,10 @@ export const UPGRADE_MESSAGES: Record<string, string> = {
     "You have reached the product limit for your plan. Upgrade to add more products.",
   maxUsers:
     "You have reached the user limit for your plan. Upgrade to add more team members.",
-  aiEnabled:
-    "AI features are available on the Pro plan. Upgrade to unlock AI insights.",
+  aiBasicEnabled:
+    "AI Chatbot assistant is available on Starter and Pro plans. Upgrade to ask general business questions.",
+  aiAnalystEnabled:
+    "AI Business Analyst & Autonomous Workflows are available exclusively on the Pro plan. Upgrade to unlock run-out forecasting and draft purchase orders.",
   whatsappEnabled:
     "WhatsApp integration is available on the Pro plan.",
   etimsEnabled:

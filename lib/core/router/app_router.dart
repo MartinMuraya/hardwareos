@@ -19,8 +19,8 @@ import '../../features/team/screens/team_screen.dart';
 import '../../features/admin/screens/admin_dashboard_screen.dart';
 import '../../features/admin/screens/admin_businesses_screen.dart';
 import '../../features/admin/screens/admin_subscriptions_screen.dart';
+import '../../features/admin/screens/admin_plan_configs_screen.dart';
 import '../../features/admin/screens/admin_analytics_screen.dart';
-import '../../features/admin/screens/admin_plans_screen.dart';
 import '../../features/admin/screens/admin_users_screen.dart';
 import '../../features/admin/screens/admin_settings_screen.dart';
 import '../../features/settings/screens/printer_settings_screen.dart';
@@ -214,20 +214,11 @@ class AppRouter {
             ),
             GoRoute(
               path: '/admin/plans',
-              pageBuilder: (context, state) => const NoTransitionPage(child: AdminPlansScreen()),
+              pageBuilder: (context, state) => const NoTransitionPage(child: AdminPlanConfigsScreen()),
             ),
             GoRoute(
               path: '/admin/users',
               pageBuilder: (context, state) => const NoTransitionPage(child: AdminUsersScreen()),
-            ),
-
-            GoRoute(
-              path: '/printer-settings',
-              pageBuilder: (context, state) => const NoTransitionPage(child: PrinterSettingsScreen()),
-            ),
-            GoRoute(
-              path: '/label-settings',
-              pageBuilder: (context, state) => const NoTransitionPage(child: LabelSettingsScreen()),
             ),
             GoRoute(
               path: '/admin/settings',
@@ -259,6 +250,10 @@ class AppRouter {
             GoRoute(
               path: '/storefront-settings',
               builder: (_, __) => const StorefrontManagementScreen(),
+            ),
+            GoRoute(
+              path: '/printer-settings',
+              builder: (_, __) => const PrinterSettingsScreen(),
             ),
             GoRoute(
               path: '/label-settings',
