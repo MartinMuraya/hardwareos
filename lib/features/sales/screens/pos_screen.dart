@@ -372,12 +372,12 @@ class _POSScreenState extends State<POSScreen> {
     _saveCart();
   }
 
-  double get _cartTotal  => _cart.fold(0, (s, e) => s + e.lineTotal) - _pointsDiscount;
-  double get _cartProfit => _cart.fold(0, (s, e) => s + e.lineProfit) - _pointsDiscount;
+  double get _cartTotal  => _cart.fold(0.0, (s, e) => s + e.lineTotal) - _pointsDiscount;
+  double get _cartProfit => _cart.fold(0.0, (s, e) => s + e.lineProfit) - _pointsDiscount;
 
   Future<void> _checkout() async {
     if (_cart.isEmpty) return;
-    if (_paymentMethod == 'credit' && _selectedCustomerId == null) {
+    if (_paymentMethod == 'credit' && _selectedCustomer == null) {
       if (mounted) setState(() => _error = 'Please select a customer for credit sales.');
       return;
     }
@@ -482,7 +482,7 @@ class _POSScreenState extends State<POSScreen> {
               price: e.appliedPrice, subtotal: e.lineTotal,
             )).toList(),
             subtotal: saleTotal + _pointsDiscount,
-            discount: _pointsDiscount > 0 ? _pointsDiscount : null,
+            discount: _pointsDiscount > 0 ? _pointsDiscount : 0,
             grandTotal: saleTotal,
             paymentMethod: _paymentMethod,
             customerName: _selectedCustomer?.fullName,
@@ -524,7 +524,7 @@ class _POSScreenState extends State<POSScreen> {
               price: e.appliedPrice, subtotal: e.lineTotal,
             )).toList(),
             subtotal: total + _pointsDiscount,
-            discount: _pointsDiscount > 0 ? _pointsDiscount : null,
+            discount: _pointsDiscount > 0 ? _pointsDiscount : 0,
             grandTotal: total,
             paymentMethod: _paymentMethod,
             customerName: _selectedCustomer?.fullName,
@@ -595,7 +595,7 @@ class _POSScreenState extends State<POSScreen> {
           price: e.appliedPrice, subtotal: e.lineTotal,
         )).toList(),
         subtotal: total + _pointsDiscount,
-        discount: _pointsDiscount > 0 ? _pointsDiscount : null,
+        discount: _pointsDiscount > 0 ? _pointsDiscount : 0,
         grandTotal: total,
         paymentMethod: _paymentMethod,
         customerName: _selectedCustomer?.fullName,
@@ -771,14 +771,18 @@ class _POSScreenState extends State<POSScreen> {
                                 ),
                                 title: Text(c.fullName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                                 subtitle: Text(c.phoneNumber, style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
-                                trailing: c.currentBalance > 0
-                                    ? Text(_fmt.format(c.currentBalance),
-                                        style: const TextStyle(color: AppColors.warning, fontWeight: FontWeight.w700, fontSize: 13))
-                                    : null,
-                                  if (c.isFundi)
-                                    Text('${c.loyaltyPoints.toInt()} pts',
-                                        style: const TextStyle(color: AppColors.accent, fontWeight: FontWeight.w700, fontSize: 13)),
-                                ],
+                                trailing: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    if (c.currentBalance > 0)
+                                      Text(_fmt.format(c.currentBalance),
+                                          style: const TextStyle(color: AppColors.warning, fontWeight: FontWeight.w700, fontSize: 13)),
+                                    if (c.isFundi)
+                                      Text('${c.loyaltyPoints.toInt()} pts',
+                                          style: const TextStyle(color: AppColors.accent, fontWeight: FontWeight.w700, fontSize: 13)),
+                                  ],
+                                ),
                                 onTap: () {
                                   setState(() {
                                     _selectedCustomer = c;
@@ -1276,7 +1280,6 @@ class _POSScreenState extends State<POSScreen> {
             onPressed: () => setState(() => _cart.clear()),
             child: const Text('Clear Cart'),
           ),
-        ],
       ]),
     );
   }

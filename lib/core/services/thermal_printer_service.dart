@@ -52,7 +52,7 @@ class ThermalPrinterService {
       return devices.map((d) => PrinterDevice(name: d.name ?? 'Unknown', address: d.address ?? '')).toList();
     } else {
       final devices = await pbt.PrintBluetoothThermal.pairedBluetooths;
-      return devices.map((d) => PrinterDevice(name: d.name, address: d.macString)).toList();
+      return devices.map((d) => PrinterDevice(name: d.name, address: d.macAdress)).toList();
     }
   }
 
