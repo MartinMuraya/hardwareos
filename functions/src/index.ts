@@ -43,8 +43,9 @@ export {
 // Inventory Ledger
 export { migrateToLedger } from "./functions/inventory_ledger";
 
-// AI Intelligence
+// AI Intelligence & Business Analyst
 export { analyzeInventoryHealth } from "./functions/ai";
+export { getAIInsights, getAIQuickInsights } from "./functions/ai_assistant";
 export { runAIBusinessAnalyst, approveAIDraftedAction } from "./functions/ai_business_analyst";
 
 // Sales
@@ -59,208 +60,15 @@ export { sendDailyEodReport, updateEodReportSettings } from "./functions/eod_rep
 // Expenses
 export { createExpense, getExpenses } from "./functions/expenses";
 
-// Purchases
+// Purchases & Suppliers
 export { createPurchase, getPurchases } from "./functions/purchases";
+export { createSupplier, getSuppliers, getSupplier, updateSupplier } from "./functions/suppliers";
+export { createPurchaseOrder, getPurchaseOrders, getPurchaseOrder, updatePurchaseOrderStatus, receivePurchaseOrder } from "./functions/purchase_orders";
 
 // Dashboard & Reports
 export { getDashboardStats, getReportStats, seedDemoData } from "./functions/dashboard";
 
-// Super Admin
-export { getPlatformStats, adminGrantSuperAdmin, adminRevokeSuperAdmin } from "./functions/super_admin";
-export { adminGetAllBusinesses, adminUpdateBusinessStatus, adminDeleteBusiness } from "./functions/admin_businesses";
-export {
-  adminGetSubscriptions,
-  adminUpdateSubscription,
-  adminGetPlans,
-  adminCreatePlan,
-  adminUpdatePlan,
-  adminDeletePlan,
-  adminGetUsers,
-  adminUpdateUser,
-  adminGetSettings,
-  adminUpdateSettings,
-  getMySubscriptionPayments,
-  adminImpersonateTenant,
-  createGlobalAnnouncement,
-  adminGetSystemLogs,
-} from "./functions/admin_operations";
-
-// Support
-export {
-  createSupportTicket,
-  adminGetSupportTickets,
-  adminRespondToTicket,
-} from "./functions/support";
-
-// M-Pesa Billing
-export { createSubscriptionPayment, mpesaCallback, simulateMpesaCallback } from "./functions/mpesa_billing";
-
-// Subscription Lifecycle
-export {
-  expireSubscriptions,
-  sendRenewalReminders,
-  getSubscriptionAnalytics,
-  checkSubscriptionHealth,
-} from "./functions/subscriptionLifecycle";
-
-// Subscription History
-export {
-  getMySubscriptionHistory,
-  adminGetBusinessHistory,
-} from "./functions/subscriptionHistory";
-
-export {
-  initiateStkPush,
-  posMpesaCallback,
-} from "./functions/mpesa";
-
-// Customers & Debt
-export {
-  createCustomer,
-  getCustomers,
-  getCustomer,
-  updateCustomer,
-} from "./functions/customers";
-
-export {
-  createCreditSale,
-  recordDebtPayment,
-  adjustDebt,
-  getDebtTransactions,
-  getCustomerStatement,
-  getDebtDashboard,
-} from "./functions/debt";
-
-// Quotations
-export {
-  createQuotation,
-  getQuotations,
-  getQuotation,
-  updateQuotationStatus,
-  convertQuotationToSale,
-} from "./functions/quotations";
-
-// Suppliers & Purchase Orders
-export {
-  createSupplier,
-  getSuppliers,
-  getSupplier,
-  updateSupplier,
-} from "./functions/suppliers";
-
-export {
-  createPurchaseOrder,
-  getPurchaseOrders,
-  getPurchaseOrder,
-  updatePurchaseOrderStatus,
-  receivePurchaseOrder,
-} from "./functions/purchase_orders";
-
-// Audit Trail
-export {
-  getAuditLogs,
-  getAuditModules,
-  getRecentAuditLogs,
-} from "./functions/audit_log";
-
-// Returns & Refunds
-export {
-  processReturn,
-  getReturns,
-  getReturnStats,
-} from "./functions/returns";
-
-// Cash Drawer Reconciliation
-export {
-  openCashSession,
-  closeCashSession,
-  getCashSessions,
-  getCashVarianceReport,
-  calculateCashVariance,
-  getDailyCashReport,
-  getMonthlyCashReport,
-} from "./functions/cash_drawer";
-
-// Broken-Bulk Inventory
-export {
-  bulkCreateProduct,
-  autoConvertDuringSale,
-  validateConversion,
-  convertParentToChild,
-} from "./functions/bulk_inventory";
-
-// Multi-Branch Operations
-export {
-  createBranch,
-  getBranch,
-  getBranches,
-  updateBranch,
-  requestStockTransfer,
-  approveStockTransfer,
-  getStockTransfers,
-  getBranchInventory,
-  getBranchPerformance,
-  getPendingTransfers,
-  getSalesByBranch,
-  getBranchExpensesReport,
-  getBranchProfitReport,
-} from "./functions/branches";
-
-// WhatsApp Automation
-export {
-  enqueueNotification,
-  getNotificationSettings,
-  updateNotificationSettings,
-  getNotifications,
-  getNotificationStats,
-  processNotificationQueue,
-} from "./functions/whatsapp_automation";
-
-// Security Dashboard
-export {
-  getSecurityMetrics,
-  getSecurityEvents,
-} from "./functions/securityDashboard";
-
-// AI Assistant
-export {
-  getAIInsights,
-  getAIQuickInsights,
-} from "./functions/ai_assistant";
-
-// Advanced Analytics
-export {
-  getAdvancedAnalytics,
-  getDemandForecast,
-} from "./functions/advanced_analytics";
-
-// Storefront (Real Implementation)
-export {
-  getPublicStorefront,
-  getPublicProducts,
-  getStorefrontCategories,
-export { analyzeInventoryHealth } from "./functions/ai";
-export { runAIBusinessAnalyst, approveAIDraftedAction } from "./functions/ai_business_analyst";
-
-// Sales
-export { createSale, getSales } from "./functions/sales";
-
-// Supplier Debt
-export { recordSupplierPayment, getSupplierDebts, getSupplierDebtDashboard } from "./functions/supplier_debt";
-
-// EOD Daily Report
-export { sendDailyEodReport, updateEodReportSettings } from "./functions/eod_report";
-
-// Expenses
-export { createExpense, getExpenses } from "./functions/expenses";
-
-// Purchases
-export { createPurchase, getPurchases } from "./functions/purchases";
-
-// Dashboard & Reports
-export { getDashboardStats, getReportStats, seedDemoData } from "./functions/dashboard";
-
-// Super Admin
+// Super Admin Operations & Plan Configs
 export { getPlatformStats, adminGrantSuperAdmin, adminRevokeSuperAdmin } from "./functions/super_admin";
 export { adminGetAllBusinesses, adminUpdateBusinessStatus, adminDeleteBusiness } from "./functions/admin_businesses";
 export {
@@ -281,198 +89,44 @@ export {
   adminRespondToTicket,
 } from "./functions/support";
 
-// M-Pesa Billing
+// M-Pesa Billing & Subscription Lifecycle
 export { createSubscriptionPayment, mpesaCallback, simulateMpesaCallback } from "./functions/mpesa_billing";
-
-// Subscription Lifecycle
 export {
   expireSubscriptions,
   sendRenewalReminders,
   getSubscriptionAnalytics,
   checkSubscriptionHealth,
 } from "./functions/subscriptionLifecycle";
+export { getMySubscriptionHistory, adminGetBusinessHistory } from "./functions/subscriptionHistory";
+export { initiateStkPush, posMpesaCallback } from "./functions/mpesa";
 
-// Subscription History
-export {
-  getMySubscriptionHistory,
-  adminGetBusinessHistory,
-} from "./functions/subscriptionHistory";
-
-export {
-  initiateStkPush,
-  posMpesaCallback,
-} from "./functions/mpesa";
-
-// Customers & Debt
-export {
-  createCustomer,
-  getCustomers,
-  getCustomer,
-  updateCustomer,
-} from "./functions/customers";
-
-export {
-  createCreditSale,
-  recordDebtPayment,
-  adjustDebt,
-  getDebtTransactions,
-  getCustomerStatement,
-  getDebtDashboard,
-} from "./functions/debt";
+// Customers & Credit Debt
+export { createCustomer, getCustomers, getCustomer, updateCustomer } from "./functions/customers";
+export { createCreditSale, recordDebtPayment, adjustDebt, getDebtTransactions, getCustomerStatement, getDebtDashboard } from "./functions/debt";
 
 // Quotations
-export {
-  createQuotation,
-  getQuotations,
-  getQuotation,
-  updateQuotationStatus,
-  convertQuotationToSale,
-} from "./functions/quotations";
+export { createQuotation, getQuotations, getQuotation, updateQuotationStatus, convertQuotationToSale } from "./functions/quotations";
 
-// Suppliers & Purchase Orders
-export {
-  createSupplier,
-  getSuppliers,
-  getSupplier,
-  updateSupplier,
-} from "./functions/suppliers";
+// Audit Trail, Returns, Cash Drawer
+export { getAuditLogs, getAuditModules, getRecentAuditLogs } from "./functions/audit_log";
+export { processReturn, getReturns, getReturnStats } from "./functions/returns";
+export { openCashSession, closeCashSession, getCashSessions, getCashVarianceReport, calculateCashVariance, getDailyCashReport, getMonthlyCashReport } from "./functions/cash_drawer";
 
-export {
-  createPurchaseOrder,
-  getPurchaseOrders,
-  getPurchaseOrder,
-  updatePurchaseOrderStatus,
-  receivePurchaseOrder,
-} from "./functions/purchase_orders";
+// Broken-Bulk Inventory & Branches
+export { bulkCreateProduct, autoConvertDuringSale, validateConversion, convertParentToChild } from "./functions/bulk_inventory";
+export { createBranch, getBranch, getBranches, updateBranch, requestStockTransfer, approveStockTransfer, getStockTransfers, getBranchInventory, getBranchPerformance, getPendingTransfers, getSalesByBranch, getBranchExpensesReport, getBranchProfitReport } from "./functions/branches";
 
-// Audit Trail
-export {
-  getAuditLogs,
-  getAuditModules,
-  getRecentAuditLogs,
-} from "./functions/audit_log";
-
-// Returns & Refunds
-export {
-  processReturn,
-  getReturns,
-  getReturnStats,
-} from "./functions/returns";
-
-// Cash Drawer Reconciliation
-export {
-  openCashSession,
-  closeCashSession,
-  getCashSessions,
-  getCashVarianceReport,
-  calculateCashVariance,
-  getDailyCashReport,
-  getMonthlyCashReport,
-} from "./functions/cash_drawer";
-
-// Broken-Bulk Inventory
-export {
-  bulkCreateProduct,
-  autoConvertDuringSale,
-  validateConversion,
-  convertParentToChild,
-} from "./functions/bulk_inventory";
-
-// Multi-Branch Operations
-export {
-  createBranch,
-  getBranch,
-  getBranches,
-  updateBranch,
-  requestStockTransfer,
-  approveStockTransfer,
-  getStockTransfers,
-  getBranchInventory,
-  getBranchPerformance,
-  getPendingTransfers,
-  getSalesByBranch,
-  getBranchExpensesReport,
-  getBranchProfitReport,
-} from "./functions/branches";
-
-// WhatsApp Automation
-export {
-  enqueueNotification,
-  getNotificationSettings,
-  updateNotificationSettings,
-  getNotifications,
-  getNotificationStats,
-  processNotificationQueue,
-} from "./functions/whatsapp_automation";
-
-// Security Dashboard
-export {
-  getSecurityMetrics,
-  getSecurityEvents,
-} from "./functions/securityDashboard";
-
-// AI Assistant
-export {
-  getAIInsights,
-  getAIQuickInsights,
-} from "./functions/ai_assistant";
-
-// Advanced Analytics
-export {
-  getAdvancedAnalytics,
-  getDemandForecast,
-} from "./functions/advanced_analytics";
-
-// Storefront (Real Implementation)
-export {
-  getPublicStorefront,
-  getPublicProducts,
-  getStorefrontCategories,
-  createOnlineOrder,
-  approveOnlineOrder,
-  rejectOnlineOrder,
-} from "./functions/storefront";
-
-// Accounting
-export {
-  initializeChartOfAccounts,
-  getChartOfAccounts,
-  postManualJournalEntry,
-  getTrialBalance,
-  migrateHistoricalData,
-} from "./functions/accounting";
-
-// HR & Payroll
-export {
-  saveHrSettings,
-  getHrSettings,
-  createEmployee,
-  updateEmployee,
-  submitTimesheet,
-  processLeave,
-  generatePayroll,
-  processPayroll,
-  payoutCommission,
-} from "./functions/hr";
+// WhatsApp Automation & Security Dashboard
+export { enqueueNotification, getNotificationSettings, updateNotificationSettings, getNotifications, getNotificationStats, processNotificationQueue } from "./functions/whatsapp_automation";
+export { getSecurityMetrics, getSecurityEvents } from "./functions/securityDashboard";
+export { getAdvancedAnalytics, getDemandForecast } from "./functions/advanced_analytics";
 
 // Storefront API
-export {
-  getStorefrontSettings,
-  updateStorefrontSettings,
-  checkSlugAvailability,
-} from "./functions/storefront";
+export { getPublicStorefront, getPublicProducts, getStorefrontCategories, createOnlineOrder, approveOnlineOrder, rejectOnlineOrder, getStorefrontSettings, updateStorefrontSettings, checkSlugAvailability } from "./functions/storefront";
 
-// Tax API
-export {
-  getTaxSettings,
-  updateTaxSettings,
-} from "./functions/tax";
-
-// Admin Reports
+// Accounting, HR & Tax
+export { initializeChartOfAccounts, getChartOfAccounts, postManualJournalEntry, getTrialBalance, migrateHistoricalData } from "./functions/accounting";
+export { saveHrSettings, getHrSettings, createEmployee, updateEmployee, submitTimesheet, processLeave, generatePayroll, processPayroll, payoutCommission } from "./functions/hr";
+export { getTaxSettings, updateTaxSettings } from "./functions/tax";
 export { exportAdminReport } from "./functions/admin_reports";
-
-// Admin Plan Configurations CRUD
-export { adminGetPlanConfigs, adminSavePlanConfig } from "./functions/admin_operations";
-
-// SMS Reminders
 export { sendDebtReminders } from "./functions/sms_reminders";

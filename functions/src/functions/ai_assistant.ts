@@ -5,7 +5,7 @@
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
-import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
+import { assertBusinessMember, assertActiveSubscription, assertFeatureEnabled } from "../middleware/checkPlanLimits";
 
 const geminiApiKeySecret = defineSecret("GEMINI_API_KEY");
 const db = () => admin.firestore();
@@ -97,11 +97,7 @@ export const getAIInsights = onCall({ cors: true, secrets: [geminiApiKeySecret] 
   await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager"]);
   await assertActiveSubscription(businessId);
 
-  // Verify plan supports AI (Pro feature)
-  const bizSnap = await db().collection("businesses").doc(businessId).get();
-  if (bizSnap.data()?.plan !== "pro") {
-    throw new HttpsError("permission-denied", "AI Insights are only available on the Pro plan.");
-  }
+  await assertFeatureEnabled(businessId, "aiBasicEnabled");
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -139,10 +135,7 @@ export const getAIQuickInsights = onCall({ cors: true, secrets: [geminiApiKeySec
   await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager"]);
   await assertActiveSubscription(businessId);
 
-  const bizSnap = await db().collection("businesses").doc(businessId).get();
-  if (bizSnap.data()?.plan !== "pro") {
-    throw new HttpsError("permission-denied", "AI Insights are only available on the Pro plan.");
-  }
+  await assertFeatureEnabled(businessId, "aiBasicEnabled");
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {

@@ -260,7 +260,7 @@ export const runAIBusinessAnalyst = onCall({ cors: true, secrets: [geminiApiKeyS
 
   await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager"]);
   await assertActiveSubscription(businessId);
-  await assertFeatureEnabled(businessId, "aiEnabled");
+  await assertFeatureEnabled(businessId, "aiAnalystEnabled");
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {

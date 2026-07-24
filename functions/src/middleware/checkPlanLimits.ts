@@ -116,10 +116,10 @@ export async function assertUserLimit(businessId: string): Promise<void> {
   }
 }
 
-/** Enforce: feature flag check (e.g. aiEnabled, whatsappEnabled, advancedAnalyticsEnabled, storefrontEnabled, etimsEnabled) */
+/** Enforce: feature flag check (e.g. aiBasicEnabled, aiAnalystEnabled, whatsappEnabled, advancedAnalyticsEnabled, storefrontEnabled, etimsEnabled) */
 export async function assertFeatureEnabled(
   businessId: string,
-  feature: "aiEnabled" | "whatsappEnabled" | "advancedAnalyticsEnabled" | "storefrontEnabled" | "etimsEnabled" | "reportsEnabled"
+  feature: "aiBasicEnabled" | "aiAnalystEnabled" | "whatsappEnabled" | "advancedAnalyticsEnabled" | "storefrontEnabled" | "etimsEnabled" | "reportsEnabled"
 ): Promise<void> {
   const biz = await getBusinessData(businessId);
   const trialEndsAt = biz.trialEndsAt ? biz.trialEndsAt.toDate() : null;
