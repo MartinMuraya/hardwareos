@@ -11,6 +11,7 @@ import 'core/providers/theme_provider.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/providers/connectivity_provider.dart';
 import 'core/services/offline_service.dart';
+import 'core/services/thermal_printer_service.dart';
 import 'core/theme/app_theme.dart';
 import 'features/sales/services/offline_sales_queue.dart';
 import 'features/accounting/providers/accounting_provider.dart';
@@ -34,6 +35,7 @@ void main() async {
 
   await Hive.initFlutter();
   await OfflineService.init();
+  await ThermalPrinterService.init();
   final themeProvider = await ThemeProvider.create();
   runApp(HardwareOSApp(themeProvider: themeProvider));
 }

@@ -62,7 +62,7 @@ export const initiateStkPush = onCall({ cors: true }, async (request) => {
     const password = Buffer.from(`${shortcode}${passkey}${timestamp}`).toString("base64");
 
     // We will need a callback URL deployed. For now, we will construct it dynamically.
-    const callbackUrl = `https://${process.env.GCLOUD_PROJECT}.cloudfunctions.net/mpesaCallback`;
+    const callbackUrl = `https://${process.env.GCLOUD_PROJECT}.cloudfunctions.net/posMpesaCallback`;
 
     const payload = {
       BusinessShortCode: shortcode,
@@ -118,7 +118,7 @@ export const initiateStkPush = onCall({ cors: true }, async (request) => {
 // mpesaCallback
 // Safaricom calls this URL after the user enters their PIN.
 // -----------------------------------------------------------
-export const mpesaCallback = onRequest({ cors: true }, async (req, res) => {
+export const posMpesaCallback = onRequest({ cors: true }, async (req, res) => {
   try {
     const callbackData = req.body.Body?.stkCallback;
     if (!callbackData) {

@@ -9,6 +9,7 @@ class Customer {
   final double totalDebt;
   final bool isFundi;
   final double loyaltyPoints;
+  final DateTime? paymentDueDate;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -23,6 +24,7 @@ class Customer {
     this.totalDebt = 0,
     this.isFundi = false,
     this.loyaltyPoints = 0,
+    this.paymentDueDate,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -38,6 +40,7 @@ class Customer {
     totalDebt: ((map['totalDebt'] as num?) ?? 0).toDouble(),
     isFundi: (map['isFundi'] as bool?) ?? false,
     loyaltyPoints: ((map['loyaltyPoints'] as num?) ?? 0).toDouble(),
+    paymentDueDate: map['paymentDueDate'] != null ? DateTime.parse(map['paymentDueDate'] as String) : null,
     createdAt: DateTime.parse(map['createdAt'] as String),
     updatedAt: DateTime.parse(map['updatedAt'] as String),
   );
@@ -53,6 +56,7 @@ class Customer {
     'totalDebt': totalDebt,
     'isFundi': isFundi,
     'loyaltyPoints': loyaltyPoints,
+    'paymentDueDate': paymentDueDate?.toIso8601String(),
     'createdAt': createdAt.toIso8601String(),
     'updatedAt': updatedAt.toIso8601String(),
   };

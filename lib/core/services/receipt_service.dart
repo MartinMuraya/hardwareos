@@ -5,6 +5,7 @@ import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'thermal_printer_service.dart';
 
 class ReceiptData {
   final String storeName;
@@ -202,14 +203,15 @@ class ReceiptService {
 
   static Future<bool> printViaBluetooth(List<int> bytes) async {
     try {
-      final bluetooth = BlueThermalPrinter.instance;
-      final connected = await bluetooth.isConnected;
-      if (connected != true) {
-        final devices = await bluetooth.getBondedDevices();
-        if (devices.isEmpty) return false;
-        await bluetooth.connect(devices.first);
+      if (!await ThermalPrinterService.isConnected()) {
+        if (ThermalPrinterService.connectedAddress != null) {
+          final reconnected = await ThermalPrinterService.connect(ThermalPrinterService.connectedAddress!);
+          if (!reconnected) return false;
+        } else {
+          return false;
+        }
       }
-      await bluetooth.writeBytes(Uint8List.fromList(bytes));
+      await ThermalPrinterService.printReceipt(bytes);
       return true;
     } catch (_) {
       return false;

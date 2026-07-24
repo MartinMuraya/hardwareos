@@ -204,9 +204,14 @@ export const createCreditSale = onCall({ cors: true }, async (request) => {
     });
 
     // 7. Update customer balance
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + 30);
+    const dueDateTimestamp = admin.firestore.Timestamp.fromDate(dueDate);
+
     const custUpdate: any = {
       currentBalance: Number(newBalance.toFixed(2)),
       totalDebt: Number(newBalance.toFixed(2)),
+      paymentDueDate: dueDateTimestamp,
       updatedAt: now,
     };
 
@@ -302,11 +307,15 @@ export const recordDebtPayment = onCall({ cors: true }, async (request) => {
     });
 
     // Update customer balance
-    txn.update(db().collection("customers").doc(customerId), {
+    const updateData: any = {
       currentBalance: Number(newBalance.toFixed(2)),
       totalDebt: Number(newBalance.toFixed(2)),
       updatedAt: now,
-    });
+    };
+    if (newBalance === 0) {
+      updateData.paymentDueDate = admin.firestore.FieldValue.delete();
+    }
+    txn.update(db().collection("customers").doc(customerId), updateData);
 
     return {
       paymentId: payRef.id,
@@ -369,11 +378,15 @@ export const adjustDebt = onCall({ cors: true }, async (request) => {
       createdAt: now,
     });
 
-    txn.update(db().collection("customers").doc(customerId), {
+    const updateData: any = {
       currentBalance: Number(newBalance.toFixed(2)),
       totalDebt: Number(newBalance.toFixed(2)),
       updatedAt: now,
-    });
+    };
+    if (newBalance === 0) {
+      updateData.paymentDueDate = admin.firestore.FieldValue.delete();
+    }
+    txn.update(db().collection("customers").doc(customerId), updateData);
 
     return { previousBalance: Number(prevBalance.toFixed(2)), newBalance: Number(newBalance.toFixed(2)) };
   });

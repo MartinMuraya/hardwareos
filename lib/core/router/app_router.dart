@@ -23,6 +23,7 @@ import '../../features/admin/screens/admin_analytics_screen.dart';
 import '../../features/admin/screens/admin_plans_screen.dart';
 import '../../features/admin/screens/admin_users_screen.dart';
 import '../../features/admin/screens/admin_settings_screen.dart';
+import '../../features/settings/screens/printer_settings_screen.dart';
 import '../../features/admin/screens/admin_security_screen.dart';
 import '../../features/admin/screens/admin_system_logs_screen.dart';
 import '../../features/admin/screens/admin_support_screen.dart';
@@ -135,6 +136,7 @@ class AppRouter {
                                      state.matchedLocation.startsWith('/cash-drawer') ||
                                      state.matchedLocation.startsWith('/branches') ||
                                      state.matchedLocation.startsWith('/storefront-settings') ||
+                                     state.matchedLocation.startsWith('/printer-settings') ||
                                      state.matchedLocation.startsWith('/stock-transfers');
 
             if (isExpired && isProtectedRoute && !isSubscriptionRoute) {
@@ -214,6 +216,11 @@ class AppRouter {
             GoRoute(
               path: '/admin/users',
               pageBuilder: (context, state) => const NoTransitionPage(child: AdminUsersScreen()),
+            ),
+
+            GoRoute(
+              path: '/printer-settings',
+              pageBuilder: (context, state) => const NoTransitionPage(child: PrinterSettingsScreen()),
             ),
             GoRoute(
               path: '/admin/settings',

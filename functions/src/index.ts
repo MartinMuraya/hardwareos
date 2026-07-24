@@ -104,7 +104,7 @@ export {
 
 export {
   initiateStkPush,
-  mpesaCallback,
+  posMpesaCallback,
 } from "./functions/mpesa";
 
 // Customers & Debt
@@ -274,3 +274,6 @@ export {
 
 // Admin Reports
 export { exportAdminReport } from "./functions/admin_reports";
+
+// SMS Reminders
+export { sendDebtReminders } from "./functions/sms_reminders";
