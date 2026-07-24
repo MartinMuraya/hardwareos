@@ -5,13 +5,14 @@
 <h1 align="center">HardwareOS</h1>
 
 <p align="center">
-  <strong>Multi-Tenant SaaS ERP for Hardware Stores — East Africa</strong>
+  <strong>Multi-Tenant SaaS ERP & POS for Hardware Stores — East Africa</strong>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Flutter-3.38-02569B?logo=flutter" alt="Flutter 3.38" />
   <img src="https://img.shields.io/badge/Dart-3.10-0175C2?logo=dart" alt="Dart 3.10" />
   <img src="https://img.shields.io/badge/Firebase-FFCA28?logo=firebase" alt="Firebase" />
+  <img src="https://img.shields.io/badge/Tests-13%20Passing-success" alt="Tests" />
   <img src="https://img.shields.io/badge/license-MIT-green" alt="License" />
 </p>
 
@@ -22,20 +23,22 @@
 Hardware stores in East Africa typically rely on fragmented, legacy workflows: physical paper ledgers, isolated desktop POS systems, manual inventory tracking, and disconnected debt collection. 
 
 **HardwareOS solves these problems by providing:**
-- **Centralized Inventory Control:** Preventing stockouts and employee theft through rigorous audit logs, multi-branch tracking, and strict role-based access.
-- **Unified Debt Management:** Over 60% of hardware sales in the region are on credit. The system explicitly tracks customer debt, generates statements, and tracks partial repayments over time.
-- **Mobility & Offline Resilience:** Staff can process sales on smartphones or tablets, even when internet connectivity drops, preventing business halts during outages.
-- **Automated M-Pesa Integration:** Native mobile money payments and automated subscription billing via Safaricom Daraja API.
+- **Centralized Inventory Control:** Preventing stockouts and employee theft through an immutable ledger, multi-branch tracking, and strict role-based access control (RBAC).
+- **Offline Sync & Conflict Resolution:** Cashiers process sales seamlessly offline. Reconnected sync detects stock conflicts atomically and routes them to a manager "Pending Review" queue with partial fulfillment and override capabilities.
+- **Dual Debt Management (Customer & Supplier):** Over 60% of hardware sales are on credit. HardwareOS mirrors customer credit ledgers with full supplier debt tracking, payment scheduling, and partial repayment processing.
+- **Thermal Barcode Label Printing:** Instant vector Code128 thermal barcode label printing supporting 38mm, 58mm, and 80mm label rolls.
+- **Automated Daily End-of-Day (EOD) Reports:** Automated 8:00 PM EAT business summaries detailing Revenue, Profit, M-Pesa vs Cash totals, Low Stock alerts, and Overdue Debts delivered via SMS and WhatsApp.
+- **Server-Side Security & Feature Gating:** Zero direct client database writes. Strict Firestore security rules across 19+ collections and Cloud Function middleware enforcing plan boundaries.
 
 ---
 
-## 📖 Deep System Overview & Analysis
+## 📖 Deep System Overview & Architecture
 
-HardwareOS is a robust, cloud-based ERP and POS platform specifically designed for hardware and building-material retailers in East Africa. It is designed to replace fragmented legacy workflows—such as paper ledgers, isolated desktop POS systems, and manual inventory tracking—with a unified omnichannel experience.
+HardwareOS is a robust, cloud-based ERP and POS platform specifically designed for hardware and building-material retailers in East Africa. It replaces fragmented legacy workflows with a unified omnichannel experience.
 
-The system is built on a **multi-tenant architecture**. Each registered hardware store operates within its own strictly isolated data environment under a tiered subscription plan. Simultaneously, platform owners govern the entire ecosystem through an omnipresent Super Admin control plane.
+The system uses a **multi-tenant architecture**. Each registered hardware store operates within its own strictly isolated data environment under a tiered subscription plan. Simultaneously, platform owners govern the entire ecosystem through an omnipresent Super Admin control plane.
 
-HardwareOS utilizes a highly secure **"Function-as-a-Service" (FaaS) data mutation pattern**. Client applications (Web, Android, Windows) have *zero* write access directly to the database. All writes are routed through Firebase Cloud Functions (HTTPS Callables), which act as middleware to enforce authentication, business logic, role-based access control (RBAC), and subscription limits.
+HardwareOS utilizes a highly secure **"Function-as-a-Service" (FaaS) data mutation pattern**. Client applications (Web, Android, Windows) have *zero* direct write access to the database. All mutations route through Firebase Cloud Functions (HTTPS Callables), which act as middleware to enforce authentication, business logic, role-based access control (RBAC), and plan limits.
 
 ---
 
@@ -46,7 +49,8 @@ HardwareOS utilizes a highly secure **"Function-as-a-Service" (FaaS) data mutati
 │                      Flutter Client                     │
 │    (Web / Android / Windows — Material 3 Design)        │
 │                                                         │
-│  State Management: Provider (Auth, Theme) + Riverpod    │
+│  State Management: Provider (Auth, Theme)               │
+│  Offline Cache: Hive (Pending Sales, Conflicted Queue)  │
 │  Routing: go_router (Auth guards, ShellRoutes)          │
 └────────────────────────┬────────────────────────────────┘
                          │ 1. HTTPS Callable Requests
@@ -54,8 +58,9 @@ HardwareOS utilizes a highly secure **"Function-as-a-Service" (FaaS) data mutati
 ┌─────────────────────────────────────────────────────────┐
 │               Firebase Cloud Functions (Node.js)        │
 │                                                         │
-│  [Auth] [Inventory] [Sales] [Expenses] [Dashboard]      │
-│  [M-Pesa Billing] [Super Admin] [Support] [AI] [Audit]  │
+│  [Auth] [Inventory] [Sales] [Supplier Debt] [Expenses]  │
+│  [M-Pesa Billing] [Super Admin] [AI] [EOD Reports]      │
+│  Middleware: assertBusinessMember, assertFeatureEnabled │
 └────────────────────────┬────────────────────────────────┘
                          │ 2. Server-side Validation & Execution
                          ▼
@@ -64,93 +69,88 @@ HardwareOS utilizes a highly secure **"Function-as-a-Service" (FaaS) data mutati
 │  Strict Security Rules (Read-Only for Clients)          │
 │                                                         │
 │  Users | Businesses | Products | Sales | Expenses       │
-│  Subscriptions | Support Tickets | System Logs | ...    │
+│  SupplierDebts | Customers | Quotations | EOD History   │
 └─────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🏃 How to Use the System (Quick Overview)
+## 🏃 Quick Start & How to Use the System
 
-1. **Onboarding:** A hardware store owner registers their business, initiating a 14-day Pro trial. They set up branches and configure basic settings.
-2. **Inventory Import:** The owner uploads their existing product catalog via the Bulk Import (CSV/Excel) tool or adds items manually.
-3. **Team Setup:** The owner invites Cashiers and Managers via email. RBAC ensures staff can only ring up sales and cannot alter historical records.
+1. **Onboarding:** A hardware store owner registers their business, initiating a 14-day Pro trial.
+2. **Inventory Setup:** Upload existing products via Bulk Import (CSV/Excel) or add products with images, UOMs, and reorder levels.
+3. **Team Management:** Invite Cashiers and Managers via email. RBAC enforces operational boundaries.
 4. **Daily Operations:**
-   - **Sales/POS:** Cashiers scan items or search the catalog to process cash, M-Pesa, or credit sales. Digital receipts are generated.
-   - **Purchases:** Managers create Purchase Orders for suppliers to restock inventory.
-   - **Expenses:** Staff log daily operational expenses (transport, utilities) from the cash drawer.
-5. **Reporting & AI Insights:** At the end of the day or month, the owner checks the Dashboard and uses the Gemini AI Assistant to analyze sales velocity, profitability, and identify slow-moving stock.
+   - **Sales/POS:** Scan items, attach customer credit, or issue digital receipts.
+   - **Offline Sync:** Process offline transactions during internet drops; resolve stock conflicts via the Sync Conflicts dashboard.
+   - **Barcode Printing:** Print price labels directly from product screens or settings.
+   - **Supplier Debt:** Track payables, log partial payments, and view overdue debt cards.
+5. **EOD Summaries & AI Analytics:** Receive automated daily EOD reports at 8:00 PM EAT and use the Gemini AI Assistant for inventory forecasting.
 
 ---
 
 ## 🚀 Core Modules & Capabilities
 
-The system is divided into over 20 highly specialized modules inside the Flutter application. 
-
-### 1. Point of Sale (POS) & Sales Management
+### 1. Point of Sale (POS) & Offline Conflict Resolution
 - **Omni-platform POS**: Fast checkout interface supporting barcode scanning and manual search.
-- **Offline Resilience**: Sales can be queued offline and synchronized automatically when internet connectivity is restored.
-- **Payment Types**: Cash, M-Pesa, and Credit (debt tracking).
-- **Receipts**: Generates digital receipts with automatic PDF creation.
-- **Sales History**: Search, refund, and review historical transactions.
+- **Offline Resilience & Conflict Queue**: Sales are queued offline in Hive. Upon reconnecting, stock shortages trigger a structured `CONFLICT:` error and route to `ConflictResolutionScreen` for **Partial Fulfillment**, **Sale Cancellation**, or **Manager Override**.
+- **Payment Methods**: Cash, M-Pesa, Bank Transfer, and Credit.
 
 ### 2. Comprehensive Inventory & Supply Chain
-- **Immutable Inventory Ledger**: Replaces traditional "quantity" integers with a strict, double-entry style immutable ledger. All stock movements (Sales, Purchases, Returns, Adjustments) are appended as historical records, ensuring mathematically perfect, tamper-proof audits.
-- **Product Management & UOM**: Full catalog tracking utilizing a powerful **Single-Document Unit of Measure (UOM)** architecture. A single product natively tracks `baseUnit`, `purchaseUnit`, `sellingUnit`, and dynamic `conversionMultipliers` (e.g. buying a box of 100 nails, selling individually).
-- **Batch & Lot Tracking**: Perfect for perishable goods like paint or cement. Purchases create distinct batch records tracking expiration dates and cost, while sales automatically decrement stock from specific batches using FIFO logic.
-- **Serial Number Tracking**: Mandatory serial capture on high-value items (like generators). The system tracks exact lifecycle states ("Available" to "Sold") for warranty enforcement.
-- **Purchase Orders (POs)**: Create and track purchase orders sent to suppliers.
-- **Suppliers**: Manage supplier directories and their related POs.
-- **Stock Adjustments**: Record manual stock corrections (damage, loss, manual counts) which write securely to the immutable ledger.
-- **Branch Management**: Multi-branch support allowing stock transfers between physical store locations.
+- **Immutable Inventory Ledger**: Double-entry style immutable ledger tracking all stock movements (Sales, Purchases, Returns, Adjustments).
+- **Product Management & Images**: High-resolution primary `imageUrl` and gallery support.
+- **Unit of Measure (UOM)**: Tracks `baseUnit`, `purchaseUnit`, `sellingUnit`, and dynamic conversion multipliers.
+- **Batch & Serial Tracking**: Perishable goods (paint, cement) FIFO batch tracking and serial number warranties.
 
-### 3. CRM & Debt Management
-- **Customer Directory**: Track all customers and their contact information.
-- **Credit Ledgers**: Advanced debt tracking. Allows cashiers to sell on credit, track outstanding balances, and record debt repayments over time.
-- **Customer Statements**: Generate full account statements for credit buyers.
+### 3. Thermal Barcode Label Printing
+- **Label Customization**: Configure paper sizes (`38mm × 25mm`, `58mm × 30mm`, `80mm × 40mm`).
+- **Field Toggles**: Toggle store name, SKU, price, and barcode rendering.
+- **Vector PDF Thermal Engine**: Instant high-resolution Code128 PDF label output.
 
-### 4. Financial Tracking
-- **Expenses**: Categorised business expenses (payroll, rent, utilities).
-- **Cash Drawer**: Track shifts, opening balances, cash drops, and closing balances for strict employee financial accountability.
-- **B2B Quotations & Invoicing:** Instantly convert quotations into formal invoices, track payments against specific documents, and manage custom credit limits for trusted contractors.
-- **Double-Entry Accounting Engine:** Fully compliant General Ledger with Chart of Accounts and real-time Trial Balance. All POS transactions and expenses automatically balance Debits and Credits via atomic Firestore transactions.
-- **Comprehensive HR & Payroll:** Structured employee management, timesheets, and automated payroll processing with configurable statutory deductions (PAYE, NHIF, NSSF). Directly integrates with the accounting engine to log salary expenses and tax liabilities.
-- **Multi-Branch Capability:** Manage several store locations under a single business umbrella. Transfer stock between branches with automated transit tracking and branch-specific profit & loss statements.
+### 4. Supplier Debt Tracking & Payables
+- **Supplier Debt Model**: Track total amount, amount paid, outstanding balance, and due dates.
+- **Payment Ledger**: Record partial or full payments via M-Pesa, Cash, or Bank Transfer with automated supplier balance deductions.
+- **Payable Dashboards**: Total Payables, Overdue Payables, and Overdue Count cards.
 
-### 6. Advanced Analytics & AI (Powered by Gemini)
-- **Dashboard**: Real-time KPI cards, low stock alerts, pending sync indicators, and recent sales feeds.
-- **Interactive Reports**: Powered by `fl_chart`, visualize Profit & Loss, sales by payment methods, and historical trends over Today, This Week, or This Month.
-- **Gemini AI Inventory Intelligence**: An embedded `analyzeInventoryHealth` engine powered by **Google Gemini 2.5 Flash**. Operating strictly as a "Senior Supply Chain Analyst", the AI ingests active ledger data and sales velocity to output mathematically-backed Markdown reports detailing Reorder Recommendations, Dead Stock Alerts, and Margin Anomalies.
+### 5. Automated Daily End-of-Day (EOD) Summary Report
+- **Scheduled Cron (`0 17 * * *`)**: Daily automated report at 8:00 PM EAT.
+- **Aggregated Business Metrics**: Revenue, Profit, Transaction count, M-Pesa vs Cash totals, Low Stock alerts, Expenses, Customer Debt, and Supplier Payables.
+- **Delivery Channels**: Multi-channel delivery via SMS (Africa's Talking) and WhatsApp (Meta API).
 
-### 7. Support & Auditing
-- **Helpdesk Ticketing**: Tenants can open support tickets directly in the app. Super Admins reply and resolve them centrally.
-- **Audit Logs**: Every mutation (sale, edit, delete) is logged. Business owners can review the exact timestamp and user responsible for any action.
+### 6. CRM & Customer Credit Ledgers
+- **Customer Directory**: Track contact info, loyalty points (1 pt per 100 KES), and Fundi badges.
+- **Credit Ledgers & Statements**: Track credit limits, available credit, and generate PDF account statements.
 
-### 8. Team & RBAC
-- Role-Based Access Control: Owner, Manager, and Staff roles.
-- Owners can invite users via email, who then accept the invite to join the tenant's workspace.
+### 7. Double-Entry Accounting & HR Payroll
+- **General Ledger**: Chart of Accounts with real-time Trial Balance.
+- **HR & Payroll Engine**: Statutory deductions (PAYE, NHIF, NSSF) linked directly to accounting liabilities.
 
-### 9. Subscriptions & M-Pesa Billing
-- **14-day Free Trial**: Automated onboarding into a Pro trial.
-- **Tiered Plans**: Starter (KES 2,600/mo, 3 users) and Pro (KES 5,200/mo, unlimited).
-- **M-Pesa STK Push**: Native Safaricom Daraja API integration.
-- **Simulation Mode**: By setting the `MPESA_CONSUMER_KEY` to `"dummy"`, developers can fully simulate the STK push and payment success/failure lifecycle without incurring real charges.
-- **Guarded Routing**: If a subscription expires, `go_router` forcefully redirects the entire tenant to the billing screen.
-
-### 10. The Super Admin Control Plane
-- Exclusive dashboard for the platform owners.
-- Platform KPIs (total MRR, active businesses).
-- Complete oversight to approve, suspend, or permanently delete tenant businesses.
-- Ability to monitor system logs and manage the global Support Helpdesk.
-- Manage global subscription plans.
+### 8. Gemini AI Assistant & Advanced Analytics
+- **Executive Insights**: Powered by Google Gemini API for cash flow optimization, inventory health reports, and demand forecasting.
+- **Interactive Reports**: Powered by `fl_chart` for Profit & Loss, sales breakdown, and payment trends.
 
 ---
 
-## 🔒 Security & Data Integrity
+## 🔒 Security Hardening & Data Integrity
 
-1. **Client Read-Only Firestore Rules**: The `firestore.rules` file enforces that clients can only *read* documents belonging to their `businessId`. All `write`, `update`, and `delete` operations are strictly blocked from the client.
-2. **Resilient Authentication**: Built-in fallback routing handles network timeouts and Firebase internal identity errors (such as `invalid-credential` mapping) to prevent infinite routing loops on the client.
-3. **Server-Side Validation**: Cloud Functions verify the user's Auth token, confirm their role within the specific business, and execute the database writes securely on the backend.
+1. **Explicit Firestore Rules**: Explicit role-appropriate rules across 19+ collections (`customers`, `debtTransactions`, `quotations`, `purchase_orders`, `employees`, `stockAdjustments`, `returns`, `accountingEntries`, `suppliers`).
+2. **Server-Side Feature Gating**: Cloud Function middleware (`assertFeatureEnabled`) enforcing plan permissions on AI, WhatsApp, Storefront, and Advanced Analytics endpoints.
+3. **Double-Entry Ledger Integrity**: Stock mutations executed atomically inside Firestore transactions.
+
+---
+
+## 🧪 Unit Testing Suite
+
+The repository includes a comprehensive unit test suite:
+- `test/models/customer_test.dart`: Verifies credit limits, `availableCredit`, `isOverLimit`, and parsing.
+- `test/models/sale_test.dart`: Verifies loyalty point math and line total calculations.
+- `test/models/product_test.dart`: Verifies stock status indicators (`isLowStock`, `isOutOfStock`, `margin`).
+- `test/services/feature_access_service_test.dart`: Verifies plan feature access and grace period restrictions.
+
+Run tests using:
+```bash
+flutter test
+```
 
 ---
 
@@ -159,33 +159,17 @@ The system is divided into over 20 highly specialized modules inside the Flutter
 | Layer | Technology |
 |---|---|
 | **Frontend UI/UX** | Flutter 3.38, Dart 3.10, Material 3, fl_chart |
-| **State & Routing** | Provider, Riverpod, go_router |
+| **State & Offline Storage** | Provider, Hive |
+| **Routing** | go_router |
 | **Backend Logic** | Firebase Cloud Functions v2 (Node.js, TypeScript) |
 | **Database** | Cloud Firestore (NoSQL) |
 | **Authentication** | Firebase Auth (Email/Password) |
-| **Billing Integration** | Safaricom M-Pesa Daraja API |
-| **AI Integration** | Google Gemini LLM API |
-
----
-
-## 🚧 Development Roadmap & Missing Structures
-
-While HardwareOS covers a vast Enterprise ERP feature set, the following areas are identified for future expansion:
-
-- **E-Commerce & Online Storefronts:** Currently, backend APIs (`storefront_stubs.ts`) exist as placeholders. The roadmap includes exposing a B2B/B2C storefront for contractors to order materials online directly from the hardware store.
-- **Advanced Tax Integration (KRA TIMS):** Expanding the current Double-Entry Accounting Ledger to automatically transmit and sign electronic tax invoices directly with the revenue authority.
-- **Advanced Hardware Integrations:** Integrating with digital weighing scales (for items sold by weight like nails/cement) and specialized barcode label printers.
+| **Integrations** | Safaricom M-Pesa Daraja API, Africa's Talking SMS, Meta WhatsApp Business API |
+| **AI Engine** | Google Gemini LLM API |
 
 ---
 
 ## ⚙️ Local Setup & Deployment
-
-### Prerequisites
-- Flutter SDK 3.0+
-- Node.js 18+ (Node 20 recommended)
-- Firebase CLI (`npm install -g firebase-tools`)
-
-### Getting Started
 
 ```bash
 # 1. Clone the repository
@@ -200,28 +184,11 @@ cd functions
 npm install
 cd ..
 
-# 4. Configure Firebase Secrets (For Deployment)
-firebase secrets:set MPESA_CONSUMER_KEY (use "dummy" for simulation)
-firebase secrets:set MPESA_CONSUMER_SECRET
-firebase secrets:set GEMINI_API_KEY (use "dummy" for simulation)
+# 4. Run Unit Tests
+flutter test
 
 # 5. Run the Flutter App
-flutter run -d chrome --web-header='Cross-Origin-Opener-Policy: same-origin-allow-popups'
-```
-
-### Production Deployment
-
-```bash
-# Deploy all Firebase Cloud Functions
-npm --prefix functions run build
-firebase deploy --only functions
-
-# Deploy Firebase Firestore Rules
-firebase deploy --only firestore:rules
-
-# Build and deploy Flutter Web App
-flutter build web
-firebase deploy --only hosting
+flutter run -d chrome
 ```
 
 ---

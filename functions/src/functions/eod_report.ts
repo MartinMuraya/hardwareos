@@ -1,15 +1,15 @@
 import * as admin from "firebase-admin";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { assertBusinessMember, getBusinessData } from "../middleware/checkPlanLimits";
+import { assertBusinessMember } from "../middleware/checkPlanLimits";
 
 const db = () => admin.firestore();
 
 // -----------------------------------------------------------
 // sendDailyEodReport
-// Scheduled function running every day at 17:00 UTC (8:00 PM EAT)
+// Scheduled function running every day at 20:00 EAT (Africa/Nairobi)
 // -----------------------------------------------------------
-export const sendDailyEodReport = onSchedule("0 17 * * *", async () => {
+export const sendDailyEodReport = onSchedule({ schedule: "0 20 * * *", timeZone: "Africa/Nairobi" }, async () => {
   console.log("Starting Daily EOD Summary Report processing...");
 
   const now = new Date();
