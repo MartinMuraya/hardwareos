@@ -4,7 +4,7 @@
 
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
+import { assertBusinessMember, assertActiveSubscription, assertFeatureEnabled } from "../middleware/checkPlanLimits";
 
 const db = () => admin.firestore();
 
@@ -17,11 +17,7 @@ export const getAdvancedAnalytics = onCall({ cors: true }, async (request) => {
   const { businessId } = request.data as { businessId: string };
   await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager"]);
   await assertActiveSubscription(businessId);
-
-  const bizSnap = await db().collection("businesses").doc(businessId).get();
-  if (bizSnap.data()?.plan !== "pro") {
-    throw new HttpsError("permission-denied", "Advanced Analytics are only available on the Pro plan.");
-  }
+  await assertFeatureEnabled(businessId, "advancedAnalyticsEnabled");
 
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -115,11 +111,7 @@ export const getDemandForecast = onCall({ cors: true }, async (request) => {
   const { businessId } = request.data as { businessId: string };
   await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager"]);
   await assertActiveSubscription(businessId);
-
-  const bizSnap = await db().collection("businesses").doc(businessId).get();
-  if (bizSnap.data()?.plan !== "pro") {
-    throw new HttpsError("permission-denied", "Advanced Analytics are only available on the Pro plan.");
-  }
+  await assertFeatureEnabled(businessId, "advancedAnalyticsEnabled");
 
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
@@ -89,6 +90,14 @@ class OfflineSalesQueue extends ChangeNotifier {
     refresh();
   }
 
+  int get conflictedSalesCount => OfflineService.conflictedSaleCount;
+  List<ConflictedSale> get conflictedSalesList => OfflineService.getConflictedSales();
+
+  Future<void> removeConflictedSale(String id) async {
+    await OfflineService.removeConflictedSale(id);
+    refresh();
+  }
+
   Future<void> _syncSales(BuildContext context) async {
     final sales = OfflineService.getPendingSales();
     final auth = context.read<AuthProvider>();
@@ -101,13 +110,34 @@ class OfflineSalesQueue extends ChangeNotifier {
         await FunctionsService.call('createSale', sale.saleData);
         await OfflineService.removeSale(sale.id);
       } on FunctionsException catch (e) {
-        if (e.code == 'unavailable' || e.code == 'deadline-exceeded') {
+        if (e.message.contains('CONFLICT:')) {
+          final rawJson = e.message.split('CONFLICT:').last;
+          Map<String, dynamic>? details;
+          try {
+            details = Map<String, dynamic>.from(jsonDecode(rawJson) as Map);
+          } catch (_) {}
+          final pName = details?['productName'];
+          final avail = details?['availableQty'];
+          final req = details?['requestedQty'];
+          final conflicted = ConflictedSale(
+            id: sale.id,
+            saleData: sale.saleData,
+            conflictReason: pName != null
+                ? 'Insufficient stock for $pName (Available: $avail, Requested: $req)'
+                : 'Stock conflict during offline sync',
+            conflictDetails: details,
+            conflictedAt: DateTime.now(),
+          );
+          await OfflineService.addConflictedSale(conflicted);
+          await OfflineService.removeSale(sale.id);
+        } else if (e.code == 'unavailable' || e.code == 'deadline-exceeded') {
           sale.retryCount++;
           await OfflineService.enqueueSale(sale);
           await OfflineService.removeSale(sale.id);
-          throw e;
+          rethrow;
+        } else {
+          await OfflineService.removeSale(sale.id);
         }
-        await OfflineService.removeSale(sale.id);
       }
     }
   }
@@ -128,7 +158,7 @@ class OfflineSalesQueue extends ChangeNotifier {
           payment.retryCount++;
           await OfflineService.enqueuePayment(payment);
           await OfflineService.removePayment(payment.id);
-          throw e;
+          rethrow;
         }
         await OfflineService.removePayment(payment.id);
       }
@@ -151,7 +181,7 @@ class OfflineSalesQueue extends ChangeNotifier {
           update.retryCount++;
           await OfflineService.enqueueInventoryUpdate(update);
           await OfflineService.removeInventoryUpdate(update.id);
-          throw e;
+          rethrow;
         }
         await OfflineService.removeInventoryUpdate(update.id);
       }

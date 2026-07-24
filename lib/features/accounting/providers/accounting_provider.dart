@@ -11,7 +11,11 @@ class AccountingProvider extends ChangeNotifier {
   TrialBalance? _trialBalance;
 
   AccountingProvider({required this.businessId}) {
-    fetchAccounts();
+    // Only fetch if we have a real businessId — avoids firing on startup
+    // with empty string before auth is loaded
+    if (businessId.isNotEmpty) {
+      fetchAccounts();
+    }
   }
 
   bool get isLoading => _isLoading;
@@ -36,6 +40,8 @@ class AccountingProvider extends ChangeNotifier {
   }
 
   Future<void> fetchAccounts() async {
+    // Guard: don't call the function with no businessId
+    if (businessId.isEmpty) return;
     _setLoading(true);
     try {
       final res = await FunctionsService.call('getChartOfAccounts', {

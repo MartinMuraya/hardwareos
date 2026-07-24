@@ -115,6 +115,38 @@ class PendingStorefrontOrder {
     );
 }
 
+class ConflictedSale {
+  final String id;
+  final Map<String, dynamic> saleData;
+  final String conflictReason;
+  final Map<String, dynamic>? conflictDetails;
+  final DateTime conflictedAt;
+
+  ConflictedSale({
+    required this.id,
+    required this.saleData,
+    required this.conflictReason,
+    this.conflictDetails,
+    required this.conflictedAt,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'saleData': saleData,
+    'conflictReason': conflictReason,
+    'conflictDetails': conflictDetails,
+    'conflictedAt': conflictedAt.toIso8601String(),
+  };
+
+  factory ConflictedSale.fromJson(Map<String, dynamic> json) => ConflictedSale(
+    id: json['id'] as String,
+    saleData: Map<String, dynamic>.from(json['saleData'] as Map),
+    conflictReason: json['conflictReason'] as String,
+    conflictDetails: json['conflictDetails'] != null ? Map<String, dynamic>.from(json['conflictDetails'] as Map) : null,
+    conflictedAt: DateTime.parse(json['conflictedAt'] as String),
+  );
+}
+
 class OfflineService {
   static const _salesBoxName = 'offline_sales';
   static const _paymentsBoxName = 'offline_payments';
@@ -125,6 +157,7 @@ class OfflineService {
   static const _productsBoxName = 'offline_products';
   static const _storefrontCartBoxName = 'offline_storefront_cart';
   static const _storefrontOrdersBoxName = 'offline_storefront_orders';
+  static const _conflictedSalesBoxName = 'offline_conflicted_sales';
 
   static late Box<String> _salesBox;
   static late Box<String> _paymentsBox;
@@ -135,6 +168,7 @@ class OfflineService {
   static late Box<String> _productsBox;
   static late Box<String> _storefrontCartBox;
   static late Box<String> _storefrontOrdersBox;
+  static late Box<String> _conflictedSalesBox;
 
   static Future<void> init() async {
     _salesBox = await Hive.openBox<String>(_salesBoxName);
@@ -146,6 +180,7 @@ class OfflineService {
     _productsBox = await Hive.openBox<String>(_productsBoxName);
     _storefrontCartBox = await Hive.openBox<String>(_storefrontCartBoxName);
     _storefrontOrdersBox = await Hive.openBox<String>(_storefrontOrdersBoxName);
+    _conflictedSalesBox = await Hive.openBox<String>(_conflictedSalesBoxName);
   }
 
   static Future<void> clearAll() async {
@@ -320,4 +355,22 @@ class OfflineService {
     if (raw == null) return null;
     return DateTime.tryParse(raw);
   }
+
+  // ── Conflicted Sales Queue ──
+
+  static Future<void> addConflictedSale(ConflictedSale sale) async {
+    await _conflictedSalesBox.put(sale.id, jsonEncode(sale.toJson()));
+  }
+
+  static List<ConflictedSale> getConflictedSales() {
+    return _conflictedSalesBox.values.map((raw) =>
+      ConflictedSale.fromJson(Map<String, dynamic>.from(jsonDecode(raw) as Map))
+    ).toList();
+  }
+
+  static Future<void> removeConflictedSale(String id) async {
+    await _conflictedSalesBox.delete(id);
+  }
+
+  static int get conflictedSaleCount => _conflictedSalesBox.length;
 }

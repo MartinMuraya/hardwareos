@@ -61,6 +61,9 @@ import '../widgets/app_scaffold.dart';
 import '../../features/auth/screens/auth_error_screen.dart';
 import '../../features/storefront/screens/storefront_app_screen.dart';
 import '../../features/storefront/screens/storefront_management_screen.dart';
+import '../../features/sales/screens/conflict_resolution_screen.dart';
+import '../../features/settings/screens/label_settings_screen.dart';
+import '../../features/suppliers/screens/supplier_debt_screen.dart';
 import '../../features/accounting/screens/accounting_dashboard_screen.dart';
 import '../../features/hr/screens/hr_dashboard_screen.dart';
 
@@ -223,6 +226,10 @@ class AppRouter {
               pageBuilder: (context, state) => const NoTransitionPage(child: PrinterSettingsScreen()),
             ),
             GoRoute(
+              path: '/label-settings',
+              pageBuilder: (context, state) => const NoTransitionPage(child: LabelSettingsScreen()),
+            ),
+            GoRoute(
               path: '/admin/settings',
               pageBuilder: (context, state) => const NoTransitionPage(child: AdminSettingsScreen()),
             ),
@@ -254,6 +261,14 @@ class AppRouter {
               builder: (_, __) => const StorefrontManagementScreen(),
             ),
             GoRoute(
+              path: '/label-settings',
+              builder: (_, __) => const LabelSettingsScreen(),
+            ),
+            GoRoute(
+              path: '/supplier-debt',
+              builder: (_, __) => const SupplierDebtScreen(),
+            ),
+            GoRoute(
               path: '/inventory',
               builder: (_, __) => const InventoryScreen(),
               routes: [
@@ -280,6 +295,10 @@ class AppRouter {
                 GoRoute(
                   path: 'online-orders',
                   builder: (_, __) => const OnlineOrdersScreen(),
+                ),
+                GoRoute(
+                  path: 'conflicts',
+                  builder: (_, __) => const ConflictResolutionScreen(),
                 ),
               ],
             ),

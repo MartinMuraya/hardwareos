@@ -1,6 +1,6 @@
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
+import { assertBusinessMember, assertActiveSubscription, assertFeatureEnabled } from "../middleware/checkPlanLimits";
 
 const db = () => admin.firestore();
 
@@ -348,6 +348,7 @@ export const getStorefrontSettings = onCall({ cors: true }, async (request) => {
   if (!businessId) throw new HttpsError("invalid-argument", "businessId required.");
   
   await assertBusinessMember(request.auth.uid, businessId);
+  await assertFeatureEnabled(businessId, "storefrontEnabled");
   
   const doc = await db().collection("storefronts").doc(businessId).get();
   return doc.data() || null;
@@ -379,6 +380,7 @@ export const updateStorefrontSettings = onCall({ cors: true }, async (request) =
   
   await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager"]);
   await assertActiveSubscription(businessId);
+  await assertFeatureEnabled(businessId, "storefrontEnabled");
   
   // Verify slug is unique (or belongs to this business)
   const slugQuery = await db().collection("storefronts").where("tenantSlug", "==", tenantSlug).get();

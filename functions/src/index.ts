@@ -49,6 +49,12 @@ export { analyzeInventoryHealth } from "./functions/ai";
 // Sales
 export { createSale, getSales } from "./functions/sales";
 
+// Supplier Debt
+export { recordSupplierPayment, getSupplierDebts, getSupplierDebtDashboard } from "./functions/supplier_debt";
+
+// EOD Daily Report
+export { sendDailyEodReport, updateEodReportSettings } from "./functions/eod_report";
+
 // Expenses
 export { createExpense, getExpenses } from "./functions/expenses";
 

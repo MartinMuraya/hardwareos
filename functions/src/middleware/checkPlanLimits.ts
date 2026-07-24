@@ -116,16 +116,17 @@ export async function assertUserLimit(businessId: string): Promise<void> {
   }
 }
 
-/** Enforce: feature flag check (e.g. aiEnabled, whatsappEnabled) */
+/** Enforce: feature flag check (e.g. aiEnabled, whatsappEnabled, advancedAnalyticsEnabled, storefrontEnabled, etimsEnabled) */
 export async function assertFeatureEnabled(
   businessId: string,
-  feature: "aiEnabled" | "whatsappEnabled"
+  feature: "aiEnabled" | "whatsappEnabled" | "advancedAnalyticsEnabled" | "storefrontEnabled" | "etimsEnabled" | "reportsEnabled"
 ): Promise<void> {
   const biz = await getBusinessData(businessId);
   const trialEndsAt = biz.trialEndsAt ? biz.trialEndsAt.toDate() : null;
   const { config } = getEffectivePlan(biz.plan, biz.subscriptionStatus, trialEndsAt);
 
   if (!config[feature]) {
-    throw new HttpsError("resource-exhausted", UPGRADE_MESSAGES[feature]);
+    const msg = UPGRADE_MESSAGES[feature] || `This feature (${feature}) is not available on your current plan.`;
+    throw new HttpsError("resource-exhausted", msg);
   }
 }

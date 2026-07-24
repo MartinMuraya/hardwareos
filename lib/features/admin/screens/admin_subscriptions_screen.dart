@@ -22,7 +22,7 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
   }
 
   Future<void> _loadSubscriptions() async {
-    setState(() => _loading = true);
+    setState(() { _loading = true; _error = null; });
     try {
       final res = await FunctionsService.call('adminGetSubscriptions', {});
       final list = (res['subscriptions'] as List?) ?? [];
@@ -34,8 +34,17 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final msg = e.toString();
+        // Provide a helpful message when the user isn't in the platformAdmins collection
+        final isPermissionDenied = msg.contains('permission-denied') ||
+            msg.contains('platform administrator') ||
+            msg.contains('PERMISSION_DENIED');
         setState(() {
-          _error = e.toString();
+          _error = isPermissionDenied
+              ? 'Access Denied: Your account has not been registered as a Platform Administrator.\n\n'
+                'To fix this, go to Firebase Console → Firestore → platformAdmins collection '
+                'and add a document with your UID as the document ID.'
+              : msg;
           _loading = false;
         });
       }
@@ -184,7 +193,29 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(child: Text(_error!, style: const TextStyle(color: AppColors.error)))
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.lock_outline_rounded, color: AppColors.error, size: 56),
+                        const SizedBox(height: 16),
+                        Text(
+                          _error!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: AppColors.error, fontSize: 14, height: 1.6),
+                        ),
+                        const SizedBox(height: 24),
+                        FilledButton.icon(
+                          onPressed: _loadSubscriptions,
+                          icon: const Icon(Icons.refresh_rounded),
+                          label: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
               : _subscriptions.isEmpty
                   ? const EmptyState(
                       icon: Icons.card_membership_rounded,

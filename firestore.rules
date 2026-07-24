@@ -238,6 +238,78 @@ service cloud.firestore {
     }
 
     // =========================================================
+    // CUSTOMERS — Members can read. No direct client writes.
+    // =========================================================
+    match /customers/{customerId} {
+      allow read: if isMember(resource.data.businessId);
+      allow create, update, delete: if false;
+    }
+
+    // =========================================================
+    // DEBT TRANSACTIONS — Manager can read. No direct writes.
+    // =========================================================
+    match /debtTransactions/{debtId} {
+      allow read: if isManager(resource.data.businessId);
+      allow create, update, delete: if false;
+    }
+
+    // =========================================================
+    // QUOTATIONS — Members can read. No direct client writes.
+    // =========================================================
+    match /quotations/{quotationId} {
+      allow read: if isMember(resource.data.businessId);
+      allow create, update, delete: if false;
+    }
+
+    // =========================================================
+    // PURCHASE ORDERS — Manager can read. No direct client writes.
+    // =========================================================
+    match /purchase_orders/{poId} {
+      allow read: if isManager(resource.data.businessId);
+      allow create, update, delete: if false;
+    }
+
+    // =========================================================
+    // EMPLOYEES — Owner only can read HR data. No direct writes.
+    // =========================================================
+    match /employees/{employeeId} {
+      allow read: if isOwner(resource.data.businessId);
+      allow create, update, delete: if false;
+    }
+
+    // =========================================================
+    // STOCK ADJUSTMENTS — Manager can read. No direct writes.
+    // =========================================================
+    match /stockAdjustments/{adjId} {
+      allow read: if isManager(resource.data.businessId);
+      allow create, update, delete: if false;
+    }
+
+    // =========================================================
+    // RETURNS — Members can read. No direct client writes.
+    // =========================================================
+    match /returns/{returnId} {
+      allow read: if isMember(resource.data.businessId);
+      allow create, update, delete: if false;
+    }
+
+    // =========================================================
+    // ACCOUNTING ENTRIES — Owner only can read. No direct writes.
+    // =========================================================
+    match /accountingEntries/{entryId} {
+      allow read: if isOwner(resource.data.businessId);
+      allow create, update, delete: if false;
+    }
+
+    // =========================================================
+    // SUPPLIERS — Manager can read. No direct client writes.
+    // =========================================================
+    match /suppliers/{supplierId} {
+      allow read: if isManager(resource.data.businessId);
+      allow create, update, delete: if false;
+    }
+
+    // =========================================================
     // DEFAULT DENY — reject everything else
     // =========================================================
     match /{document=**} {

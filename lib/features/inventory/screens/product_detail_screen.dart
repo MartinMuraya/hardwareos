@@ -183,6 +183,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 600),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                      if (p.imageUrl != null && p.imageUrl!.isNotEmpty)
+                        Container(
+                          height: 220,
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: theme.dividerColor),
+                            image: DecorationImage(
+                              image: NetworkImage(p.imageUrl!),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
                       _StockCard(product: p),
                       const SizedBox(height: 16),
                       _DetailCard(product: p, theme: theme),

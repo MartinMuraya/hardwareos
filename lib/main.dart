@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
@@ -24,13 +25,19 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Use environment variables for production keys
-  // e.g., --dart-define=RECAPTCHA_SITE_KEY=your_key
-  const recaptchaKey = String.fromEnvironment('RECAPTCHA_SITE_KEY', defaultValue: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'); // test key default
+  // App Check: use debug provider in dev (web), real reCAPTCHA in production.
+  // IMPORTANT: In debug/dev, use ReCaptchaEnterpriseProvider debug or debug provider
+  // to avoid App Check 403 throttling all Cloud Function calls.
+  const recaptchaKey = String.fromEnvironment(
+    'RECAPTCHA_SITE_KEY',
+    defaultValue: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI', // Google test key
+  );
   await FirebaseAppCheck.instance.activate(
-    androidProvider: AndroidProvider.playIntegrity,
-    appleProvider: AppleProvider.appAttest,
-    webProvider: ReCaptchaV3Provider(recaptchaKey),
+    androidProvider: kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
+    appleProvider: kDebugMode ? AppleProvider.debug : AppleProvider.appAttest,
+    webProvider: kDebugMode
+        ? ReCaptchaV3Provider('6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI') // test key for debug
+        : ReCaptchaV3Provider(recaptchaKey),
   );
 
   await Hive.initFlutter();

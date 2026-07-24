@@ -8,6 +8,7 @@ class Supplier {
   final String contactPerson;
   final String paymentTerms;
   final double currentBalance;
+  final double totalPurchasesOnCredit;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -21,6 +22,7 @@ class Supplier {
     this.contactPerson = '',
     this.paymentTerms = '30 days',
     this.currentBalance = 0,
+    this.totalPurchasesOnCredit = 0,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -35,6 +37,7 @@ class Supplier {
     contactPerson: (map['contactPerson'] as String?) ?? '',
     paymentTerms: (map['paymentTerms'] as String?) ?? '30 days',
     currentBalance: ((map['currentBalance'] as num?) ?? 0).toDouble(),
+    totalPurchasesOnCredit: ((map['totalPurchasesOnCredit'] as num?) ?? 0).toDouble(),
     createdAt: DateTime.parse(map['createdAt'] as String),
     updatedAt: DateTime.parse(map['updatedAt'] as String),
   );

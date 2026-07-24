@@ -125,7 +125,7 @@ export const adminGetPlans = onCall({ cors: true }, async (request) => {
   await assertSuperAdmin(request.auth.uid);
 
   const snap = await db().collection("plans").orderBy("name", "asc").get();
-  
+
   let plans = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
   // Seed plans if none exist
@@ -211,7 +211,7 @@ export const adminUpdatePlan = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 
-  const { id, ...updateFields } = request.data as { id: string; [key: string]: any };
+  const { id, ...updateFields } = request.data as { id: string;[key: string]: any };
 
   if (!id) {
     throw new HttpsError("invalid-argument", "Plan ID is required");
@@ -328,7 +328,7 @@ export const adminGetSettings = onCall({ cors: true }, async (request) => {
   await assertSuperAdmin(request.auth.uid);
 
   const doc = await db().collection("settings").doc("platform").get();
-  
+
   if (!doc.exists) {
     const defaultSettings = {
       maintenanceMode: false,
@@ -362,7 +362,7 @@ export const adminUpdateSettings = onCall({ cors: true }, async (request) => {
   if (settings.broadcastBanner !== undefined) updateData.broadcastBanner = settings.broadcastBanner;
   if (settings.systemAlertLevel !== undefined) updateData.systemAlertLevel = settings.systemAlertLevel;
   if (settings.backupFrequency !== undefined) updateData.backupFrequency = settings.backupFrequency;
-  
+
   if (settings.triggerBackup) {
     updateData.lastBackupTimestamp = admin.firestore.FieldValue.serverTimestamp();
   }
@@ -450,7 +450,7 @@ export const adminGetSystemLogs = onCall({ cors: true }, async (request) => {
   const numLimit = limit || 100;
 
   const snap = await db().collection("auditLogs").orderBy("timestamp", "desc").limit(numLimit).get();
-  
+
   const logs = snap.docs.map(doc => {
     const data = doc.data();
     return {

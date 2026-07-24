@@ -15,7 +15,7 @@ async function getBusinessContext(businessId: string): Promise<string> {
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const thirtyDaysAgo = new Date(startOfDay.getTime() - 30 * 24 * 60 * 60 * 1000);
-  
+
   const [salesSnap, expensesSnap, productsSnap, bizSnap] = await Promise.all([
     db().collection("sales").where("businessId", "==", businessId).where("createdAt", ">=", admin.firestore.Timestamp.fromDate(thirtyDaysAgo)).get(),
     db().collection("expenses").where("businessId", "==", businessId).where("createdAt", ">=", admin.firestore.Timestamp.fromDate(thirtyDaysAgo)).get(),
@@ -59,7 +59,7 @@ Past 30 Days Summary:
 // Generate prompt response using Gemini REST API
 async function callGeminiAPI(prompt: string, apiKey: string): Promise<string> {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`;
-  
+
   const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -96,7 +96,7 @@ export const getAIInsights = onCall({ cors: true, secrets: [geminiApiKeySecret] 
   const { businessId, prompt } = request.data as { businessId: string; prompt?: string };
   await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager"]);
   await assertActiveSubscription(businessId);
-  
+
   // Verify plan supports AI (Pro feature)
   const bizSnap = await db().collection("businesses").doc(businessId).get();
   if (bizSnap.data()?.plan !== "pro") {
@@ -109,7 +109,7 @@ export const getAIInsights = onCall({ cors: true, secrets: [geminiApiKeySecret] 
   }
 
   const contextStr = await getBusinessContext(businessId);
-  
+
   let finalPrompt = "";
   if (prompt && prompt.trim().length > 0) {
     finalPrompt = `Context:\n${contextStr}\n\nUser Question:\n${prompt}`;
@@ -138,7 +138,7 @@ export const getAIQuickInsights = onCall({ cors: true, secrets: [geminiApiKeySec
   const { businessId, type } = request.data as { businessId: string; type: "inventory_optimization" | "sales_trends" | "profit_analysis" | "reorder_suggestions" };
   await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager"]);
   await assertActiveSubscription(businessId);
-  
+
   const bizSnap = await db().collection("businesses").doc(businessId).get();
   if (bizSnap.data()?.plan !== "pro") {
     throw new HttpsError("permission-denied", "AI Insights are only available on the Pro plan.");
@@ -150,9 +150,9 @@ export const getAIQuickInsights = onCall({ cors: true, secrets: [geminiApiKeySec
   }
 
   const contextStr = await getBusinessContext(businessId);
-  
+
   let specificQuestion = "";
-  switch(type) {
+  switch (type) {
     case "inventory_optimization": specificQuestion = "How can we optimize our inventory holding costs based on this data?"; break;
     case "sales_trends": specificQuestion = "What are the key sales trends in the last 30 days?"; break;
     case "profit_analysis": specificQuestion = "Analyze our profit margin and suggest 2 ways to reduce expenses."; break;

@@ -11,7 +11,9 @@ class HrProvider extends ChangeNotifier {
   HrSettings? _settings;
 
   HrProvider({required this.businessId}) {
-    fetchSettings();
+    if (businessId.isNotEmpty) {
+      fetchSettings();
+    }
   }
 
   bool get isLoading => _isLoading;
@@ -19,6 +21,7 @@ class HrProvider extends ChangeNotifier {
   HrSettings? get settings => _settings;
 
   Future<void> fetchSettings() async {
+    if (businessId.isEmpty) return;
     _setLoading(true);
     try {
       final res = await FunctionsService.call('getHrSettings', {'businessId': businessId});

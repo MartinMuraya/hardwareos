@@ -7,7 +7,7 @@ import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { onDocumentWritten } from "firebase-functions/v2/firestore";
 import { defineSecret } from "firebase-functions/params";
-import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
+import { assertBusinessMember, assertActiveSubscription, assertFeatureEnabled } from "../middleware/checkPlanLimits";
 
 const atApiKeySecret = defineSecret("AT_API_KEY");
 const atUsernameSecret = defineSecret("AT_USERNAME");
@@ -58,6 +58,7 @@ export const enqueueNotification = onCall({ cors: true }, async (request) => {
 
   await assertBusinessMember(request.auth.uid, businessId);
   await assertActiveSubscription(businessId);
+  await assertFeatureEnabled(businessId, "whatsappEnabled");
 
   const template = TEMPLATES[type];
   if (!template) {

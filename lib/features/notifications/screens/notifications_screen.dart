@@ -22,10 +22,43 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   String? _error;
   String _filterStatus = 'all';
 
+  bool _eodEnabled = false;
+  final _eodPhoneCtrl = TextEditingController();
+  String _eodChannel = 'sms';
+
   @override
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _eodPhoneCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveEodSettings() async {
+    try {
+      final bizId = context.read<AuthProvider>().businessId!;
+      await FunctionsService.call('updateEodReportSettings', {
+        'businessId': bizId,
+        'enabled': _eodEnabled,
+        'phone': _eodPhoneCtrl.text.trim(),
+        'channel': _eodChannel,
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('EOD Report preferences saved!')),
+        );
+      }
+    } on FunctionsException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
+        );
+      }
+    }
   }
 
   Future<void> _load() async {
@@ -220,19 +253,65 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           },
         ),
         const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: AppColors.info.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
+        const SizedBox(height: 24),
+        const Divider(),
+        const SizedBox(height: 16),
+        Text('Daily End-of-Day (EOD) Summary Report', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        Text('Automated business summary sent every day at 8:00 PM EAT covering revenue, profit, low stock, and outstanding debts.',
+          style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+        ),
+        const SizedBox(height: 12),
+        Card(
+          color: theme.cardColor,
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: theme.dividerColor)),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Enable Daily EOD Summary Report', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  subtitle: const Text('Delivered automatically at 8:00 PM EAT'),
+                  value: _eodEnabled,
+                  activeTrackColor: AppColors.accent,
+                  onChanged: (v) => setState(() => _eodEnabled = v),
+                ),
+                if (_eodEnabled) ...[
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _eodPhoneCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Delivery Phone Number',
+                      hintText: 'e.g. +254712345678',
+                      prefixIcon: Icon(Icons.phone_rounded),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    initialValue: _eodChannel,
+                    decoration: const InputDecoration(labelText: 'Delivery Channel'),
+                    items: const [
+                      DropdownMenuItem(value: 'sms', child: Text('SMS (Africa\'s Talking)')),
+                      DropdownMenuItem(value: 'whatsapp', child: Text('WhatsApp (Pro Plan)')),
+                      DropdownMenuItem(value: 'both', child: Text('Both SMS & WhatsApp')),
+                    ],
+                    onChanged: (v) {
+                      if (v != null) setState(() => _eodChannel = v);
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton.icon(
+                    onPressed: _saveEodSettings,
+                    icon: const Icon(Icons.save_rounded, size: 18),
+                    label: const Text('Save EOD Report Settings'),
+                  ),
+                ],
+              ],
+            ),
           ),
-          child: Row(children: [
-            const Icon(Icons.info_outline, color: AppColors.info, size: 18),
-            const SizedBox(width: 8),
-            const Expanded(child: Text('Set your Meta WhatsApp API keys:\nfirebase functions:secrets:set META_WA_TOKEN\nfirebase functions:secrets:set META_WA_PHONE_NUMBER_ID',
-              style: TextStyle(fontSize: 11),
-            )),
-          ]),
         ),
       ]),
     );

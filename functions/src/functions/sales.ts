@@ -115,10 +115,21 @@ export const createSale = onCall({ cors: true }, async (request) => {
           }
         }
         if (product.quantity < item.quantity) {
-          throw new HttpsError(
-            "resource-exhausted",
-            `Insufficient stock for "${product.name}". Available: ${product.quantity}, Requested: ${item.quantity}.`
-          );
+          if (request.data.allowOverride && isManager) {
+            // Manager override allowed — proceed with negative stock
+          } else {
+            const conflictDetail = JSON.stringify({
+              conflictType: "stock_exhausted",
+              productId: item.productId,
+              productName: product.name,
+              availableQty: product.quantity,
+              requestedQty: item.quantity,
+            });
+            throw new HttpsError(
+              "resource-exhausted",
+              `CONFLICT:${conflictDetail}`
+            );
+          }
         }
       }
 
