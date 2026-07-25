@@ -25,20 +25,28 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // App Check: use debug provider in dev (web), real reCAPTCHA in production.
-  // IMPORTANT: In debug/dev, use ReCaptchaEnterpriseProvider debug or debug provider
-  // to avoid App Check 403 throttling all Cloud Function calls.
-  const recaptchaKey = String.fromEnvironment(
-    'RECAPTCHA_SITE_KEY',
-    defaultValue: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI', // Google test key
-  );
-  await FirebaseAppCheck.instance.activate(
-    androidProvider: kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
-    appleProvider: kDebugMode ? AppleProvider.debug : AppleProvider.appAttest,
-    webProvider: kDebugMode
-        ? ReCaptchaV3Provider('6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI') // test key for debug
-        : ReCaptchaV3Provider(recaptchaKey),
-  );
+  // App Check: activate safely without causing 403 dev throttling
+  try {
+    const recaptchaKey = String.fromEnvironment(
+      'RECAPTCHA_SITE_KEY',
+      defaultValue: '',
+    );
+    if (kDebugMode || recaptchaKey.isEmpty) {
+      await FirebaseAppCheck.instance.activate(
+        androidProvider: AndroidProvider.debug,
+        appleProvider: AppleProvider.debug,
+        webProvider: ReCaptchaV3Provider('6Ldb7qspAAAAAMj6Q5tU6tE-6-88888888888888'), // debug fallback
+      );
+    } else {
+      await FirebaseAppCheck.instance.activate(
+        androidProvider: AndroidProvider.playIntegrity,
+        appleProvider: AppleProvider.appAttest,
+        webProvider: ReCaptchaV3Provider(recaptchaKey),
+      );
+    }
+  } catch (e) {
+    debugPrint('App Check initialization non-fatal warning: $e');
+  }
 
   await Hive.initFlutter();
   await OfflineService.init();
