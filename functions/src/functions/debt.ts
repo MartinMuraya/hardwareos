@@ -22,7 +22,7 @@ const db = () => admin.firestore();
 export const createCreditSale = onCall({ cors: true }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
-  const { businessId, customerId, customerName, items, amountPaid, note, pointsRedeemed } = request.data as {
+  const { businessId, customerId, customerName, items, amountPaid, note, pointsRedeemed, idempotencyKey } = request.data as {
     businessId: string;
     customerId: string;
     customerName: string;
@@ -30,6 +30,7 @@ export const createCreditSale = onCall({ cors: true }, async (request) => {
     amountPaid?: number;
     note?: string;
     pointsRedeemed?: number;
+    idempotencyKey?: string;
   };
 
   if (!customerId || !items || items.length === 0) {
@@ -45,6 +46,15 @@ export const createCreditSale = onCall({ cors: true }, async (request) => {
   const taxSettings = taxSettingsSnap.exists ? taxSettingsSnap.data()! : { eTimsEnabled: false };
 
   const result = await db().runTransaction(async (txn) => {
+    // 0. Check idempotency key early
+    if (idempotencyKey) {
+      const idempRef = db().collection("idempotency_keys").doc(idempotencyKey);
+      const idempSnap = await txn.get(idempRef);
+      if (idempSnap.exists) {
+        return idempSnap.data()!.result;
+      }
+    }
+
     // 1. Validate customer exists and belongs to business
     const custSnap = await txn.get(db().collection("customers").doc(customerId));
     if (!custSnap.exists) {
@@ -225,7 +235,7 @@ export const createCreditSale = onCall({ cors: true }, async (request) => {
 
     txn.update(db().collection("customers").doc(customerId), custUpdate);
 
-    return {
+    const finalResult = {
       saleId: saleRef.id,
       total: Number(total.toFixed(2)),
       profit: Number(profit.toFixed(2)),
@@ -236,6 +246,16 @@ export const createCreditSale = onCall({ cors: true }, async (request) => {
       timsQrCode,
       pointsEarned: customer.isFundi ? (total / 100) : undefined,
     };
+
+    if (idempotencyKey) {
+      const idempRef = db().collection("idempotency_keys").doc(idempotencyKey);
+      txn.set(idempRef, {
+        createdAt: now,
+        result: finalResult,
+      });
+    }
+
+    return finalResult;
   });
 
   return { success: true, ...result };

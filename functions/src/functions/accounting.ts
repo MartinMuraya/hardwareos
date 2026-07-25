@@ -361,3 +361,178 @@ export const migrateHistoricalData = onCall({ cors: true }, async (request) => {
 
   return { success: true, migratedSales, migratedExpenses };
 });
+
+// -----------------------------------------------------------
+// createJournalEntry
+// Allows manual posting of double-entry journal records
+// -----------------------------------------------------------
+export const createJournalEntry = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
+  
+  const { businessId, referenceId, description, lines, date } = request.data as {
+    businessId: string;
+    referenceId: string;
+    description: string;
+    lines: { accountId: string; debit: number; credit: number }[];
+    date?: string; // ISO string
+  };
+
+  await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager"]);
+
+  if (!lines || lines.length < 2) {
+    throw new HttpsError("invalid-argument", "A journal entry must have at least two lines.");
+  }
+
+  // Validate balanced entry
+  const totalDebit = lines.reduce((sum, line) => sum + line.debit, 0);
+  const totalCredit = lines.reduce((sum, line) => sum + line.credit, 0);
+  
+  // allow small floating point differences, but generally must match exactly
+  if (Math.abs(totalDebit - totalCredit) > 0.01) {
+    throw new HttpsError("invalid-argument", `Entry is not balanced. Debits: ${totalDebit}, Credits: ${totalCredit}`);
+  }
+
+  const entryDate = date ? admin.firestore.Timestamp.fromDate(new Date(date)) : admin.firestore.Timestamp.now();
+
+  await db().runTransaction(async (txn) => {
+    postJournalEntryHelper(txn, businessId, referenceId || "MANUAL", description, lines, entryDate);
+  });
+
+  return { success: true, total: totalDebit };
+});
+
+// -----------------------------------------------------------
+// getProfitAndLoss
+// Calculates revenue minus expenses over a date range
+// -----------------------------------------------------------
+export const getProfitAndLoss = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
+  
+  const { businessId, startDate, endDate } = request.data as {
+    businessId: string;
+    startDate?: string;
+    endDate?: string;
+  };
+
+  await assertBusinessMember(request.auth.uid, businessId);
+
+  let query = db().collection("journal_lines").where("businessId", "==", businessId);
+  
+  if (startDate) {
+    query = query.where("date", ">=", admin.firestore.Timestamp.fromDate(new Date(startDate)));
+  }
+  if (endDate) {
+    query = query.where("date", "<=", admin.firestore.Timestamp.fromDate(new Date(endDate)));
+  }
+
+  const linesSnap = await query.get();
+  
+  // We need account types to classify them.
+  const accountsSnap = await db().collection("chart_of_accounts").where("businessId", "==", businessId).get();
+  const accounts = new Map(accountsSnap.docs.map(d => [d.id, d.data()]));
+
+  const revenueAccounts: any = {};
+  const expenseAccounts: any = {};
+
+  let totalRevenue = 0;
+  let totalExpense = 0;
+
+  for (const doc of linesSnap.docs) {
+    const line = doc.data();
+    const acc = accounts.get(line.accountId);
+    if (!acc) continue;
+
+    if (acc.type === "Revenue") {
+      const net = line.credit - line.debit; // Normal credit balance
+      revenueAccounts[acc.name] = (revenueAccounts[acc.name] || 0) + net;
+      totalRevenue += net;
+    } else if (acc.type === "Expense") {
+      const net = line.debit - line.credit; // Normal debit balance
+      expenseAccounts[acc.name] = (expenseAccounts[acc.name] || 0) + net;
+      totalExpense += net;
+    }
+  }
+
+  return {
+    revenue: Object.keys(revenueAccounts).map(name => ({ name, amount: revenueAccounts[name] })),
+    expenses: Object.keys(expenseAccounts).map(name => ({ name, amount: expenseAccounts[name] })),
+    totalRevenue,
+    totalExpense,
+    netProfit: totalRevenue - totalExpense,
+  };
+});
+
+// -----------------------------------------------------------
+// getBalanceSheet
+// Calculates Assets, Liabilities, and Equity as of a specific date
+// -----------------------------------------------------------
+export const getBalanceSheet = onCall({ cors: true }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
+  
+  const { businessId, asOfDate } = request.data as {
+    businessId: string;
+    asOfDate?: string;
+  };
+
+  await assertBusinessMember(request.auth.uid, businessId);
+
+  let query = db().collection("journal_lines").where("businessId", "==", businessId);
+  
+  if (asOfDate) {
+    query = query.where("date", "<=", admin.firestore.Timestamp.fromDate(new Date(asOfDate)));
+  }
+
+  const linesSnap = await query.get();
+  
+  const accountsSnap = await db().collection("chart_of_accounts").where("businessId", "==", businessId).get();
+  const accounts = new Map(accountsSnap.docs.map(d => [d.id, d.data()]));
+
+  const assets: any = {};
+  const liabilities: any = {};
+  const equity: any = {};
+
+  let totalAssets = 0;
+  let totalLiabilities = 0;
+  let totalEquity = 0;
+  let retainedEarnings = 0; // Net profit added to equity
+
+  for (const doc of linesSnap.docs) {
+    const line = doc.data();
+    const acc = accounts.get(line.accountId);
+    if (!acc) continue;
+
+    if (acc.type === "Asset") {
+      const net = line.debit - line.credit;
+      assets[acc.name] = (assets[acc.name] || 0) + net;
+      totalAssets += net;
+    } else if (acc.type === "Liability") {
+      const net = line.credit - line.debit;
+      liabilities[acc.name] = (liabilities[acc.name] || 0) + net;
+      totalLiabilities += net;
+    } else if (acc.type === "Equity") {
+      const net = line.credit - line.debit;
+      equity[acc.name] = (equity[acc.name] || 0) + net;
+      totalEquity += net;
+    } else if (acc.type === "Revenue") {
+      retainedEarnings += (line.credit - line.debit);
+    } else if (acc.type === "Expense") {
+      retainedEarnings -= (line.debit - line.credit);
+    }
+  }
+  
+  // Add retained earnings to equity
+  totalEquity += retainedEarnings;
+  if (retainedEarnings !== 0) {
+    equity["Retained Earnings"] = (equity["Retained Earnings"] || 0) + retainedEarnings;
+  }
+
+  return {
+    assets: Object.keys(assets).map(name => ({ name, amount: assets[name] })),
+    liabilities: Object.keys(liabilities).map(name => ({ name, amount: liabilities[name] })),
+    equity: Object.keys(equity).map(name => ({ name, amount: equity[name] })),
+    totalAssets,
+    totalLiabilities,
+    totalEquity,
+    isBalanced: Math.abs(totalAssets - (totalLiabilities + totalEquity)) < 0.01
+  };
+});

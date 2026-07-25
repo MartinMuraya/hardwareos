@@ -13,6 +13,7 @@ export const mpesaPasskey = defineSecret("MPESA_PASSKEY");
 export const mpesaShortcode = defineString("MPESA_SHORTCODE", { default: "174379" });
 export const mpesaCallbackUrl = defineString("MPESA_CALLBACK_URL", { default: "https://mpesacallback-us-central1.run.app" });
 export const mpesaEnvironment = defineString("MPESA_ENVIRONMENT", { default: "sandbox" });
+export const mpesaWebhookSecret = defineSecret("MPESA_WEBHOOK_SECRET");
 
 export class MpesaProvider implements PaymentProvider {
   readonly name = "mpesa";
@@ -23,6 +24,9 @@ export class MpesaProvider implements PaymentProvider {
   private get passkey(): string { return mpesaPasskey.value(); }
   private get callbackUrl(): string { return mpesaCallbackUrl.value(); }
   private get environment(): string { return mpesaEnvironment.value(); }
+  private get webhookSecret(): string {
+    try { return mpesaWebhookSecret.value(); } catch { return "dummy_secret"; }
+  }
   private get baseUrl(): string {
     return this.environment === "production"
       ? "https://api.safaricom.co.ke"
@@ -68,7 +72,7 @@ export class MpesaProvider implements PaymentProvider {
           PartyA: request.phoneNumber,
           PartyB: this.shortcode,
           PhoneNumber: request.phoneNumber,
-          CallBackURL: this.callbackUrl,
+          CallBackURL: `${this.callbackUrl}?token=${this.webhookSecret}`,
           AccountReference: request.accountReference.substring(0, 12),
           TransactionDesc: request.transactionDesc.substring(0, 20),
         }),

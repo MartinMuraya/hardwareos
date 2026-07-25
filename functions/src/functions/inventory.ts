@@ -38,6 +38,8 @@ export const createProduct = onCall({ cors: true }, async (request) => {
     isPublishedOnline?: boolean;
     images?: string[];
     description?: string;
+    trackSerials?: boolean;
+    trackBatches?: boolean;
   };
 
   if (!name || !businessId) throw new HttpsError("invalid-argument", "name and businessId required.");
@@ -84,6 +86,8 @@ export const createProduct = onCall({ cors: true }, async (request) => {
     isPublishedOnline: !!isPublishedOnline,
     images: images || [],
     description: description?.trim() || "",
+    trackSerials: request.data.trackSerials || false,
+    trackBatches: request.data.trackBatches || false,
     createdAt: now,
     updatedAt: now,
   });

@@ -136,7 +136,7 @@ export async function checkPasswordResetRateLimit(email: string): Promise<void> 
   const recentDay = requests.filter((r) => r.timestamp > oneDayAgo);
 
   if (recentHour.length >= MAX_RESETS_PER_HOUR || recentDay.length >= MAX_RESETS_PER_DAY) {
-    return;
+    throw new HttpsError("resource-exhausted", "Too many password reset requests. Please try again later.");
   }
 }
 
@@ -168,7 +168,7 @@ export async function recordPasswordResetRequest(email: string): Promise<void> {
   const recentHour = recent.filter((r) => r.timestamp > oneHourAgo);
 
   if (recentHour.length > MAX_RESETS_PER_HOUR || recent.length > MAX_RESETS_PER_DAY) {
-    return;
+    throw new HttpsError("resource-exhausted", "Too many password reset requests. Please try again later.");
   }
 
   await ref.update({

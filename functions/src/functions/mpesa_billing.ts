@@ -1,6 +1,6 @@
 import * as admin from "firebase-admin";
 import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
-import { MpesaProvider, mpesaConsumerKey, mpesaConsumerSecret, mpesaPasskey } from "../services/mpesaProvider";
+import { MpesaProvider, mpesaConsumerKey, mpesaConsumerSecret, mpesaPasskey, mpesaWebhookSecret } from "../services/mpesaProvider";
 import { assertBusinessMember } from "../middleware/checkPlanLimits";
 import { rateLimitCheck } from "../middleware/rateLimiter";
 
@@ -143,7 +143,7 @@ export const createSubscriptionPayment = onCall({ cors: true, secrets: [mpesaCon
 // mpesaCallback
 // webhook callback called directly by Safaricom
 // -----------------------------------------------------------
-export const mpesaCallback = onRequest({ cors: true, secrets: [mpesaConsumerKey, mpesaConsumerSecret, mpesaPasskey] }, async (req, res) => {
+export const mpesaCallback = onRequest({ cors: true, secrets: [mpesaConsumerKey, mpesaConsumerSecret, mpesaPasskey, mpesaWebhookSecret] }, async (req, res) => {
   try {
     const clientIp = req.ip || req.headers["x-forwarded-for"]?.toString() || "unknown";
     
@@ -160,6 +160,21 @@ export const mpesaCallback = onRequest({ cors: true, secrets: [mpesaConsumerKey,
     // if (!clientIp.startsWith("196.201.") && clientIp !== "unknown") {
     //   console.warn("M-Pesa callback from unrecognized IP:", clientIp);
     // }
+
+    // Verify Webhook Secret
+    const token = req.query.token;
+    let expectedToken = "dummy_secret";
+    try {
+      expectedToken = mpesaWebhookSecret.value();
+    } catch (e) {
+      // Secret might not be set in dev
+    }
+
+    if (token !== expectedToken) {
+      console.error(`Unauthorized callback access attempt from IP: ${clientIp}`);
+      res.status(401).send("Unauthorized");
+      return;
+    }
 
     const callbackData = req.body;
     console.log("M-Pesa Callback received:", JSON.stringify(callbackData));

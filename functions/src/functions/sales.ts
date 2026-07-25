@@ -47,6 +47,7 @@ export const createSale = onCall({ cors: true }, async (request) => {
     customerId?: string;
     customerName?: string;
     pointsRedeemed?: number;
+    idempotencyKey?: string;
   };
 
   if (!items || items.length === 0) {
@@ -67,6 +68,15 @@ export const createSale = onCall({ cors: true }, async (request) => {
 
   // Run everything in a Firestore transaction for atomicity
   const result = await db().runTransaction(async (txn) => {
+    // 0. Check idempotency key early
+    if (request.data.idempotencyKey) {
+      const idempRef = db().collection("idempotency_keys").doc(request.data.idempotencyKey);
+      const idempSnap = await txn.get(idempRef);
+      if (idempSnap.exists) {
+        return idempSnap.data()!.result;
+      }
+    }
+
     // 1. Read all products
     const productRefs = items.map((item) =>
       db().collection("products").doc(item.productId)
@@ -318,7 +328,7 @@ export const createSale = onCall({ cors: true }, async (request) => {
       }
     }
 
-    return {
+    const finalResult = {
       saleId: saleRef.id,
       total: Number(total.toFixed(2)),
       profit: Number(profit.toFixed(2)),
@@ -328,6 +338,16 @@ export const createSale = onCall({ cors: true }, async (request) => {
       timsQrCode,
       pointsEarned,
     };
+
+    if (request.data.idempotencyKey) {
+      const idempRef = db().collection("idempotency_keys").doc(request.data.idempotencyKey);
+      txn.set(idempRef, {
+        createdAt: now,
+        result: finalResult,
+      });
+    }
+
+    return finalResult;
   });
 
   return { success: true, ...result };
