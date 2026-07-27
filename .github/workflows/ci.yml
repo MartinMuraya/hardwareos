@@ -12,10 +12,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Flutter
-        uses: subosmit/flutter-action@v2
-        with:
-          flutter-version: 'stable'
+      - name: Install Flutter SDK (clone stable channel)
+        run: |
+          git clone https://github.com/flutter/flutter.git -b stable --depth 1 flutter-sdk
+          echo "${{ github.workspace }}/flutter-sdk/bin" >> $GITHUB_PATH
+          flutter --version
+          flutter doctor -v
       - name: Install dependencies
         run: flutter pub get
       - name: Static analysis
