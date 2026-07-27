@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/images/logo.png" alt="HardwareOS Logo" width="120" height="120" />
+  <img src="assets/images/logo.svg" alt="HardwareOS Logo" width="120" height="120" />
 </p>
 
 <h1 align="center">HardwareOS</h1>
