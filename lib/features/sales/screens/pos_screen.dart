@@ -120,14 +120,13 @@ class _POSScreenState extends State<POSScreen> {
           'items': _cart.map((e) => e.toMap()).toList(),
         };
         final messenger = ScaffoldMessenger.of(context);
+        final dialogNavigator = Navigator.of(ctx);
         await OfflineService.saveDraftSale(id, draftData);
         if (!mounted) return;
         setState(() { _cart.clear(); });
         _saveCart();
-        if (mounted) {
-          Navigator.pop(ctx);
-          messenger.showSnackBar(SnackBar(content: Text('Cart "$ref" held.')));
-        }
+        dialogNavigator.pop();
+        messenger.showSnackBar(SnackBar(content: Text('Cart "$ref" held.')));
       }
       return AlertDialog(
         title: const Text('Hold Cart'),
@@ -148,7 +147,7 @@ class _POSScreenState extends State<POSScreen> {
     });
   }
 
-  void _showHeldCarts(BuildContext context) {
+  void _showHeldCarts() {
     final drafts = OfflineService.getAllDrafts();
     showDialog(context: context, builder: (ctx) => AlertDialog(
       title: const Text('Held Carts'),
@@ -171,13 +170,15 @@ class _POSScreenState extends State<POSScreen> {
                   trailing: IconButton(
                     icon: const Icon(Icons.delete, color: AppColors.error),
                     onPressed: () async {
+                      final dialogNavigator = Navigator.of(ctx);
                       await OfflineService.deleteDraftSale(id);
-                      Navigator.pop(ctx);
+                      dialogNavigator.pop();
                       if (!mounted) return;
-                      _showHeldCarts(context); // Refresh
+                      _showHeldCarts(); // Refresh
                     },
                   ),
                   onTap: () async {
+                    final dialogNavigator = Navigator.of(ctx);
                     // Restore cart
                     setState(() {
                       _cart.clear();
@@ -203,8 +204,9 @@ class _POSScreenState extends State<POSScreen> {
                     });
                     _saveCart();
                     await OfflineService.deleteDraftSale(id);
-                    Navigator.pop(ctx);
+                    dialogNavigator.pop();
                   },
+
                 );
               },
             ),
@@ -684,17 +686,18 @@ class _POSScreenState extends State<POSScreen> {
 
   Future<void> _printReceipt(BuildContext context) async {
     if (_lastReceiptData == null) return;
+    final messenger = ScaffoldMessenger.of(context);
     try {
       final bytes = await ReceiptService.generateEscPos(_lastReceiptData!);
       final success = await ReceiptService.printViaBluetooth(bytes);
       if (!success && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           const SnackBar(content: Text('No Bluetooth printer found. Connect a printer and try again.')),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(content: Text('Print failed: $e')),
         );
       }
@@ -824,6 +827,7 @@ class _POSScreenState extends State<POSScreen> {
 
             setDialogState(() => isSaving = true);
             final messenger = ScaffoldMessenger.of(context);
+            final dialogNavigator = Navigator.of(ctx);
             try {
               final bizId = context.read<AuthProvider>().businessId!;
               final res = await FunctionsService.call('createCustomer', {
@@ -855,7 +859,7 @@ class _POSScreenState extends State<POSScreen> {
                 _mpesaPhoneCtrl.text = phone;
               });
 
-              Navigator.pop(ctx);
+              dialogNavigator.pop();
               messenger.showSnackBar(SnackBar(content: Text('Customer $name created!')));
             } catch (e) {
               if (!mounted) return;
@@ -1002,7 +1006,7 @@ class _POSScreenState extends State<POSScreen> {
           ),
           const SizedBox(width: 8),
           TextButton.icon(
-            onPressed: () => _showHeldCarts(context),
+          onPressed: () => _showHeldCarts(),
             icon: const Icon(Icons.inventory_2_rounded, size: 16),
             label: const Text('Held Carts'),
           ),
