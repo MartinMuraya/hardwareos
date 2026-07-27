@@ -7,8 +7,8 @@ enum AuthState { initial, loading, authenticated, unauthenticated }
 
 class AuthProvider extends ChangeNotifier {
   late final AuthRepository _repo;
-  late final FirebaseAuth _auth;
-  late final FirebaseFunctions _functions;
+  FirebaseAuth? _auth;
+  FirebaseFunctions? _functions;
   final Future<Map<String, dynamic>> Function()? _profileFetcher;
 
   User? _user;
@@ -58,10 +58,15 @@ class AuthProvider extends ChangeNotifier {
     Future<Map<String, dynamic>> Function()? profileFetcher,
     bool attachAuthState = true,
   }) : _profileFetcher = profileFetcher {
-    _auth = firebaseAuth ?? FirebaseAuth.instance;
-    _functions = functions ?? FirebaseFunctions.instance;
+    // Lazily initialize Firebase clients only when needed. This allows tests to
+    // create the provider without requiring Firebase.initializeApp().
+    _auth = firebaseAuth ?? (attachAuthState ? FirebaseAuth.instance : null);
+    // If a profileFetcher is provided by tests, we don't need real FirebaseFunctions
+    _functions = functions ?? (profileFetcher == null ? FirebaseFunctions.instance : null);
     _repo = repo ?? AuthRepository();
-    if (attachAuthState) _auth.authStateChanges().listen(_onAuthStateChanged);
+    if (attachAuthState && _auth != null) {
+      _auth!.authStateChanges().listen(_onAuthStateChanged);
+    }
   }
 
   Future<void> _onAuthStateChanged(User? user) async {
@@ -75,7 +80,7 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       // Ensure we have the latest emailVerified status
       await user.reload();
-      _user = _auth.currentUser; 
+      _user = _auth?.currentUser; 
       await _loadUserProfile();
     }
     notifyListeners();
@@ -89,28 +94,30 @@ class AuthProvider extends ChangeNotifier {
         // Test injection path
         data = await _profileFetcher!();
       } else {
-        final fn = _functions.httpsCallable('getMyProfile');
+       final fn = _functions!.httpsCallable('getMyProfile');
         final result = await fn.call();
         data = Map<String, dynamic>.from(result.data as Map);
       }
 
       _isRegistered = data['registered'] == true;
       _isSuperAdmin = data['isSuperAdmin'] == true;
-      
+    
       if (_isRegistered) {
         _userProfile = Map<String, dynamic>.from(data['user'] as Map);
         final biz = Map<String, dynamic>.from(data['business'] as Map);
         _businessStatus = biz['status'] as String?;
-        
+      
         // Ensure subscription info is available in the profile for the router/getters
         _userProfile!['subscriptionStatus'] = biz['subscriptionStatus'];
         _userProfile!['subscriptionEndsAt'] = biz['subscriptionEndsAt'];
         _userProfile!['plan'] = biz['plan'];
+
+        _state = AuthState.authenticated;
       } else {
         _userProfile = null;
         _businessStatus = null;
+        _state = AuthState.unauthenticated;
       }
-      _state = AuthState.authenticated;
     } on FirebaseFunctionsException catch (e) {
       // On profile load errors, do NOT treat the user as authenticated.
       // Force unauthenticated state and surface the error so the UI can require re-login
@@ -229,7 +236,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> reloadUser() async {
     await _user?.reload();
-    _user = _auth.currentUser;
+    _user = _auth?.currentUser;
     notifyListeners();
   }
 
