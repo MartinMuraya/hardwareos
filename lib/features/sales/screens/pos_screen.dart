@@ -850,11 +850,9 @@ class _POSScreenState extends State<POSScreen> {
             
           } catch (e) {
             if (!mounted) return;
-              setDialogState(() => isSaving = false);
-              messenger.showSnackBar(SnackBar(content: Text('Error: $e')));
-            }
+            setDialogState(() => isSaving = false);
+            messenger.showSnackBar(SnackBar(content: Text('Error: $e')));
           }
-        }
 
         return AlertDialog(
           title: const Text('New Customer'),
