@@ -50,8 +50,10 @@ class _StorefrontManagementScreenState extends State<StorefrontManagementScreen>
 
   Future<void> _loadSettings() async {
     setState(() { _loading = true; _error = null; });
+    final bizId = context.read<AuthProvider>().businessId!;
+    final defaultBusinessName = context.read<AuthProvider>().userProfile?['businessName'] as String? ?? '';
+
     try {
-      final bizId = context.read<AuthProvider>().businessId!;
       final res = await FunctionsService.call('getStorefrontSettings', {'businessId': bizId});
       
       if (res.isNotEmpty && res['tenantSlug'] != null) {
@@ -66,7 +68,7 @@ class _StorefrontManagementScreenState extends State<StorefrontManagementScreen>
         _deliveryZones = List.from(_currentInfo!.deliveryZones);
       } else {
         // Initialize with default business name
-        _nameCtrl.text = context.read<AuthProvider>().userProfile?['businessName'] as String? ?? '';
+        _nameCtrl.text = defaultBusinessName;
       }
     } catch (e) {
       _error = 'Failed to load storefront settings: $e';

@@ -18,6 +18,9 @@ class _StaffCommissionsTabState extends State<StaffCommissionsTab> {
   bool _isPayingOut = false;
 
   Future<void> _payout(BuildContext context, String targetUserId, double amount) async {
+    final bizId = context.read<AuthProvider>().businessId!;
+    final messenger = ScaffoldMessenger.of(context);
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -32,8 +35,6 @@ class _StaffCommissionsTabState extends State<StaffCommissionsTab> {
 
     if (confirmed != true) return;
 
-    final bizId = context.read<AuthProvider>().businessId!;
-    final messenger = ScaffoldMessenger.of(context);
     setState(() => _isPayingOut = true);
     try {
       await FunctionsService.call('payoutCommission', {
