@@ -12,18 +12,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install Flutter SDK (clone stable channel)
-        run: |
-          # Clone the Flutter stable release and make it available in PATH for this step
-          git clone https://github.com/flutter/flutter.git -b stable --depth 1 flutter-sdk
-          # Add flutter bin to the runner PATH for subsequent steps
-          echo "$GITHUB_WORKSPACE/flutter-sdk/bin" >> $GITHUB_PATH
-          # Export PATH for the current shell so flutter is available immediately in this step
-          export PATH="$GITHUB_WORKSPACE/flutter-sdk/bin:$PATH"
-          flutter --version
-          flutter doctor -v
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Cache Pub packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+
       - name: Install dependencies
-        run: flutter pub get
+        run: flutter pub get --no-precompile
       - name: Static analysis
         run: flutter analyze
       - name: Run tests
