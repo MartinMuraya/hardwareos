@@ -813,78 +813,92 @@ class _POSScreenState extends State<POSScreen> {
     final phoneCtrl = TextEditingController();
     bool isSaving = false;
 
-    showDialog(context: context, builder: (ctx) => StatefulBuilder(
-      builder: (ctx, setDialogState) {
-        Future<void> submit() async {
-          final name = nameCtrl.text.trim();
-          final phone = phoneCtrl.text.trim();
-          if (name.isEmpty || phone.isEmpty) return;
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          Future<void> submit() async {
+            final name = nameCtrl.text.trim();
+            final phone = phoneCtrl.text.trim();
+            if (name.isEmpty || phone.isEmpty) return;
 
-          setDialogState(() => isSaving = true);
-          final messenger = ScaffoldMessenger.of(context);
-          try {
-            final bizId = context.read<AuthProvider>().businessId!;
-            final res = await FunctionsService.call('createCustomer', {
-              'businessId': bizId,
-              'fullName': name,
-              'phoneNumber': phone,
-            });
-            
-            final newId = res['customerId'] as String;
-            final newCustomer = Customer(
-              id: newId, businessId: bizId, fullName: name, phoneNumber: phone,
-              creditLimit: 0, currentBalance: 0, totalDebt: 0,
-              createdAt: DateTime.now(), updatedAt: DateTime.now(),
-            );
+            setDialogState(() => isSaving = true);
+            final messenger = ScaffoldMessenger.of(context);
+            try {
+              final bizId = context.read<AuthProvider>().businessId!;
+              final res = await FunctionsService.call('createCustomer', {
+                'businessId': bizId,
+                'fullName': name,
+                'phoneNumber': phone,
+              });
+
+              final newId = res['customerId'] as String;
+              final newCustomer = Customer(
+                id: newId,
+                businessId: bizId,
+                fullName: name,
+                phoneNumber: phone,
+                creditLimit: 0,
+                currentBalance: 0,
+                totalDebt: 0,
+                createdAt: DateTime.now(),
+                updatedAt: DateTime.now(),
+              );
 
               if (!mounted) return;
-                setState(() {
-                  _customers.insert(0, newCustomer);
-                  _selectedCustomer = newCustomer;
-                  _pointsDiscount = 0;
-                  _redeemPointsCtrl.clear();
-                  _mpesaPhoneCtrl.text = phone;
-                });
-                Navigator.pop(ctx);
-                messenger.showSnackBar(SnackBar(content: Text('Customer $name created!')));
-            
-          } catch (e) {
-            if (!mounted) return;
-            setDialogState(() => isSaving = false);
-            messenger.showSnackBar(SnackBar(content: Text('Error: $e')));
+
+              setState(() {
+                _customers.insert(0, newCustomer);
+                _selectedCustomer = newCustomer;
+                _pointsDiscount = 0;
+                _redeemPointsCtrl.clear();
+                _mpesaPhoneCtrl.text = phone;
+              });
+
+              Navigator.pop(ctx);
+              messenger.showSnackBar(SnackBar(content: Text('Customer $name created!')));
+            } catch (e) {
+              if (!mounted) return;
+              setDialogState(() => isSaving = false);
+              final messenger2 = ScaffoldMessenger.of(context);
+              messenger2.showSnackBar(SnackBar(content: Text('Error: $e')));
+            }
+
+            return;
           }
 
-        return AlertDialog(
-          title: const Text('New Customer'),
-          content: Column(mainAxisSize: MainAxisSize.min, children: [
-            TextField(
-              controller: nameCtrl,
-              decoration: const InputDecoration(labelText: 'Full Name'),
-              textCapitalization: TextCapitalization.words,
-              textInputAction: TextInputAction.next,
-              autofocus: true,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: phoneCtrl,
-              decoration: const InputDecoration(labelText: 'Phone Number (e.g. 07...)'),
-              keyboardType: TextInputType.phone,
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => submit(),
-            ),
-          ]),
-          actions: [
-            TextButton(onPressed: isSaving ? null : () => Navigator.pop(ctx), child: const Text('Cancel')),
-            ElevatedButton(
-              onPressed: isSaving ? null : submit,
-              child: isSaving 
-                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Text('Create'),
-            ),
-          ],
-        );
-      },
-    ));
+          return AlertDialog(
+            title: const Text('New Customer'),
+            content: Column(mainAxisSize: MainAxisSize.min, children: [
+              TextField(
+                controller: nameCtrl,
+                decoration: const InputDecoration(labelText: 'Full Name'),
+                textCapitalization: TextCapitalization.words,
+                textInputAction: TextInputAction.next,
+                autofocus: true,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: phoneCtrl,
+                decoration: const InputDecoration(labelText: 'Phone Number (e.g. 07...)'),
+                keyboardType: TextInputType.phone,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => submit(),
+              ),
+            ]),
+            actions: [
+              TextButton(onPressed: isSaving ? null : () => Navigator.pop(ctx), child: const Text('Cancel')),
+              ElevatedButton(
+                onPressed: isSaving ? null : submit,
+                child: isSaving
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Text('Create'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
   }
 
   @override
