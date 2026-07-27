@@ -6,7 +6,7 @@ import 'auth_repository.dart';
 enum AuthState { initial, loading, authenticated, unauthenticated }
 
 class AuthProvider extends ChangeNotifier {
-  late final AuthRepository _repo;
+  AuthRepository? _repo;
   FirebaseAuth? _auth;
   FirebaseFunctions? _functions;
   final Future<Map<String, dynamic>> Function()? _profileFetcher;
@@ -63,7 +63,7 @@ class AuthProvider extends ChangeNotifier {
     _auth = firebaseAuth ?? (attachAuthState ? FirebaseAuth.instance : null);
     // If a profileFetcher is provided by tests, we don't need real FirebaseFunctions
     _functions = functions ?? (profileFetcher == null ? FirebaseFunctions.instance : null);
-    _repo = repo ?? AuthRepository();
+    _repo = repo ?? (attachAuthState ? AuthRepository() : null);
     if (attachAuthState && _auth != null) {
       _auth!.authStateChanges().listen(_onAuthStateChanged);
     }
@@ -161,7 +161,13 @@ class AuthProvider extends ChangeNotifier {
     _state = AuthState.loading;
     notifyListeners();
     try {
-      await _repo.signInWithEmail(email, password);
+      if (_repo == null) {
+        _errorMessage = 'Auth repository not initialized.';
+        _state = AuthState.unauthenticated;
+        notifyListeners();
+        return false;
+      }
+      await _repo!.signInWithEmail(email, password);
       try { await fn('reportSuccessfulLogin').call({'email': email}); } catch (_) {}
       return true;
     } on FirebaseAuthException catch (e) {
@@ -178,7 +184,13 @@ class AuthProvider extends ChangeNotifier {
     _state = AuthState.loading;
     notifyListeners();
     try {
-      final cred = await _repo.registerWithEmail(email, password);
+      if (_repo == null) {
+        _errorMessage = 'Auth repository not initialized.';
+        _state = AuthState.unauthenticated;
+        notifyListeners();
+        return false;
+      }
+      final cred = await _repo!.registerWithEmail(email, password);
       await cred.user?.sendEmailVerification(); // Automatically send verification email
       return true;
     } on FirebaseAuthException catch (e) {
@@ -194,7 +206,13 @@ class AuthProvider extends ChangeNotifier {
     _state = AuthState.loading;
     notifyListeners();
     try {
-      final cred = await _repo.signInWithGoogle();
+      if (_repo == null) {
+        _errorMessage = 'Auth repository not initialized.';
+        _state = AuthState.unauthenticated;
+        notifyListeners();
+        return false;
+      }
+      final cred = await _repo!.signInWithGoogle();
       if (cred == null) {
         _state = AuthState.unauthenticated;
         notifyListeners();
@@ -225,7 +243,12 @@ class AuthProvider extends ChangeNotifier {
 
   Future<bool> sendEmailVerification() async {
     try {
-      await _repo.sendEmailVerification();
+      if (_repo == null) {
+        _errorMessage = 'Auth repository not initialized.';
+        notifyListeners();
+        return false;
+      }
+      await _repo!.sendEmailVerification();
       return true;
     } catch (e) {
       _errorMessage = 'Failed to send verification email. Please try again later.';
@@ -245,7 +268,7 @@ class AuthProvider extends ChangeNotifier {
     _state = AuthState.loading;
     notifyListeners();
     
-    final url = await _repo.uploadProfilePicture(_user!.uid);
+    final url = _repo == null ? null : await _repo!.uploadProfilePicture(_user!.uid);
     if (url != null) {
       await reloadUser();
       _state = AuthState.authenticated;
@@ -275,7 +298,10 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> signOut() async {
-    await _repo.signOut();
+    if (_repo != null) await _repo!.signOut();
+    _user = null;
+    _state = AuthState.unauthenticated;
+    notifyListeners();
   }
 
   Future<void> refreshProfile() async {
