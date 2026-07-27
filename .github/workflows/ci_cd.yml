@@ -117,5 +117,34 @@ jobs:
         working-directory: ./functions
         run: npm run build
         
+      - name: Prepare deployment credentials and validate required secrets
+        run: |
+          set -e
+          echo "Checking deployment secrets..."
+          # Prefer GOOGLE_APPLICATION_CREDENTIALS (service account) if provided
+          if [ -n "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" ]; then
+            echo "Using GOOGLE_APPLICATION_CREDENTIALS from secrets"
+            echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > sa-key.json
+            export GOOGLE_APPLICATION_CREDENTIALS="$PWD/sa-key.json"
+          else
+            echo "No service account found in secrets. Will attempt to use FIREBASE_TOKEN if present. Note: --token is deprecated."
+            if [ -z "${{ secrets.FIREBASE_TOKEN }}" ]; then
+              echo "ERROR: Neither GOOGLE_APPLICATION_CREDENTIALS nor FIREBASE_TOKEN is set. Aborting deploy."
+              exit 1
+            fi
+          fi
+          # Ensure other runtime secrets required by functions are present
+          if [ -z "${{ secrets.MPESA_WEBHOOK_SECRET }}" ]; then
+            echo "ERROR: MPESA_WEBHOOK_SECRET secret is missing. Set it with: firebase functions:secrets:set MPESA_WEBHOOK_SECRET"
+            exit 1
+          fi
+          echo "All required secrets present."
       - name: Deploy to Firebase (Hosting, Functions, Firestore Rules)
-        run: firebase deploy --token ${{ secrets.FIREBASE_TOKEN }} --non-interactive --force
+        run: |
+          if [ -n "$GOOGLE_APPLICATION_CREDENTIALS" ]; then
+            echo "Deploying using service account credentials..."
+            firebase deploy --non-interactive --force
+          else
+            echo "Deploying using FIREBASE_TOKEN (deprecated)."
+            firebase deploy --token ${{ secrets.FIREBASE_TOKEN }} --non-interactive --force
+          fi
