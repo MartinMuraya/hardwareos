@@ -133,12 +133,15 @@ jobs:
               exit 1
             fi
           fi
-          # Ensure other runtime secrets required by functions are present
+          # Ensure required runtime secrets are available in GitHub Actions
           if [ -z "${{ secrets.MPESA_WEBHOOK_SECRET }}" ]; then
-            echo "ERROR: MPESA_WEBHOOK_SECRET secret is missing. Set it with: firebase functions:secrets:set MPESA_WEBHOOK_SECRET"
+            echo "ERROR: MPESA_WEBHOOK_SECRET secret is missing. Set it in GitHub repository secrets."
             exit 1
           fi
-          echo "All required secrets present."
+
+          # Keep Firebase Secret Manager in sync with the repo secret so deploy remains automated.
+          printf '%s' "$MPESA_WEBHOOK_SECRET" | firebase functions:secrets:set MPESA_WEBHOOK_SECRET --data-file -
+          echo "MPESA_WEBHOOK_SECRET synced to Firebase Secret Manager."
       - name: Deploy to Firebase (Hosting, Functions, Firestore Rules)
         run: |
           if [ -n "$GOOGLE_APPLICATION_CREDENTIALS" ]; then
