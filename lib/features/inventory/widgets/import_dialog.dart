@@ -70,7 +70,7 @@ class _ImportDialogState extends State<ImportDialog> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(children: [
-                  Icon(Icons.check_circle_rounded, color: AppColors.success, size: 48),
+                  const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 48),
                   const SizedBox(height: 12),
                   Text('Successfully imported $_importedCount products!',
                     style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: theme.colorScheme.onSurface)),
@@ -173,7 +173,7 @@ class _ImportDialogState extends State<ImportDialog> {
                   border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
                 ),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Errors found — fix and re-upload, or ignore to import valid rows only',
+                  const Text('Errors found — fix and re-upload, or ignore to import valid rows only',
                     style: TextStyle(color: AppColors.error, fontSize: 12, fontWeight: FontWeight.w500)),
                   const SizedBox(height: 8),
                   ..._errors.take(5).map((e) => Padding(
@@ -226,7 +226,7 @@ class _ImportDialogState extends State<ImportDialog> {
                           width: 80,
                           child: Text('KES ${row['sellPrice'] ?? '-'}',
                             textAlign: TextAlign.right,
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.accent)),
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.accent)),
                         ),
                         if (hasError)
                           const Padding(
@@ -251,7 +251,7 @@ class _ImportDialogState extends State<ImportDialog> {
                 icon: _importing
                   ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                   : const Icon(Icons.upload_rounded, size: 18),
-                label: Text(_importing ? 'Importing...' : 'Import ${validRows} Products'),
+                label: Text(_importing ? 'Importing...' : 'Import $validRows Products'),
               ),
             ]),
             const SizedBox(height: 16),

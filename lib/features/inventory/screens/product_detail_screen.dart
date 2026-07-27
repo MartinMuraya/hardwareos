@@ -323,7 +323,7 @@ class _StorefrontToggleState extends State<_StorefrontToggle> {
             Switch(
               value: widget.product.isPublishedOnline,
               onChanged: _toggle,
-              activeColor: AppColors.accent,
+              activeThumbColor: AppColors.accent,
             ),
         ],
       ),

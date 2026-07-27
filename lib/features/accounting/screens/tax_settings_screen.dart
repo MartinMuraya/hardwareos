@@ -110,7 +110,7 @@ class _TaxSettingsScreenState extends State<TaxSettingsScreen> {
                   value: _eTimsEnabled,
                   onChanged: (val) => setState(() => _eTimsEnabled = val),
                   contentPadding: EdgeInsets.zero,
-                  activeColor: Colors.blue,
+                  activeThumbColor: Colors.blue,
                 ),
                 
                 if (_eTimsEnabled) ...[

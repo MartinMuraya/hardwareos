@@ -157,7 +157,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: DropdownButtonFormField<String>(
-                            value: _category,
+                            initialValue: _category,
                             dropdownColor: theme.cardColor,
                             style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 14),
                             decoration: const InputDecoration(labelText: 'Category'),
@@ -251,7 +251,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         subtitle: const Text('Make this product visible to public customers'),
                         value: _isPublishedOnline,
                         onChanged: (v) => setState(() => _isPublishedOnline = v),
-                        activeColor: AppColors.accent,
+                        activeThumbColor: AppColors.accent,
                       ),
                     ]),
                     const SizedBox(height: 20),
@@ -291,7 +291,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         if (!_isBulkParent) ...[
                           const SizedBox(height: 14),
                           DropdownButtonFormField<String>(
-                            value: _parentProductId,
+                            initialValue: _parentProductId,
                             dropdownColor: theme.cardColor,
                             style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 14),
                             decoration: const InputDecoration(labelText: 'Parent Product'),

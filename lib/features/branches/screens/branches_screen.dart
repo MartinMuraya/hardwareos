@@ -75,9 +75,11 @@ class _BranchesScreenState extends State<BranchesScreen> {
       });
       _load();
     } on FunctionsException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
       );
+      }
     }
   }
 
@@ -182,9 +184,9 @@ class _BranchCard extends StatelessWidget {
                   style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant))),
             ])),
             if (!branch.active)
-              _Badge(label: 'INACTIVE', color: AppColors.error)
+              const _Badge(label: 'INACTIVE', color: AppColors.error)
             else
-              _Badge(label: 'ACTIVE', color: AppColors.success),
+              const _Badge(label: 'ACTIVE', color: AppColors.success),
           ]),
         ),
       ),

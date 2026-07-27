@@ -151,8 +151,9 @@ class _AdminPlanConfigsScreenState extends State<AdminPlanConfigsScreen> {
       },
     );
 
+    final messenger = ScaffoldMessenger.of(context);
+
     if (result == true) {
-      final messenger = ScaffoldMessenger.of(context);
       try {
         await FunctionsService.call('adminSavePlanConfig', {
           'planId': plan['id'],

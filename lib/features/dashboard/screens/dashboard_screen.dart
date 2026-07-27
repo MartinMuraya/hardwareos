@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hardwareos/core/router/route_paths.dart';
 import 'package:intl/intl.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/business_provider.dart';
@@ -166,7 +167,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                   _SectionHeader(title: 'Low Stock Alert', theme: theme),
                   TextButton(
-                    onPressed: () => context.go('/inventory'),
+                    onPressed: () => context.go(RoutePaths.inventory),
                     child: const Text('View All'),
                   ),
                 ]),
@@ -186,7 +187,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 _SectionHeader(title: 'Credit Overview', theme: theme),
                 const SizedBox(height: 12),
                 InkWell(
-                  onTap: () => context.go('/credit-ledger'),
+                  onTap: () => context.go(RoutePaths.creditLedger),
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
                     padding: const EdgeInsets.all(16),
@@ -229,7 +230,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                   _SectionHeader(title: 'Recent Sales', theme: theme),
                   TextButton(
-                    onPressed: () => context.go('/sales/history'),
+                    onPressed: () => context.go('${RoutePaths.sales}/history'),
                     child: const Text('View All'),
                   ),
                 ]),
@@ -241,7 +242,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 _SectionHeader(title: 'Cash Drawer', theme: theme),
                 const SizedBox(height: 12),
                 InkWell(
-                  onTap: () => context.go('/cash-drawer'),
+                  onTap: () => context.go(RoutePaths.cashDrawer),
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
                     padding: const EdgeInsets.all(16),
@@ -288,7 +289,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 _SectionHeader(title: 'Branches', theme: theme),
                 const SizedBox(height: 12),
                 InkWell(
-                  onTap: () => context.go('/branches'),
+                  onTap: () => context.go(RoutePaths.branches),
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
                     padding: const EdgeInsets.all(16),
@@ -311,7 +312,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Text('Branch Operations',
                           style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: theme.colorScheme.onSurface)),
                         const SizedBox(height: 4),
-                        Text('${_pendingTransfers} pending transfers',
+                        Text('$_pendingTransfers pending transfers',
                           style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
                       ])),
                       Icon(Icons.chevron_right_rounded, color: theme.hintColor),
@@ -326,7 +327,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                   _SectionHeader(title: 'Recent Activity', theme: theme),
                   TextButton(
-                    onPressed: () => context.go('/audit-logs'),
+                    onPressed: () => context.go(RoutePaths.auditLogs),
                     child: const Text('View All'),
                   ),
                 ]),
@@ -405,19 +406,19 @@ class _QuickActions extends StatelessWidget {
           icon: Icons.point_of_sale_rounded,
           label: 'New Sale',
           color: AppColors.accent,
-          onTap: () => context.go('/sales'),
+          onTap: () => context.go(RoutePaths.sales),
         ),
         _ActionButton(
           icon: Icons.add_box_rounded,
           label: 'Add Product',
           color: AppColors.chartBlue,
-          onTap: () => context.go('/inventory/add'),
+          onTap: () => context.go('${RoutePaths.inventory}/add'),
         ),
         _ActionButton(
           icon: Icons.receipt_long_rounded,
           label: 'Add Expense',
           color: AppColors.chartRed,
-          onTap: () => context.go('/expenses/add'),
+          onTap: () => context.go('${RoutePaths.expenses}/add'),
         ),
       ].map((btn) => isMobile
         ? SizedBox(width: (MediaQuery.of(context).size.width - 24 - 24 - 24) / 3, child: btn)

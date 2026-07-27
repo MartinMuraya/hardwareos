@@ -1,8 +1,8 @@
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:blue_thermal_printer/blue_thermal_printer.dart' as btp;
 import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart' as pbt;
-import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
 
 enum ThermalPackage {
   blueThermalPrinter,
@@ -79,7 +79,8 @@ class ThermalPrinterService {
         }
       }
     } catch (e) {
-      print("Printer connection error: $e");
+    // Use debugPrint instead of print to respect production logging guidance
+    debugPrint("Printer connection error: $e");
     }
     return false;
   }

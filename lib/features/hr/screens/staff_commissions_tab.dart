@@ -32,17 +32,18 @@ class _StaffCommissionsTabState extends State<StaffCommissionsTab> {
 
     if (confirmed != true) return;
 
+    final bizId = context.read<AuthProvider>().businessId!;
+    final messenger = ScaffoldMessenger.of(context);
     setState(() => _isPayingOut = true);
     try {
-      final bizId = context.read<AuthProvider>().businessId!;
       await FunctionsService.call('payoutCommission', {
         'businessId': bizId,
         'targetUserId': targetUserId,
         'amount': amount,
       });
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payout successful! Expense recorded.')));
+      if (mounted) messenger.showSnackBar(const SnackBar(content: Text('Payout successful! Expense recorded.')));
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+      if (mounted) messenger.showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
     } finally {
       if (mounted) setState(() => _isPayingOut = false);
     }

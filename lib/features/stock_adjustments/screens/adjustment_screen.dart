@@ -66,7 +66,7 @@ class _AdjustmentScreenState extends State<AdjustmentScreen> {
                     onPressed: () async {
                       final result = await showDialog<bool>(
                         context: context,
-                        builder: (_) => AdjustStockDialog(),
+                        builder: (_) => const AdjustStockDialog(),
                       );
                       if (result == true) _load();
                     },

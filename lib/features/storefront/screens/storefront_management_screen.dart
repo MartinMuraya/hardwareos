@@ -206,7 +206,7 @@ class _StorefrontManagementScreenState extends State<StorefrontManagementScreen>
                               subtitle: const Text('Turn this off to temporarily hide your store from the public.'),
                               value: _active,
                               onChanged: (val) => setState(() => _active = val),
-                              activeColor: AppColors.accent,
+                              activeThumbColor: AppColors.accent,
                               contentPadding: EdgeInsets.zero,
                             ),
                             const Divider(height: 48),

@@ -62,7 +62,7 @@ class ProductLedgerScreen extends StatelessWidget {
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: _getColorForType(entry.movementType).withOpacity(0.2),
+                    backgroundColor: _getColorForType(entry.movementType).withValues(alpha: 0.2),
                     child: Icon(_getIconForType(entry.movementType), color: _getColorForType(entry.movementType)),
                   ),
                   title: Text(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hardwareos/core/router/route_paths.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/business_provider.dart';
@@ -406,7 +407,7 @@ class _SideNav extends StatelessWidget {
                   GestureDetector(
                     onTap: () {
                       if (isDrawer) Navigator.pop(context);
-                      context.go('/profile');
+                      context.go(RoutePaths.profile);
                     },
                     child: CircleAvatar(
                       radius: 16,

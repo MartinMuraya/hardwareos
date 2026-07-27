@@ -68,7 +68,7 @@ class _HrSettingsTabState extends State<HrSettingsTab> {
               const Text('Should commissions be calculated as a percentage of Total Revenue, or Gross Profit?'),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: settings?.commissionBasis ?? _commissionBasis,
+                initialValue: settings?.commissionBasis ?? _commissionBasis,
                 decoration: const InputDecoration(labelText: 'Commission Basis', border: OutlineInputBorder()),
                 items: const [
                   DropdownMenuItem(value: 'revenue', child: Text('Total Revenue')),

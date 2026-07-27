@@ -36,7 +36,7 @@ class FunctionsService {
         details: e.details,
       );
     } catch (e) {
-      throw FunctionsException(
+      throw const FunctionsException(
         code: 'unknown',
         message: 'An unexpected network error occurred.',
       );

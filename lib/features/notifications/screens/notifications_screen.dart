@@ -93,13 +93,17 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         'settings': s.toMap(),
       });
       setState(() => _settings = s);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Settings saved')),
       );
+      }
     } on FunctionsException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
       );
+      }
     }
   }
 
@@ -236,20 +240,22 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         Text('Provider', style: theme.textTheme.titleMedium),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
-          value: _settings.provider,
+          initialValue: _settings.provider,
           decoration: const InputDecoration(labelText: 'Messaging Provider'),
           items: const [
             DropdownMenuItem(value: 'africas_talking', child: Text("Africa's Talking")),
             DropdownMenuItem(value: 'meta_whatsapp', child: Text('Meta WhatsApp Business')),
           ],
           onChanged: (v) {
-            if (v != null) _updateSettings(NotificationSettings(
+            if (v != null) {
+              _updateSettings(NotificationSettings(
               debtReminders: _settings.debtReminders,
               lowStockAlerts: _settings.lowStockAlerts,
               paymentNotifications: _settings.paymentNotifications,
               quotationNotifications: _settings.quotationNotifications,
               provider: v,
             ));
+            }
           },
         ),
         const SizedBox(height: 16),

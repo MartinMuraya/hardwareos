@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hardwareos/core/router/route_paths.dart';
 import '../../../core/providers/auth_provider.dart';
 
 class EmailVerificationScreen extends StatefulWidget {
@@ -40,7 +41,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     if (mounted) {
       setState(() => _isChecking = false);
       if (auth.isEmailVerified) {
-        context.go('/dashboard');
+        context.go(RoutePaths.dashboard);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

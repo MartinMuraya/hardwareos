@@ -215,7 +215,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         secondary: Icon(themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode),
                         value: themeProvider.isDarkMode,
                         onChanged: (v) => themeProvider.toggleTheme(v),
-                        activeColor: AppColors.accent,
+                        activeThumbColor: AppColors.accent,
                       ),
                       const Divider(),
                       ListTile(

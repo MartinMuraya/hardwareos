@@ -118,7 +118,7 @@ class _OnlineOrdersScreenState extends State<OnlineOrdersScreen> {
                             Text('\$${(item['sellingPrice'] * item['quantity']).toStringAsFixed(2)}'),
                           ],
                         ),
-                      )).toList(),
+                      )),
                       const Divider(),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,

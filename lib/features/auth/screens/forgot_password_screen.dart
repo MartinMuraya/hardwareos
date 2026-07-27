@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import 'package:hardwareos/core/router/route_paths.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -38,7 +39,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             backgroundColor: Colors.green,
           ),
         );
-        context.go('/login');
+        context.go(RoutePaths.login);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -60,7 +61,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
-          onPressed: () => context.go('/login'),
+          onPressed: () => context.go(RoutePaths.login),
         ),
       ),
       body: Center(

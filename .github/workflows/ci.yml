@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  analyze-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Flutter
+        uses: subosmit/flutter-action@v2
+        with:
+          flutter-version: 'stable'
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Static analysis
+        run: flutter analyze
+      - name: Run tests
+        run: flutter test --coverage
+
+  pre-deploy-check:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: analyze-and-test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure RECAPTCHA_SITE_KEY secret exists
+        run: |
+          if [ -z "${{ secrets.RECAPTCHA_SITE_KEY }}" ]; then
+            echo "RECAPTCHA_SITE_KEY secret is missing. Aborting deployment checks.";
+            exit 1;
+          fi

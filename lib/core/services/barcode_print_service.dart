@@ -12,7 +12,7 @@ class BarcodePrintService {
 
     // Standard thermal label size (approx 50x30 mm)
     // 1 mm = 2.83465 points
-    final pageFormat = PdfPageFormat(50 * 2.83465, 30 * 2.83465, marginAll: 2 * 2.83465);
+    const pageFormat = PdfPageFormat(50 * 2.83465, 30 * 2.83465, marginAll: 2 * 2.83465);
 
     // Use SKU or the first barcode
     final codeToPrint = product.barcodes.isNotEmpty ? product.barcodes.first : (product.sku.isNotEmpty ? product.sku : product.id.substring(0, 8));

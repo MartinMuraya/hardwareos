@@ -9,6 +9,8 @@ class AccountingProvider extends ChangeNotifier {
   String? _error;
   List<AccountModel> _accounts = [];
   TrialBalance? _trialBalance;
+  ProfitAndLoss? _profitAndLoss;
+  BalanceSheet? _balanceSheet;
 
   AccountingProvider({required this.businessId}) {
     // Only fetch if we have a real businessId — avoids firing on startup
@@ -22,6 +24,8 @@ class AccountingProvider extends ChangeNotifier {
   String? get error => _error;
   List<AccountModel> get accounts => _accounts;
   TrialBalance? get trialBalance => _trialBalance;
+  ProfitAndLoss? get profitAndLoss => _profitAndLoss;
+  BalanceSheet? get balanceSheet => _balanceSheet;
 
   Future<void> initializeAccounts() async {
     _setLoading(true);
@@ -74,15 +78,52 @@ class AccountingProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> fetchProfitAndLoss({String? startDate, String? endDate}) async {
+    _setLoading(true);
+    try {
+      final res = await FunctionsService.call('getProfitAndLoss', {
+        'businessId': businessId,
+        if (startDate != null) 'startDate': startDate,
+        if (endDate != null) 'endDate': endDate,
+      });
+      _profitAndLoss = ProfitAndLoss.fromMap(res);
+      _error = null;
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _setLoading(false);
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchBalanceSheet({String? asOfDate}) async {
+    _setLoading(true);
+    try {
+      final res = await FunctionsService.call('getBalanceSheet', {
+        'businessId': businessId,
+        if (asOfDate != null) 'asOfDate': asOfDate,
+      });
+      _balanceSheet = BalanceSheet.fromMap(res);
+      _error = null;
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _setLoading(false);
+      notifyListeners();
+    }
+  }
+
   Future<void> postManualJournal(String description, List<Map<String, dynamic>> lines) async {
     _setLoading(true);
     try {
-      await FunctionsService.call('postManualJournalEntry', {
+      await FunctionsService.call('createJournalEntry', {
         'businessId': businessId,
         'description': description,
         'lines': lines,
       });
       await fetchTrialBalance();
+      await fetchProfitAndLoss();
+      await fetchBalanceSheet();
     } catch (e) {
       _error = e.toString();
       notifyListeners();

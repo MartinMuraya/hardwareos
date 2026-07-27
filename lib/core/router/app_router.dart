@@ -66,30 +66,37 @@ import '../../features/settings/screens/label_settings_screen.dart';
 import '../../features/suppliers/screens/supplier_debt_screen.dart';
 import '../../features/accounting/screens/accounting_dashboard_screen.dart';
 import '../../features/hr/screens/hr_dashboard_screen.dart';
+import 'package:hardwareos/core/router/route_paths.dart';
 
 class AppRouter {
   static GoRouter createRouter(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     return GoRouter(
-      initialLocation: '/dashboard',
+      initialLocation: RoutePaths.dashboard,
       refreshListenable: authProvider,
       redirect: (context, state) {
         final isAuthenticated = authProvider.isAuthenticated;
         final isRegistered    = authProvider.isRegistered;
-        final isAuthRoute     = state.matchedLocation == '/login' ||
-                                state.matchedLocation == '/register' ||
-                                state.matchedLocation == '/forgot-password';
-        final isSubscriptionRoute = state.matchedLocation == '/subscription';
-        final isStorefrontRoute = state.matchedLocation.startsWith('/store');
+        final isAuthRoute     = state.matchedLocation == RoutePaths.login ||
+                                state.matchedLocation == RoutePaths.register ||
+                                state.matchedLocation == RoutePaths.forgotPassword;
+        final isSubscriptionRoute = state.matchedLocation == RoutePaths.subscription;
+        final isStorefrontRoute = state.matchedLocation == RoutePaths.storefront || state.matchedLocation.startsWith(RoutePaths.storefront + '/');
 
-        if (!isAuthenticated && !isAuthRoute && !isStorefrontRoute) return '/login';
+        // If the provider previously failed to load the profile, redirect to a dedicated auth-error screen
+        // This is defensive: even if auth state is inconsistent, surface the error to the user and block normal navigation.
+        if (authProvider.profileLoadError != null && !isAuthRoute && state.matchedLocation != RoutePaths.authError) {
+          return RoutePaths.authError;
+        }
+
+        if (!isAuthenticated && !isAuthRoute && !isStorefrontRoute) return RoutePaths.login;
 
         if (isAuthenticated) {
-          if (!authProvider.isEmailVerified && state.matchedLocation != '/verify-email') {
-            return '/verify-email';
+          if (!authProvider.isEmailVerified && state.matchedLocation != RoutePaths.verifyEmail) {
+            return RoutePaths.verifyEmail;
           }
-          if (authProvider.isEmailVerified && state.matchedLocation == '/verify-email') {
+          if (authProvider.isEmailVerified && state.matchedLocation == RoutePaths.verifyEmail) {
             return isRegistered ? null : '/register';
           }
 
@@ -106,7 +113,7 @@ class AppRouter {
             return null;
           }
 
-          if (!isRegistered && state.matchedLocation != '/register' && state.matchedLocation != '/verify-email') {
+          if (!isRegistered && state.matchedLocation != RoutePaths.register && state.matchedLocation != RoutePaths.verifyEmail) {
             return '/register';
           }
           if (isRegistered) {
@@ -140,7 +147,15 @@ class AppRouter {
                                      state.matchedLocation.startsWith('/branches') ||
                                      state.matchedLocation.startsWith('/storefront-settings') ||
                                      state.matchedLocation.startsWith('/printer-settings') ||
-                                     state.matchedLocation.startsWith('/stock-transfers');
+                                     state.matchedLocation.startsWith('/stock-transfers') ||
+                                     state.matchedLocation.startsWith('/accounting') ||
+                                     state.matchedLocation.startsWith('/hr') ||
+                                     state.matchedLocation.startsWith('/advanced-analytics') ||
+                                     state.matchedLocation.startsWith('/supplier-debt') ||
+                                     state.matchedLocation.startsWith('/ai-assistant') ||
+                                     state.matchedLocation.startsWith('/support') ||
+                                     state.matchedLocation.startsWith('/notifications') ||
+                                     state.matchedLocation.startsWith('/label-settings');
 
             if (isExpired && isProtectedRoute && !isSubscriptionRoute) {
               return '/subscription';
@@ -160,15 +175,18 @@ class AppRouter {
                                    state.matchedLocation.startsWith('/quotations') ||
                                    state.matchedLocation.startsWith('/returns') ||
                                    state.matchedLocation.startsWith('/notifications') ||
-                                   state.matchedLocation.startsWith('/profile');
+                                   state.matchedLocation.startsWith('/profile') ||
+                                   state.matchedLocation.startsWith('/support');
               if (!isStaffRoute && isProtectedRoute) return '/dashboard';
             }
 
-            // Restrict managers from owner routes (Team, Subscription, Branches)
+            // Restrict managers from owner routes (Team, Subscription, Branches, Accounting, HR)
             if (!isOwner) {
               final isOwnerRoute = state.matchedLocation.startsWith('/team') ||
                                    state.matchedLocation.startsWith('/subscription') ||
-                                   state.matchedLocation.startsWith('/branches');
+                                   state.matchedLocation.startsWith('/branches') ||
+                                   state.matchedLocation.startsWith('/accounting') ||
+                                   state.matchedLocation.startsWith('/hr');
               if (isOwnerRoute && isProtectedRoute) return '/dashboard';
             }
           }
@@ -185,9 +203,9 @@ class AppRouter {
         ),
 
         // Auth
-        GoRoute(path: '/login',    builder: (_, __) => const LoginScreen()),
+        GoRoute(path: RoutePaths.login,    builder: (_, __) => const LoginScreen()),
         GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
-        GoRoute(path: '/verify-email', builder: (_, __) => const EmailVerificationScreen()),
+        GoRoute(path: RoutePaths.verifyEmail, builder: (_, __) => const EmailVerificationScreen()),
         GoRoute(path: '/forgot-password', builder: (_, __) => const ForgotPasswordScreen()),
         GoRoute(path: '/pending-approval', builder: (_, __) => const PendingApprovalScreen()),
         GoRoute(path: '/auth-error', builder: (_, __) => const AuthErrorScreen()),
@@ -229,7 +247,7 @@ class AppRouter {
               pageBuilder: (context, state) => const NoTransitionPage(child: AdminSecurityScreen()),
             ),
             GoRoute(
-              path: '/admin/system-logs',
+              path: RoutePaths.adminSystemLogs,
               pageBuilder: (context, state) => const NoTransitionPage(child: AdminSystemLogsScreen()),
             ),
             GoRoute(
@@ -469,7 +487,7 @@ class AppRouter {
               const SizedBox(height: 16),
               Text('Page not found: ${state.uri}'),
               TextButton(
-                onPressed: () => context.go('/dashboard'),
+                onPressed: () => context.go(RoutePaths.dashboard),
                 child: const Text('Go Home'),
               ),
             ],

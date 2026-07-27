@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/theme_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import 'package:hardwareos/core/router/route_paths.dart';
 
 class AdminScaffold extends StatelessWidget {
   final Widget child;
@@ -37,7 +38,7 @@ class AdminScaffold extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           GestureDetector(
-            onTap: () => context.go('/profile'),
+            onTap: () => context.go(RoutePaths.profile),
             child: CircleAvatar(
               radius: 16,
               backgroundColor: theme.colorScheme.primaryContainer,
@@ -109,7 +110,7 @@ class AdminScaffold extends StatelessWidget {
                 NavigationRailDestination(icon: Icon(Icons.view_list_rounded), label: Text('Plans')),
                 NavigationRailDestination(icon: Icon(Icons.security_rounded), label: Text('Security')),
                 NavigationRailDestination(icon: Icon(Icons.support_agent_rounded), label: Text('Support')),
-                NavigationRailDestination(icon: Icon(Icons.history_edu_rounded), label: Text('Logs')),
+                NavigationRailDestination(icon: Icon(Icons.history_edu_rounded), label: Text('System Logs')),
                 NavigationRailDestination(icon: Icon(Icons.settings_rounded), label: Text('Settings')),
               ],
             ),
@@ -129,23 +130,23 @@ class AdminScaffold extends StatelessWidget {
     if (location.startsWith('/admin/plans')) return 5;
     if (location.startsWith('/admin/security')) return 6;
     if (location.startsWith('/admin/support')) return 7;
-    if (location.startsWith('/admin/logs')) return 8;
+    if (location.startsWith(RoutePaths.adminSystemLogs)) return 8;
     if (location.startsWith('/admin/settings')) return 9;
     return 0;
   }
 
   void _onNavTap(BuildContext context, int i) {
     switch (i) {
-      case 0: context.go('/admin/dashboard'); break;
-      case 1: context.go('/admin/businesses'); break;
-      case 2: context.go('/admin/subscriptions'); break;
-      case 3: context.go('/admin/analytics'); break;
-      case 4: context.go('/admin/users'); break;
-      case 5: context.go('/admin/plans'); break;
-      case 6: context.go('/admin/security'); break;
-      case 7: context.go('/admin/support'); break;
-      case 8: context.go('/admin/logs'); break;
-      case 9: context.go('/admin/settings'); break;
+      case 0: context.go(RoutePaths.adminDashboard); break;
+      case 1: context.go(RoutePaths.adminBusinesses); break;
+      case 2: context.go(RoutePaths.adminSubscriptions); break;
+      case 3: context.go(RoutePaths.adminAnalytics); break;
+      case 4: context.go(RoutePaths.adminUsers); break;
+      case 5: context.go(RoutePaths.adminPlans); break;
+      case 6: context.go(RoutePaths.adminSecurity); break;
+      case 7: context.go(RoutePaths.adminSupport); break;
+      case 8: context.go(RoutePaths.adminSystemLogs); break;
+      case 9: context.go(RoutePaths.adminSettings); break;
     }
   }
 }
@@ -212,7 +213,7 @@ class _Sidebar extends StatelessWidget {
                   isSelected: location == '/admin' || location == '/admin/dashboard',
                   onTap: () {
                     if (isDrawer) Navigator.pop(context);
-                    context.go('/admin/dashboard');
+                    context.go(RoutePaths.adminDashboard);
                   },
                 ),
                 _NavItem(
@@ -221,7 +222,7 @@ class _Sidebar extends StatelessWidget {
                   isSelected: location.startsWith('/admin/businesses'),
                   onTap: () {
                     if (isDrawer) Navigator.pop(context);
-                    context.go('/admin/businesses');
+                    context.go(RoutePaths.adminBusinesses);
                   },
                 ),
                 _NavItem(
@@ -230,7 +231,7 @@ class _Sidebar extends StatelessWidget {
                   isSelected: location.startsWith('/admin/subscriptions'),
                   onTap: () {
                     if (isDrawer) Navigator.pop(context);
-                    context.go('/admin/subscriptions');
+                    context.go(RoutePaths.adminSubscriptions);
                   },
                 ),
                 _NavItem(
@@ -239,7 +240,7 @@ class _Sidebar extends StatelessWidget {
                   isSelected: location.startsWith('/admin/analytics'),
                   onTap: () {
                     if (isDrawer) Navigator.pop(context);
-                    context.go('/admin/analytics');
+                    context.go(RoutePaths.adminAnalytics);
                   },
                 ),
                 _NavItem(
@@ -248,7 +249,7 @@ class _Sidebar extends StatelessWidget {
                   isSelected: location.startsWith('/admin/users'),
                   onTap: () {
                     if (isDrawer) Navigator.pop(context);
-                    context.go('/admin/users');
+                    context.go(RoutePaths.adminUsers);
                   },
                 ),
                 _NavItem(
@@ -257,7 +258,7 @@ class _Sidebar extends StatelessWidget {
                   isSelected: location.startsWith('/admin/plans'),
                   onTap: () {
                     if (isDrawer) Navigator.pop(context);
-                    context.go('/admin/plans');
+                    context.go(RoutePaths.adminPlans);
                   },
                 ),
                 _NavItem(
@@ -266,7 +267,7 @@ class _Sidebar extends StatelessWidget {
                   isSelected: location.startsWith('/admin/security'),
                   onTap: () {
                     if (isDrawer) Navigator.pop(context);
-                    context.go('/admin/security');
+                    context.go(RoutePaths.adminSecurity);
                   },
                 ),
                 _NavItem(
@@ -275,7 +276,7 @@ class _Sidebar extends StatelessWidget {
                   isSelected: location.startsWith('/admin/settings'),
                   onTap: () {
                     if (isDrawer) Navigator.pop(context);
-                    context.go('/admin/settings');
+                    context.go(RoutePaths.adminSettings);
                   },
                 ),
                 _NavItem(
@@ -284,16 +285,16 @@ class _Sidebar extends StatelessWidget {
                   isSelected: location.startsWith('/admin/support'),
                   onTap: () {
                     if (isDrawer) Navigator.pop(context);
-                    context.go('/admin/support');
+                    context.go(RoutePaths.adminSupport);
                   },
                 ),
                 _NavItem(
                   icon: Icons.history_edu_rounded,
                   label: 'System Logs',
-                  isSelected: location.startsWith('/admin/logs'),
+                  isSelected: location.startsWith('/admin/system-logs'),
                   onTap: () {
                     if (isDrawer) Navigator.pop(context);
-                    context.go('/admin/logs');
+                    context.go(RoutePaths.adminSystemLogs);
                   },
                 ),
               ],

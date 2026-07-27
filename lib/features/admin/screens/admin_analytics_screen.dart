@@ -338,7 +338,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
               Expanded(
                 child: LineChart(
                   LineChartData(
-                    gridData: FlGridData(show: true, drawVerticalLine: false, horizontalInterval: 10000),
+                    gridData: const FlGridData(show: true, drawVerticalLine: false, horizontalInterval: 10000),
                     titlesData: FlTitlesData(
                       leftTitles: AxisTitles(
                         sideTitles: SideTitles(

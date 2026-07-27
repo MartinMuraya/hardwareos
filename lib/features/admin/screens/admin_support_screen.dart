@@ -59,7 +59,7 @@ class _AdminSupportScreenState extends State<AdminSupportScreen> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: newStatus,
+                  initialValue: newStatus,
                   decoration: const InputDecoration(labelText: 'Update Status'),
                   items: const [
                     DropdownMenuItem(value: 'answered', child: Text('Answered')),

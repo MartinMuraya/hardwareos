@@ -4,6 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/empty_state.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hardwareos/core/router/route_paths.dart';
 
 class AdminBusinessesScreen extends StatefulWidget {
   const AdminBusinessesScreen({super.key});
@@ -70,7 +71,7 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
       await FirebaseAuth.instance.signInWithCustomToken(customToken);
       
       if (mounted) {
-        context.go('/dashboard');
+        context.go(RoutePaths.dashboard);
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Impersonating user...')));
       }
     } catch (e) {

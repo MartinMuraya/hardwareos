@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hardwareos/core/router/route_paths.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_colors.dart';
@@ -136,7 +137,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed: () => context.go('/forgot-password'),
+                            onPressed: () => context.go(RoutePaths.forgotPassword),
                             child: const Text('Forgot Password?', style: TextStyle(fontSize: 13)),
                           ),
                         ),
@@ -191,7 +192,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               style: theme.textTheme.bodySmall,
                             ),
                             TextButton(
-                              onPressed: () => context.go('/register'),
+                              onPressed: () => context.go(RoutePaths.register),
                               child: const Text('Register'),
                             ),
                           ],

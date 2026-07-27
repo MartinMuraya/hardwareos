@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hardwareos/core/router/route_paths.dart';
 import 'package:provider/provider.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/models/business.dart';
@@ -516,7 +517,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   await context.read<AuthProvider>().refreshProfile();
                   if (!context.mounted) return;
                   Navigator.pop(context);
-                  context.go('/dashboard');
+                  context.go(RoutePaths.dashboard);
                 },
                 child: const Text('Go to Dashboard'),
               ),

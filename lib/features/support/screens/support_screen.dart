@@ -15,6 +15,7 @@ class _SupportScreenState extends State<SupportScreen> {
   Future<void> _createTicket() async {
     final subjectCtrl = TextEditingController();
     final msgCtrl = TextEditingController();
+    final messenger = ScaffoldMessenger.of(context);
     
     final res = await showDialog<bool>(
       context: context,
@@ -48,7 +49,7 @@ class _SupportScreenState extends State<SupportScreen> {
     if (res != true) return;
     
     if (subjectCtrl.text.isEmpty || msgCtrl.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill all fields')));
+      messenger.showSnackBar(const SnackBar(content: Text('Please fill all fields')));
       return;
     }
     
@@ -59,10 +60,10 @@ class _SupportScreenState extends State<SupportScreen> {
         'message': msgCtrl.text,
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Support ticket created successfully. We will get back to you soon.')));
+        messenger.showSnackBar(const SnackBar(content: Text('Support ticket created successfully. We will get back to you soon.')));
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted) messenger.showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       if (mounted) setState(() => _loading = false);
     }

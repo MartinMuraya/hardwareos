@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import 'package:hardwareos/core/router/route_paths.dart';
 
 class AuthErrorScreen extends StatelessWidget {
   const AuthErrorScreen({super.key});
@@ -53,7 +54,7 @@ class AuthErrorScreen extends StatelessWidget {
                   TextButton(
                     onPressed: () async {
                       await auth.signOut();
-                      if (context.mounted) context.go('/login');
+                      if (context.mounted) context.go(RoutePaths.login);
                     },
                     child: const Text('Sign Out'),
                   )

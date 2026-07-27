@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
@@ -25,27 +25,34 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // App Check: activate safely without causing 403 dev throttling
+  // App Check: require proper configuration in release builds. Allow debug providers only in non-release.
   try {
     const recaptchaKey = String.fromEnvironment(
       'RECAPTCHA_SITE_KEY',
       defaultValue: '',
     );
-    if (kDebugMode || recaptchaKey.isEmpty) {
-      await FirebaseAppCheck.instance.activate(
-        androidProvider: AndroidProvider.debug,
-        appleProvider: AppleProvider.debug,
-        webProvider: ReCaptchaV3Provider('6Ldb7qspAAAAAMj6Q5tU6tE-6-88888888888888'), // debug fallback
-      );
-    } else {
+    // In release mode require a valid recaptcha key and fail fast if missing so production cannot run without App Check
+    if (kReleaseMode) {
+      if (recaptchaKey.isEmpty) {
+        // Fail startup in production to avoid running without App Check
+        throw FlutterError('RECAPTCHA_SITE_KEY must be provided in production for App Check to be enabled.');
+      }
       await FirebaseAppCheck.instance.activate(
         androidProvider: AndroidProvider.playIntegrity,
         appleProvider: AppleProvider.appAttest,
         webProvider: ReCaptchaV3Provider(recaptchaKey),
       );
+    } else {
+      // Non-release (dev/test) - use debug providers to avoid developer friction
+      await FirebaseAppCheck.instance.activate(
+        androidProvider: AndroidProvider.debug,
+        appleProvider: AppleProvider.debug,
+        webProvider: ReCaptchaV3Provider('6Ldb7qspAAAAAMj6Q5tU6tE-6-88888888888888'), // debug fallback
+      );
     }
   } catch (e) {
-    debugPrint('App Check initialization non-fatal warning: $e');
+    // In non-release builds, warn but continue. In release builds the above throws and prevents startup.
+    debugPrint('App Check initialization warning: $e');
   }
 
   await Hive.initFlutter();

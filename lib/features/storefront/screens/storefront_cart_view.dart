@@ -197,7 +197,7 @@ class _StorefrontCartViewState extends State<StorefrontCartView> {
             if (provider.storeInfo?.deliveryZones.isNotEmpty == true)
               DropdownButtonFormField<String>(
                 decoration: const InputDecoration(labelText: 'Delivery Zone *', border: OutlineInputBorder()),
-                value: provider.selectedZone?.id,
+                initialValue: provider.selectedZone?.id,
                 items: provider.storeInfo!.deliveryZones.map((z) => DropdownMenuItem(
                   value: z.id,
                   child: Text('${z.name} (+\$${z.fee.toStringAsFixed(2)})'),

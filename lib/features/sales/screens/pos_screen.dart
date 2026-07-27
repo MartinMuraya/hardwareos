@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hardwareos/core/router/route_paths.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/providers/auth_provider.dart';
@@ -17,7 +18,6 @@ import '../../../core/services/product_cache_service.dart';
 import '../services/offline_sales_queue.dart';
 import '../../../core/utils/barcode_listener.dart';
 import '../../../core/services/web_serial_service.dart';
-import '../../../core/widgets/empty_state.dart';
 import 'offline_queue_screen.dart';
 import 'package:flutter/services.dart';
 
@@ -417,8 +417,8 @@ class _POSScreenState extends State<POSScreen> {
             showDialog(
               context: context,
               barrierDismissible: false,
-              builder: (ctx) => AlertDialog(
-                content: Column(mainAxisSize: MainAxisSize.min, children: const [
+              builder: (ctx) => const AlertDialog(
+                content: Column(mainAxisSize: MainAxisSize.min, children: [
                   CircularProgressIndicator(),
                   SizedBox(height: 16),
                   Text('Waiting for M-Pesa PIN...', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -626,7 +626,7 @@ class _POSScreenState extends State<POSScreen> {
           ),
           const SizedBox(height: 16),
           Text(isOffline ? 'Sale Saved Offline' : 'Sale Complete!',
-            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
           if (isOffline) ...[
             const SizedBox(height: 4),
             Text('Will sync when online',
@@ -664,7 +664,7 @@ class _POSScreenState extends State<POSScreen> {
             ),
           ],
           ElevatedButton(
-            onPressed: () { Navigator.pop(dialogContext); context.go('/sales/history'); },
+            onPressed: () { Navigator.pop(dialogContext); context.go('${RoutePaths.sales}/history'); },
             child: const Text('View History'),
           ),
         ],
@@ -992,7 +992,7 @@ class _POSScreenState extends State<POSScreen> {
           ),
           const SizedBox(width: 8),
           TextButton.icon(
-            onPressed: () => context.go('/sales/history'),
+            onPressed: () => context.go('${RoutePaths.sales}/history'),
             icon: const Icon(Icons.history_rounded, size: 16),
             label: const Text('History'),
           ),
@@ -1671,7 +1671,7 @@ class _CartTile extends StatelessWidget {
           onTap: () => _showEditQtyDialog(context),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Text('${entry.qty.toStringAsFixed(entry.qty.truncateToDouble() == entry.qty ? 0 : 2)}',
+            child: Text(entry.qty.toStringAsFixed(entry.qty.truncateToDouble() == entry.qty ? 0 : 2),
               style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16,
                 color: theme.colorScheme.onSurface,
                 decoration: TextDecoration.underline)),

@@ -120,7 +120,7 @@ class _TrialBalanceTab extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       children: [
         DataTable(
-          headingRowColor: MaterialStateProperty.all(Colors.grey[200]),
+          headingRowColor: WidgetStateProperty.all(Colors.grey[200]),
           columns: const [
             DataColumn(label: Text('Account', style: TextStyle(fontWeight: FontWeight.bold))),
             DataColumn(label: Text('Type', style: TextStyle(fontWeight: FontWeight.bold))),
@@ -137,9 +137,9 @@ class _TrialBalanceTab extends StatelessWidget {
                 DataCell(Text(acc.credit > 0 ? acc.credit.toStringAsFixed(2) : '-')),
                 DataCell(Text(acc.balance.toStringAsFixed(2), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue))),
               ],
-            )).toList(),
+            )),
             DataRow(
-              color: MaterialStateProperty.all(Colors.green[50]),
+              color: WidgetStateProperty.all(Colors.green[50]),
               cells: [
                 const DataCell(Text('TOTAL', style: TextStyle(fontWeight: FontWeight.bold))),
                 const DataCell(Text('')),

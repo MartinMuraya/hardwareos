@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hardwareos/core/router/route_paths.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/models/product.dart';
@@ -150,7 +151,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                             ? 'Add your first product to start tracking inventory.'
                             : 'Try a different search or category.',
                         actionLabel: _all.isEmpty ? 'Add Product' : null,
-                        onAction: _all.isEmpty ? () => context.go('/inventory/add') : null,
+                        onAction: _all.isEmpty ? () => context.go('${RoutePaths.inventory}/add') : null,
                       )
                     : RefreshIndicator(
                         onRefresh: _load,

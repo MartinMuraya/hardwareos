@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hardwareos/core/router/route_paths.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/theme/app_colors.dart';
 
@@ -64,6 +65,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Future<void> _showBroadcastDialog() async {
     final titleCtrl = TextEditingController();
     final msgCtrl = TextEditingController();
+    final messenger = ScaffoldMessenger.of(context);
     
     final res = await showDialog<bool>(
       context: context,
@@ -90,7 +92,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     if (res != true) return;
     
     if (titleCtrl.text.isEmpty || msgCtrl.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill all fields')));
+      messenger.showSnackBar(const SnackBar(content: Text('Please fill all fields')));
       return;
     }
     
@@ -100,9 +102,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         'message': msgCtrl.text,
         'type': 'info',
       });
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Broadcast sent successfully')));
+      if (mounted) messenger.showSnackBar(const SnackBar(content: Text('Broadcast sent successfully')));
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted) messenger.showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -183,7 +185,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     children: [
                       Text('Subscription Health', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                       TextButton.icon(
-                        onPressed: () => context.go('/admin/analytics'),
+                        onPressed: () => context.go(RoutePaths.adminAnalytics),
                         icon: const Icon(Icons.analytics_rounded, size: 16),
                         label: const Text('Full Analytics'),
                       ),

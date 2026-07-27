@@ -85,7 +85,7 @@ class OfflineSalesQueue extends ChangeNotifier {
     } catch (e) {
       _status = SyncStatus.error;
       _lastError = e.toString();
-      _scheduleRetry(context);
+      if (context.mounted) _scheduleRetry(context);
     }
     refresh();
   }
@@ -107,6 +107,7 @@ class OfflineSalesQueue extends ChangeNotifier {
       try {
         if (bizId == null) continue;
         sale.saleData['businessId'] = bizId;
+        sale.saleData['idempotencyKey'] = sale.id;
         await FunctionsService.call('createSale', sale.saleData);
         await OfflineService.removeSale(sale.id);
       } on FunctionsException catch (e) {

@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
-import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';

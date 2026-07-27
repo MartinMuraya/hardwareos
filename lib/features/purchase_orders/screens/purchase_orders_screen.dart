@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hardwareos/core/router/route_paths.dart';
 import 'package:intl/intl.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/services/functions_service.dart';
@@ -81,7 +82,7 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
                   style: theme.textTheme.bodyMedium),
               ])),
               TextButton(
-                onPressed: () => context.go('/suppliers'),
+                onPressed: () => context.go(RoutePaths.suppliers),
                 child: const Text('Suppliers'),
               ),
             ]),

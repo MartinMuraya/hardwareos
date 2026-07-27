@@ -175,13 +175,17 @@ class _CashDrawerScreenState extends State<CashDrawerScreen> {
       final bizId = context.read<AuthProvider>().businessId!;
       await FunctionsService.call('openCashSession', {'businessId': bizId, 'openingFloat': float});
       _load();
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Session opened')),
       );
+      }
     } on FunctionsException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
       );
+      }
     }
   }
 
@@ -236,9 +240,11 @@ class _CashDrawerScreenState extends State<CashDrawerScreen> {
         );
       }
     } on FunctionsException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
       );
+      }
     }
   }
 }

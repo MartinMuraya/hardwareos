@@ -6,8 +6,10 @@ import 'auth_repository.dart';
 enum AuthState { initial, loading, authenticated, unauthenticated }
 
 class AuthProvider extends ChangeNotifier {
-  final AuthRepository _repo = AuthRepository();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  late final AuthRepository _repo;
+  late final FirebaseAuth _auth;
+  late final FirebaseFunctions _functions;
+  final Future<Map<String, dynamic>> Function()? _profileFetcher;
 
   User? _user;
   AuthState _state = AuthState.initial;
@@ -44,8 +46,22 @@ class AuthProvider extends ChangeNotifier {
     return null;
   }
 
-  AuthProvider() {
-    _auth.authStateChanges().listen(_onAuthStateChanged);
+  /// AuthProvider constructor
+  ///
+  /// Optional parameters allow injecting test doubles for FirebaseAuth, FirebaseFunctions,
+  /// AuthRepository or a custom profileFetcher for unit tests. Set attachAuthState=false to
+  /// avoid registering the real authStateChanges listener during tests.
+  AuthProvider({
+    FirebaseAuth? firebaseAuth,
+    FirebaseFunctions? functions,
+    AuthRepository? repo,
+    Future<Map<String, dynamic>> Function()? profileFetcher,
+    bool attachAuthState = true,
+  }) : _profileFetcher = profileFetcher {
+    _auth = firebaseAuth ?? FirebaseAuth.instance;
+    _functions = functions ?? FirebaseFunctions.instance;
+    _repo = repo ?? AuthRepository();
+    if (attachAuthState) _auth.authStateChanges().listen(_onAuthStateChanged);
   }
 
   Future<void> _onAuthStateChanged(User? user) async {
@@ -68,9 +84,16 @@ class AuthProvider extends ChangeNotifier {
   Future<void> _loadUserProfile() async {
     _profileLoadError = null;
     try {
-      final fn = FirebaseFunctions.instance.httpsCallable('getMyProfile');
-      final result = await fn.call();
-      final data = Map<String, dynamic>.from(result.data as Map);
+      Map<String, dynamic> data;
+      if (_profileFetcher != null) {
+        // Test injection path
+        data = await _profileFetcher!();
+      } else {
+        final fn = _functions.httpsCallable('getMyProfile');
+        final result = await fn.call();
+        data = Map<String, dynamic>.from(result.data as Map);
+      }
+
       _isRegistered = data['registered'] == true;
       _isSuperAdmin = data['isSuperAdmin'] == true;
       
@@ -89,18 +112,29 @@ class AuthProvider extends ChangeNotifier {
       }
       _state = AuthState.authenticated;
     } on FirebaseFunctionsException catch (e) {
+      // On profile load errors, do NOT treat the user as authenticated.
+      // Force unauthenticated state and surface the error so the UI can require re-login
       _isRegistered = false;
       _isSuperAdmin = false;
       _businessStatus = null;
-      _state = AuthState.authenticated;
+      _state = AuthState.unauthenticated;
       _profileLoadError = e.message ?? 'An error occurred connecting to the server.';
+      _errorMessage = 'Failed to load profile. Please sign in again.';
     } catch (e) {
+      // Generic fallback - mark unauthenticated and surface message
       _isRegistered = false;
       _isSuperAdmin = false;
       _businessStatus = null;
-      _state = AuthState.authenticated;
+      _state = AuthState.unauthenticated;
       _profileLoadError = 'An unexpected error occurred loading your profile.';
+      _errorMessage = 'Failed to load profile. Please sign in again.';
     }
+  }
+
+  /// Test helper: allow tests to invoke profile load with a provided user context.
+  Future<void> loadProfileForTest([User? user]) async {
+    _user = user;
+    await _loadUserProfile();
   }
 
   Future<bool> signInWithEmail(String email, String password) async {

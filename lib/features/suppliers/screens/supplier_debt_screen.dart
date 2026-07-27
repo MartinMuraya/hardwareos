@@ -61,6 +61,8 @@ class _SupplierDebtScreenState extends State<SupplierDebtScreen> {
 
   Future<void> _showPaymentDialog(SupplierDebt debt) async {
     final theme = Theme.of(context);
+    final bizId = context.read<AuthProvider>().businessId!;
+    final messenger = ScaffoldMessenger.of(context);
     final amountCtrl = TextEditingController(text: debt.outstanding.toStringAsFixed(0));
     final refCtrl = TextEditingController();
     final noteCtrl = TextEditingController();
@@ -136,9 +138,6 @@ class _SupplierDebtScreenState extends State<SupplierDebtScreen> {
     if (result == true) {
       final pmtAmount = double.tryParse(amountCtrl.text);
       if (pmtAmount == null || pmtAmount <= 0) return;
-
-      final bizId = context.read<AuthProvider>().businessId!;
-      final messenger = ScaffoldMessenger.of(context);
       try {
         await FunctionsService.call('recordSupplierPayment', {
           'businessId': bizId,

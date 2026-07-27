@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_colors.dart';
+import 'package:hardwareos/core/router/route_paths.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -104,7 +105,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           error: auth.errorMessage,
                           onToggleObscure: () => setState(() => _obscure = !_obscure),
                           onSubmit: _createAccount,
-                          onLogin: () => context.go('/login'),
+                          onLogin: () => context.go(RoutePaths.login),
                         )
                       : _BusinessStep(
                           bizNameCtrl: _bizNameCtrl, isSubmitting: _isSubmitting,

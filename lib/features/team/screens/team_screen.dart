@@ -210,7 +210,7 @@ class _TeamMemberCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     'Commission: ${(user.commissionRate! * 100).toStringAsFixed(1)}%',
-                    style: TextStyle(color: AppColors.chartGreen, fontSize: 13, fontWeight: FontWeight.bold),
+                    style: const TextStyle(color: AppColors.chartGreen, fontSize: 13, fontWeight: FontWeight.bold),
                   ),
                 ],
               ],
