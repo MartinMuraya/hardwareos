@@ -171,6 +171,7 @@ class _CashDrawerScreenState extends State<CashDrawerScreen> {
     final float = double.tryParse(result) ?? 0;
     if (float < 0) return;
 
+    if (!mounted) return; // guard against using context after async gaps
     try {
       final bizId = context.read<AuthProvider>().businessId!;
       await FunctionsService.call('openCashSession', {'businessId': bizId, 'openingFloat': float});
@@ -219,6 +220,7 @@ class _CashDrawerScreenState extends State<CashDrawerScreen> {
     final actual = double.tryParse(result) ?? 0;
     if (actual < 0) return;
 
+    if (!mounted) return; // guard before using context
     try {
       final bizId = context.read<AuthProvider>().businessId!;
       final res = await FunctionsService.call('closeCashSession', {

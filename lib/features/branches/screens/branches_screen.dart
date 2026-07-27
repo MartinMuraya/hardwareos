@@ -65,6 +65,7 @@ class _BranchesScreenState extends State<BranchesScreen> {
     );
     if (result != true) return;
 
+    if (!mounted) return; // ensure state is still mounted before using context after async gap
     try {
       final bizId = context.read<AuthProvider>().businessId!;
       await FunctionsService.call('createBranch', {

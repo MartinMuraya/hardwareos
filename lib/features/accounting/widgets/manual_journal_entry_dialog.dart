@@ -84,7 +84,7 @@ class _ManualJournalEntryDialogState extends State<ManualJournalEntryDialog> {
             const SizedBox(height: 16),
             const Text('Debit (Dr)', style: TextStyle(fontWeight: FontWeight.bold)),
             DropdownButtonFormField<AccountModel>(
-              value: _selectedDebitAccount,
+              initialValue: _selectedDebitAccount,
               isExpanded: true,
               hint: const Text('Select Debit Account'),
               items: accounts.map((acc) => DropdownMenuItem(
@@ -107,7 +107,7 @@ class _ManualJournalEntryDialogState extends State<ManualJournalEntryDialog> {
             const SizedBox(height: 24),
             const Text('Credit (Cr)', style: TextStyle(fontWeight: FontWeight.bold)),
             DropdownButtonFormField<AccountModel>(
-              value: _selectedCreditAccount,
+              initialValue: _selectedCreditAccount,
               isExpanded: true,
               hint: const Text('Select Credit Account'),
               items: accounts.map((acc) => DropdownMenuItem(

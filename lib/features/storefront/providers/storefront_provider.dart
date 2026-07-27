@@ -140,7 +140,7 @@ class StorefrontProvider extends ChangeNotifier {
 
     try {
       // Attempt online checkout. Backend should return orderId and stk_push status
-      final res = await FunctionsService.call('createOnlineOrder', orderData);
+      await FunctionsService.call('createOnlineOrder', orderData);
       clearCart();
     } on FunctionsException catch (e) {
       if (e.code == 'unavailable' || e.code == 'deadline-exceeded') {

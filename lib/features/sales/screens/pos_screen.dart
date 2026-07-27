@@ -1554,7 +1554,7 @@ class _CartTile extends StatelessWidget {
       final stream = service.readData();
       String buffer = '';
       
-      final sub = stream.listen((data) {
+      stream.listen((data) {
         buffer += data;
         // Looking for a continuous number, e.g., ST,GS,+  001.25 kg
         // A simple regex to find the first decimal number in the stream output

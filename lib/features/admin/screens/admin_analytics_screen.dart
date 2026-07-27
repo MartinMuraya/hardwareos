@@ -58,7 +58,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
             onPressed: () {},
           ),
         ));
-        print(csvData); // Print to console for now
+        debugPrint(csvData); // Print to console for now (use debugPrint for production)
       }
     } catch (e) {
       if (mounted) {

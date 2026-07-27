@@ -82,7 +82,7 @@ class AppRouter {
                                 state.matchedLocation == RoutePaths.register ||
                                 state.matchedLocation == RoutePaths.forgotPassword;
         final isSubscriptionRoute = state.matchedLocation == RoutePaths.subscription;
-        final isStorefrontRoute = state.matchedLocation == RoutePaths.storefront || state.matchedLocation.startsWith(RoutePaths.storefront + '/');
+        final isStorefrontRoute = state.matchedLocation == RoutePaths.storefront || state.matchedLocation.startsWith('${RoutePaths.storefront}/');
 
         // If the provider previously failed to load the profile, redirect to a dedicated auth-error screen
         // This is defensive: even if auth state is inconsistent, surface the error to the user and block normal navigation.
