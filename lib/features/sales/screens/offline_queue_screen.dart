@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../services/offline_sales_queue.dart';
 
 import '../../../core/services/offline_service.dart';
+import '../../../core/providers/auth_provider.dart';
 
 class OfflineQueueScreen extends StatefulWidget {
   const OfflineQueueScreen({super.key});
@@ -21,7 +22,8 @@ class _OfflineQueueScreenState extends State<OfflineQueueScreen> {
     setState(() => _isSyncing = true);
     try {
       final queue = context.read<OfflineSalesQueue>();
-      await queue.syncAll(context);
+      final auth = context.read<AuthProvider>();
+      await queue.syncAll(auth);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Sync completed successfully')),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../sales/services/offline_sales_queue.dart';
+import '../../../core/providers/auth_provider.dart';
 
 class PendingSyncCard extends StatelessWidget {
   const PendingSyncCard({super.key});
@@ -34,7 +35,7 @@ class PendingSyncCard extends StatelessWidget {
             )
           else
             TextButton(
-              onPressed: () => queue.syncAll(context),
+              onPressed: () => queue.syncAll(context.read<AuthProvider>()),
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 minimumSize: Size.zero,

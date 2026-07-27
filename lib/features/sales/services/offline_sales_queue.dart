@@ -70,22 +70,22 @@ class OfflineSalesQueue extends ChangeNotifier {
     refresh();
   }
 
-  Future<void> syncAll(BuildContext context) async {
+  Future<void> syncAll(AuthProvider auth) async {
     if (_status == SyncStatus.syncing) return;
     _status = SyncStatus.syncing;
     _lastError = null;
     notifyListeners();
 
     try {
-      await _syncSales(context);
-      await _syncPayments(context);
-      await _syncInventory(context);
+      await _syncSales(auth);
+      await _syncPayments(auth);
+      await _syncInventory(auth);
       _status = SyncStatus.idle;
       _retryAttempt = 0;
     } catch (e) {
       _status = SyncStatus.error;
       _lastError = e.toString();
-      if (context.mounted) _scheduleRetry(context);
+      _scheduleRetry(auth);
     }
     refresh();
   }
@@ -98,9 +98,8 @@ class OfflineSalesQueue extends ChangeNotifier {
     refresh();
   }
 
-  Future<void> _syncSales(BuildContext context) async {
+  Future<void> _syncSales(AuthProvider auth) async {
     final sales = OfflineService.getPendingSales();
-    final auth = context.read<AuthProvider>();
     final bizId = auth.businessId;
 
     for (final sale in sales) {
@@ -143,9 +142,8 @@ class OfflineSalesQueue extends ChangeNotifier {
     }
   }
 
-  Future<void> _syncPayments(BuildContext context) async {
+  Future<void> _syncPayments(AuthProvider auth) async {
     final payments = OfflineService.getPendingPayments();
-    final auth = context.read<AuthProvider>();
     final bizId = auth.businessId;
 
     for (final payment in payments) {
@@ -166,9 +164,8 @@ class OfflineSalesQueue extends ChangeNotifier {
     }
   }
 
-  Future<void> _syncInventory(BuildContext context) async {
+  Future<void> _syncInventory(AuthProvider auth) async {
     final updates = OfflineService.getPendingInventoryUpdates();
-    final auth = context.read<AuthProvider>();
     final bizId = auth.businessId;
 
     for (final update in updates) {
@@ -189,7 +186,7 @@ class OfflineSalesQueue extends ChangeNotifier {
     }
   }
 
-  void _scheduleRetry(BuildContext context) {
+  void _scheduleRetry(AuthProvider auth) {
     _retryTimer?.cancel();
     final delays = [10, 30, 60];
     final delay = _retryAttempt < delays.length
@@ -197,7 +194,7 @@ class OfflineSalesQueue extends ChangeNotifier {
         : delays.last;
     _retryAttempt++;
     _retryTimer = Timer(Duration(seconds: delay), () {
-      syncAll(context);
+      syncAll(auth);
     });
   }
 

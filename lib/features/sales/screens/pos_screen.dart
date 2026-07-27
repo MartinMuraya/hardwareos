@@ -119,12 +119,14 @@ class _POSScreenState extends State<POSScreen> {
           'timestamp': DateTime.now().toIso8601String(),
           'items': _cart.map((e) => e.toMap()).toList(),
         };
+        final messenger = ScaffoldMessenger.of(context);
         await OfflineService.saveDraftSale(id, draftData);
+        if (!mounted) return;
         setState(() { _cart.clear(); });
         _saveCart();
         if (mounted) {
           Navigator.pop(ctx);
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Cart "$ref" held.')));
+          messenger.showSnackBar(SnackBar(content: Text('Cart "$ref" held.')));
         }
       }
       return AlertDialog(
@@ -171,6 +173,7 @@ class _POSScreenState extends State<POSScreen> {
                     onPressed: () async {
                       await OfflineService.deleteDraftSale(id);
                       Navigator.pop(ctx);
+                      if (!mounted) return;
                       _showHeldCarts(context); // Refresh
                     },
                   ),
@@ -818,6 +821,7 @@ class _POSScreenState extends State<POSScreen> {
           if (name.isEmpty || phone.isEmpty) return;
 
           setDialogState(() => isSaving = true);
+          final messenger = ScaffoldMessenger.of(context);
           try {
             final bizId = context.read<AuthProvider>().businessId!;
             final res = await FunctionsService.call('createCustomer', {
@@ -833,7 +837,7 @@ class _POSScreenState extends State<POSScreen> {
               createdAt: DateTime.now(), updatedAt: DateTime.now(),
             );
 
-              if (mounted) {
+              if (!mounted) return;
                 setState(() {
                   _customers.insert(0, newCustomer);
                   _selectedCustomer = newCustomer;
@@ -842,12 +846,12 @@ class _POSScreenState extends State<POSScreen> {
                   _mpesaPhoneCtrl.text = phone;
                 });
                 Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Customer $name created!')));
-            }
+                messenger.showSnackBar(SnackBar(content: Text('Customer $name created!')));
+            
           } catch (e) {
-            if (mounted) {
+            if (!mounted) return;
               setDialogState(() => isSaving = false);
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+              messenger.showSnackBar(SnackBar(content: Text('Error: $e')));
             }
           }
         }
