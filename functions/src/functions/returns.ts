@@ -4,6 +4,7 @@
 // ============================================================
 
 import * as admin from "firebase-admin";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
 import { recordInventoryMovement, MovementType } from "./inventory_ledger";
@@ -16,7 +17,7 @@ const validReasons = ["Damaged", "Wrong Item", "Defective Product", "Customer Ch
 // processReturn
 // Atomically: validate → restore stock → create return → update reports → audit
 // -----------------------------------------------------------
-export const processReturn = onCall({ cors: true }, async (request) => {
+export const processReturn = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, saleId, items, reason, notes } = request.data as {
@@ -165,7 +166,7 @@ export const processReturn = onCall({ cors: true }, async (request) => {
 // getReturns
 // Paginated returns list, newest first.
 // -----------------------------------------------------------
-export const getReturns = onCall({ cors: true }, async (request) => {
+export const getReturns = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, limit: pageLimit = 50, startAfter } = request.data as {
@@ -199,7 +200,7 @@ export const getReturns = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // getReturnStats — Today's return count + refund amount (dashboard)
 // -----------------------------------------------------------
-export const getReturnStats = onCall({ cors: true }, async (request) => {
+export const getReturnStats = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId } = request.data as { businessId: string };

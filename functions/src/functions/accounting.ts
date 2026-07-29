@@ -3,6 +3,7 @@
 // ============================================================
 
 import * as admin from "firebase-admin";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
 
@@ -37,7 +38,7 @@ export interface JournalLine {
 // initializeChartOfAccounts
 // Seeds the standard chart of accounts for a new/existing business
 // -----------------------------------------------------------
-export const initializeChartOfAccounts = onCall({ cors: true }, async (request) => {
+export const initializeChartOfAccounts = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
   const { businessId } = request.data as { businessId: string };
   await assertBusinessMember(request.auth.uid, businessId, ["owner"]);
@@ -119,7 +120,7 @@ export function postJournalEntryHelper(
 // postManualJournalEntry
 // Callable for frontend (Manual Adjustments)
 // -----------------------------------------------------------
-export const postManualJournalEntry = onCall({ cors: true }, async (request) => {
+export const postManualJournalEntry = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
   const { businessId, description, lines } = request.data as {
     businessId: string;
@@ -141,7 +142,7 @@ export const postManualJournalEntry = onCall({ cors: true }, async (request) => 
 // getTrialBalance
 // Uses Firestore SUM() aggregation to calculate account balances without pulling documents
 // -----------------------------------------------------------
-export const getTrialBalance = onCall({ cors: true }, async (request) => {
+export const getTrialBalance = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
   const { businessId } = request.data as { businessId: string };
   await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager"]);
@@ -209,7 +210,7 @@ export const getTrialBalance = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // getChartOfAccounts
 // -----------------------------------------------------------
-export const getChartOfAccounts = onCall({ cors: true }, async (request) => {
+export const getChartOfAccounts = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
   const { businessId } = request.data as { businessId: string };
   await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager", "staff"]);
@@ -222,7 +223,7 @@ export const getChartOfAccounts = onCall({ cors: true }, async (request) => {
 // migrateHistoricalData
 // Reads past sales/expenses and generates missing journal entries.
 // -----------------------------------------------------------
-export const migrateHistoricalData = onCall({ cors: true }, async (request) => {
+export const migrateHistoricalData = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
   const { businessId } = request.data as { businessId: string };
   await assertBusinessMember(request.auth.uid, businessId, ["owner"]);
@@ -366,7 +367,7 @@ export const migrateHistoricalData = onCall({ cors: true }, async (request) => {
 // createJournalEntry
 // Allows manual posting of double-entry journal records
 // -----------------------------------------------------------
-export const createJournalEntry = onCall({ cors: true }, async (request) => {
+export const createJournalEntry = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
   
   const { businessId, referenceId, description, lines, date } = request.data as {
@@ -405,7 +406,7 @@ export const createJournalEntry = onCall({ cors: true }, async (request) => {
 // getProfitAndLoss
 // Calculates revenue minus expenses over a date range
 // -----------------------------------------------------------
-export const getProfitAndLoss = onCall({ cors: true }, async (request) => {
+export const getProfitAndLoss = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
   
   const { businessId, startDate, endDate } = request.data as {
@@ -466,7 +467,7 @@ export const getProfitAndLoss = onCall({ cors: true }, async (request) => {
 // getBalanceSheet
 // Calculates Assets, Liabilities, and Equity as of a specific date
 // -----------------------------------------------------------
-export const getBalanceSheet = onCall({ cors: true }, async (request) => {
+export const getBalanceSheet = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
   
   const { businessId, asOfDate } = request.data as {

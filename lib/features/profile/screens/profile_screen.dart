@@ -18,6 +18,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _loading = false;
   final _nameController = TextEditingController();
+  final _currentPasswordController = TextEditingController();
   final _passwordController = TextEditingController();
 
   @override
@@ -30,6 +31,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _currentPasswordController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -46,8 +48,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
       
       if (_passwordController.text.isNotEmpty) {
+        if (_currentPasswordController.text.isEmpty) {
+          throw FirebaseAuthException(code: 'requires-recent-login', message: 'Current password is required to change password.');
+        }
+        
+        final cred = EmailAuthProvider.credential(email: user.email!, password: _currentPasswordController.text);
+        await user.reauthenticateWithCredential(cred);
+        
         await user.updatePassword(_passwordController.text);
         _passwordController.clear();
+        _currentPasswordController.clear();
       }
 
       await auth.reloadUser();
@@ -178,11 +188,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
+                        controller: _currentPasswordController,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Current Password',
+                          prefixIcon: Icon(Icons.lock_outline),
+                          helperText: 'Required if you are changing your password',
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
                         controller: _passwordController,
                         obscureText: true,
                         decoration: const InputDecoration(
                           labelText: 'New Password (Optional)',
-                          prefixIcon: Icon(Icons.lock_outline),
+                          prefixIcon: Icon(Icons.lock_reset),
                           helperText: 'Leave blank to keep current password',
                         ),
                       ),

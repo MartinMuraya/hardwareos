@@ -1,4 +1,5 @@
 import * as admin from "firebase-admin";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 
 const db = () => admin.firestore();
@@ -17,7 +18,7 @@ async function assertSuperAdmin(uid: string) {
 // adminGetAllBusinesses
 // Fetches all businesses with optional filter
 // -----------------------------------------------------------
-export const adminGetAllBusinesses = onCall({ cors: true }, async (request) => {
+export const adminGetAllBusinesses = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 
@@ -50,7 +51,7 @@ export const adminGetAllBusinesses = onCall({ cors: true }, async (request) => {
 // adminUpdateBusinessStatus
 // Updates the status of a business (approve, suspend, reject, reactivate)
 // -----------------------------------------------------------
-export const adminUpdateBusinessStatus = onCall({ cors: true }, async (request) => {
+export const adminUpdateBusinessStatus = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 
@@ -84,7 +85,7 @@ export const adminUpdateBusinessStatus = onCall({ cors: true }, async (request) 
 // adminDeleteBusiness
 // Hard deletes a business and all its associated data
 // -----------------------------------------------------------
-export const adminDeleteBusiness = onCall({ cors: true, timeoutSeconds: 540 }, async (request) => {
+export const adminDeleteBusiness = onCall({ ...SECURE_FN_OPTS, timeoutSeconds: 540 }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 

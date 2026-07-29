@@ -3,6 +3,8 @@
 // ============================================================
 
 import * as admin from "firebase-admin";
+import { rateLimitCheck } from "../middleware/rateLimiter";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
 
@@ -28,8 +30,9 @@ async function nextPONumber(businessId: string): Promise<string> {
 // -----------------------------------------------------------
 // createPurchaseOrder
 // -----------------------------------------------------------
-export const createPurchaseOrder = onCall({ cors: true }, async (request) => {
+export const createPurchaseOrder = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
+  await rateLimitCheck(request.rawRequest?.ip || request.auth.uid, "createPurchaseOrder", 60, 1);
 
   const { businessId, supplierId, supplierName, items, notes } = request.data as {
     businessId: string;
@@ -87,7 +90,7 @@ export const createPurchaseOrder = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // getPurchaseOrders
 // -----------------------------------------------------------
-export const getPurchaseOrders = onCall({ cors: true }, async (request) => {
+export const getPurchaseOrders = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, limit: pageLimit = 50, startAfter, status } = request.data as {
@@ -138,7 +141,7 @@ export const getPurchaseOrders = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // getPurchaseOrder
 // -----------------------------------------------------------
-export const getPurchaseOrder = onCall({ cors: true }, async (request) => {
+export const getPurchaseOrder = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, purchaseOrderId } = request.data as {
@@ -172,7 +175,7 @@ export const getPurchaseOrder = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // updatePurchaseOrderStatus
 // -----------------------------------------------------------
-export const updatePurchaseOrderStatus = onCall({ cors: true }, async (request) => {
+export const updatePurchaseOrderStatus = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, purchaseOrderId, status } = request.data as {
@@ -210,7 +213,7 @@ export const updatePurchaseOrderStatus = onCall({ cors: true }, async (request) 
 // receivePurchaseOrder
 // Full receiving workflow: add stock + log movements + update status.
 // -----------------------------------------------------------
-export const receivePurchaseOrder = onCall({ cors: true }, async (request) => {
+export const receivePurchaseOrder = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, purchaseOrderId } = request.data as {

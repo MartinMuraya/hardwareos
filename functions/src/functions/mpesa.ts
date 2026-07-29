@@ -3,6 +3,7 @@
 // ============================================================
 
 import * as admin from "firebase-admin";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { onRequest } from "firebase-functions/v2/https";
 
@@ -27,7 +28,7 @@ async function getDarajaToken(consumerKey: string, consumerSecret: string): Prom
 // initiateStkPush
 // Triggered by the POS when a cashier selects M-Pesa.
 // -----------------------------------------------------------
-export const initiateStkPush = onCall({ cors: true }, async (request) => {
+export const initiateStkPush = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, phoneNumber, amount, reference, description } = request.data as {
@@ -118,7 +119,7 @@ export const initiateStkPush = onCall({ cors: true }, async (request) => {
 // mpesaCallback
 // Safaricom calls this URL after the user enters their PIN.
 // -----------------------------------------------------------
-export const posMpesaCallback = onRequest({ cors: true }, async (req, res) => {
+export const posMpesaCallback = onRequest(SECURE_FN_OPTS, async (req, res) => {
   try {
     const callbackData = req.body.Body?.stkCallback;
     if (!callbackData) {

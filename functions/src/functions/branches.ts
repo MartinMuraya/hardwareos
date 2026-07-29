@@ -3,6 +3,7 @@
 // ============================================================
 
 import * as admin from "firebase-admin";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
 import { recordInventoryMovement, MovementType } from "./inventory_ledger";
@@ -13,7 +14,7 @@ const db = () => admin.firestore();
 // createBranch
 // Only owner can create branches.
 // -----------------------------------------------------------
-export const createBranch = onCall({ cors: true }, async (request) => {
+export const createBranch = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, name, address, phone } = request.data as {
@@ -62,7 +63,7 @@ export const createBranch = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // getBranch
 // -----------------------------------------------------------
-export const getBranch = onCall({ cors: true }, async (request) => {
+export const getBranch = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, branchId } = request.data as { businessId: string; branchId: string };
@@ -82,7 +83,7 @@ export const getBranch = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // getBranches
 // -----------------------------------------------------------
-export const getBranches = onCall({ cors: true }, async (request) => {
+export const getBranches = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId } = request.data as { businessId: string };
@@ -106,7 +107,7 @@ export const getBranches = onCall({ cors: true }, async (request) => {
 // updateBranch
 // Owner can update branch details.
 // -----------------------------------------------------------
-export const updateBranch = onCall({ cors: true }, async (request) => {
+export const updateBranch = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, branchId, updates } = request.data as {
@@ -131,7 +132,7 @@ export const updateBranch = onCall({ cors: true }, async (request) => {
 // requestStockTransfer
 // Branch staff requests stock from another branch.
 // -----------------------------------------------------------
-export const requestStockTransfer = onCall({ cors: true }, async (request) => {
+export const requestStockTransfer = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, fromBranchId, toBranchId, productId, quantity, productName } = request.data as {
@@ -194,7 +195,7 @@ export const requestStockTransfer = onCall({ cors: true }, async (request) => {
 // approveStockTransfer
 // Manager/owner approves and executes the transfer atomically.
 // -----------------------------------------------------------
-export const approveStockTransfer = onCall({ cors: true }, async (request) => {
+export const approveStockTransfer = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, transferId } = request.data as {
@@ -311,7 +312,7 @@ export const approveStockTransfer = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // getStockTransfers
 // -----------------------------------------------------------
-export const getStockTransfers = onCall({ cors: true }, async (request) => {
+export const getStockTransfers = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, status, limit: pageLimit = 50 } = request.data as {
@@ -346,7 +347,7 @@ export const getStockTransfers = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // getBranchInventory
 // -----------------------------------------------------------
-export const getBranchInventory = onCall({ cors: true }, async (request) => {
+export const getBranchInventory = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, branchId } = request.data as { businessId: string; branchId: string };
@@ -370,7 +371,7 @@ export const getBranchInventory = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // getBranchPerformance — dashboard widget data
 // -----------------------------------------------------------
-export const getBranchPerformance = onCall({ cors: true }, async (request) => {
+export const getBranchPerformance = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId } = request.data as { businessId: string };
@@ -405,7 +406,7 @@ export const getBranchPerformance = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // getPendingTransfers — count for dashboard widget
 // -----------------------------------------------------------
-export const getPendingTransfers = onCall({ cors: true }, async (request) => {
+export const getPendingTransfers = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId } = request.data as { businessId: string };
@@ -428,7 +429,7 @@ export const getPendingTransfers = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // getSalesByBranch — sales for a specific branch
 // -----------------------------------------------------------
-export const getSalesByBranch = onCall({ cors: true }, async (request) => {
+export const getSalesByBranch = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, branchId, limit: pageLimit = 50 } = request.data as {
@@ -468,7 +469,7 @@ export const getSalesByBranch = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // getBranchExpensesReport — expenses for a specific branch
 // -----------------------------------------------------------
-export const getBranchExpensesReport = onCall({ cors: true }, async (request) => {
+export const getBranchExpensesReport = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, branchId, limit: pageLimit = 50 } = request.data as {
@@ -507,7 +508,7 @@ export const getBranchExpensesReport = onCall({ cors: true }, async (request) =>
 // -----------------------------------------------------------
 // getBranchProfitReport — net profit for a branch
 // -----------------------------------------------------------
-export const getBranchProfitReport = onCall({ cors: true }, async (request) => {
+export const getBranchProfitReport = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, branchId } = request.data as {

@@ -3,6 +3,8 @@
 // ============================================================
 
 import * as admin from "firebase-admin";
+import { rateLimitCheck } from "../middleware/rateLimiter";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
 import { postJournalEntryHelper, JournalLine } from "./accounting";
@@ -17,8 +19,9 @@ export const EXPENSE_CATEGORIES = [
 // -----------------------------------------------------------
 // createExpense
 // -----------------------------------------------------------
-export const createExpense = onCall({ cors: true }, async (request) => {
+export const createExpense = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
+  await rateLimitCheck(request.rawRequest?.ip || request.auth.uid, "createExpense", 60, 1);
 
   const { businessId, branchId, category, amount, note } = request.data as {
     businessId: string;
@@ -75,7 +78,7 @@ export const createExpense = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // getExpenses
 // -----------------------------------------------------------
-export const getExpenses = onCall({ cors: true }, async (request) => {
+export const getExpenses = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, limit: pageLimit = 30, startAfter } = request.data as {

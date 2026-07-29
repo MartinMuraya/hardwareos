@@ -3,6 +3,7 @@
 // ============================================================
 
 import * as admin from "firebase-admin";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember } from "../middleware/checkPlanLimits";
 
@@ -13,7 +14,7 @@ const db = () => admin.firestore();
 // Paginated logs with optional filters: module, action, userId, date range.
 // Newest first.
 // -----------------------------------------------------------
-export const getAuditLogs = onCall({ cors: true }, async (request) => {
+export const getAuditLogs = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const {
@@ -79,7 +80,7 @@ export const getAuditLogs = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // getAuditModules — Returns distinct modules for filter dropdown
 // -----------------------------------------------------------
-export const getAuditModules = onCall({ cors: true }, async (request) => {
+export const getAuditModules = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId } = request.data as { businessId: string };
@@ -103,7 +104,7 @@ export const getAuditModules = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // getRecentAuditLogs — Latest 10 entries (dashboard widget)
 // -----------------------------------------------------------
-export const getRecentAuditLogs = onCall({ cors: true }, async (request) => {
+export const getRecentAuditLogs = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId } = request.data as { businessId: string };

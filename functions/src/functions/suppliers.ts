@@ -3,6 +3,8 @@
 // ============================================================
 
 import * as admin from "firebase-admin";
+import { rateLimitCheck } from "../middleware/rateLimiter";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
 
@@ -11,8 +13,9 @@ const db = () => admin.firestore();
 // -----------------------------------------------------------
 // createSupplier
 // -----------------------------------------------------------
-export const createSupplier = onCall({ cors: true }, async (request) => {
+export const createSupplier = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
+  await rateLimitCheck(request.rawRequest?.ip || request.auth.uid, "createSupplier", 60, 1);
 
   const { businessId, name, phoneNumber, email, address, contactPerson, paymentTerms } = request.data as {
     businessId: string;
@@ -54,7 +57,7 @@ export const createSupplier = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // getSuppliers
 // -----------------------------------------------------------
-export const getSuppliers = onCall({ cors: true }, async (request) => {
+export const getSuppliers = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, limit: pageLimit = 50, startAfter, search } = request.data as {
@@ -102,7 +105,7 @@ export const getSuppliers = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // getSupplier
 // -----------------------------------------------------------
-export const getSupplier = onCall({ cors: true }, async (request) => {
+export const getSupplier = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, supplierId } = request.data as {
@@ -133,7 +136,7 @@ export const getSupplier = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // updateSupplier
 // -----------------------------------------------------------
-export const updateSupplier = onCall({ cors: true }, async (request) => {
+export const updateSupplier = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, supplierId, name, phoneNumber, email, address, contactPerson, paymentTerms } = request.data as {

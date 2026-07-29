@@ -3,6 +3,7 @@
 // ============================================================
 
 import * as admin from "firebase-admin";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
 
@@ -83,7 +84,7 @@ export async function performAutoConversion(
 // -----------------------------------------------------------
 // bulkCreateProduct
 // -----------------------------------------------------------
-export const bulkCreateProduct = onCall({ cors: true }, async (request) => {
+export const bulkCreateProduct = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const {
@@ -163,7 +164,7 @@ export const bulkCreateProduct = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // autoConvertDuringSale — callable wrapper
 // -----------------------------------------------------------
-export const autoConvertDuringSale = onCall({ cors: true }, async (request) => {
+export const autoConvertDuringSale = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, items } = request.data as {
@@ -185,7 +186,7 @@ export const autoConvertDuringSale = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // validateConversion — check if conversion is possible for an item
 // -----------------------------------------------------------
-export const validateConversion = onCall({ cors: true }, async (request) => {
+export const validateConversion = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, productId, quantity } = request.data as {
@@ -238,7 +239,7 @@ export const validateConversion = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // convertParentToChild — manual conversion triggered by user
 // -----------------------------------------------------------
-export const convertParentToChild = onCall({ cors: true }, async (request) => {
+export const convertParentToChild = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, productId, quantity } = request.data as {

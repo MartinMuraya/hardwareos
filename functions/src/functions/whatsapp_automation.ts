@@ -4,6 +4,7 @@
 // ============================================================
 
 import * as admin from "firebase-admin";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { onDocumentWritten } from "firebase-functions/v2/firestore";
 import { defineSecret } from "firebase-functions/params";
@@ -42,7 +43,7 @@ function fillTemplate(template: string, vars: Record<string, string>): string {
 // enqueueNotification
 // Called by other Cloud Functions to queue a message.
 // -----------------------------------------------------------
-export const enqueueNotification = onCall({ cors: true }, async (request) => {
+export const enqueueNotification = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, type, recipient, variables } = request.data as {
@@ -87,7 +88,7 @@ export const enqueueNotification = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // getNotificationSettings — Read business notification prefs
 // -----------------------------------------------------------
-export const getNotificationSettings = onCall({ cors: true }, async (request) => {
+export const getNotificationSettings = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId } = request.data as { businessId: string };
@@ -108,7 +109,7 @@ export const getNotificationSettings = onCall({ cors: true }, async (request) =>
 // -----------------------------------------------------------
 // updateNotificationSettings
 // -----------------------------------------------------------
-export const updateNotificationSettings = onCall({ cors: true }, async (request) => {
+export const updateNotificationSettings = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, settings } = request.data as {
@@ -130,7 +131,7 @@ export const updateNotificationSettings = onCall({ cors: true }, async (request)
 // -----------------------------------------------------------
 // getNotifications — Notification delivery history
 // -----------------------------------------------------------
-export const getNotifications = onCall({ cors: true }, async (request) => {
+export const getNotifications = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, status, limit: pageLimit = 50 } = request.data as {
@@ -165,7 +166,7 @@ export const getNotifications = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // getNotificationStats — Dashboard widget
 // -----------------------------------------------------------
-export const getNotificationStats = onCall({ cors: true }, async (request) => {
+export const getNotificationStats = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId } = request.data as { businessId: string };

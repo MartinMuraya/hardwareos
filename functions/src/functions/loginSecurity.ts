@@ -1,3 +1,4 @@
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import {
   checkLoginRateLimit,
@@ -8,7 +9,7 @@ import {
   writeAuditLog,
 } from "../middleware/securityMiddleware";
 
-export const checkLoginLocked = onCall({ cors: true }, async (request) => {
+export const checkLoginLocked = onCall(SECURE_FN_OPTS, async (request) => {
   const { email } = request.data as { email: string };
   if (!email) throw new HttpsError("invalid-argument", "Email is required.");
 
@@ -16,7 +17,7 @@ export const checkLoginLocked = onCall({ cors: true }, async (request) => {
   return { allowed: true };
 });
 
-export const reportFailedLogin = onCall({ cors: true }, async (request) => {
+export const reportFailedLogin = onCall(SECURE_FN_OPTS, async (request) => {
   const { email } = request.data as { email: string };
   if (!email) throw new HttpsError("invalid-argument", "Email is required.");
 
@@ -40,7 +41,7 @@ export const reportFailedLogin = onCall({ cors: true }, async (request) => {
   return { recorded: true };
 });
 
-export const reportSuccessfulLogin = onCall({ cors: true }, async (request) => {
+export const reportSuccessfulLogin = onCall(SECURE_FN_OPTS, async (request) => {
   const { email } = request.data as { email: string };
   if (!email) throw new HttpsError("invalid-argument", "Email is required.");
 
@@ -48,7 +49,7 @@ export const reportSuccessfulLogin = onCall({ cors: true }, async (request) => {
   return { recorded: true };
 });
 
-export const requestPasswordReset = onCall({ cors: true }, async (request) => {
+export const requestPasswordReset = onCall(SECURE_FN_OPTS, async (request) => {
   const { email } = request.data as { email: string };
   if (!email) throw new HttpsError("invalid-argument", "Email is required.");
 

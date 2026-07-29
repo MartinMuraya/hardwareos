@@ -3,6 +3,7 @@
 // ============================================================
 
 import * as admin from "firebase-admin";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
 import { recordInventoryMovement, MovementType } from "./inventory_ledger";
@@ -24,7 +25,7 @@ export interface PurchaseItem {
 // Records a supplier purchase and increases stock for each item.
 // Also logs stock movements.
 // -----------------------------------------------------------
-export const createPurchase = onCall({ cors: true }, async (request) => {
+export const createPurchase = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, supplierId, supplierName, items, note } = request.data as {
@@ -146,7 +147,7 @@ export const createPurchase = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // getPurchases
 // -----------------------------------------------------------
-export const getPurchases = onCall({ cors: true }, async (request) => {
+export const getPurchases = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, limit: pageLimit = 30, startAfter } = request.data as {

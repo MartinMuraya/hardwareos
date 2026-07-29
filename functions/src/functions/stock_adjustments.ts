@@ -4,6 +4,7 @@
 // ============================================================
 
 import * as admin from "firebase-admin";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
 import { recordInventoryMovement, MovementType } from "./inventory_ledger";
@@ -14,7 +15,7 @@ const db = () => admin.firestore();
 // adjustInventoryStock
 // Atomically: validate → create adjustment → update stock → audit log
 // -----------------------------------------------------------
-export const adjustInventoryStock = onCall({ cors: true }, async (request) => {
+export const adjustInventoryStock = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, productId, newQty, reason, notes } = request.data as {
@@ -123,7 +124,7 @@ export const adjustInventoryStock = onCall({ cors: true }, async (request) => {
 // getStockAdjustments
 // Paginated adjustment history, newest first.
 // -----------------------------------------------------------
-export const getStockAdjustments = onCall({ cors: true }, async (request) => {
+export const getStockAdjustments = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, limit: pageLimit = 50, startAfter } = request.data as {
@@ -158,7 +159,7 @@ export const getStockAdjustments = onCall({ cors: true }, async (request) => {
 // getAdjustmentStats
 // Today's adjustment count and value (for dashboard KPIs).
 // -----------------------------------------------------------
-export const getAdjustmentStats = onCall({ cors: true }, async (request) => {
+export const getAdjustmentStats = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId } = request.data as { businessId: string };

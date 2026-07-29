@@ -1,4 +1,5 @@
 import * as admin from "firebase-admin";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 
 const db = () => admin.firestore();
@@ -42,7 +43,7 @@ export async function recordSubscriptionEvent(params: {
 // Returns the authenticated user's business subscription history
 // -----------------------------------------------------------
 export const getMySubscriptionHistory = onCall(
-  { cors: true },
+  SECURE_FN_OPTS,
   async (request) => {
     if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
 
@@ -91,7 +92,7 @@ export const getMySubscriptionHistory = onCall(
 // Admin function to view any business's subscription history
 // -----------------------------------------------------------
 export const adminGetBusinessHistory = onCall(
-  { cors: true },
+  SECURE_FN_OPTS,
   async (request) => {
     if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
 

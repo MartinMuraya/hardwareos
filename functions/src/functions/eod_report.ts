@@ -1,4 +1,5 @@
 import * as admin from "firebase-admin";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember } from "../middleware/checkPlanLimits";
@@ -116,7 +117,7 @@ ${lowStockItems.slice(0, 3).map((item) => `  - ${item}`).join("\n") || "  None"}
 // updateEodReportSettings
 // Callable endpoint for owners to configure daily report preferences
 // -----------------------------------------------------------
-export const updateEodReportSettings = onCall({ cors: true }, async (request) => {
+export const updateEodReportSettings = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, enabled, phone, channel } = request.data as {

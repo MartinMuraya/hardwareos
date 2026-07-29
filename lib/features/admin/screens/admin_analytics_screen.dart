@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../../core/services/functions_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/utils/download.dart';
 
 class AdminAnalyticsScreen extends StatefulWidget {
   const AdminAnalyticsScreen({super.key});
@@ -58,7 +59,13 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
             onPressed: () {},
           ),
         ));
-        debugPrint(csvData); // Print to console for now (use debugPrint for production)
+        
+        try {
+          downloadCsv(csvData, '${type}_report_${DateTime.now().toIso8601String().split('T')[0]}.csv');
+        } catch (e) {
+          debugPrint('CSV Export not supported on this platform: $e');
+          debugPrint(csvData);
+        }
       }
     } catch (e) {
       if (mounted) {

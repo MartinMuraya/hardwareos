@@ -1,4 +1,5 @@
 import * as admin from "firebase-admin";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
 
@@ -8,7 +9,7 @@ const db = () => admin.firestore();
 // recordSupplierPayment
 // Records a full or partial payment towards a supplier debt.
 // -----------------------------------------------------------
-export const recordSupplierPayment = onCall({ cors: true }, async (request) => {
+export const recordSupplierPayment = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, supplierDebtId, amount, paymentMethod, referenceCode, note } = request.data as {
@@ -96,7 +97,7 @@ export const recordSupplierPayment = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // getSupplierDebts
 // -----------------------------------------------------------
-export const getSupplierDebts = onCall({ cors: true }, async (request) => {
+export const getSupplierDebts = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId } = request.data as { businessId: string };
@@ -125,7 +126,7 @@ export const getSupplierDebts = onCall({ cors: true }, async (request) => {
 // getSupplierDebtDashboard
 // Returns summary statistics of supplier payables
 // -----------------------------------------------------------
-export const getSupplierDebtDashboard = onCall({ cors: true }, async (request) => {
+export const getSupplierDebtDashboard = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId } = request.data as { businessId: string };

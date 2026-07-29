@@ -3,6 +3,8 @@
 // ============================================================
 
 import * as admin from "firebase-admin";
+import { rateLimitCheck } from "../middleware/rateLimiter";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
 import { performAutoConversion } from "./bulk_inventory";
@@ -35,8 +37,9 @@ export interface SaleItem {
 //  5. Log stock movement per item
 // All steps atomic via Firestore transaction.
 // -----------------------------------------------------------
-export const createSale = onCall({ cors: true }, async (request) => {
+export const createSale = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
+  await rateLimitCheck(request.rawRequest?.ip || request.auth.uid, "createSale", 60, 1);
 
   const { businessId, branchId, items, paymentMethod, note, customerId, customerName, pointsRedeemed } = request.data as {
     businessId: string;
@@ -197,7 +200,7 @@ export const createSale = onCall({ cors: true }, async (request) => {
       timsCuInvoiceNumber,
       timsQrCode,
       cashierId: request.auth!.uid,
-      cashierName: userData.name || "Unknown",
+      cashierName: userData.displayName || "Unknown",
       createdAt: now,
       customerId: customerId || null,
       customerName: customerName || null,
@@ -357,7 +360,7 @@ export const createSale = onCall({ cors: true }, async (request) => {
 // getSales
 // Paginated sales history, ordered by createdAt desc.
 // -----------------------------------------------------------
-export const getSales = onCall({ cors: true }, async (request) => {
+export const getSales = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, limit: pageLimit = 30, startAfter } = request.data as {

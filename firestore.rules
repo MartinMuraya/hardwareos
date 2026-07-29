@@ -310,6 +310,28 @@ service cloud.firestore {
     }
 
     // =========================================================
+    // ADDITIONAL EXPLICIT RULES FOR UNPROTECTED COLLECTIONS
+    // =========================================================
+    
+    match /chart_of_accounts/{id} { allow read: if isOwner(resource.data.businessId); allow write: if false; }
+    match /hr_settings/{id} { allow read: if isMember(resource.data.businessId); allow write: if false; }
+    match /tax_settings/{id} { allow read: if isMember(resource.data.businessId); allow write: if false; }
+    match /storefront_settings/{id} { allow read: if isMember(resource.data.businessId); allow write: if false; }
+    match /product_serials/{id} { allow read: if isMember(resource.data.businessId); allow write: if false; }
+    match /product_batches/{id} { allow read: if isMember(resource.data.businessId); allow write: if false; }
+    match /inventory_ledger/{id} { allow read: if isManager(resource.data.businessId); allow write: if false; }
+    match /support_tickets/{id} { allow read: if isMember(resource.data.businessId); allow write: if false; }
+    match /onlineOrders/{id} { allow read: if isMember(resource.data.businessId); allow write: if false; }
+    match /employees/{id} { allow read: if isOwner(resource.data.businessId); allow write: if false; }
+    match /eod_settings/{id} { allow read: if isOwner(resource.data.businessId); allow write: if false; }
+    match /supplier_debts/{id} { allow read: if isManager(resource.data.businessId); allow write: if false; }
+    
+    // Admin/Internal collections
+    match /platformAdmins/{id} { allow read, write: if false; }
+    match /idempotency_keys/{id} { allow read, write: if false; }
+    match /rateLimits/{id} { allow read, write: if false; }
+
+    // =========================================================
     // DEFAULT DENY — reject everything else
     // =========================================================
     match /{document=**} {

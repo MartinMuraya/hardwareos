@@ -3,6 +3,7 @@
 // ============================================================
 
 import * as admin from "firebase-admin";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
 
@@ -13,7 +14,7 @@ const db = () => admin.firestore();
 // Start a new cash session with opening float.
 // Only one session can be open at a time.
 // -----------------------------------------------------------
-export const openCashSession = onCall({ cors: true }, async (request) => {
+export const openCashSession = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, branchId, openingFloat } = request.data as {
@@ -92,7 +93,7 @@ export const openCashSession = onCall({ cors: true }, async (request) => {
 // closeCashSession
 // Manager enters actual cash counted; system calculates variance.
 // -----------------------------------------------------------
-export const closeCashSession = onCall({ cors: true }, async (request) => {
+export const closeCashSession = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, sessionId, actualCash } = request.data as {
@@ -166,7 +167,7 @@ export const closeCashSession = onCall({ cors: true }, async (request) => {
 // getCashSessions
 // Paginated session list.
 // -----------------------------------------------------------
-export const getCashSessions = onCall({ cors: true }, async (request) => {
+export const getCashSessions = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, status, limit: pageLimit = 50, startAfter } = request.data as {
@@ -210,7 +211,7 @@ export const getCashSessions = onCall({ cors: true }, async (request) => {
 // getCashVarianceReport
 // Summary stats for today / period.
 // -----------------------------------------------------------
-export const getCashVarianceReport = onCall({ cors: true }, async (request) => {
+export const getCashVarianceReport = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId } = request.data as { businessId: string };
@@ -254,7 +255,7 @@ export const getCashVarianceReport = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // calculateCashVariance — Recalculate variance for a specific session
 // -----------------------------------------------------------
-export const calculateCashVariance = onCall({ cors: true }, async (request) => {
+export const calculateCashVariance = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, sessionId } = request.data as {
@@ -292,7 +293,7 @@ export const calculateCashVariance = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // getDailyCashReport — Aggregated report for a specific day
 // -----------------------------------------------------------
-export const getDailyCashReport = onCall({ cors: true }, async (request) => {
+export const getDailyCashReport = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, date } = request.data as {
@@ -345,7 +346,7 @@ export const getDailyCashReport = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // getMonthlyCashReport — Aggregated report for a month
 // -----------------------------------------------------------
-export const getMonthlyCashReport = onCall({ cors: true }, async (request) => {
+export const getMonthlyCashReport = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, year, month } = request.data as {

@@ -28,7 +28,7 @@ interface ImportError {
   message: string;
 }
 
-export const importProducts = onCall({ cors: true }, async (request) => {
+export const importProducts = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, products } = request.data as {

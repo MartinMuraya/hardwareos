@@ -1,4 +1,5 @@
 import * as admin from "firebase-admin";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 
 const db = () => admin.firestore();
@@ -10,7 +11,7 @@ async function assertSuperAdmin(uid: string): Promise<void> {
   }
 }
 
-export const getSecurityMetrics = onCall({ cors: true }, async (request) => {
+export const getSecurityMetrics = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
   const oneHourAgo = admin.firestore.Timestamp.fromMillis(Date.now() - 60 * 60 * 1000);
@@ -99,7 +100,7 @@ export const getSecurityMetrics = onCall({ cors: true }, async (request) => {
   };
 });
 
-export const getSecurityEvents = onCall({ cors: true }, async (request) => {
+export const getSecurityEvents = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 

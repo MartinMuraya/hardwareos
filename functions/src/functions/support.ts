@@ -1,4 +1,5 @@
 import * as admin from "firebase-admin";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 
 const db = () => admin.firestore();
@@ -14,7 +15,7 @@ async function assertSuperAdmin(uid: string) {
 // -----------------------------------------------------------
 // 1. createSupportTicket (For Tenants)
 // -----------------------------------------------------------
-export const createSupportTicket = onCall({ cors: true }, async (request) => {
+export const createSupportTicket = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
 
   const { subject, message, priority } = request.data as { subject: string; message: string; priority?: string };
@@ -55,7 +56,7 @@ export const createSupportTicket = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // 2. adminGetSupportTickets (For Super Admins)
 // -----------------------------------------------------------
-export const adminGetSupportTickets = onCall({ cors: true }, async (request) => {
+export const adminGetSupportTickets = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 
@@ -83,7 +84,7 @@ export const adminGetSupportTickets = onCall({ cors: true }, async (request) => 
 // -----------------------------------------------------------
 // 3. adminRespondToTicket (For Super Admins)
 // -----------------------------------------------------------
-export const adminRespondToTicket = onCall({ cors: true }, async (request) => {
+export const adminRespondToTicket = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 

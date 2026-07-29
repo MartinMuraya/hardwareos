@@ -3,6 +3,7 @@
 // ============================================================
 
 import * as admin from "firebase-admin";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 
 const db = () => admin.firestore();
@@ -20,7 +21,7 @@ async function assertSuperAdmin(uid: string) {
 // -----------------------------------------------------------
 // getPlatformStats
 // -----------------------------------------------------------
-export const getPlatformStats = onCall({ cors: true }, async (request) => {
+export const getPlatformStats = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 
@@ -92,7 +93,7 @@ export const getPlatformStats = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // adminGrantSuperAdmin
 // -----------------------------------------------------------
-export const adminGrantSuperAdmin = onCall({ cors: true }, async (request) => {
+export const adminGrantSuperAdmin = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 
@@ -119,7 +120,7 @@ export const adminGrantSuperAdmin = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // adminRevokeSuperAdmin
 // -----------------------------------------------------------
-export const adminRevokeSuperAdmin = onCall({ cors: true }, async (request) => {
+export const adminRevokeSuperAdmin = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 

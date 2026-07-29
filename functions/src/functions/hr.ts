@@ -1,4 +1,5 @@
 import * as admin from "firebase-admin";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
 import { postJournalEntryHelper, JournalLine } from "./accounting";
@@ -8,7 +9,7 @@ const db = () => admin.firestore();
 // -----------------------------------------------------------
 // HR Settings (Configurable Statutory Rates)
 // -----------------------------------------------------------
-export const saveHrSettings = onCall({ cors: true }, async (request) => {
+export const saveHrSettings = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
   const { businessId, payeRate, nhifRate, nssfRate } = request.data as {
     businessId: string;
@@ -30,7 +31,7 @@ export const saveHrSettings = onCall({ cors: true }, async (request) => {
   return { success: true };
 });
 
-export const getHrSettings = onCall({ cors: true }, async (request) => {
+export const getHrSettings = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
   const { businessId } = request.data as { businessId: string };
   await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager"]);
@@ -45,7 +46,7 @@ export const getHrSettings = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // Employee Management
 // -----------------------------------------------------------
-export const createEmployee = onCall({ cors: true }, async (request) => {
+export const createEmployee = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
   const { businessId, fullName, role, kraPin, nhifNumber, nssfNumber, baseSalary, employmentType } = request.data as any;
   
@@ -70,7 +71,7 @@ export const createEmployee = onCall({ cors: true }, async (request) => {
   return { success: true, employeeId: empRef.id };
 });
 
-export const updateEmployee = onCall({ cors: true }, async (request) => {
+export const updateEmployee = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
   const { employeeId, businessId, ...updates } = request.data as any;
   await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager"]);
@@ -92,7 +93,7 @@ export const updateEmployee = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // Timesheets & Leave
 // -----------------------------------------------------------
-export const submitTimesheet = onCall({ cors: true }, async (request) => {
+export const submitTimesheet = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
   const { businessId, employeeId, date, hoursWorked, overtimeHours } = request.data as any;
   await assertBusinessMember(request.auth.uid, businessId);
@@ -112,7 +113,7 @@ export const submitTimesheet = onCall({ cors: true }, async (request) => {
   return { success: true };
 });
 
-export const processLeave = onCall({ cors: true }, async (request) => {
+export const processLeave = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
   const { businessId, leaveId, status } = request.data as any; // status: Approved, Rejected
   await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager"]);
@@ -136,7 +137,7 @@ export function calculatePayslip(gross: number, rates: { payeRate: number, nhifR
 // -----------------------------------------------------------
 // Payroll Generation & Processing
 // -----------------------------------------------------------
-export const generatePayroll = onCall({ cors: true }, async (request) => {
+export const generatePayroll = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
   const { businessId, period } = request.data as { businessId: string; period: string };
   await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager"]);
@@ -193,7 +194,7 @@ export const generatePayroll = onCall({ cors: true }, async (request) => {
   return { success: true, payrollId: payrollRef.id };
 });
 
-export const processPayroll = onCall({ cors: true }, async (request) => {
+export const processPayroll = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
   const { businessId, payrollId } = request.data as { businessId: string; payrollId: string };
   await assertBusinessMember(request.auth.uid, businessId, ["owner"]);
@@ -243,7 +244,7 @@ export const processPayroll = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // Commissions
 // -----------------------------------------------------------
-export const payoutCommission = onCall({ cors: true }, async (request) => {
+export const payoutCommission = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
   
   const { businessId, targetUserId, amount } = request.data as {

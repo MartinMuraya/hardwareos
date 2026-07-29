@@ -1,4 +1,5 @@
 import * as admin from "firebase-admin";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 
 const db = () => admin.firestore();
@@ -17,7 +18,7 @@ async function assertSuperAdmin(uid: string) {
 // adminGetPlanConfigs & adminSavePlanConfig
 // Super Admin Subscription Plan CRUD Operations
 // -----------------------------------------------------------
-export const adminGetPlanConfigs = onCall({ cors: true }, async (request) => {
+export const adminGetPlanConfigs = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 
@@ -76,7 +77,7 @@ export const adminGetPlanConfigs = onCall({ cors: true }, async (request) => {
   return { plans };
 });
 
-export const adminSavePlanConfig = onCall({ cors: true }, async (request) => {
+export const adminSavePlanConfig = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 
@@ -106,7 +107,7 @@ export const adminSavePlanConfig = onCall({ cors: true }, async (request) => {
 // ============================================================
 
 /** Get the current user's own subscription payment history */
-export const getMySubscriptionPayments = onCall({ cors: true }, async (request) => {
+export const getMySubscriptionPayments = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
 
   const userSnap = await db().collection("users").doc(request.auth.uid).get();
@@ -135,7 +136,7 @@ export const getMySubscriptionPayments = onCall({ cors: true }, async (request) 
   return { payments };
 });
 
-export const adminGetSubscriptions = onCall({ cors: true }, async (request) => {
+export const adminGetSubscriptions = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 
@@ -158,7 +159,7 @@ export const adminGetSubscriptions = onCall({ cors: true }, async (request) => {
   return { subscriptions };
 });
 
-export const adminUpdateSubscription = onCall({ cors: true }, async (request) => {
+export const adminUpdateSubscription = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 
@@ -208,7 +209,7 @@ export const adminUpdateSubscription = onCall({ cors: true }, async (request) =>
 // 2. Plan Management (CRUD for plans stored in 'plans' collection)
 // ============================================================
 
-export const adminGetPlans = onCall({ cors: true }, async (request) => {
+export const adminGetPlans = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 
@@ -269,7 +270,7 @@ export const adminGetPlans = onCall({ cors: true }, async (request) => {
   return { plans };
 });
 
-export const adminCreatePlan = onCall({ cors: true }, async (request) => {
+export const adminCreatePlan = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 
@@ -295,7 +296,7 @@ export const adminCreatePlan = onCall({ cors: true }, async (request) => {
   return { success: true };
 });
 
-export const adminUpdatePlan = onCall({ cors: true }, async (request) => {
+export const adminUpdatePlan = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 
@@ -310,7 +311,7 @@ export const adminUpdatePlan = onCall({ cors: true }, async (request) => {
   return { success: true };
 });
 
-export const adminDeletePlan = onCall({ cors: true }, async (request) => {
+export const adminDeletePlan = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 
@@ -329,7 +330,7 @@ export const adminDeletePlan = onCall({ cors: true }, async (request) => {
 // 3. User Management
 // ============================================================
 
-export const adminGetUsers = onCall({ cors: true }, async (request) => {
+export const adminGetUsers = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 
@@ -363,7 +364,7 @@ export const adminGetUsers = onCall({ cors: true }, async (request) => {
   return { users };
 });
 
-export const adminUpdateUser = onCall({ cors: true }, async (request) => {
+export const adminUpdateUser = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 
@@ -411,7 +412,7 @@ export const adminUpdateUser = onCall({ cors: true }, async (request) => {
 // 4. Platform Settings & Operations
 // ============================================================
 
-export const adminGetSettings = onCall({ cors: true }, async (request) => {
+export const adminGetSettings = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 
@@ -432,7 +433,7 @@ export const adminGetSettings = onCall({ cors: true }, async (request) => {
   return doc.data();
 });
 
-export const adminUpdateSettings = onCall({ cors: true }, async (request) => {
+export const adminUpdateSettings = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 
@@ -474,7 +475,7 @@ export const adminUpdateSettings = onCall({ cors: true }, async (request) => {
 // 5. Tenant Impersonation & Broadcasts
 // ============================================================
 
-export const adminImpersonateTenant = onCall({ cors: true }, async (request) => {
+export const adminImpersonateTenant = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 
@@ -499,7 +500,7 @@ export const adminImpersonateTenant = onCall({ cors: true }, async (request) => 
   return { customToken };
 });
 
-export const createGlobalAnnouncement = onCall({ cors: true }, async (request) => {
+export const createGlobalAnnouncement = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 
@@ -530,7 +531,7 @@ export const createGlobalAnnouncement = onCall({ cors: true }, async (request) =
   return { success: true, announcementId };
 });
 
-export const adminGetSystemLogs = onCall({ cors: true }, async (request) => {
+export const adminGetSystemLogs = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 

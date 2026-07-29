@@ -1,9 +1,10 @@
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore } from "firebase-admin/firestore";
 
 const db = getFirestore;
 
-export const exportAdminReport = onCall({ cors: true }, async (request) => {
+export const exportAdminReport = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
 
   // Verify Admin Access

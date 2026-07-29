@@ -117,14 +117,14 @@ class AppRouter {
             return '/register';
           }
           if (isRegistered) {
-            if (authProvider.businessStatus == 'pending' && state.matchedLocation != '/pending-approval') {
-              return '/pending-approval';
+            if (authProvider.businessStatus == 'pending' && state.matchedLocation != RoutePaths.pendingApproval) {
+              return RoutePaths.pendingApproval;
             }
             if (authProvider.businessStatus != 'pending' && isAuthRoute) {
-              return '/dashboard';
+              return RoutePaths.dashboard;
             }
-            if (authProvider.businessStatus != 'pending' && state.matchedLocation == '/pending-approval') {
-              return '/dashboard';
+            if (authProvider.businessStatus != 'pending' && state.matchedLocation == RoutePaths.pendingApproval) {
+              return RoutePaths.dashboard;
             }
 
             final isExpired = authProvider.subscriptionStatus == 'expired';
@@ -206,9 +206,9 @@ class AppRouter {
         GoRoute(path: RoutePaths.login,    builder: (_, __) => const LoginScreen()),
         GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
         GoRoute(path: RoutePaths.verifyEmail, builder: (_, __) => const EmailVerificationScreen()),
-        GoRoute(path: '/forgot-password', builder: (_, __) => const ForgotPasswordScreen()),
-        GoRoute(path: '/pending-approval', builder: (_, __) => const PendingApprovalScreen()),
-        GoRoute(path: '/auth-error', builder: (_, __) => const AuthErrorScreen()),
+        GoRoute(path: RoutePaths.forgotPassword, builder: (_, __) => const ForgotPasswordScreen()),
+        GoRoute(path: RoutePaths.pendingApproval, builder: (_, __) => const PendingApprovalScreen()),
+        GoRoute(path: RoutePaths.authError, builder: (_, __) => const AuthErrorScreen()),
         
         // Super Admin Shell
         ShellRoute(

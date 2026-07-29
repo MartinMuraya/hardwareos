@@ -3,6 +3,8 @@
 // ============================================================
 
 import * as admin from "firebase-admin";
+import { rateLimitCheck } from "../middleware/rateLimiter";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import {
   assertBusinessMember,
@@ -17,8 +19,9 @@ const db = () => admin.firestore();
 // Validates plan limits before creating a new product.
 // Only owner/manager can create products.
 // -----------------------------------------------------------
-export const createProduct = onCall({ cors: true }, async (request) => {
+export const createProduct = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
+  await rateLimitCheck(request.rawRequest?.ip || request.auth.uid, "createProduct", 60, 1);
 
   const {
     businessId, name, sku, category,
@@ -117,7 +120,7 @@ export const createProduct = onCall({ cors: true }, async (request) => {
 // updateProduct
 // Updates product details. Stock changes must use addStock().
 // -----------------------------------------------------------
-export const updateProduct = onCall({ cors: true }, async (request) => {
+export const updateProduct = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, productId, updates } = request.data as {
@@ -145,8 +148,9 @@ export const updateProduct = onCall({ cors: true }, async (request) => {
 // Increases inventory quantity + logs stock movement.
 // Used for manual top-ups and purchase receipts.
 // -----------------------------------------------------------
-export const addStock = onCall({ cors: true }, async (request) => {
+export const addStock = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
+  await rateLimitCheck(request.rawRequest?.ip || request.auth.uid, "addStock", 60, 1);
 
   const { businessId, productId, quantity, reason, referenceId, branchId } = request.data as {
     businessId: string;
@@ -199,7 +203,7 @@ export const addStock = onCall({ cors: true }, async (request) => {
 // getProducts
 // Paginated product list with optional search/filter.
 // -----------------------------------------------------------
-export const getProducts = onCall({ cors: true }, async (request) => {
+export const getProducts = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, limit: pageLimit = 50, startAfter, category, branchId } = request.data as {
@@ -247,7 +251,7 @@ export const getProducts = onCall({ cors: true }, async (request) => {
 // getLowStockProducts
 // Returns products at or below reorderLevel. Used by dashboard.
 // -----------------------------------------------------------
-export const getLowStockProducts = onCall({ cors: true }, async (request) => {
+export const getLowStockProducts = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, branchId } = request.data as { businessId: string; branchId?: string };

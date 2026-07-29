@@ -1,4 +1,5 @@
 import * as admin from "firebase-admin";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember } from "../middleware/checkPlanLimits";
 
@@ -56,7 +57,7 @@ export function recordInventoryMovement(
 // -----------------------------------------------------------
 // Migration Script: Convert existing quantity to OPENING_BALANCE
 // -----------------------------------------------------------
-export const migrateToLedger = onCall({ cors: true, timeoutSeconds: 540 }, async (request) => {
+export const migrateToLedger = onCall({ ...SECURE_FN_OPTS, timeoutSeconds: 540 }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
   
   const { businessId } = request.data as { businessId: string };

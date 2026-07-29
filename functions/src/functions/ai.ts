@@ -1,4 +1,5 @@
 import * as admin from "firebase-admin";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
 import { GoogleGenAI } from "@google/genai";
@@ -11,7 +12,7 @@ const geminiApiKey = defineSecret("GEMINI_API_KEY");
 // analyzeInventoryHealth
 // -----------------------------------------------------------
 export const analyzeInventoryHealth = onCall(
-  { cors: true, secrets: [geminiApiKey], timeoutSeconds: 300 },
+  { ...SECURE_FN_OPTS, secrets: [geminiApiKey], timeoutSeconds: 300 },
   async (request) => {
     if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 

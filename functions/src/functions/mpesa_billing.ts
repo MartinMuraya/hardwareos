@@ -1,4 +1,5 @@
 import * as admin from "firebase-admin";
+import { SECURE_FN_OPTS, WEBHOOK_FN_OPTS } from "../config/functionOptions";
 import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
 import { MpesaProvider, mpesaConsumerKey, mpesaConsumerSecret, mpesaPasskey, mpesaWebhookSecret } from "../services/mpesaProvider";
 import { assertBusinessMember } from "../middleware/checkPlanLimits";
@@ -20,7 +21,7 @@ function computeNextExpiry(): admin.firestore.Timestamp {
 // -----------------------------------------------------------
 // createSubscriptionPayment
 // -----------------------------------------------------------
-export const createSubscriptionPayment = onCall({ cors: true, secrets: [mpesaConsumerKey, mpesaConsumerSecret, mpesaPasskey] }, async (request) => {
+export const createSubscriptionPayment = onCall({ ...SECURE_FN_OPTS, secrets: [mpesaConsumerKey, mpesaConsumerSecret, mpesaPasskey] }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
 
   const { businessId, planId, phoneNumber } = request.data as {
@@ -143,7 +144,7 @@ export const createSubscriptionPayment = onCall({ cors: true, secrets: [mpesaCon
 // mpesaCallback
 // webhook callback called directly by Safaricom
 // -----------------------------------------------------------
-export const mpesaCallback = onRequest({ cors: true, secrets: [mpesaConsumerKey, mpesaConsumerSecret, mpesaPasskey, mpesaWebhookSecret] }, async (req, res) => {
+export const mpesaCallback = onRequest({ ...WEBHOOK_FN_OPTS, secrets: [mpesaConsumerKey, mpesaConsumerSecret, mpesaPasskey, mpesaWebhookSecret] }, async (req, res) => {
   try {
     const clientIp = req.ip || req.headers["x-forwarded-for"]?.toString() || "unknown";
     
@@ -384,7 +385,7 @@ export const mpesaCallback = onRequest({ cors: true, secrets: [mpesaConsumerKey,
 // simulateMpesaCallback
 // Admin-only helper to test end-to-end payment loop instantly
 // -----------------------------------------------------------
-export const simulateMpesaCallback = onCall({ cors: true }, async (request) => {
+export const simulateMpesaCallback = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
 
   // Production safety: only super admins can simulate payments

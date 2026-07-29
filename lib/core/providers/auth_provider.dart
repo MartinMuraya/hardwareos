@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_functions/cloud_functions.dart';
@@ -10,6 +11,7 @@ class AuthProvider extends ChangeNotifier {
   FirebaseAuth? _auth;
   FirebaseFunctions? _functions;
   final Future<Map<String, dynamic>> Function()? _profileFetcher;
+  StreamSubscription<User?>? _authStateSubscription;
 
   User? _user;
   AuthState _state = AuthState.initial;
@@ -65,8 +67,14 @@ class AuthProvider extends ChangeNotifier {
     _functions = functions ?? (profileFetcher == null ? FirebaseFunctions.instance : null);
     _repo = repo ?? (attachAuthState ? AuthRepository() : null);
     if (attachAuthState && _auth != null) {
-      _auth!.authStateChanges().listen(_onAuthStateChanged);
+      _authStateSubscription = _auth!.authStateChanges().listen(_onAuthStateChanged);
     }
+  }
+
+  @override
+  void dispose() {
+    _authStateSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _onAuthStateChanged(User? user) async {

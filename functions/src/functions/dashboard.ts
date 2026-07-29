@@ -3,6 +3,7 @@
 // ============================================================
 
 import * as admin from "firebase-admin";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, getBusinessData } from "../middleware/checkPlanLimits";
 import { getEffectivePlan, Plan, SubscriptionStatus } from "../config/planLimits";
@@ -13,7 +14,7 @@ const db = () => admin.firestore();
 // getDashboardStats
 // Returns today's KPIs + low stock + subscription info.
 // -----------------------------------------------------------
-export const getDashboardStats = onCall({ cors: true }, async (request) => {
+export const getDashboardStats = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId } = request.data as { businessId: string };
@@ -142,7 +143,7 @@ export const getDashboardStats = onCall({ cors: true }, async (request) => {
 // getReportStats
 // Returns aggregated stats for a period ('today'|'week'|'month').
 // -----------------------------------------------------------
-export const getReportStats = onCall({ cors: true }, async (request) => {
+export const getReportStats = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, period } = request.data as {
@@ -221,7 +222,7 @@ export const getReportStats = onCall({ cors: true }, async (request) => {
 // Admin-only function.
 // -----------------------------------------------------------
 
-export const seedDemoData = onCall({ cors: true }, async (request) => {
+export const seedDemoData = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const adminSnap = await db().collection("platformAdmins").doc(request.auth.uid).get();

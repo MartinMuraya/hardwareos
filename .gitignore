@@ -57,3 +57,21 @@ serviceAccount*.json
 # Environment secrets
 .env
 .env.local
+.env.*
+functions/.env*
+
+# Sensitive data — NEVER commit
+users.json
+*-service-account*.json
+serviceAccount*.json
+
+# Backup files
+*.bak
+
+# JVM crash dumps
+hs_err_pid*
+replay_pid*
+
+# Misc generated
+opencode.json
+skills-lock.json

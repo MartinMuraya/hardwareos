@@ -1,4 +1,5 @@
 import * as admin from "firebase-admin";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { GRACE_PERIOD_DAYS } from "../config/planLimits";
@@ -399,7 +400,7 @@ async function aggregateSubscriptionStats(): Promise<void> {
 // Callable function for admin to fetch subscription stats
 // -----------------------------------------------------------
 export const getSubscriptionAnalytics = onCall(
-  { cors: true },
+  SECURE_FN_OPTS,
   async (request) => {
     if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
 

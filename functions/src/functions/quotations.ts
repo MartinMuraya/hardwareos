@@ -3,6 +3,7 @@
 // ============================================================
 
 import * as admin from "firebase-admin";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
 
@@ -28,7 +29,7 @@ async function nextQuotationNumber(businessId: string): Promise<string> {
 // -----------------------------------------------------------
 // createQuotation
 // -----------------------------------------------------------
-export const createQuotation = onCall({ cors: true }, async (request) => {
+export const createQuotation = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const {
@@ -113,7 +114,7 @@ export const createQuotation = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // getQuotations
 // -----------------------------------------------------------
-export const getQuotations = onCall({ cors: true }, async (request) => {
+export const getQuotations = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, limit: pageLimit = 50, startAfter, status } = request.data as {
@@ -164,7 +165,7 @@ export const getQuotations = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // getQuotation
 // -----------------------------------------------------------
-export const getQuotation = onCall({ cors: true }, async (request) => {
+export const getQuotation = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, quotationId } = request.data as {
@@ -199,7 +200,7 @@ export const getQuotation = onCall({ cors: true }, async (request) => {
 // -----------------------------------------------------------
 // updateQuotationStatus
 // -----------------------------------------------------------
-export const updateQuotationStatus = onCall({ cors: true }, async (request) => {
+export const updateQuotationStatus = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, quotationId, status } = request.data as {
@@ -235,7 +236,7 @@ export const updateQuotationStatus = onCall({ cors: true }, async (request) => {
 // convertQuotationToSale
 // Converts an accepted quotation into a sale.
 // -----------------------------------------------------------
-export const convertQuotationToSale = onCall({ cors: true }, async (request) => {
+export const convertQuotationToSale = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, quotationId, paymentMethod } = request.data as {

@@ -1,4 +1,5 @@
 import * as admin from "firebase-admin";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription, assertFeatureEnabled } from "../middleware/checkPlanLimits";
 
@@ -8,7 +9,7 @@ const db = () => admin.firestore();
 // getPublicStorefront
 // Resolves a slug to a business and returns basic storefront info
 // -----------------------------------------------------------
-export const getPublicStorefront = onCall({ cors: true }, async (request) => {
+export const getPublicStorefront = onCall(SECURE_FN_OPTS, async (request) => {
   const { tenantSlug } = request.data as { tenantSlug: string };
   if (!tenantSlug) throw new HttpsError("invalid-argument", "tenantSlug is required.");
 
@@ -34,7 +35,7 @@ export const getPublicStorefront = onCall({ cors: true }, async (request) => {
 // getPublicProducts
 // Retrieves products for a business where isPublishedOnline is true
 // -----------------------------------------------------------
-export const getPublicProducts = onCall({ cors: true }, async (request) => {
+export const getPublicProducts = onCall(SECURE_FN_OPTS, async (request) => {
   const { businessId, category } = request.data as { businessId: string, category?: string };
   if (!businessId) throw new HttpsError("invalid-argument", "businessId is required.");
 
@@ -68,7 +69,7 @@ export const getPublicProducts = onCall({ cors: true }, async (request) => {
 // getStorefrontCategories
 // Retrieves unique categories for published products
 // -----------------------------------------------------------
-export const getStorefrontCategories = onCall({ cors: true }, async (request) => {
+export const getStorefrontCategories = onCall(SECURE_FN_OPTS, async (request) => {
   const { businessId } = request.data as { businessId: string };
   if (!businessId) throw new HttpsError("invalid-argument", "businessId is required.");
 
@@ -90,7 +91,7 @@ export const getStorefrontCategories = onCall({ cors: true }, async (request) =>
 // Submits a shopping cart to create a pending online order.
 // Temporarily decrements stock (Hold) until approved by the merchant.
 // -----------------------------------------------------------
-export const createOnlineOrder = onCall({ cors: true }, async (request) => {
+export const createOnlineOrder = onCall(SECURE_FN_OPTS, async (request) => {
     const { businessId, items, customerName, customerPhone, address, note, deliveryZoneId, deliveryFee, triggerMpesa } = request.data as {
       businessId: string;
       items: Array<{ productId: string; quantity: number }>;
@@ -234,7 +235,7 @@ export const createOnlineOrder = onCall({ cors: true }, async (request) => {
 // Approves an online order, creates a sale document.
 // Stock was already decremented during createOnlineOrder (Stock Hold).
 // -----------------------------------------------------------
-export const approveOnlineOrder = onCall({ cors: true }, async (request) => {
+export const approveOnlineOrder = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, orderId } = request.data as { businessId: string; orderId: string };
@@ -289,7 +290,7 @@ export const approveOnlineOrder = onCall({ cors: true }, async (request) => {
 // rejectOnlineOrder
 // Rejects an online order and restores the Stock Hold.
 // -----------------------------------------------------------
-export const rejectOnlineOrder = onCall({ cors: true }, async (request) => {
+export const rejectOnlineOrder = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, orderId } = request.data as { businessId: string; orderId: string };
@@ -341,7 +342,7 @@ export const rejectOnlineOrder = onCall({ cors: true }, async (request) => {
 // getStorefrontSettings
 // Returns the storefront configuration for a specific business.
 // -----------------------------------------------------------
-export const getStorefrontSettings = onCall({ cors: true }, async (request) => {
+export const getStorefrontSettings = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
   
   const { businessId } = request.data as { businessId: string };
@@ -358,7 +359,7 @@ export const getStorefrontSettings = onCall({ cors: true }, async (request) => {
 // updateStorefrontSettings
 // Updates the storefront configuration for a specific business.
 // -----------------------------------------------------------
-export const updateStorefrontSettings = onCall({ cors: true }, async (request) => {
+export const updateStorefrontSettings = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
   
   const { 
@@ -415,7 +416,7 @@ export const updateStorefrontSettings = onCall({ cors: true }, async (request) =
 // checkSlugAvailability
 // Checks if a requested tenant slug is available.
 // -----------------------------------------------------------
-export const checkSlugAvailability = onCall({ cors: true }, async (request) => {
+export const checkSlugAvailability = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
   
   const { slug, businessId } = request.data as { slug: string; businessId: string };

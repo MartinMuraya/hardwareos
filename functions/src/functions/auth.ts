@@ -3,6 +3,7 @@
 // ============================================================
 
 import * as admin from "firebase-admin";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as nodemailer from "nodemailer";
 import { TRIAL_DAYS } from "../config/planLimits";
@@ -16,7 +17,7 @@ const db = () => admin.firestore();
 // Called once when a new owner registers their hardware store.
 // Creates the business doc + owner user profile atomically.
 // -----------------------------------------------------------
-export const createBusiness = onCall({ cors: true }, async (request) => {
+export const createBusiness = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "You must be logged in.");
   }
@@ -170,7 +171,7 @@ export const createBusiness = onCall({ cors: true }, async (request) => {
 // Enforces maxUsers plan limit before creating the profile.
 // The invited user must already have a Firebase Auth account.
 // -----------------------------------------------------------
-export const inviteUser = onCall({ cors: true }, async (request) => {
+export const inviteUser = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "You must be logged in.");
   }
@@ -227,7 +228,7 @@ export const inviteUser = onCall({ cors: true }, async (request) => {
 // updateStaff
 // Owner/Manager updates an existing staff member's role or commission.
 // -----------------------------------------------------------
-export const updateStaff = onCall({ cors: true }, async (request) => {
+export const updateStaff = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "You must be logged in.");
   }
@@ -265,7 +266,7 @@ export const updateStaff = onCall({ cors: true }, async (request) => {
 // Returns the calling user's profile + business info + super admin status.
 // Called on app startup to restore session context.
 // -----------------------------------------------------------
-export const getMyProfile = onCall({ cors: true }, async (request) => {
+export const getMyProfile = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "You must be logged in.");
   }
@@ -301,7 +302,7 @@ export const getMyProfile = onCall({ cors: true }, async (request) => {
 // Retrieves all users associated with the given businessId.
 // Caller must be an owner or manager.
 // -----------------------------------------------------------
-export const getUsers = onCall({ cors: true }, async (request) => {
+export const getUsers = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "You must be logged in.");
   }

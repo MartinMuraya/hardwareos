@@ -3,6 +3,7 @@
 // ============================================================
 
 import * as admin from "firebase-admin";
+import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
 
@@ -19,7 +20,7 @@ const db = () => admin.firestore();
 //  5. Update customer balance
 //  6. Record payment if partial amount received
 // -----------------------------------------------------------
-export const createCreditSale = onCall({ cors: true }, async (request) => {
+export const createCreditSale = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, customerId, customerName, items, amountPaid, note, pointsRedeemed, idempotencyKey } = request.data as {
@@ -265,7 +266,7 @@ export const createCreditSale = onCall({ cors: true }, async (request) => {
 // recordDebtPayment
 // Record a payment against a customer's outstanding debt.
 // -----------------------------------------------------------
-export const recordDebtPayment = onCall({ cors: true }, async (request) => {
+export const recordDebtPayment = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, customerId, amount, note } = request.data as {
@@ -351,7 +352,7 @@ export const recordDebtPayment = onCall({ cors: true }, async (request) => {
 // adjustDebt
 // Manually adjust a customer's debt (for corrections).
 // -----------------------------------------------------------
-export const adjustDebt = onCall({ cors: true }, async (request) => {
+export const adjustDebt = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, customerId, amount, reason } = request.data as {
@@ -418,7 +419,7 @@ export const adjustDebt = onCall({ cors: true }, async (request) => {
 // getDebtTransactions
 // Paginated debt transactions for a customer.
 // -----------------------------------------------------------
-export const getDebtTransactions = onCall({ cors: true }, async (request) => {
+export const getDebtTransactions = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, customerId, limit: pageLimit = 50, startAfter } = request.data as {
@@ -460,7 +461,7 @@ export const getDebtTransactions = onCall({ cors: true }, async (request) => {
 // getCustomerStatement
 // Full statement: opening balance + transactions + current balance.
 // -----------------------------------------------------------
-export const getCustomerStatement = onCall({ cors: true }, async (request) => {
+export const getCustomerStatement = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, customerId } = request.data as {
@@ -523,7 +524,7 @@ export const getCustomerStatement = onCall({ cors: true }, async (request) => {
 // getDebtDashboard
 // Aggregated debt metrics for the dashboard.
 // -----------------------------------------------------------
-export const getDebtDashboard = onCall({ cors: true }, async (request) => {
+export const getDebtDashboard = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId } = request.data as { businessId: string };

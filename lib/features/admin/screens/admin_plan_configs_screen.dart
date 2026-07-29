@@ -41,19 +41,23 @@ class _AdminPlanConfigsScreenState extends State<AdminPlanConfigsScreen> {
     }
   }
 
-  Future<void> _editPlanModal(Map<String, dynamic> plan) async {
+  Future<void> _editPlanModal([Map<String, dynamic>? plan]) async {
     final theme = Theme.of(context);
-    final nameCtrl = TextEditingController(text: plan['name'] ?? plan['id']);
-    final priceCtrl = TextEditingController(text: (plan['priceKes'] ?? 0).toString());
-    final maxProdCtrl = TextEditingController(text: (plan['maxProducts'] ?? -1).toString());
-    final maxUsersCtrl = TextEditingController(text: (plan['maxUsers'] ?? -1).toString());
+    final isNew = plan == null;
+    final planData = plan ?? {};
 
-    bool aiBasic = plan['aiBasicEnabled'] ?? false;
-    bool aiAnalyst = plan['aiAnalystEnabled'] ?? false;
-    bool whatsapp = plan['whatsappEnabled'] ?? false;
-    bool etims = plan['etimsEnabled'] ?? false;
-    bool storefront = plan['storefrontEnabled'] ?? false;
-    bool advancedAnalytics = plan['advancedAnalyticsEnabled'] ?? false;
+    final idCtrl = TextEditingController(text: planData['id'] ?? '');
+    final nameCtrl = TextEditingController(text: planData['name'] ?? planData['id']);
+    final priceCtrl = TextEditingController(text: (planData['priceKes'] ?? 0).toString());
+    final maxProdCtrl = TextEditingController(text: (planData['maxProducts'] ?? -1).toString());
+    final maxUsersCtrl = TextEditingController(text: (planData['maxUsers'] ?? -1).toString());
+
+    bool aiBasic = planData['aiBasicEnabled'] ?? false;
+    bool aiAnalyst = planData['aiAnalystEnabled'] ?? false;
+    bool whatsapp = planData['whatsappEnabled'] ?? false;
+    bool etims = planData['etimsEnabled'] ?? false;
+    bool storefront = planData['storefrontEnabled'] ?? false;
+    bool advancedAnalytics = planData['advancedAnalyticsEnabled'] ?? false;
 
     final result = await showDialog<bool>(
       context: context,
@@ -62,12 +66,19 @@ class _AdminPlanConfigsScreenState extends State<AdminPlanConfigsScreen> {
           builder: (ctx, setDialogState) {
             return AlertDialog(
               backgroundColor: theme.cardColor,
-              title: Text('Edit Plan Tier: ${plan['id'].toUpperCase()}'),
+              title: Text(isNew ? 'Create New Plan Tier' : 'Edit Plan Tier: ${planData['id'].toUpperCase()}'),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    if (isNew) ...[
+                      TextField(
+                        controller: idCtrl,
+                        decoration: const InputDecoration(labelText: 'Plan ID (e.g. basic, ultra)'),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
                     TextField(
                       controller: nameCtrl,
                       decoration: const InputDecoration(labelText: 'Plan Display Name'),
@@ -155,9 +166,13 @@ class _AdminPlanConfigsScreenState extends State<AdminPlanConfigsScreen> {
     final messenger = ScaffoldMessenger.of(context);
 
     if (result == true) {
+      if (isNew && idCtrl.text.trim().isEmpty) {
+        messenger.showSnackBar(const SnackBar(content: Text('Plan ID is required'), backgroundColor: AppColors.error));
+        return;
+      }
       try {
         await FunctionsService.call('adminSavePlanConfig', {
-          'planId': plan['id'],
+          'planId': isNew ? idCtrl.text.trim().toLowerCase() : planData['id'],
           'config': {
             'name': nameCtrl.text.trim(),
             'priceKes': double.tryParse(priceCtrl.text) ?? 0,
@@ -297,6 +312,13 @@ class _AdminPlanConfigsScreenState extends State<AdminPlanConfigsScreen> {
                     ],
                   ),
                 ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _editPlanModal(),
+        icon: const Icon(Icons.add_rounded),
+        label: const Text('Create Plan'),
+        backgroundColor: AppColors.accent,
+        foregroundColor: Colors.white,
+      ),
     );
   }
 }
