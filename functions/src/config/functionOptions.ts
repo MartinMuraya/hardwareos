@@ -3,7 +3,7 @@
 // All callable functions should use these options for security.
 // ============================================================
 
-import { HttpsOptions } from "firebase-functions/v2/https";
+import { CallableOptions } from "firebase-functions/v2/https";
 
 /** Default production domain whitelist for CORS. */
 const ALLOWED_ORIGINS = [
@@ -17,7 +17,7 @@ const ALLOWED_ORIGINS = [
  * Secure callable options — enforces App Check and restricts CORS.
  * Use for ALL authenticated callable functions.
  */
-export const SECURE_FN_OPTS: HttpsOptions = {
+export const SECURE_FN_OPTS: CallableOptions = {
   cors: ALLOWED_ORIGINS,
   enforceAppCheck: true,
 };
@@ -26,7 +26,7 @@ export const SECURE_FN_OPTS: HttpsOptions = {
  * Public callable options — enforces App Check but allows broader CORS.
  * Use for public-facing endpoints like storefront that don't require auth.
  */
-export const PUBLIC_FN_OPTS: HttpsOptions = {
+export const PUBLIC_FN_OPTS: CallableOptions = {
   cors: true, // Public storefront needs broad access
   enforceAppCheck: true,
 };
@@ -35,7 +35,7 @@ export const PUBLIC_FN_OPTS: HttpsOptions = {
  * Webhook options — no App Check (external callers like M-Pesa).
  * These endpoints validate via webhook secret instead.
  */
-export const WEBHOOK_FN_OPTS: HttpsOptions = {
+export const WEBHOOK_FN_OPTS: CallableOptions = {
   cors: true,
   enforceAppCheck: false,
 };
