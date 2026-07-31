@@ -45,11 +45,15 @@ void main() async {
       );
     } else {
       // Non-release (dev/test) - use debug providers to avoid developer friction
-      await FirebaseAppCheck.instance.activate(
-        androidProvider: AndroidProvider.debug,
-        appleProvider: AppleProvider.debug,
-        webProvider: ReCaptchaV3Provider('6Ldb7qspAAAAAMj6Q5tU6tE-6-88888888888888'), // debug fallback
-      );
+      if (kIsWeb && recaptchaKey.isEmpty) {
+        debugPrint('App Check initialization skipped on Web: Provide RECAPTCHA_SITE_KEY via --dart-define to test against live backend.');
+      } else {
+        await FirebaseAppCheck.instance.activate(
+          androidProvider: AndroidProvider.debug,
+          appleProvider: AppleProvider.debug,
+          webProvider: recaptchaKey.isNotEmpty ? ReCaptchaV3Provider(recaptchaKey) : null,
+        );
+      }
     }
   } catch (e) {
     // In non-release builds, warn but continue. In release builds the above throws and prevents startup.
