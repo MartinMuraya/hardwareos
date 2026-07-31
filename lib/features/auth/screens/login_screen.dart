@@ -100,141 +100,149 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         )
                       : Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          'Sign In',
-                          style: theme.textTheme.headlineMedium,
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Welcome back to your store dashboard.',
-                          style: theme.textTheme.bodySmall,
-                        ),
-                        const SizedBox(height: 24),
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                'Sign In',
+                                style: theme.textTheme.headlineMedium,
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                'Welcome back to your store dashboard.',
+                                style: theme.textTheme.bodySmall,
+                              ),
+                              const SizedBox(height: 24),
 
-                        // Error
-                        if (auth.errorMessage != null)
-                          _ErrorBanner(message: auth.errorMessage!),
+                              // Error
+                              if (auth.errorMessage != null)
+                                _ErrorBanner(message: auth.errorMessage!),
 
-                        // Email
-                        TextFormField(
-                          controller: _emailCtrl,
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: const InputDecoration(
-                            labelText: 'Email Address',
-                            prefixIcon: Icon(Icons.email_outlined, size: 18),
+                              // Email
+                              TextFormField(
+                                controller: _emailCtrl,
+                                keyboardType: TextInputType.emailAddress,
+                                decoration: const InputDecoration(
+                                  labelText: 'Email Address',
+                                  prefixIcon:
+                                      Icon(Icons.email_outlined, size: 18),
+                                ),
+                                validator: (v) {
+                                  if (v == null || v.trim().isEmpty)
+                                    return 'Enter your email';
+                                  final emailRegExp = RegExp(
+                                      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+                                  if (!emailRegExp.hasMatch(v.trim()))
+                                    return 'Enter a valid email address';
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 16),
+
+                              // Password
+                              TextFormField(
+                                controller: _passCtrl,
+                                obscureText: _obscure,
+                                decoration: InputDecoration(
+                                  labelText: 'Password',
+                                  prefixIcon:
+                                      const Icon(Icons.lock_outline, size: 18),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                        _obscure
+                                            ? Icons.visibility_off
+                                            : Icons.visibility,
+                                        size: 18),
+                                    onPressed: () =>
+                                        setState(() => _obscure = !_obscure),
+                                  ),
+                                ),
+                                validator: (v) => v == null || v.length < 8
+                                    ? 'Password must be 8+ characters'
+                                    : null,
+                                onFieldSubmitted: (_) => _submit(),
+                              ),
+                              const SizedBox(height: 8),
+
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton(
+                                  onPressed: () =>
+                                      context.go(RoutePaths.forgotPassword),
+                                  child: const Text('Forgot Password?',
+                                      style: TextStyle(fontSize: 13)),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+
+                              ElevatedButton(
+                                onPressed: _submit,
+                                child: const Text('Sign In'),
+                              ),
+                              const SizedBox(height: 24),
+
+                              // Divider
+                              Row(children: [
+                                Expanded(
+                                    child: Divider(color: theme.dividerColor)),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16),
+                                  child: Text('OR',
+                                      style: theme.textTheme.labelSmall
+                                          ?.copyWith(fontSize: 10)),
+                                ),
+                                Expanded(
+                                    child: Divider(color: theme.dividerColor)),
+                              ]),
+                              const SizedBox(height: 24),
+
+                              // Google Sign In
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton.icon(
+                                  onPressed: () async {
+                                    setState(() => _isSubmitting = true);
+                                    await auth.signInWithGoogle();
+                                    if (mounted)
+                                      setState(() => _isSubmitting = false);
+                                  },
+                                  icon: SvgPicture.network(
+                                    'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
+                                    height: 18,
+                                    placeholderBuilder: (context) =>
+                                        const SizedBox(width: 18, height: 18),
+                                  ),
+                                  label: const Text('Continue with Google'),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor:
+                                        theme.colorScheme.onSurface,
+                                    side: BorderSide(color: theme.dividerColor),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    "Don't have an account? ",
+                                    style: theme.textTheme.bodySmall,
+                                  ),
+                                  TextButton(
+                                    onPressed: () =>
+                                        context.go(RoutePaths.register),
+                                    child: const Text('Register'),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
-                          validator: (v) {
-                            if (v == null || v.trim().isEmpty)
-                              return 'Enter your email';
-                            final emailRegExp = RegExp(
-                                r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
-                            if (!emailRegExp.hasMatch(v.trim()))
-                              return 'Enter a valid email address';
-                            return null;
-                          },
                         ),
-                        const SizedBox(height: 16),
-
-                        // Password
-                        TextFormField(
-                          controller: _passCtrl,
-                          obscureText: _obscure,
-                          decoration: InputDecoration(
-                            labelText: 'Password',
-                            prefixIcon:
-                                const Icon(Icons.lock_outline, size: 18),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                  _obscure
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
-                                  size: 18),
-                              onPressed: () =>
-                                  setState(() => _obscure = !_obscure),
-                            ),
-                          ),
-                          validator: (v) => v == null || v.length < 8
-                              ? 'Password must be 8+ characters'
-                              : null,
-                          onFieldSubmitted: (_) => _submit(),
-                        ),
-                        const SizedBox(height: 8),
-
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () =>
-                                context.go(RoutePaths.forgotPassword),
-                            child: const Text('Forgot Password?',
-                                style: TextStyle(fontSize: 13)),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-
-                        ElevatedButton(
-                          onPressed: _submit,
-                          child: const Text('Sign In'),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Divider
-                        Row(children: [
-                          Expanded(child: Divider(color: theme.dividerColor)),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Text('OR',
-                                style: theme.textTheme.labelSmall
-                                    ?.copyWith(fontSize: 10)),
-                          ),
-                          Expanded(child: Divider(color: theme.dividerColor)),
-                        ]),
-                        const SizedBox(height: 24),
-
-                        // Google Sign In
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: () async {
-                              setState(() => _isSubmitting = true);
-                              await auth.signInWithGoogle();
-                              if (mounted) setState(() => _isSubmitting = false);
-                            },
-                            icon: SvgPicture.network(
-                              'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
-                              height: 18,
-                              placeholderBuilder: (context) =>
-                                  const SizedBox(width: 18, height: 18),
-                            ),
-                            label: const Text('Continue with Google'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: theme.colorScheme.onSurface,
-                              side: BorderSide(color: theme.dividerColor),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "Don't have an account? ",
-                              style: theme.textTheme.bodySmall,
-                            ),
-                            TextButton(
-                              onPressed: () => context.go(RoutePaths.register),
-                              child: const Text('Register'),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
                 ),
               ],
             ),

@@ -24,9 +24,7 @@ export class MpesaProvider implements PaymentProvider {
   private get passkey(): string { return mpesaPasskey.value(); }
   private get callbackUrl(): string { return mpesaCallbackUrl.value(); }
   private get environment(): string { return mpesaEnvironment.value(); }
-  private get webhookSecret(): string {
-    try { return mpesaWebhookSecret.value(); } catch { return "dummy_secret"; }
-  }
+
   private get baseUrl(): string {
     return this.environment === "production"
       ? "https://api.safaricom.co.ke"
