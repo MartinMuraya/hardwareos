@@ -97,11 +97,26 @@ class OfflineSalesQueue extends ChangeNotifier {
     refresh();
   }
 
+  static const int _maxRetries = 10;
+  static const int _maxAgeDays = 7;
+
   Future<void> _syncSales(AuthProvider auth) async {
     final sales = OfflineService.getPendingSales();
     final bizId = auth.businessId;
 
     for (final sale in sales) {
+      if (sale.retryCount > _maxRetries || DateTime.now().difference(sale.createdAt).inDays > _maxAgeDays) {
+        final conflicted = ConflictedSale(
+          id: sale.id,
+          saleData: sale.saleData,
+          conflictReason: 'Sale expired in offline queue (Max retries or TTL reached)',
+          conflictedAt: DateTime.now(),
+        );
+        await OfflineService.addConflictedSale(conflicted);
+        await OfflineService.removeSale(sale.id);
+        continue;
+      }
+
       try {
         if (bizId == null) continue;
         sale.saleData['businessId'] = bizId;
@@ -146,6 +161,11 @@ class OfflineSalesQueue extends ChangeNotifier {
     final bizId = auth.businessId;
 
     for (final payment in payments) {
+      if (payment.retryCount > _maxRetries || DateTime.now().difference(payment.createdAt).inDays > _maxAgeDays) {
+        await OfflineService.removePayment(payment.id);
+        continue;
+      }
+
       try {
         if (bizId == null) continue;
         payment.paymentData['businessId'] = bizId;
@@ -168,6 +188,11 @@ class OfflineSalesQueue extends ChangeNotifier {
     final bizId = auth.businessId;
 
     for (final update in updates) {
+      if (update.retryCount > _maxRetries || DateTime.now().difference(update.createdAt).inDays > _maxAgeDays) {
+        await OfflineService.removeInventoryUpdate(update.id);
+        continue;
+      }
+
       try {
         if (bizId == null) continue;
         update.updateData['businessId'] = bizId;

@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive/hive.dart';
 
 class PendingSale {
@@ -171,16 +173,44 @@ class OfflineService {
   static late Box<String> _conflictedSalesBox;
 
   static Future<void> init() async {
-    _salesBox = await Hive.openBox<String>(_salesBoxName);
-    _paymentsBox = await Hive.openBox<String>(_paymentsBoxName);
-    _inventoryBox = await Hive.openBox<String>(_inventoryBoxName);
-    _cartBox = await Hive.openBox<String>(_cartBoxName);
-    _draftBox = await Hive.openBox<String>(_draftBoxName);
-    _customerBox = await Hive.openBox<String>(_customerBoxName);
-    _productsBox = await Hive.openBox<String>(_productsBoxName);
-    _storefrontCartBox = await Hive.openBox<String>(_storefrontCartBoxName);
-    _storefrontOrdersBox = await Hive.openBox<String>(_storefrontOrdersBoxName);
-    _conflictedSalesBox = await Hive.openBox<String>(_conflictedSalesBoxName);
+    const secureStorage = FlutterSecureStorage();
+    
+    // 1. Obtain or generate encryption key
+    final containsEncryptionKey = await secureStorage.containsKey(key: 'hive_key');
+    if (!containsEncryptionKey) {
+      final key = Hive.generateSecureKey();
+      await secureStorage.write(
+        key: 'hive_key', 
+        value: base64UrlEncode(key),
+      );
+    }
+    
+    final encryptionKeyString = await secureStorage.read(key: 'hive_key');
+    final encryptionKeyUint8List = base64Url.decode(encryptionKeyString!);
+    final cipher = HiveAesCipher(encryptionKeyUint8List);
+
+    // 2. Open boxes with encryption. If it fails (e.g., key lost, corrupted, or migrating from unencrypted), 
+    // we delete the boxes and recreate them to prevent app crashes.
+    Future<Box<String>> safeOpenBox(String boxName) async {
+      try {
+        return await Hive.openBox<String>(boxName, encryptionCipher: cipher);
+      } catch (e) {
+        debugPrint('Failed to open Hive box $boxName with encryption. Wiping and retrying. Error: $e');
+        await Hive.deleteBoxFromDisk(boxName);
+        return await Hive.openBox<String>(boxName, encryptionCipher: cipher);
+      }
+    }
+
+    _salesBox = await safeOpenBox(_salesBoxName);
+    _paymentsBox = await safeOpenBox(_paymentsBoxName);
+    _inventoryBox = await safeOpenBox(_inventoryBoxName);
+    _cartBox = await safeOpenBox(_cartBoxName);
+    _draftBox = await safeOpenBox(_draftBoxName);
+    _customerBox = await safeOpenBox(_customerBoxName);
+    _productsBox = await safeOpenBox(_productsBoxName);
+    _storefrontCartBox = await safeOpenBox(_storefrontCartBoxName);
+    _storefrontOrdersBox = await safeOpenBox(_storefrontOrdersBoxName);
+    _conflictedSalesBox = await safeOpenBox(_conflictedSalesBoxName);
   }
 
   static Future<void> clearAll() async {
@@ -193,6 +223,7 @@ class OfflineService {
     await _productsBox.clear();
     await _storefrontCartBox.clear();
     await _storefrontOrdersBox.clear();
+    await _conflictedSalesBox.clear();
   }
 
   // ── Cart Persistence ──

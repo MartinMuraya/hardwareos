@@ -86,12 +86,24 @@ export const adminSavePlanConfig = onCall(SECURE_FN_OPTS, async (request) => {
     throw new HttpsError("invalid-argument", "planId and config object required.");
   }
 
+  const safeConfig: any = {};
+  const allowedFields = [
+    "name", "priceKes", "maxProducts", "maxUsers", "aiBasicEnabled", "aiAnalystEnabled",
+    "whatsappEnabled", "reportsEnabled", "etimsEnabled", "storefrontEnabled",
+    "advancedAnalyticsEnabled", "receiptPrintingEnabled", "multiLanguageEnabled", "maxDailySales"
+  ];
+  for (const field of allowedFields) {
+    if (config[field] !== undefined) {
+      safeConfig[field] = config[field];
+    }
+  }
+
   const planRef = db().collection("subscription_plan_configs").doc(planId);
   const now = admin.firestore.FieldValue.serverTimestamp();
 
   await planRef.set(
     {
-      ...config,
+      ...safeConfig,
       id: planId,
       updatedAt: now,
       updatedBy: request.auth.uid,
@@ -484,9 +496,12 @@ export const adminImpersonateTenant = onCall(SECURE_FN_OPTS, async (request) => 
     throw new HttpsError("invalid-argument", "targetUserId is required");
   }
 
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // Tokens expire in 1hr by default
+
   // Create custom token for the target user
   const customToken = await admin.auth().createCustomToken(targetUserId, {
     impersonatedBy: request.auth.uid,
+    expiresAt: expiresAt.toISOString(),
   });
 
   await db().collection("auditLogs").add({
@@ -495,6 +510,7 @@ export const adminImpersonateTenant = onCall(SECURE_FN_OPTS, async (request) => 
     targetType: "user",
     performedBy: request.auth.uid,
     timestamp: admin.firestore.FieldValue.serverTimestamp(),
+    details: { expiresAt: expiresAt.toISOString() }
   });
 
   return { customToken };

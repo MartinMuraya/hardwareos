@@ -61,14 +61,6 @@ export const createSale = onCall(SECURE_FN_OPTS, async (request) => {
   const userData = await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager", "staff"]);
   const isManager = userData.role === "owner" || userData.role === "manager";
 
-  // Fetch HR Settings for commission basis
-  const hrSettingsSnap = await db().collection("hr_settings").doc(businessId).get();
-  const hrSettings = hrSettingsSnap.exists ? hrSettingsSnap.data()! : { commissionBasis: "revenue" };
-
-  // Fetch Tax Settings
-  const taxSettingsSnap = await db().collection("tax_settings").doc(businessId).get();
-  const taxSettings = taxSettingsSnap.exists ? taxSettingsSnap.data()! : { eTimsEnabled: false };
-
   // Run everything in a Firestore transaction for atomicity
   const result = await db().runTransaction(async (txn) => {
     // 0. Check idempotency key early
@@ -79,6 +71,16 @@ export const createSale = onCall(SECURE_FN_OPTS, async (request) => {
         return idempSnap.data()!.result;
       }
     }
+
+    // Fetch HR Settings for commission basis inside txn
+    const hrSettingsRef = db().collection("hr_settings").doc(businessId);
+    const hrSettingsSnap = await txn.get(hrSettingsRef);
+    const hrSettings = hrSettingsSnap.exists ? hrSettingsSnap.data()! : { commissionBasis: "revenue" };
+
+    // Fetch Tax Settings inside txn
+    const taxSettingsRef = db().collection("tax_settings").doc(businessId);
+    const taxSettingsSnap = await txn.get(taxSettingsRef);
+    const taxSettings = taxSettingsSnap.exists ? taxSettingsSnap.data()! : { eTimsEnabled: false };
 
     // 1. Read all products
     const productRefs = items.map((item) =>

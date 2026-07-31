@@ -85,17 +85,16 @@ export const createBusiness = onCall(SECURE_FN_OPTS, async (request) => {
       },
     });
 
-    const mailOptions = {
-      from: `"HardwareOS System" <${process.env.SMTP_USER || "noreply@hardwareos.app"}>`,
-      to: process.env.SUPER_ADMIN_EMAIL || "superadmin@example.com",
-      subject: `[HardwareOS] New Registration: ${businessName.trim()}`,
-      text: `A new hardware store has registered on HardwareOS.\n\nBusiness Name: ${businessName.trim()}\nTenant Slug: ${tenantSlug}\nOwner Email: ${request.auth.token.email}\nBusiness ID: ${businessRef.id}\n\nPlease verify this business in the Super Admin Dashboard.`,
-    };
-
-    if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    if (process.env.SMTP_USER && process.env.SMTP_PASS && process.env.SUPER_ADMIN_EMAIL) {
+      const mailOptions = {
+        from: `"HardwareOS System" <${process.env.SMTP_USER}>`,
+        to: process.env.SUPER_ADMIN_EMAIL,
+        subject: `[HardwareOS] New Registration: ${businessName.trim()}`,
+        text: `A new hardware store has registered on HardwareOS.\n\nBusiness Name: ${businessName.trim()}\nTenant Slug: ${tenantSlug}\nOwner Email: ${request.auth.token.email}\nBusiness ID: ${businessRef.id}\n\nPlease verify this business in the Super Admin Dashboard.`,
+      };
       await transporter.sendMail(mailOptions);
     } else {
-      console.warn("SMTP credentials not configured. Skipping Super Admin registration alert email.");
+      console.warn("SMTP credentials or SUPER_ADMIN_EMAIL not configured. Skipping Super Admin registration alert email.");
     }
   } catch (err) {
     console.error("Failed to send Super Admin alert email:", err);
@@ -112,7 +111,6 @@ export const createBusiness = onCall(SECURE_FN_OPTS, async (request) => {
 
   if (telegramBotToken && telegramChatId) {
     try {
-      const fetch = require("node-fetch");
       await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

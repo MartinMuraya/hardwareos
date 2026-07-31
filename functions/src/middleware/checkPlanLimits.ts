@@ -49,7 +49,10 @@ export async function assertBusinessMember(
   return userData;
 }
 
-/** Enforce: subscription is active (not expired or grace_period) — for write operations */
+/** Enforce: subscription is active or in grace period — for write operations.
+ *  Grace period businesses can still transact (sales, payments) but the client
+ *  should show a persistent renewal warning. Only hard-expired subs are blocked.
+ */
 export async function assertActiveSubscription(businessId: string): Promise<BusinessData> {
   const biz = await getBusinessData(businessId);
   const trialEndsAt = biz.trialEndsAt ? biz.trialEndsAt.toDate() : null;
@@ -59,9 +62,7 @@ export async function assertActiveSubscription(businessId: string): Promise<Busi
   if (isExpired && !isGracePeriod) {
     throw new HttpsError("resource-exhausted", UPGRADE_MESSAGES["expired"]);
   }
-  if (isGracePeriod) {
-    throw new HttpsError("resource-exhausted", UPGRADE_MESSAGES["gracePeriod"]);
-  }
+  // Grace period: allow writes — client should display renewal warning banner
   return biz;
 }
 

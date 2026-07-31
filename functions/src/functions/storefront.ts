@@ -1,5 +1,5 @@
 import * as admin from "firebase-admin";
-import { SECURE_FN_OPTS } from "../config/functionOptions";
+import { SECURE_FN_OPTS, PUBLIC_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription, assertFeatureEnabled } from "../middleware/checkPlanLimits";
 
@@ -9,7 +9,7 @@ const db = () => admin.firestore();
 // getPublicStorefront
 // Resolves a slug to a business and returns basic storefront info
 // -----------------------------------------------------------
-export const getPublicStorefront = onCall(SECURE_FN_OPTS, async (request) => {
+export const getPublicStorefront = onCall(PUBLIC_FN_OPTS, async (request) => {
   const { tenantSlug } = request.data as { tenantSlug: string };
   if (!tenantSlug) throw new HttpsError("invalid-argument", "tenantSlug is required.");
 
@@ -35,7 +35,7 @@ export const getPublicStorefront = onCall(SECURE_FN_OPTS, async (request) => {
 // getPublicProducts
 // Retrieves products for a business where isPublishedOnline is true
 // -----------------------------------------------------------
-export const getPublicProducts = onCall(SECURE_FN_OPTS, async (request) => {
+export const getPublicProducts = onCall(PUBLIC_FN_OPTS, async (request) => {
   const { businessId, category } = request.data as { businessId: string, category?: string };
   if (!businessId) throw new HttpsError("invalid-argument", "businessId is required.");
 
@@ -69,7 +69,7 @@ export const getPublicProducts = onCall(SECURE_FN_OPTS, async (request) => {
 // getStorefrontCategories
 // Retrieves unique categories for published products
 // -----------------------------------------------------------
-export const getStorefrontCategories = onCall(SECURE_FN_OPTS, async (request) => {
+export const getStorefrontCategories = onCall(PUBLIC_FN_OPTS, async (request) => {
   const { businessId } = request.data as { businessId: string };
   if (!businessId) throw new HttpsError("invalid-argument", "businessId is required.");
 
@@ -91,7 +91,7 @@ export const getStorefrontCategories = onCall(SECURE_FN_OPTS, async (request) =>
 // Submits a shopping cart to create a pending online order.
 // Temporarily decrements stock (Hold) until approved by the merchant.
 // -----------------------------------------------------------
-export const createOnlineOrder = onCall(SECURE_FN_OPTS, async (request) => {
+export const createOnlineOrder = onCall(PUBLIC_FN_OPTS, async (request) => {
     const { businessId, items, customerName, customerPhone, address, note, deliveryZoneId, deliveryFee, triggerMpesa } = request.data as {
       businessId: string;
       items: Array<{ productId: string; quantity: number }>;

@@ -23,6 +23,16 @@ export const SECURE_FN_OPTS: CallableOptions = {
 };
 
 /**
+ * Analytics callable options — enforces App Check and strict timeouts.
+ */
+export const ANALYTICS_FN_OPTS: CallableOptions = {
+  cors: ALLOWED_ORIGINS,
+  enforceAppCheck: true,
+  timeoutSeconds: 30, // Query timeout to prevent hanging analytics
+  memory: "512MiB",
+};
+
+/**
  * Public callable options — enforces App Check but allows broader CORS.
  * Use for public-facing endpoints like storefront that don't require auth.
  */

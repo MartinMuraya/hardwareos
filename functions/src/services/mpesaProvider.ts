@@ -72,7 +72,7 @@ export class MpesaProvider implements PaymentProvider {
           PartyA: request.phoneNumber,
           PartyB: this.shortcode,
           PhoneNumber: request.phoneNumber,
-          CallBackURL: `${this.callbackUrl}?token=${this.webhookSecret}`,
+          CallBackURL: this.callbackUrl,
           AccountReference: request.accountReference.substring(0, 12),
           TransactionDesc: request.transactionDesc.substring(0, 20),
         }),

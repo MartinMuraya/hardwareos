@@ -210,6 +210,13 @@ export const mpesaCallback = onRequest({ ...WEBHOOK_FN_OPTS, secrets: [mpesaCons
       }
 
       const orderDoc = orderSnap.docs[0];
+      const orderData = orderDoc.data();
+
+      // M-9: Idempotency check for online orders
+      if (orderData.status === "pending" || orderData.status === "payment_failed") {
+        res.status(200).send("OK");
+        return;
+      }
       
       let mpesaReceipt = "";
       if (ResultCode === 0) {
@@ -247,6 +254,12 @@ export const mpesaCallback = onRequest({ ...WEBHOOK_FN_OPTS, secrets: [mpesaCons
 
     const subDoc = subSnap.docs[0];
     const subData = subDoc.data();
+
+    // M-9: Idempotency check for subscriptions
+    if (subData.transactionStatus === "completed" || subData.transactionStatus === "failed") {
+      res.status(200).send("OK");
+      return;
+    }
 
     // Process via MpesaProvider
     let mpesaReceipt = "";

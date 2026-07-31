@@ -5,7 +5,7 @@
 import * as admin from "firebase-admin";
 import { setGlobalOptions } from "firebase-functions/v2";
 
-setGlobalOptions({ maxInstances: 10 });
+setGlobalOptions({ maxInstances: 100 });
 
 // Initialize Firebase Admin SDK (once)
 admin.initializeApp();
@@ -130,3 +130,4 @@ export { saveHrSettings, getHrSettings, createEmployee, updateEmployee, submitTi
 export { getTaxSettings, updateTaxSettings } from "./functions/tax";
 export { exportAdminReport } from "./functions/admin_reports";
 export { sendDebtReminders } from "./functions/sms_reminders";
+export { runSystemMaintenance } from "./functions/system_maintenance";

@@ -19,7 +19,7 @@ export const expireSubscriptions = onSchedule(
   },
   async () => {
     const now = admin.firestore.Timestamp.now();
-    const batch = db().batch();
+    let batch = db().batch();
     let batchCount = 0;
 
     // 1. Find active subscriptions past their end date → grace_period
@@ -57,6 +57,7 @@ export const expireSubscriptions = onSchedule(
       batchCount++;
       if (batchCount >= 400) {
         await batch.commit();
+        batch = db().batch();
         batchCount = 0;
       }
     }
@@ -94,6 +95,7 @@ export const expireSubscriptions = onSchedule(
       batchCount++;
       if (batchCount >= 400) {
         await batch.commit();
+        batch = db().batch();
         batchCount = 0;
       }
     }
@@ -129,6 +131,7 @@ export const expireSubscriptions = onSchedule(
       batchCount++;
       if (batchCount >= 400) {
         await batch.commit();
+        batch = db().batch();
         batchCount = 0;
       }
     }
@@ -157,7 +160,7 @@ export const sendRenewalReminders = onSchedule(
   async () => {
     const now = admin.firestore.Timestamp.now();
     const today = new Date();
-    const batch = db().batch();
+    let batch = db().batch();
     let batchCount = 0;
 
     // Find businesses approaching expiry (active or grace_period)
@@ -238,6 +241,7 @@ export const sendRenewalReminders = onSchedule(
 
       if (batchCount >= 400) {
         await batch.commit();
+        batch = db().batch();
         batchCount = 0;
       }
     }
@@ -302,29 +306,42 @@ async function recoverFailedPayments(): Promise<void> {
 // -----------------------------------------------------------
 async function aggregateSubscriptionStats(): Promise<void> {
   const now = new Date();
-  const bizSnap = await db().collection("businesses").get();
+  
+  // H-2: Use aggregation queries instead of full scans
+  const [
+    totalBusinessesSnap, activeSnap, trialSnap, expiredSnap, graceSnap, starterSnap, proSnap
+  ] = await Promise.all([
+    db().collection("businesses").count().get(),
+    db().collection("businesses").where("subscriptionStatus", "==", "active").count().get(),
+    db().collection("businesses").where("subscriptionStatus", "==", "trial").count().get(),
+    db().collection("businesses").where("subscriptionStatus", "==", "expired").count().get(),
+    db().collection("businesses").where("subscriptionStatus", "==", "grace_period").count().get(),
+    db().collection("businesses").where("plan", "==", "starter").count().get(),
+    db().collection("businesses").where("plan", "==", "pro").count().get(),
+  ]);
 
-  let totalBusinesses = 0;
-  let activeSubscriptions = 0;
-  let trialAccounts = 0;
-  let expiredSubscriptions = 0;
-  let gracePeriodAccounts = 0;
-  let starterAccounts = 0;
-  let proAccounts = 0;
+  const totalBusinesses = totalBusinessesSnap.data().count;
+  const activeSubscriptions = activeSnap.data().count;
+  const trialAccounts = trialSnap.data().count;
+  const expiredSubscriptions = expiredSnap.data().count;
+  const gracePeriodAccounts = graceSnap.data().count;
+  const starterAccounts = starterSnap.data().count;
+  const proAccounts = proSnap.data().count;
+
+  // M-4, M-8: Fetch actual plan prices and count only active subs for MRR
   let monthlyRecurringRevenue = 0;
-
-  for (const doc of bizSnap.docs) {
-    const data = doc.data();
-    totalBusinesses++;
-    const status = data.subscriptionStatus || "trial";
-    const plan = data.plan || "free";
-
-    if (status === "active") activeSubscriptions++;
-    if (status === "trial") trialAccounts++;
-    if (status === "expired") expiredSubscriptions++;
-    if (status === "grace_period") gracePeriodAccounts++;
-    if (plan === "starter") { starterAccounts++; monthlyRecurringRevenue += 2600; }
-    if (plan === "pro") { proAccounts++; monthlyRecurringRevenue += 5200; }
+  const plansSnap = await db().collection("subscription_plan_configs").get();
+  for (const doc of plansSnap.docs) {
+    const plan = doc.data();
+    if (plan.priceKes > 0) {
+      const activeSubsSnap = await db()
+        .collection("businesses")
+        .where("plan", "==", doc.id)
+        .where("subscriptionStatus", "==", "active")
+        .count()
+        .get();
+      monthlyRecurringRevenue += (plan.priceKes * activeSubsSnap.data().count);
+    }
   }
 
   // Churn rate (last 30 days)
@@ -333,9 +350,10 @@ async function aggregateSubscriptionStats(): Promise<void> {
     .collection("subscriptionHistory")
     .where("eventType", "in", ["subscription_expired", "grace_period_ended", "trial_ended"])
     .where("timestamp", ">=", admin.firestore.Timestamp.fromDate(thirtyDaysAgo))
+    .count()
     .get();
 
-  const churnCount = churnedLast30.size;
+  const churnCount = churnedLast30.data().count;
   const churnRate = totalBusinesses > 0 ? churnCount / totalBusinesses : 0;
 
   // Recovered last 30 days
@@ -343,26 +361,43 @@ async function aggregateSubscriptionStats(): Promise<void> {
     .collection("subscriptionHistory")
     .where("eventType", "==", "subscription_renewed")
     .where("timestamp", ">=", admin.firestore.Timestamp.fromDate(thirtyDaysAgo))
+    .count()
     .get();
-  const recoveryCount = recoveredLast30.size;
+  const recoveryCount = recoveredLast30.data().count;
 
   // Payment success rate
-  const totalPayments = await db()
-    .collection("subscriptions")
+  const successfulPaymentsSnap = await db().collection("subscriptions")
     .where("createdAt", ">=", admin.firestore.Timestamp.fromDate(thirtyDaysAgo))
-    .get();
+    .where("transactionStatus", "==", "completed")
+    .count().get();
+  
+  const failedPaymentsSnap = await db().collection("subscriptions")
+    .where("createdAt", ">=", admin.firestore.Timestamp.fromDate(thirtyDaysAgo))
+    .where("transactionStatus", "==", "failed")
+    .count().get();
 
-  let successfulPayments = 0;
-  let failedPayments = 0;
-  for (const doc of totalPayments.docs) {
-    const status = doc.data().transactionStatus;
-    if (status === "completed") successfulPayments++;
-    if (status === "failed") failedPayments++;
+  const successfulPayments = successfulPaymentsSnap.data().count;
+  const failedPayments = failedPaymentsSnap.data().count;
+  const totalPaymentsSize = successfulPayments + failedPayments;
+
+  const paymentSuccessRate = totalPaymentsSize > 0 ? successfulPayments / totalPaymentsSize : 1;
+
+  // H-3: Dynamic historical metrics (append current month to existing data)
+  const existingStatsSnap = await db().collection("subscriptionStats").doc("aggregate").get();
+  let historicalMetrics: any[] = [];
+  if (existingStatsSnap.exists) {
+    historicalMetrics = existingStatsSnap.data()?.historicalMetrics || [];
   }
-  const paymentSuccessRate =
-    totalPayments.size > 0
-      ? successfulPayments / totalPayments.size
-      : 1;
+  
+  const monthName = now.toLocaleString('default', { month: 'short' });
+  // Remove existing entry for this month if it exists
+  historicalMetrics = historicalMetrics.filter(m => m.month !== monthName);
+  historicalMetrics.push({ month: monthName, mrr: monthlyRecurringRevenue, churnRate: churnRate });
+  
+  // Keep only the last 12 months
+  if (historicalMetrics.length > 12) {
+    historicalMetrics = historicalMetrics.slice(historicalMetrics.length - 12);
+  }
 
   const stats = {
     computedAt: admin.firestore.Timestamp.fromDate(now),
@@ -380,16 +415,9 @@ async function aggregateSubscriptionStats(): Promise<void> {
     paymentSuccessRate,
     successfulPayments,
     failedPayments,
-    totalPaymentsLast30: totalPayments.size,
+    totalPaymentsLast30: totalPaymentsSize,
     lastChurnPeriodEnd: admin.firestore.Timestamp.fromDate(thirtyDaysAgo),
-    historicalMetrics: [
-      { month: "Feb", mrr: 20000, churnRate: 0.05 },
-      { month: "Mar", mrr: 25000, churnRate: 0.04 },
-      { month: "Apr", mrr: 32000, churnRate: 0.06 },
-      { month: "May", mrr: 45000, churnRate: 0.03 },
-      { month: "Jun", mrr: 58000, churnRate: 0.02 },
-      { month: "Jul", mrr: monthlyRecurringRevenue, churnRate: churnRate },
-    ],
+    historicalMetrics,
   };
 
   await db().collection("subscriptionStats").doc("aggregate").set(stats);

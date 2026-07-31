@@ -102,7 +102,7 @@ export const importProducts = onCall(SECURE_FN_OPTS, async (request) => {
 
   let imported = 0;
   if (valid.length > 0) {
-    const batch = db().batch();
+    let batch = db().batch();
     let opCount = 0;
 
     for (const row of valid) {
@@ -141,6 +141,7 @@ export const importProducts = onCall(SECURE_FN_OPTS, async (request) => {
 
       if (opCount >= 450) {
         await batch.commit();
+        batch = db().batch();
         opCount = 0;
       }
     }

@@ -3,7 +3,7 @@
 // ============================================================
 
 import * as admin from "firebase-admin";
-import { SECURE_FN_OPTS } from "../config/functionOptions";
+import { SECURE_FN_OPTS, ANALYTICS_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription, assertFeatureEnabled } from "../middleware/checkPlanLimits";
 
@@ -12,7 +12,7 @@ const db = () => admin.firestore();
 // -----------------------------------------------------------
 // getAdvancedAnalytics
 // -----------------------------------------------------------
-export const getAdvancedAnalytics = onCall(SECURE_FN_OPTS, async (request) => {
+export const getAdvancedAnalytics = onCall(ANALYTICS_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId } = request.data as { businessId: string };
@@ -106,7 +106,7 @@ export const getAdvancedAnalytics = onCall(SECURE_FN_OPTS, async (request) => {
 // -----------------------------------------------------------
 // getDemandForecast
 // -----------------------------------------------------------
-export const getDemandForecast = onCall(SECURE_FN_OPTS, async (request) => {
+export const getDemandForecast = onCall(ANALYTICS_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId } = request.data as { businessId: string };

@@ -142,6 +142,12 @@ export const posMpesaCallback = onRequest(SECURE_FN_OPTS, async (req, res) => {
 
     const reqData = docSnap.data()!;
 
+    // M-9: Idempotency check to ignore duplicate callbacks from Safaricom
+    if (reqData.status === "COMPLETED" || reqData.status === "FAILED") {
+      res.status(200).send("OK");
+      return;
+    }
+
     if (resultCode === 0) {
       // Success
       const meta = callbackData.CallbackMetadata?.Item || [];
