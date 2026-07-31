@@ -38,7 +38,10 @@ class _InviteUserDialogState extends State<InviteUserDialog> {
       return;
     }
 
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
 
     try {
       final bizId = context.read<AuthProvider>().businessId!;
@@ -55,7 +58,11 @@ class _InviteUserDialogState extends State<InviteUserDialog> {
         Navigator.of(context).pop();
       }
     } on FunctionsException catch (e) {
-      if (mounted) setState(() { _error = e.message; _loading = false; });
+      if (mounted)
+        setState(() {
+          _error = e.message;
+          _loading = false;
+        });
     }
   }
 
@@ -64,7 +71,9 @@ class _InviteUserDialogState extends State<InviteUserDialog> {
     final theme = Theme.of(context);
     return AlertDialog(
       backgroundColor: theme.cardColor,
-      title: Text('Invite Staff', style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)),
+      title: Text('Invite Staff',
+          style: TextStyle(
+              fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -72,7 +81,8 @@ class _InviteUserDialogState extends State<InviteUserDialog> {
           children: [
             Text(
               'Enter the Firebase UID of the user you wish to invite. The user must have already created an account on the login screen.',
-              style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
+              style: TextStyle(
+                  color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -95,7 +105,8 @@ class _InviteUserDialogState extends State<InviteUserDialog> {
             const SizedBox(height: 12),
             TextField(
               controller: _commissionCtrl,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               style: TextStyle(color: theme.colorScheme.onSurface),
               decoration: const InputDecoration(
                 labelText: 'Commission Rate (%)',
@@ -103,17 +114,21 @@ class _InviteUserDialogState extends State<InviteUserDialog> {
               ),
             ),
             const SizedBox(height: 16),
-            Text('Role', style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13)),
+            Text('Role',
+                style: TextStyle(
+                    color: theme.colorScheme.onSurfaceVariant, fontSize: 13)),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
               initialValue: _role,
               dropdownColor: theme.cardColor,
               style: TextStyle(color: theme.colorScheme.onSurface),
               decoration: const InputDecoration(
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
               items: const [
-                DropdownMenuItem(value: 'staff', child: Text('Staff (Cashier)')),
+                DropdownMenuItem(
+                    value: 'staff', child: Text('Staff (Cashier)')),
                 DropdownMenuItem(value: 'manager', child: Text('Manager')),
               ],
               onChanged: (v) {
@@ -122,7 +137,8 @@ class _InviteUserDialogState extends State<InviteUserDialog> {
             ),
             if (_error != null) ...[
               const SizedBox(height: 16),
-              Text(_error!, style: const TextStyle(color: AppColors.error, fontSize: 13)),
+              Text(_error!,
+                  style: const TextStyle(color: AppColors.error, fontSize: 13)),
             ],
           ],
         ),
@@ -134,9 +150,12 @@ class _InviteUserDialogState extends State<InviteUserDialog> {
         ),
         FilledButton(
           onPressed: _loading ? null : _invite,
-          child: _loading 
-            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-            : const Text('Invite'),
+          child: _loading
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2))
+              : const Text('Invite'),
         ),
       ],
     );

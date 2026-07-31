@@ -61,11 +61,13 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         'systemAlertLevel': _alertLevel,
         'backupFrequency': _backupFrequency,
       });
-      messenger.showSnackBar(const SnackBar(content: Text('Settings saved successfully.')));
+      messenger.showSnackBar(
+          const SnackBar(content: Text('Settings saved successfully.')));
       _loadSettings();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.toString())));
         setState(() => _loading = false);
       }
     }
@@ -75,12 +77,15 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     setState(() => _loading = true);
     try {
       final messenger = ScaffoldMessenger.of(context);
-      await FunctionsService.call('adminUpdateSettings', {'triggerBackup': true});
-      messenger.showSnackBar(const SnackBar(content: Text('Backup triggered successfully.')));
+      await FunctionsService.call(
+          'adminUpdateSettings', {'triggerBackup': true});
+      messenger.showSnackBar(
+          const SnackBar(content: Text('Backup triggered successfully.')));
       _loadSettings();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.toString())));
         setState(() => _loading = false);
       }
     }
@@ -93,16 +98,22 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('Platform Settings', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+        title: Text('Platform Settings',
+            style: theme.textTheme.titleLarge
+                ?.copyWith(fontWeight: FontWeight.bold)),
         actions: [
-          IconButton(icon: const Icon(Icons.refresh_rounded), onPressed: _loadSettings),
+          IconButton(
+              icon: const Icon(Icons.refresh_rounded),
+              onPressed: _loadSettings),
           const SizedBox(width: 24),
         ],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(child: Text(_error!, style: const TextStyle(color: AppColors.error)))
+              ? Center(
+                  child: Text(_error!,
+                      style: const TextStyle(color: AppColors.error)))
               : SingleChildScrollView(
                   padding: const EdgeInsets.all(24),
                   child: Column(
@@ -121,10 +132,14 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         child: Column(
                           children: [
                             SwitchListTile(
-                              title: const Text('Maintenance Mode', style: TextStyle(fontWeight: FontWeight.bold)),
-                              subtitle: const Text('Put the application offline for all standard business users.'),
+                              title: const Text('Maintenance Mode',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                              subtitle: const Text(
+                                  'Put the application offline for all standard business users.'),
                               value: _maintenanceMode,
-                              onChanged: (val) => setState(() => _maintenanceMode = val),
+                              onChanged: (val) =>
+                                  setState(() => _maintenanceMode = val),
                               activeThumbColor: AppColors.error,
                             ),
                           ],
@@ -133,7 +148,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       const SizedBox(height: 32),
 
                       // Section 2: Notifications and Alerts
-                      _buildSectionHeader('Broadcast Banners & Alerts', theme: theme),
+                      _buildSectionHeader('Broadcast Banners & Alerts',
+                          theme: theme),
                       const SizedBox(height: 16),
                       Container(
                         padding: const EdgeInsets.all(24),
@@ -149,22 +165,30 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                               controller: _bannerController,
                               decoration: const InputDecoration(
                                 labelText: 'System Broadcast Message',
-                                hintText: 'Enter text to display as a top banner for all users.',
+                                hintText:
+                                    'Enter text to display as a top banner for all users.',
                               ),
                               maxLines: 2,
                             ),
                             const SizedBox(height: 20),
                             DropdownButtonFormField<String>(
                               initialValue: _alertLevel,
-                              decoration: const InputDecoration(labelText: 'Alert Level'),
+                              decoration: const InputDecoration(
+                                  labelText: 'Alert Level'),
                               dropdownColor: theme.cardColor,
                               items: const [
-                                DropdownMenuItem(value: 'info', child: Text('Info (Blue)')),
-                                DropdownMenuItem(value: 'warning', child: Text('Warning (Amber)')),
-                                DropdownMenuItem(value: 'critical', child: Text('Critical (Red)')),
+                                DropdownMenuItem(
+                                    value: 'info', child: Text('Info (Blue)')),
+                                DropdownMenuItem(
+                                    value: 'warning',
+                                    child: Text('Warning (Amber)')),
+                                DropdownMenuItem(
+                                    value: 'critical',
+                                    child: Text('Critical (Red)')),
                               ],
                               onChanged: (val) {
-                                if (val != null) setState(() => _alertLevel = val);
+                                if (val != null)
+                                  setState(() => _alertLevel = val);
                               },
                             ),
                           ],
@@ -173,7 +197,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       const SizedBox(height: 32),
 
                       // Section 3: Backups
-                      _buildSectionHeader('System Backup Operations', theme: theme),
+                      _buildSectionHeader('System Backup Operations',
+                          theme: theme),
                       const SizedBox(height: 16),
                       Container(
                         padding: const EdgeInsets.all(24),
@@ -187,15 +212,23 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           children: [
                             DropdownButtonFormField<String>(
                               initialValue: _backupFrequency,
-                              decoration: const InputDecoration(labelText: 'Backup Frequency'),
+                              decoration: const InputDecoration(
+                                  labelText: 'Backup Frequency'),
                               dropdownColor: theme.cardColor,
                               items: const [
-                                DropdownMenuItem(value: 'daily', child: Text('Daily Auto Backup')),
-                                DropdownMenuItem(value: 'weekly', child: Text('Weekly Auto Backup')),
-                                DropdownMenuItem(value: 'monthly', child: Text('Monthly Auto Backup')),
+                                DropdownMenuItem(
+                                    value: 'daily',
+                                    child: Text('Daily Auto Backup')),
+                                DropdownMenuItem(
+                                    value: 'weekly',
+                                    child: Text('Weekly Auto Backup')),
+                                DropdownMenuItem(
+                                    value: 'monthly',
+                                    child: Text('Monthly Auto Backup')),
                               ],
                               onChanged: (val) {
-                                if (val != null) setState(() => _backupFrequency = val);
+                                if (val != null)
+                                  setState(() => _backupFrequency = val);
                               },
                             ),
                             const SizedBox(height: 24),
@@ -205,11 +238,17 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text('Last Backup Status',
-                                      style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13)),
+                                        style: TextStyle(
+                                            color: theme
+                                                .colorScheme.onSurfaceVariant,
+                                            fontSize: 13)),
                                     const SizedBox(height: 4),
                                     Text(_lastBackup ?? 'Never',
-                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15,
-                                        color: theme.colorScheme.onSurface)),
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                            color:
+                                                theme.colorScheme.onSurface)),
                                   ],
                                 ),
                                 const Spacer(),
@@ -249,7 +288,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   Widget _buildSectionHeader(String title, {required ThemeData theme}) {
     return Text(
       title,
-      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.accent, letterSpacing: 0.8),
+      style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: AppColors.accent,
+          letterSpacing: 0.8),
     );
   }
 }

@@ -11,123 +11,101 @@ setGlobalOptions({ maxInstances: 100 });
 admin.initializeApp();
 
 // Auth
-export { createBusiness, inviteUser, updateStaff, getMyProfile, getUsers } from "./functions/auth";
+const functionName = process.env.FUNCTION_TARGET || process.env.K_SERVICE;
+function lazyExport(modulePath: string, exportsList: string[]) {
+  exportsList.forEach((name) => {
+    if (!functionName || functionName === name) {
+      exports[name] = require(modulePath)[name];
+    }
+  });
+}
+
+lazyExport('./functions/auth', ['createBusiness', 'inviteUser', 'updateStaff', 'getMyProfile', 'getUsers']);
 
 // Security - Login/Password Abuse Protection
-export {
-  checkLoginLocked,
-  reportFailedLogin,
-  reportSuccessfulLogin,
-  requestPasswordReset,
-} from "./functions/loginSecurity";
+lazyExport('./functions/loginSecurity', ['checkLoginLocked', 'reportFailedLogin', 'reportSuccessfulLogin', 'requestPasswordReset']);
 
 // Inventory
-export {
-  createProduct,
-  updateProduct,
-  addStock,
-  getProducts,
-  getLowStockProducts,
-} from "./functions/inventory";
+lazyExport('./functions/inventory', ['createProduct', 'updateProduct', 'addStock', 'getProducts', 'getLowStockProducts']);
 
 // Bulk Import
-export { importProducts } from "./functions/import_products";
+lazyExport('./functions/import_products', ['importProducts']);
 
 // Inventory — Stock Adjustments
-export {
-  adjustInventoryStock,
-  getStockAdjustments,
-  getAdjustmentStats,
-} from "./functions/stock_adjustments";
+lazyExport('./functions/stock_adjustments', ['adjustInventoryStock', 'getStockAdjustments', 'getAdjustmentStats']);
 
 // Inventory Ledger
-export { migrateToLedger } from "./functions/inventory_ledger";
+lazyExport('./functions/inventory_ledger', ['migrateToLedger']);
 
 // AI Intelligence & Business Analyst
-export { analyzeInventoryHealth } from "./functions/ai";
-export { getAIInsights, getAIQuickInsights } from "./functions/ai_assistant";
-export { runAIBusinessAnalyst, approveAIDraftedAction } from "./functions/ai_business_analyst";
+lazyExport('./functions/ai', ['analyzeInventoryHealth']);
+lazyExport('./functions/ai_assistant', ['getAIInsights', 'getAIQuickInsights']);
+lazyExport('./functions/ai_business_analyst', ['runAIBusinessAnalyst', 'approveAIDraftedAction']);
 
 // Sales
-export { createSale, getSales } from "./functions/sales";
+lazyExport('./functions/sales', ['createSale', 'getSales']);
 
 // Supplier Debt
-export { recordSupplierPayment, getSupplierDebts, getSupplierDebtDashboard } from "./functions/supplier_debt";
+lazyExport('./functions/supplier_debt', ['recordSupplierPayment', 'getSupplierDebts', 'getSupplierDebtDashboard']);
 
 // EOD Daily Report
-export { sendDailyEodReport, updateEodReportSettings } from "./functions/eod_report";
+lazyExport('./functions/eod_report', ['sendDailyEodReport', 'updateEodReportSettings']);
 
 // Expenses
-export { createExpense, getExpenses } from "./functions/expenses";
+lazyExport('./functions/expenses', ['createExpense', 'getExpenses']);
 
 // Purchases & Suppliers
-export { createPurchase, getPurchases } from "./functions/purchases";
-export { createSupplier, getSuppliers, getSupplier, updateSupplier } from "./functions/suppliers";
-export { createPurchaseOrder, getPurchaseOrders, getPurchaseOrder, updatePurchaseOrderStatus, receivePurchaseOrder } from "./functions/purchase_orders";
+lazyExport('./functions/purchases', ['createPurchase', 'getPurchases']);
+lazyExport('./functions/suppliers', ['createSupplier', 'getSuppliers', 'getSupplier', 'updateSupplier']);
+lazyExport('./functions/purchase_orders', ['createPurchaseOrder', 'getPurchaseOrders', 'getPurchaseOrder', 'updatePurchaseOrderStatus', 'receivePurchaseOrder']);
 
 // Dashboard & Reports
-export { getDashboardStats, getReportStats, seedDemoData } from "./functions/dashboard";
+lazyExport('./functions/dashboard', ['getDashboardStats', 'getReportStats', 'seedDemoData']);
 
 // Super Admin Operations & Plan Configs
-export { getPlatformStats, adminGrantSuperAdmin, adminRevokeSuperAdmin } from "./functions/super_admin";
-export { adminGetAllBusinesses, adminUpdateBusinessStatus, adminDeleteBusiness } from "./functions/admin_businesses";
-export {
-  adminGetSubscriptions,
-  adminUpdateSubscription,
-  getMySubscriptionPayments,
-  adminImpersonateTenant,
-  createGlobalAnnouncement,
-  adminGetSystemLogs,
-  adminGetPlanConfigs,
-  adminSavePlanConfig,
-} from "./functions/admin_operations";
+lazyExport('./functions/super_admin', ['getPlatformStats', 'adminGrantSuperAdmin', 'adminRevokeSuperAdmin']);
+lazyExport('./functions/admin_businesses', ['adminGetAllBusinesses', 'adminUpdateBusinessStatus', 'adminDeleteBusiness']);
+lazyExport('./functions/admin_operations', ['adminGetSubscriptions', 'adminUpdateSubscription', 'getMySubscriptionPayments', 'adminImpersonateTenant', 'createGlobalAnnouncement', 'adminGetSystemLogs', 'adminGetPlanConfigs', 'adminSavePlanConfig']);
 
 // Support
-export {
-  createSupportTicket,
-  adminGetSupportTickets,
-  adminRespondToTicket,
-} from "./functions/support";
+lazyExport('./functions/support', ['createSupportTicket', 'adminGetSupportTickets', 'adminRespondToTicket']);
 
 // M-Pesa Billing & Subscription Lifecycle
-export { createSubscriptionPayment, mpesaCallback, simulateMpesaCallback } from "./functions/mpesa_billing";
-export {
-  expireSubscriptions,
-  sendRenewalReminders,
-  getSubscriptionAnalytics,
-  checkSubscriptionHealth,
-} from "./functions/subscriptionLifecycle";
-export { getMySubscriptionHistory, adminGetBusinessHistory } from "./functions/subscriptionHistory";
-export { initiateStkPush, posMpesaCallback } from "./functions/mpesa";
+lazyExport('./functions/mpesa_billing', ['createSubscriptionPayment', 'mpesaCallback', 'simulateMpesaCallback']);
+lazyExport('./functions/subscriptionLifecycle', ['expireSubscriptions', 'sendRenewalReminders', 'getSubscriptionAnalytics', 'checkSubscriptionHealth']);
+lazyExport('./functions/subscriptionHistory', ['getMySubscriptionHistory', 'adminGetBusinessHistory']);
+lazyExport('./functions/mpesa', ['initiateStkPush', 'posMpesaCallback']);
 
 // Customers & Credit Debt
-export { createCustomer, getCustomers, getCustomer, updateCustomer } from "./functions/customers";
-export { createCreditSale, recordDebtPayment, adjustDebt, getDebtTransactions, getCustomerStatement, getDebtDashboard } from "./functions/debt";
+lazyExport('./functions/customers', ['createCustomer', 'getCustomers', 'getCustomer', 'updateCustomer']);
+lazyExport('./functions/debt', ['createCreditSale', 'recordDebtPayment', 'adjustDebt', 'getDebtTransactions', 'getCustomerStatement', 'getDebtDashboard']);
 
 // Quotations
-export { createQuotation, getQuotations, getQuotation, updateQuotationStatus, convertQuotationToSale } from "./functions/quotations";
+lazyExport('./functions/quotations', ['createQuotation', 'getQuotations', 'getQuotation', 'updateQuotationStatus', 'convertQuotationToSale']);
 
 // Audit Trail, Returns, Cash Drawer
-export { getAuditLogs, getAuditModules, getRecentAuditLogs } from "./functions/audit_log";
-export { processReturn, getReturns, getReturnStats } from "./functions/returns";
-export { openCashSession, closeCashSession, getCashSessions, getCashVarianceReport, calculateCashVariance, getDailyCashReport, getMonthlyCashReport } from "./functions/cash_drawer";
+lazyExport('./functions/audit_log', ['getAuditLogs', 'getAuditModules', 'getRecentAuditLogs']);
+lazyExport('./functions/returns', ['processReturn', 'getReturns', 'getReturnStats']);
+lazyExport('./functions/cash_drawer', ['openCashSession', 'closeCashSession', 'getCashSessions', 'getCashVarianceReport', 'calculateCashVariance', 'getDailyCashReport', 'getMonthlyCashReport']);
 
 // Broken-Bulk Inventory & Branches
-export { bulkCreateProduct, autoConvertDuringSale, validateConversion, convertParentToChild } from "./functions/bulk_inventory";
-export { createBranch, getBranch, getBranches, updateBranch, requestStockTransfer, approveStockTransfer, getStockTransfers, getBranchInventory, getBranchPerformance, getPendingTransfers, getSalesByBranch, getBranchExpensesReport, getBranchProfitReport } from "./functions/branches";
+lazyExport('./functions/bulk_inventory', ['bulkCreateProduct', 'autoConvertDuringSale', 'validateConversion', 'convertParentToChild']);
+lazyExport('./functions/branches', ['createBranch', 'getBranch', 'getBranches', 'updateBranch', 'requestStockTransfer', 'approveStockTransfer', 'getStockTransfers', 'getBranchInventory', 'getBranchPerformance', 'getPendingTransfers', 'getSalesByBranch', 'getBranchExpensesReport', 'getBranchProfitReport']);
 
 // WhatsApp Automation & Security Dashboard
-export { enqueueNotification, getNotificationSettings, updateNotificationSettings, getNotifications, getNotificationStats, processNotificationQueue } from "./functions/whatsapp_automation";
-export { getSecurityMetrics, getSecurityEvents } from "./functions/securityDashboard";
-export { getAdvancedAnalytics, getDemandForecast } from "./functions/advanced_analytics";
+lazyExport('./functions/whatsapp_automation', ['enqueueNotification', 'getNotificationSettings', 'updateNotificationSettings', 'getNotifications', 'getNotificationStats', 'processNotificationQueue']);
+lazyExport('./functions/securityDashboard', ['getSecurityMetrics', 'getSecurityEvents']);
+lazyExport('./functions/advanced_analytics', ['getAdvancedAnalytics', 'getDemandForecast']);
 
 // Storefront API
-export { getPublicStorefront, getPublicProducts, getStorefrontCategories, createOnlineOrder, approveOnlineOrder, rejectOnlineOrder, getStorefrontSettings, updateStorefrontSettings, checkSlugAvailability } from "./functions/storefront";
+lazyExport('./functions/storefront', ['getPublicStorefront', 'getPublicProducts', 'getStorefrontCategories', 'createOnlineOrder', 'approveOnlineOrder', 'rejectOnlineOrder', 'getStorefrontSettings', 'updateStorefrontSettings', 'checkSlugAvailability']);
 
 // Accounting, HR & Tax
-export { initializeChartOfAccounts, getChartOfAccounts, postManualJournalEntry, getTrialBalance, migrateHistoricalData } from "./functions/accounting";
-export { saveHrSettings, getHrSettings, createEmployee, updateEmployee, submitTimesheet, processLeave, generatePayroll, processPayroll, payoutCommission } from "./functions/hr";
-export { getTaxSettings, updateTaxSettings } from "./functions/tax";
-export { exportAdminReport } from "./functions/admin_reports";
-export { sendDebtReminders } from "./functions/sms_reminders";
-export { runSystemMaintenance } from "./functions/system_maintenance";
+lazyExport('./functions/accounting', ['initializeChartOfAccounts', 'getChartOfAccounts', 'postManualJournalEntry', 'getTrialBalance', 'migrateHistoricalData']);
+lazyExport('./functions/hr', ['saveHrSettings', 'getHrSettings', 'createEmployee', 'updateEmployee', 'submitTimesheet', 'processLeave', 'generatePayroll', 'processPayroll', 'payoutCommission']);
+lazyExport('./functions/tax', ['getTaxSettings', 'updateTaxSettings']);
+lazyExport('./functions/admin_reports', ['exportAdminReport']);
+lazyExport('./functions/sms_reminders', ['sendDebtReminders']);
+lazyExport('./functions/system_maintenance', ['runSystemMaintenance']);
+
+export {};

@@ -36,7 +36,8 @@ void main() async {
     if (kReleaseMode) {
       if (recaptchaKey.isEmpty) {
         // Fail startup in production to avoid running without App Check
-        throw FlutterError('RECAPTCHA_SITE_KEY must be provided in production for App Check to be enabled.');
+        throw FlutterError(
+            'RECAPTCHA_SITE_KEY must be provided in production for App Check to be enabled.');
       }
       await FirebaseAppCheck.instance.activate(
         androidProvider: AndroidProvider.playIntegrity,
@@ -46,12 +47,15 @@ void main() async {
     } else {
       // Non-release (dev/test) - use debug providers to avoid developer friction
       if (kIsWeb && recaptchaKey.isEmpty) {
-        debugPrint('App Check initialization skipped on Web: Provide RECAPTCHA_SITE_KEY via --dart-define to test against live backend.');
+        debugPrint(
+            'App Check initialization skipped on Web: Provide RECAPTCHA_SITE_KEY via --dart-define to test against live backend.');
       } else {
         await FirebaseAppCheck.instance.activate(
           androidProvider: AndroidProvider.debug,
           appleProvider: AppleProvider.debug,
-          webProvider: recaptchaKey.isNotEmpty ? ReCaptchaV3Provider(recaptchaKey) : null,
+          webProvider: recaptchaKey.isNotEmpty
+              ? ReCaptchaV3Provider(recaptchaKey)
+              : null,
         );
       }
     }

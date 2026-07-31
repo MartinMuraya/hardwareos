@@ -35,10 +35,19 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
   Future<void> _loadExpenses({bool refresh = false}) async {
     if (refresh) {
-      setState(() { _loading = true; _error = null; _lastDocId = null; _hasMore = true; _expenses.clear(); });
+      setState(() {
+        _loading = true;
+        _error = null;
+        _lastDocId = null;
+        _hasMore = true;
+        _expenses.clear();
+      });
     } else {
       if (!_hasMore || _loadingMore) return;
-      setState(() { _loadingMore = true; _error = null; });
+      setState(() {
+        _loadingMore = true;
+        _error = null;
+      });
     }
 
     try {
@@ -50,7 +59,9 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       });
 
       final rawList = (data['expenses'] as List?) ?? [];
-      final newExpenses = rawList.map((e) => Expense.fromMap(Map<String, dynamic>.from(e as Map))).toList();
+      final newExpenses = rawList
+          .map((e) => Expense.fromMap(Map<String, dynamic>.from(e as Map)))
+          .toList();
 
       if (mounted) {
         setState(() {
@@ -98,7 +109,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                         Text('Expenses', style: theme.textTheme.displayMedium),
                         const SizedBox(height: 4),
                         Text('Track and manage business expenses',
-                          style: theme.textTheme.bodyMedium),
+                            style: theme.textTheme.bodyMedium),
                       ],
                     ),
                   ),
@@ -109,19 +120,23 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     },
                     icon: const Icon(Icons.add, size: 18),
                     label: const Text('Add Expense'),
-                    style: FilledButton.styleFrom(backgroundColor: AppColors.chartRed),
+                    style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.chartRed),
                   ),
                 ],
               ),
               const SizedBox(height: 24),
               if (_error != null && _expenses.isEmpty)
-                Center(child: Text(_error!, style: TextStyle(color: theme.colorScheme.onSurface))),
+                Center(
+                    child: Text(_error!,
+                        style: TextStyle(color: theme.colorScheme.onSurface))),
               Expanded(
                 child: _expenses.isEmpty && !_loading
                     ? EmptyState(
                         icon: Icons.receipt_long_rounded,
                         title: 'No expenses recorded',
-                        subtitle: 'Click "Add Expense" to start tracking your spending.',
+                        subtitle:
+                            'Click "Add Expense" to start tracking your spending.',
                         actionLabel: 'Add Expense',
                         onAction: () async {
                           await context.push('/expenses/add');
@@ -134,17 +149,21 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                         backgroundColor: theme.cardColor,
                         child: ListView.separated(
                           itemCount: _expenses.length + (_hasMore ? 1 : 0),
-                          separatorBuilder: (_, __) => const SizedBox(height: 12),
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 12),
                           itemBuilder: (context, i) {
                             if (i == _expenses.length) {
                               _loadExpenses();
                               return const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 20),
-                              child: Center(child: CircularProgressIndicator(color: AppColors.accent)),
-                            );
+                                padding: EdgeInsets.symmetric(vertical: 20),
+                                child: Center(
+                                    child: CircularProgressIndicator(
+                                        color: AppColors.accent)),
+                              );
                             }
                             final exp = _expenses[i];
-                            return _ExpenseCard(expense: exp, fmt: _fmt, theme: theme);
+                            return _ExpenseCard(
+                                expense: exp, fmt: _fmt, theme: theme);
                           },
                         ),
                       ),
@@ -162,7 +181,8 @@ class _ExpenseCard extends StatelessWidget {
   final NumberFormat fmt;
   final ThemeData theme;
 
-  const _ExpenseCard({required this.expense, required this.fmt, required this.theme});
+  const _ExpenseCard(
+      {required this.expense, required this.fmt, required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -176,9 +196,13 @@ class _ExpenseCard extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 44, height: 44,
-            decoration: BoxDecoration(color: AppColors.chartRed.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-            child: const Icon(Icons.receipt_long_rounded, color: AppColors.chartRed, size: 22),
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+                color: AppColors.chartRed.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10)),
+            child: const Icon(Icons.receipt_long_rounded,
+                color: AppColors.chartRed, size: 22),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -186,19 +210,29 @@ class _ExpenseCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(expense.category,
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14,
-                    color: theme.colorScheme.onSurface)),
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: theme.colorScheme.onSurface)),
                 const SizedBox(height: 4),
                 if (expense.note.isNotEmpty)
-                  Text(expense.note, style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  Text(expense.note,
+                      style: TextStyle(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontSize: 13),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis),
                 const SizedBox(height: 4),
                 Text(DateFormat('MMM d, y • h:mm a').format(expense.createdAt),
-                  style: TextStyle(color: theme.hintColor, fontSize: 11)),
+                    style: TextStyle(color: theme.hintColor, fontSize: 11)),
               ],
             ),
           ),
           Text(fmt.format(expense.amount),
-            style: const TextStyle(color: AppColors.chartRed, fontWeight: FontWeight.w700, fontSize: 15)),
+              style: const TextStyle(
+                  color: AppColors.chartRed,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15)),
         ],
       ),
     );

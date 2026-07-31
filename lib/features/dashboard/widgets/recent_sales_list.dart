@@ -23,38 +23,47 @@ class RecentSalesList extends StatelessWidget {
           final total = (sale['total'] as num).toDouble();
           final profit = (sale['profit'] as num).toDouble();
           final method = sale['paymentMethod'] as String? ?? 'cash';
-          final createdAt = DateTime.tryParse(sale['createdAt']?.toString() ?? '') ?? DateTime.now();
+          final createdAt =
+              DateTime.tryParse(sale['createdAt']?.toString() ?? '') ??
+                  DateTime.now();
 
           return Column(children: [
             if (i > 0) Divider(height: 1, color: theme.dividerColor),
             ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               leading: Container(
-                width: 38, height: 38,
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
                   color: AppColors.accent.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.receipt_rounded, color: AppColors.accent, size: 18),
+                child: const Icon(Icons.receipt_rounded,
+                    color: AppColors.accent, size: 18),
               ),
               title: Text(fmt.format(total),
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14,
-                  color: theme.colorScheme.onSurface)),
+                  style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      color: theme.colorScheme.onSurface)),
               subtitle: Row(children: [
                 _PaymentChip(method: method),
                 const SizedBox(width: 8),
                 Text(DateFormat('h:mm a').format(createdAt),
-                  style: TextStyle(color: theme.hintColor, fontSize: 11)),
+                    style: TextStyle(color: theme.hintColor, fontSize: 11)),
               ]),
               trailing: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text('+${fmt.format(profit)}',
-                    style: const TextStyle(color: AppColors.success,
-                      fontWeight: FontWeight.w600, fontSize: 13)),
+                      style: const TextStyle(
+                          color: AppColors.success,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13)),
                   Text('profit',
-                    style: TextStyle(color: theme.hintColor, fontSize: 10)),
+                      style: TextStyle(color: theme.hintColor, fontSize: 10)),
                 ],
               ),
             ),
@@ -72,9 +81,14 @@ class _PaymentChip extends StatelessWidget {
   Widget build(BuildContext context) {
     Color color;
     switch (method) {
-      case 'mpesa':  color = AppColors.success; break;
-      case 'credit': color = AppColors.warning; break;
-      default:       color = AppColors.chartBlue;
+      case 'mpesa':
+        color = AppColors.success;
+        break;
+      case 'credit':
+        color = AppColors.warning;
+        break;
+      default:
+        color = AppColors.chartBlue;
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -83,7 +97,8 @@ class _PaymentChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(method.toUpperCase(),
-        style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.w700)),
+          style: TextStyle(
+              color: color, fontSize: 9, fontWeight: FontWeight.w700)),
     );
   }
 }

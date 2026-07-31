@@ -21,12 +21,13 @@ class User {
 
   factory User.fromMap(Map<String, dynamic> map) {
     return User(
-      uid:         map['uid'] as String,
-      businessId:  map['businessId'] as String,
-      role:        map['role'] as String,
+      uid: map['uid'] as String,
+      businessId: map['businessId'] as String,
+      role: map['role'] as String,
       displayName: map['displayName'] as String? ?? '',
-      email:       map['email'] as String? ?? '',
-      createdAt:   DateTime.tryParse(map['createdAt']?.toString() ?? '') ?? DateTime.now(),
+      email: map['email'] as String? ?? '',
+      createdAt: DateTime.tryParse(map['createdAt']?.toString() ?? '') ??
+          DateTime.now(),
       commissionRate: (map['commissionRate'] as num?)?.toDouble(),
       commissionBalance: (map['commissionBalance'] as num?)?.toDouble(),
     );

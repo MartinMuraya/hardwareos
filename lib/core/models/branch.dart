@@ -28,7 +28,8 @@ class Branch {
       managerId: map['managerId'] as String?,
       phone: map['phone'] as String? ?? '',
       active: map['active'] as bool? ?? true,
-      createdAt: DateTime.tryParse(map['createdAt']?.toString() ?? '') ?? DateTime.now(),
+      createdAt: DateTime.tryParse(map['createdAt']?.toString() ?? '') ??
+          DateTime.now(),
     );
   }
 }
@@ -80,8 +81,11 @@ class StockTransfer {
       requestedByName: map['requestedByName'] as String? ?? '',
       approvedBy: map['approvedBy'] as String?,
       approvedByName: map['approvedByName'] as String?,
-      createdAt: DateTime.tryParse(map['createdAt']?.toString() ?? '') ?? DateTime.now(),
-      completedAt: map['completedAt'] != null ? DateTime.tryParse(map['completedAt'].toString()) : null,
+      createdAt: DateTime.tryParse(map['createdAt']?.toString() ?? '') ??
+          DateTime.now(),
+      completedAt: map['completedAt'] != null
+          ? DateTime.tryParse(map['completedAt'].toString())
+          : null,
     );
   }
 

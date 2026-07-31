@@ -11,7 +11,7 @@ class StorefrontProvider extends ChangeNotifier {
   List<StorefrontProduct> _products = [];
   List<String> _categories = [];
   List<StorefrontCartItem> _cart = [];
-  
+
   bool _isLoading = true;
   String? _error;
 
@@ -34,7 +34,8 @@ class StorefrontProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  double get cartSubtotal => _cart.fold(0, (sum, item) => sum + (item.product.sellingPrice * item.quantity));
+  double get cartSubtotal => _cart.fold(
+      0, (sum, item) => sum + (item.product.sellingPrice * item.quantity));
   double get cartTotal => cartSubtotal + (_selectedZone?.fee ?? 0.0);
   int get cartItemCount => _cart.fold(0, (sum, item) => sum + item.quantity);
 
@@ -44,18 +45,25 @@ class StorefrontProvider extends ChangeNotifier {
 
     try {
       // 1. Fetch store info
-      final storeRes = await FunctionsService.call('getPublicStorefront', {'tenantSlug': tenantSlug});
+      final storeRes = await FunctionsService.call(
+          'getPublicStorefront', {'tenantSlug': tenantSlug});
       _storeInfo = StorefrontInfo.fromJson(Map<String, dynamic>.from(storeRes));
 
       if (_storeInfo!.active) {
         // 2. Fetch products
-        final prodRes = await FunctionsService.call('getPublicProducts', {'businessId': _storeInfo!.businessId});
-        final pList = (prodRes['products'] as List).map((e) => StorefrontProduct.fromJson(Map<String, dynamic>.from(e))).toList();
+        final prodRes = await FunctionsService.call(
+            'getPublicProducts', {'businessId': _storeInfo!.businessId});
+        final pList = (prodRes['products'] as List)
+            .map(
+                (e) => StorefrontProduct.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
         _products = pList;
 
         // 3. Fetch categories
-        final catRes = await FunctionsService.call('getStorefrontCategories', {'businessId': _storeInfo!.businessId});
-        _categories = (catRes['categories'] as List).map((e) => e.toString()).toList();
+        final catRes = await FunctionsService.call(
+            'getStorefrontCategories', {'businessId': _storeInfo!.businessId});
+        _categories =
+            (catRes['categories'] as List).map((e) => e.toString()).toList();
         _categories.insert(0, 'All');
 
         // 4. Load offline cart
@@ -73,7 +81,8 @@ class StorefrontProvider extends ChangeNotifier {
   void addToCart(StorefrontProduct product, [int quantity = 1]) {
     if (!product.inStock) return;
 
-    final existingIndex = _cart.indexWhere((item) => item.product.id == product.id);
+    final existingIndex =
+        _cart.indexWhere((item) => item.product.id == product.id);
     if (existingIndex >= 0) {
       _cart[existingIndex].quantity += quantity;
     } else {
@@ -107,9 +116,7 @@ class StorefrontProvider extends ChangeNotifier {
   Future<void> _saveCart() async {
     notifyListeners();
     await OfflineService.saveStorefrontCart(
-      tenantSlug, 
-      _cart.map((e) => e.toJson()).toList()
-    );
+        tenantSlug, _cart.map((e) => e.toJson()).toList());
   }
 
   Future<void> checkout({
@@ -120,10 +127,12 @@ class StorefrontProvider extends ChangeNotifier {
   }) async {
     if (_cart.isEmpty || _storeInfo == null) return;
 
-    final itemsPayload = _cart.map((item) => {
-      'productId': item.product.id,
-      'quantity': item.quantity,
-    }).toList();
+    final itemsPayload = _cart
+        .map((item) => {
+              'productId': item.product.id,
+              'quantity': item.quantity,
+            })
+        .toList();
 
     final orderData = {
       'businessId': _storeInfo!.businessId,
@@ -144,7 +153,8 @@ class StorefrontProvider extends ChangeNotifier {
       clearCart();
     } on FunctionsException catch (e) {
       if (e.code == 'unavailable' || e.code == 'deadline-exceeded') {
-        throw Exception('Network error. Cannot initiate M-Pesa payment right now.');
+        throw Exception(
+            'Network error. Cannot initiate M-Pesa payment right now.');
       } else {
         rethrow;
       }

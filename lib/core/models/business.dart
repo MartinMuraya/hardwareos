@@ -56,28 +56,34 @@ class Business {
     );
   }
 
-  bool get isOnTrial        => subscriptionStatus == 'trial';
-  bool get isExpired        => subscriptionStatus == 'expired';
-  bool get isActive         => subscriptionStatus == 'active';
-  bool get isOnGracePeriod  => subscriptionStatus == 'grace_period';
-  bool get isPro            => plan == 'pro';
-  bool get isStarter        => plan == 'starter';
+  bool get isOnTrial => subscriptionStatus == 'trial';
+  bool get isExpired => subscriptionStatus == 'expired';
+  bool get isActive => subscriptionStatus == 'active';
+  bool get isOnGracePeriod => subscriptionStatus == 'grace_period';
+  bool get isPro => plan == 'pro';
+  bool get isStarter => plan == 'starter';
 
   int? get trialDaysLeft {
     if (trialEndsAt == null) return null;
     final now = DateTime.now();
-    return trialEndsAt!.isAfter(now) ? trialEndsAt!.difference(now).inDays.clamp(0, 999) : 0;
+    return trialEndsAt!.isAfter(now)
+        ? trialEndsAt!.difference(now).inDays.clamp(0, 999)
+        : 0;
   }
 
   int? get subscriptionDaysLeft {
     if (subscriptionEndsAt == null) return null;
     final now = DateTime.now();
-    return subscriptionEndsAt!.isAfter(now) ? subscriptionEndsAt!.difference(now).inDays.clamp(0, 999) : 0;
+    return subscriptionEndsAt!.isAfter(now)
+        ? subscriptionEndsAt!.difference(now).inDays.clamp(0, 999)
+        : 0;
   }
 
   int? get graceDaysLeft {
     if (gracePeriodEndsAt == null) return null;
     final now = DateTime.now();
-    return gracePeriodEndsAt!.isAfter(now) ? gracePeriodEndsAt!.difference(now).inDays.clamp(0, 999) : 0;
+    return gracePeriodEndsAt!.isAfter(now)
+        ? gracePeriodEndsAt!.difference(now).inDays.clamp(0, 999)
+        : 0;
   }
 }

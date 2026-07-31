@@ -16,7 +16,8 @@ void main() {
 
       double calculatedTotal = 0;
       for (final item in items) {
-        calculatedTotal += (item['quantity'] as num) * (item['sellingPrice'] as num);
+        calculatedTotal +=
+            (item['quantity'] as num) * (item['sellingPrice'] as num);
       }
 
       expect(calculatedTotal, 4150.0);

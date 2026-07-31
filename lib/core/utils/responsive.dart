@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 class Responsive {
-  static double _width(BuildContext context) => MediaQuery.of(context).size.width;
+  static double _width(BuildContext context) =>
+      MediaQuery.of(context).size.width;
 
   static bool isMobile(BuildContext context) => _width(context) < 700;
-  static bool isTablet(BuildContext context) => _width(context) >= 700 && _width(context) < 1024;
+  static bool isTablet(BuildContext context) =>
+      _width(context) >= 700 && _width(context) < 1024;
   static bool isDesktop(BuildContext context) => _width(context) >= 1024;
 
   static bool isMobileOrTablet(BuildContext context) => _width(context) < 1024;

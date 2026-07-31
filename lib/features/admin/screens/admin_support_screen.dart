@@ -24,18 +24,27 @@ class _AdminSupportScreenState extends State<AdminSupportScreen> {
   }
 
   Future<void> _loadTickets() async {
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
-      final res = await FunctionsService.call('adminGetSupportTickets', {'status': _filter});
+      final res = await FunctionsService.call(
+          'adminGetSupportTickets', {'status': _filter});
       final list = (res['tickets'] as List?) ?? [];
       if (mounted) {
         setState(() {
-          _tickets = list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+          _tickets =
+              list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
           _loading = false;
         });
       }
     } catch (e) {
-      if (mounted) setState(() { _error = e.toString(); _loading = false; });
+      if (mounted)
+        setState(() {
+          _error = e.toString();
+          _loading = false;
+        });
     }
   }
 
@@ -54,7 +63,8 @@ class _AdminSupportScreenState extends State<AdminSupportScreen> {
               children: [
                 TextField(
                   controller: msgCtrl,
-                  decoration: const InputDecoration(labelText: 'Your Response', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                      labelText: 'Your Response', border: OutlineInputBorder()),
                   maxLines: 4,
                 ),
                 const SizedBox(height: 16),
@@ -62,7 +72,8 @@ class _AdminSupportScreenState extends State<AdminSupportScreen> {
                   initialValue: newStatus,
                   decoration: const InputDecoration(labelText: 'Update Status'),
                   items: const [
-                    DropdownMenuItem(value: 'answered', child: Text('Answered')),
+                    DropdownMenuItem(
+                        value: 'answered', child: Text('Answered')),
                     DropdownMenuItem(value: 'closed', child: Text('Closed')),
                     DropdownMenuItem(value: 'open', child: Text('Keep Open')),
                   ],
@@ -73,7 +84,9 @@ class _AdminSupportScreenState extends State<AdminSupportScreen> {
               ],
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+              TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text('Cancel')),
               FilledButton(
                 onPressed: () => Navigator.pop(ctx, true),
                 child: const Text('Send Response'),
@@ -92,12 +105,15 @@ class _AdminSupportScreenState extends State<AdminSupportScreen> {
           'message': msgCtrl.text,
           'newStatus': newStatus,
         });
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Response sent')));
+        if (mounted)
+          ScaffoldMessenger.of(context)
+              .showSnackBar(const SnackBar(content: Text('Response sent')));
         _loadTickets();
       } catch (e) {
         if (mounted) {
           setState(() => _loading = false);
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text('Error: $e')));
         }
       }
     }
@@ -112,7 +128,8 @@ class _AdminSupportScreenState extends State<AdminSupportScreen> {
       appBar: AppBar(
         title: const Text('Support Tickets'),
         actions: [
-          IconButton(icon: const Icon(Icons.refresh_rounded), onPressed: _loadTickets),
+          IconButton(
+              icon: const Icon(Icons.refresh_rounded), onPressed: _loadTickets),
         ],
       ),
       body: Column(
@@ -125,61 +142,88 @@ class _AdminSupportScreenState extends State<AdminSupportScreen> {
                 ChoiceChip(
                   label: const Text('All'),
                   selected: _filter == 'all',
-                  onSelected: (_) { setState(() => _filter = 'all'); _loadTickets(); },
+                  onSelected: (_) {
+                    setState(() => _filter = 'all');
+                    _loadTickets();
+                  },
                 ),
                 const SizedBox(width: 8),
                 ChoiceChip(
                   label: const Text('Open'),
                   selected: _filter == 'open',
-                  onSelected: (_) { setState(() => _filter = 'open'); _loadTickets(); },
+                  onSelected: (_) {
+                    setState(() => _filter = 'open');
+                    _loadTickets();
+                  },
                 ),
                 const SizedBox(width: 8),
                 ChoiceChip(
                   label: const Text('Answered'),
                   selected: _filter == 'answered',
-                  onSelected: (_) { setState(() => _filter = 'answered'); _loadTickets(); },
+                  onSelected: (_) {
+                    setState(() => _filter = 'answered');
+                    _loadTickets();
+                  },
                 ),
                 const SizedBox(width: 8),
                 ChoiceChip(
                   label: const Text('Closed'),
                   selected: _filter == 'closed',
-                  onSelected: (_) { setState(() => _filter = 'closed'); _loadTickets(); },
+                  onSelected: (_) {
+                    setState(() => _filter = 'closed');
+                    _loadTickets();
+                  },
                 ),
               ],
             ),
           ),
           Expanded(
             child: _loading
-              ? const Center(child: CircularProgressIndicator())
-              : _error != null
-                ? Center(child: Text(_error!, style: const TextStyle(color: AppColors.error)))
-                : _tickets.isEmpty
-                  ? const EmptyState(icon: Icons.support_agent_rounded, title: 'No Tickets', subtitle: 'No support tickets found.')
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(24),
-                      itemCount: _tickets.length,
-                      itemBuilder: (context, i) {
-                        final ticket = _tickets[i];
-                        final ts = ticket['createdAt'] != null ? DateTime.tryParse(ticket['createdAt']) : null;
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.all(16),
-                            title: Text(ticket['subject'] ?? 'No Subject', style: const TextStyle(fontWeight: FontWeight.bold)),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 8),
-                                Text('Business ID: ${ticket['businessId']}'),
-                                if (ts != null) Text('Created: ${DateFormat('MMM dd, HH:mm').format(ts)}'),
-                              ],
-                            ),
-                            trailing: _StatusBadge(status: ticket['status'] ?? 'open'),
-                            onTap: () => _respondToTicket(ticket['id'], ticket['subject'] ?? ''),
+                ? const Center(child: CircularProgressIndicator())
+                : _error != null
+                    ? Center(
+                        child: Text(_error!,
+                            style: const TextStyle(color: AppColors.error)))
+                    : _tickets.isEmpty
+                        ? const EmptyState(
+                            icon: Icons.support_agent_rounded,
+                            title: 'No Tickets',
+                            subtitle: 'No support tickets found.')
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(24),
+                            itemCount: _tickets.length,
+                            itemBuilder: (context, i) {
+                              final ticket = _tickets[i];
+                              final ts = ticket['createdAt'] != null
+                                  ? DateTime.tryParse(ticket['createdAt'])
+                                  : null;
+                              return Card(
+                                margin: const EdgeInsets.only(bottom: 16),
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.all(16),
+                                  title: Text(ticket['subject'] ?? 'No Subject',
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold)),
+                                  subtitle: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const SizedBox(height: 8),
+                                      Text(
+                                          'Business ID: ${ticket['businessId']}'),
+                                      if (ts != null)
+                                        Text(
+                                            'Created: ${DateFormat('MMM dd, HH:mm').format(ts)}'),
+                                    ],
+                                  ),
+                                  trailing: _StatusBadge(
+                                      status: ticket['status'] ?? 'open'),
+                                  onTap: () => _respondToTicket(
+                                      ticket['id'], ticket['subject'] ?? ''),
+                                ),
+                              );
+                            },
                           ),
-                        );
-                      },
-                    ),
           ),
         ],
       ),
@@ -195,10 +239,17 @@ class _StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     Color color;
     switch (status) {
-      case 'open': color = AppColors.warning; break;
-      case 'answered': color = AppColors.success; break;
-      case 'closed': color = Colors.grey; break;
-      default: color = AppColors.accent;
+      case 'open':
+        color = AppColors.warning;
+        break;
+      case 'answered':
+        color = AppColors.success;
+        break;
+      case 'closed':
+        color = Colors.grey;
+        break;
+      default:
+        color = AppColors.accent;
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -207,7 +258,9 @@ class _StatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
-      child: Text(status.toUpperCase(), style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+      child: Text(status.toUpperCase(),
+          style: TextStyle(
+              color: color, fontSize: 10, fontWeight: FontWeight.bold)),
     );
   }
 }

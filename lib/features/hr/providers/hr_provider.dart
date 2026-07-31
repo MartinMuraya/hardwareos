@@ -24,7 +24,8 @@ class HrProvider extends ChangeNotifier {
     if (businessId.isEmpty) return;
     _setLoading(true);
     try {
-      final res = await FunctionsService.call('getHrSettings', {'businessId': businessId});
+      final res = await FunctionsService.call(
+          'getHrSettings', {'businessId': businessId});
       _settings = HrSettings.fromMap(res);
       _error = null;
     } catch (e) {
@@ -35,7 +36,8 @@ class HrProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> saveSettings(double paye, double nhif, double nssf, String commissionBasis) async {
+  Future<void> saveSettings(
+      double paye, double nhif, double nssf, String commissionBasis) async {
     _setLoading(true);
     try {
       await FunctionsService.call('saveHrSettings', {
@@ -111,7 +113,9 @@ class HrProvider extends ChangeNotifier {
         .collection('employees')
         .where('businessId', isEqualTo: businessId)
         .snapshots()
-        .map((snap) => snap.docs.map((d) => EmployeeModel.fromMap(d.data(), d.id)).toList());
+        .map((snap) => snap.docs
+            .map((d) => EmployeeModel.fromMap(d.data(), d.id))
+            .toList());
   }
 
   Stream<List<PayrollModel>> getPayrollsStream() {
@@ -120,6 +124,8 @@ class HrProvider extends ChangeNotifier {
         .where('businessId', isEqualTo: businessId)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snap) => snap.docs.map((d) => PayrollModel.fromMap(d.data(), d.id)).toList());
+        .map((snap) => snap.docs
+            .map((d) => PayrollModel.fromMap(d.data(), d.id))
+            .toList());
   }
 }

@@ -15,11 +15,11 @@ class AddExpenseScreen extends StatefulWidget {
 }
 
 class _AddExpenseScreenState extends State<AddExpenseScreen> {
-  final _formKey     = GlobalKey<FormState>();
-  final _amountCtrl  = TextEditingController();
-  final _noteCtrl    = TextEditingController();
-  String _category   = 'Operations';
-  bool _submitting   = false;
+  final _formKey = GlobalKey<FormState>();
+  final _amountCtrl = TextEditingController();
+  final _noteCtrl = TextEditingController();
+  String _category = 'Operations';
+  bool _submitting = false;
   String? _error;
 
   static const _categories = [
@@ -44,14 +44,17 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() { _submitting = true; _error = null; });
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
     try {
       final bizId = context.read<AuthProvider>().businessId!;
       await FunctionsService.call('createExpense', {
         'businessId': bizId,
-        'category':   _category,
-        'amount':     double.parse(_amountCtrl.text),
-        'note':       _noteCtrl.text.trim(),
+        'category': _category,
+        'amount': double.parse(_amountCtrl.text),
+        'note': _noteCtrl.text.trim(),
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -60,7 +63,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         context.pop();
       }
     } on FunctionsException catch (e) {
-      setState(() { _error = e.message; _submitting = false; });
+      setState(() {
+        _error = e.message;
+        _submitting = false;
+      });
     }
   }
 
@@ -89,7 +95,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (_error != null) _ErrorCard(message: _error!, theme: theme),
+                    if (_error != null)
+                      _ErrorCard(message: _error!, theme: theme),
 
                     // Amount
                     _Section(
@@ -117,7 +124,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                         ),
                         validator: (v) {
                           final n = double.tryParse(v ?? '');
-                          return (n == null || n <= 0) ? 'Enter a valid amount' : null;
+                          return (n == null || n <= 0)
+                              ? 'Enter a valid amount'
+                              : null;
                         },
                       ),
                     ),
@@ -137,7 +146,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 160),
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 8),
+                                  horizontal: 14, vertical: 8),
                               decoration: BoxDecoration(
                                 color: sel
                                     ? AppColors.chartRed.withValues(alpha: 0.12)
@@ -150,13 +159,14 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                                   width: sel ? 1.5 : 1,
                                 ),
                               ),
-                              child: Text(c,
+                              child: Text(
+                                c,
                                 style: TextStyle(
                                   color: sel
                                       ? AppColors.chartRed
                                       : theme.colorScheme.onSurfaceVariant,
-                                  fontWeight: sel
-                                      ? FontWeight.w600 : FontWeight.w400,
+                                  fontWeight:
+                                      sel ? FontWeight.w600 : FontWeight.w400,
                                   fontSize: 13,
                                 ),
                               ),
@@ -175,7 +185,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                         controller: _noteCtrl,
                         maxLines: 3,
                         style: TextStyle(
-                          color: theme.colorScheme.onSurface, fontSize: 14),
+                            color: theme.colorScheme.onSurface, fontSize: 14),
                         decoration: const InputDecoration(
                           hintText: 'Add a description...',
                           border: InputBorder.none,
@@ -194,7 +204,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         backgroundColor: AppColors.chartRed,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                            borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
                   ],
@@ -213,7 +223,8 @@ class _Section extends StatelessWidget {
   final Widget child;
   final ThemeData theme;
 
-  const _Section({required this.title, required this.child, required this.theme});
+  const _Section(
+      {required this.title, required this.child, required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -263,8 +274,9 @@ class _ErrorCard extends StatelessWidget {
       child: Row(children: [
         const Icon(Icons.error_outline, color: AppColors.error, size: 16),
         const SizedBox(width: 10),
-        Expanded(child: Text(message,
-          style: const TextStyle(color: AppColors.error, fontSize: 13))),
+        Expanded(
+            child: Text(message,
+                style: const TextStyle(color: AppColors.error, fontSize: 13))),
       ]),
     );
   }

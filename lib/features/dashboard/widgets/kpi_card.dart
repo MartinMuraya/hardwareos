@@ -25,10 +25,13 @@ class KpiCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isHighlighted ? iconColor.withValues(alpha: 0.08) : theme.cardColor,
+        color:
+            isHighlighted ? iconColor.withValues(alpha: 0.08) : theme.cardColor,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isHighlighted ? iconColor.withValues(alpha: 0.3) : theme.dividerColor,
+          color: isHighlighted
+              ? iconColor.withValues(alpha: 0.3)
+              : theme.dividerColor,
           width: isHighlighted ? 1.5 : 1,
         ),
       ),
@@ -41,7 +44,8 @@ class KpiCard extends StatelessWidget {
           children: [
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
               Container(
-                width: 32, height: 32,
+                width: 32,
+                height: 32,
                 decoration: BoxDecoration(
                   color: iconColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
@@ -50,29 +54,38 @@ class KpiCard extends StatelessWidget {
               ),
               if (trend != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: AppColors.success.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text(trend!,
-                    style: const TextStyle(color: AppColors.success, fontSize: 10, fontWeight: FontWeight.w600),
+                  child: Text(
+                    trend!,
+                    style: const TextStyle(
+                        color: AppColors.success,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600),
                   ),
                 ),
             ]),
             const SizedBox(height: 12),
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(value,
+              Text(
+                value,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: isHighlighted ? iconColor : theme.textTheme.headlineSmall?.color,
+                  color: isHighlighted
+                      ? iconColor
+                      : theme.textTheme.headlineSmall?.color,
                   fontSize: 16,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 2),
-              Text(label,
+              Text(
+                label,
                 style: theme.textTheme.bodySmall,
               ),
             ]),

@@ -43,25 +43,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     setState(() => _loading = true);
     try {
-      if (_nameController.text.trim().isNotEmpty && _nameController.text != user.displayName) {
+      if (_nameController.text.trim().isNotEmpty &&
+          _nameController.text != user.displayName) {
         await user.updateDisplayName(_nameController.text.trim());
       }
-      
+
       if (_passwordController.text.isNotEmpty) {
         if (_currentPasswordController.text.isEmpty) {
-          throw FirebaseAuthException(code: 'requires-recent-login', message: 'Current password is required to change password.');
+          throw FirebaseAuthException(
+              code: 'requires-recent-login',
+              message: 'Current password is required to change password.');
         }
-        
-        final cred = EmailAuthProvider.credential(email: user.email!, password: _currentPasswordController.text);
+
+        final cred = EmailAuthProvider.credential(
+            email: user.email!, password: _currentPasswordController.text);
         await user.reauthenticateWithCredential(cred);
-        
+
         await user.updatePassword(_passwordController.text);
         _passwordController.clear();
         _currentPasswordController.clear();
       }
 
       await auth.reloadUser();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Profile updated successfully')),
@@ -70,7 +74,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } on FirebaseAuthException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message ?? 'Failed to update profile'), backgroundColor: AppColors.error),
+          SnackBar(
+              content: Text(e.message ?? 'Failed to update profile'),
+              backgroundColor: AppColors.error),
         );
       }
     } finally {
@@ -90,7 +96,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(auth.errorMessage ?? 'Upload failed'), backgroundColor: AppColors.error),
+          SnackBar(
+              content: Text(auth.errorMessage ?? 'Upload failed'),
+              backgroundColor: AppColors.error),
         );
       }
     }
@@ -115,7 +123,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               Text('My Profile', style: theme.textTheme.displayMedium),
               const SizedBox(height: 24),
-              
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -125,11 +132,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         CircleAvatar(
                           radius: 40,
-                          backgroundColor: AppColors.accent.withValues(alpha: 0.1),
-                          backgroundImage: auth.photoUrl != null ? NetworkImage(auth.photoUrl!) : null,
+                          backgroundColor:
+                              AppColors.accent.withValues(alpha: 0.1),
+                          backgroundImage: auth.photoUrl != null
+                              ? NetworkImage(auth.photoUrl!)
+                              : null,
                           child: auth.photoUrl == null
-                              ? Text(auth.user?.displayName?.substring(0, 1).toUpperCase() ?? 'U', 
-                                  style: const TextStyle(fontSize: 32, color: AppColors.accent))
+                              ? Text(
+                                  auth.user?.displayName
+                                          ?.substring(0, 1)
+                                          .toUpperCase() ??
+                                      'U',
+                                  style: const TextStyle(
+                                      fontSize: 32, color: AppColors.accent))
                               : null,
                         ),
                         Positioned(
@@ -140,9 +155,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             decoration: BoxDecoration(
                               color: AppColors.accent,
                               shape: BoxShape.circle,
-                              border: Border.all(color: theme.scaffoldBackgroundColor, width: 2),
+                              border: Border.all(
+                                  color: theme.scaffoldBackgroundColor,
+                                  width: 2),
                             ),
-                            child: const Icon(Icons.camera_alt, size: 14, color: Colors.white),
+                            child: const Icon(Icons.camera_alt,
+                                size: 14, color: Colors.white),
                           ),
                         ),
                       ],
@@ -153,8 +171,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(auth.user?.displayName ?? 'User', style: theme.textTheme.titleLarge),
-                        Text(auth.user?.email ?? '', style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor)),
+                        Text(auth.user?.displayName ?? 'User',
+                            style: theme.textTheme.titleLarge),
+                        Text(auth.user?.email ?? '',
+                            style: theme.textTheme.bodyMedium
+                                ?.copyWith(color: theme.hintColor)),
                         const SizedBox(height: 8),
                         Row(
                           children: [
@@ -169,7 +190,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
               const SizedBox(height: 32),
-              
               Card(
                 color: theme.cardColor,
                 child: Padding(
@@ -193,7 +213,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         decoration: const InputDecoration(
                           labelText: 'Current Password',
                           prefixIcon: Icon(Icons.lock_outline),
-                          helperText: 'Required if you are changing your password',
+                          helperText:
+                              'Required if you are changing your password',
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -219,7 +240,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-
               Card(
                 color: theme.cardColor,
                 child: Padding(
@@ -227,12 +247,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Preferences & Account', style: theme.textTheme.titleMedium),
+                      Text('Preferences & Account',
+                          style: theme.textTheme.titleMedium),
                       const SizedBox(height: 8),
                       SwitchListTile(
                         contentPadding: EdgeInsets.zero,
                         title: const Text('Dark Mode'),
-                        secondary: Icon(themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode),
+                        secondary: Icon(themeProvider.isDarkMode
+                            ? Icons.dark_mode
+                            : Icons.light_mode),
                         value: themeProvider.isDarkMode,
                         onChanged: (v) => themeProvider.toggleTheme(v),
                         activeThumbColor: AppColors.accent,
@@ -242,20 +265,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         contentPadding: EdgeInsets.zero,
                         leading: const Icon(Icons.business_rounded),
                         title: const Text('Business Name'),
-                        trailing: Text(biz.businessName ?? 'Unknown', style: const TextStyle(fontWeight: FontWeight.w600)),
+                        trailing: Text(biz.businessName ?? 'Unknown',
+                            style:
+                                const TextStyle(fontWeight: FontWeight.w600)),
                       ),
                       ListTile(
                         contentPadding: EdgeInsets.zero,
                         leading: const Icon(Icons.workspace_premium_rounded),
                         title: const Text('Subscription'),
-                        trailing: Text(biz.subscriptionStatus?.toUpperCase() ?? 'UNKNOWN', 
-                          style: TextStyle(fontWeight: FontWeight.w600, color: biz.subscriptionStatus == 'expired' ? AppColors.error : AppColors.success)),
+                        trailing: Text(
+                            biz.subscriptionStatus?.toUpperCase() ?? 'UNKNOWN',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: biz.subscriptionStatus == 'expired'
+                                    ? AppColors.error
+                                    : AppColors.success)),
                       ),
                       const Divider(),
                       ListTile(
                         contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.logout, color: AppColors.error),
-                        title: const Text('Sign Out', style: TextStyle(color: AppColors.error)),
+                        leading:
+                            const Icon(Icons.logout, color: AppColors.error),
+                        title: const Text('Sign Out',
+                            style: TextStyle(color: AppColors.error)),
                         onTap: () => auth.signOut(),
                       ),
                     ],
@@ -283,8 +315,10 @@ class _RoleBadge extends StatelessWidget {
         color: theme.dividerColor.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(6),
       ),
-      child: Text(role.toUpperCase(),
-        style: theme.textTheme.labelSmall?.copyWith(fontSize: 10, fontWeight: FontWeight.w700),
+      child: Text(
+        role.toUpperCase(),
+        style: theme.textTheme.labelSmall
+            ?.copyWith(fontSize: 10, fontWeight: FontWeight.w700),
       ),
     );
   }
@@ -298,9 +332,14 @@ class _PlanBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     Color color;
     switch (plan) {
-      case 'pro':     color = AppColors.planPro;     break;
-      case 'starter': color = AppColors.planStarter; break;
-      default:        color = AppColors.planFree;
+      case 'pro':
+        color = AppColors.planPro;
+        break;
+      case 'starter':
+        color = AppColors.planStarter;
+        break;
+      default:
+        color = AppColors.planFree;
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -309,9 +348,12 @@ class _PlanBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
-      child: Text(plan.toUpperCase(),
+      child: Text(
+        plan.toUpperCase(),
         style: TextStyle(
-          color: color, fontSize: 10, fontWeight: FontWeight.w800,
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
           letterSpacing: 0.8,
         ),
       ),

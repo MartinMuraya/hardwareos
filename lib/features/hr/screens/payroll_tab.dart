@@ -18,9 +18,12 @@ class PayrollTab extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Payroll Runs', style: Theme.of(context).textTheme.headlineSmall),
+              Text('Payroll Runs',
+                  style: Theme.of(context).textTheme.headlineSmall),
               ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.blue[900], foregroundColor: Colors.white),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue[900],
+                    foregroundColor: Colors.white),
                 onPressed: () => _generatePayroll(context, provider),
                 icon: const Icon(Icons.play_arrow),
                 label: const Text('Generate Payroll'),
@@ -58,10 +61,16 @@ class PayrollTab extends StatelessWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('Period: ${pr.period}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                              Text('Period: ${pr.period}',
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18)),
                               Chip(
-                                label: Text(pr.status, style: const TextStyle(color: Colors.white)),
-                                backgroundColor: isDraft ? Colors.orange : Colors.green,
+                                label: Text(pr.status,
+                                    style:
+                                        const TextStyle(color: Colors.white)),
+                                backgroundColor:
+                                    isDraft ? Colors.orange : Colors.green,
                               ),
                             ],
                           ),
@@ -77,15 +86,24 @@ class PayrollTab extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               const Text('Total Deductions (PAYE/NHIF/NSSF):'),
-                              Text('KES ${pr.totalDeductions.toStringAsFixed(2)}', style: const TextStyle(color: Colors.red)),
+                              Text(
+                                  'KES ${pr.totalDeductions.toStringAsFixed(2)}',
+                                  style: const TextStyle(color: Colors.red)),
                             ],
                           ),
                           const Divider(),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text('Net Pay:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                              Text('KES ${pr.totalNetPay.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.green)),
+                              const Text('Net Pay:',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16)),
+                              Text('KES ${pr.totalNetPay.toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                      color: Colors.green)),
                             ],
                           ),
                           if (isDraft) ...[
@@ -93,15 +111,27 @@ class PayrollTab extends StatelessWidget {
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton.icon(
-                                style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
-                                onPressed: provider.isLoading ? null : () async {
-                                  try {
-                                    await provider.processPayroll(pr.id);
-                                    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payroll Processed & Ledger Updated!')));
-                                  } catch (e) {
-                                    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
-                                  }
-                                },
+                                style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.green,
+                                    foregroundColor: Colors.white),
+                                onPressed: provider.isLoading
+                                    ? null
+                                    : () async {
+                                        try {
+                                          await provider.processPayroll(pr.id);
+                                          if (context.mounted)
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(const SnackBar(
+                                                    content: Text(
+                                                        'Payroll Processed & Ledger Updated!')));
+                                        } catch (e) {
+                                          if (context.mounted)
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(SnackBar(
+                                                    content:
+                                                        Text('Error: $e')));
+                                        }
+                                      },
                                 icon: const Icon(Icons.check_circle),
                                 label: const Text('Process & Post to Ledger'),
                               ),
@@ -124,9 +154,13 @@ class PayrollTab extends StatelessWidget {
     final currentPeriod = DateFormat('MMMM yyyy').format(DateTime.now());
     try {
       await provider.generatePayroll(currentPeriod);
-      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Draft Payroll for $currentPeriod generated!')));
+      if (context.mounted)
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Draft Payroll for $currentPeriod generated!')));
     } catch (e) {
-      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (context.mounted)
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 }

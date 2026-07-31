@@ -49,7 +49,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   }
 
   Future<void> _loadPaymentHistory() async {
-    final businessProvider = Provider.of<BusinessProvider>(context, listen: false);
+    final businessProvider =
+        Provider.of<BusinessProvider>(context, listen: false);
     final businessId = businessProvider.businessId;
 
     if (businessId == null) return;
@@ -110,7 +111,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           'id': businessId,
           'name': 'My Business', // will be updated once businessProvider loads
           'plan': userProfile['plan'] as String? ?? 'trial',
-          'subscriptionStatus': userProfile['subscriptionStatus'] as String? ?? 'trial',
+          'subscriptionStatus':
+              userProfile['subscriptionStatus'] as String? ?? 'trial',
           'trialEndsAt': userProfile['trialEndsAt'],
           'subscriptionStartsAt': userProfile['subscriptionStartsAt'],
           'subscriptionEndsAt': userProfile['subscriptionEndsAt'],
@@ -142,7 +144,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     safeData['id'] = (safeData['id'] as String?) ?? '';
     safeData['name'] = (safeData['name'] as String?) ?? 'My Business';
     safeData['plan'] = (safeData['plan'] as String?) ?? 'trial';
-    safeData['subscriptionStatus'] = (safeData['subscriptionStatus'] as String?) ?? 'trial';
+    safeData['subscriptionStatus'] =
+        (safeData['subscriptionStatus'] as String?) ?? 'trial';
     safeData['ownerId'] = (safeData['ownerId'] as String?) ?? '';
 
     final business = Business.fromMap(safeData);
@@ -155,7 +158,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: theme.colorScheme.surface,
-        title: Text('Subscription & Plans', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+        title: Text('Subscription & Plans',
+            style: theme.textTheme.titleLarge
+                ?.copyWith(fontWeight: FontWeight.bold)),
         elevation: 0,
       ),
       body: Stack(
@@ -163,7 +168,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           SingleChildScrollView(
             child: Column(
               children: [
-                _buildCurrentStatusCard(business, isExpired, isOnTrial, isActive, isGracePeriod),
+                _buildCurrentStatusCard(
+                    business, isExpired, isOnTrial, isActive, isGracePeriod),
                 const SizedBox(height: 24),
                 _buildAvailablePlansSection(),
                 if (_selectedPlanId != null) ...[
@@ -184,12 +190,27 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     );
   }
 
-  Widget _buildCurrentStatusCard(Business business, bool isExpired, bool isOnTrial, bool isActive, bool isGracePeriod) {
+  Widget _buildCurrentStatusCard(Business business, bool isExpired,
+      bool isOnTrial, bool isActive, bool isGracePeriod) {
     final theme = Theme.of(context);
-    final statusColor = isExpired ? AppColors.error : (isGracePeriod ? AppColors.warning : (isActive ? AppColors.success : AppColors.info));
-    final statusText = isExpired ? 'Expired' : (isGracePeriod ? 'Grace Period' : (isActive ? 'Active' : 'Trial'));
-    final expiryDate = isOnTrial ? business.trialEndsAt : (isGracePeriod ? business.gracePeriodEndsAt : business.subscriptionEndsAt);
-    final daysLeft = isOnTrial ? business.trialDaysLeft : (isGracePeriod ? business.graceDaysLeft : business.subscriptionDaysLeft);
+    final statusColor = isExpired
+        ? AppColors.error
+        : (isGracePeriod
+            ? AppColors.warning
+            : (isActive ? AppColors.success : AppColors.info));
+    final statusText = isExpired
+        ? 'Expired'
+        : (isGracePeriod ? 'Grace Period' : (isActive ? 'Active' : 'Trial'));
+    final expiryDate = isOnTrial
+        ? business.trialEndsAt
+        : (isGracePeriod
+            ? business.gracePeriodEndsAt
+            : business.subscriptionEndsAt);
+    final daysLeft = isOnTrial
+        ? business.trialDaysLeft
+        : (isGracePeriod
+            ? business.graceDaysLeft
+            : business.subscriptionDaysLeft);
 
     return Container(
       margin: const EdgeInsets.all(24),
@@ -212,17 +233,26 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 children: [
                   Text(
                     business.plan.toUpperCase(),
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24, color: AppColors.accent),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 24,
+                        color: AppColors.accent),
                   ),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: statusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+                      border:
+                          Border.all(color: statusColor.withValues(alpha: 0.3)),
                     ),
-                    child: Text(statusText, style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 12)),
+                    child: Text(statusText,
+                        style: TextStyle(
+                            color: statusColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12)),
                   ),
                 ],
               ),
@@ -232,7 +262,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   children: [
                     Text(
                       '$daysLeft days left',
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -252,16 +283,19 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   decoration: BoxDecoration(
                     color: AppColors.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                    border: Border.all(
+                        color: AppColors.error.withValues(alpha: 0.3)),
                   ),
                   child: const Row(
                     children: [
-                      Icon(Icons.warning_rounded, color: AppColors.error, size: 18),
+                      Icon(Icons.warning_rounded,
+                          color: AppColors.error, size: 18),
                       SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           'Your trial or subscription has expired. Upgrade to continue using HardwareOS.',
-                          style: TextStyle(color: AppColors.error, fontSize: 13),
+                          style:
+                              TextStyle(color: AppColors.error, fontSize: 13),
                         ),
                       ),
                     ],
@@ -278,16 +312,19 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   decoration: BoxDecoration(
                     color: AppColors.warning.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+                    border: Border.all(
+                        color: AppColors.warning.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.hourglass_bottom_rounded, color: AppColors.warning, size: 18),
+                      const Icon(Icons.hourglass_bottom_rounded,
+                          color: AppColors.warning, size: 18),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           'Your subscription has ended. You have ${business.graceDaysLeft ?? 0} days left in the grace period. Renew now to avoid losing access.',
-                          style: const TextStyle(color: AppColors.warning, fontSize: 13),
+                          style: const TextStyle(
+                              color: AppColors.warning, fontSize: 13),
                         ),
                       ),
                     ],
@@ -312,7 +349,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         children: [
           Text('Available Plans', style: theme.textTheme.titleMedium),
           const SizedBox(height: 16),
-          if (isMobile) 
+          if (isMobile)
             Column(
               children: [
                 PlanCard(
@@ -401,17 +438,24 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 color: AppColors.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Text(_error!, style: const TextStyle(color: AppColors.error, fontSize: 12)),
+              child: Text(_error!,
+                  style: const TextStyle(color: AppColors.error, fontSize: 12)),
             ),
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
             child: FilledButton(
-              onPressed: _isProcessing || _phoneNumber.isEmpty || _selectedPlanId == null
+              onPressed: _isProcessing ||
+                      _phoneNumber.isEmpty ||
+                      _selectedPlanId == null
                   ? null
                   : () => _processPayment(business.id),
               child: _isProcessing
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white))
                   : const Text('Pay with M-Pesa STK Push'),
             ),
           ),
@@ -500,7 +544,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 64),
+            const Icon(Icons.check_circle_rounded,
+                color: AppColors.success, size: 64),
             const SizedBox(height: 24),
             Text('Payment Successful!', style: theme.textTheme.headlineSmall),
             const SizedBox(height: 16),
@@ -545,13 +590,15 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(
-                width: 48, height: 48,
+                width: 48,
+                height: 48,
                 child: CircularProgressIndicator(strokeWidth: 4),
               ),
               const SizedBox(height: 24),
               Text(
                 'Waiting for Payment',
-                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
               Text(
@@ -597,7 +644,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _paymentHistory.length,
               separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (context, i) => _buildPaymentHistoryItem(_paymentHistory[i]),
+              itemBuilder: (context, i) =>
+                  _buildPaymentHistoryItem(_paymentHistory[i]),
             ),
         ],
       ),
@@ -606,8 +654,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
   Widget _buildPaymentHistoryItem(Subscription sub) {
     final theme = Theme.of(context);
-    final statusColor = sub.isCompleted ? AppColors.success : (sub.isFailed ? AppColors.error : AppColors.warning);
-    final statusText = sub.isCompleted ? 'Completed' : (sub.isFailed ? 'Failed' : 'Pending');
+    final statusColor = sub.isCompleted
+        ? AppColors.success
+        : (sub.isFailed ? AppColors.error : AppColors.warning);
+    final statusText =
+        sub.isCompleted ? 'Completed' : (sub.isFailed ? 'Failed' : 'Pending');
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -624,9 +675,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(sub.plan.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                Text('${sub.createdAt.toLocal().toString().split(' ')[0]} • KES ${sub.amount}', 
-                  style: theme.textTheme.bodySmall),
+                Text(sub.plan.toUpperCase(),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 13)),
+                Text(
+                    '${sub.createdAt.toLocal().toString().split(' ')[0]} • KES ${sub.amount}',
+                    style: theme.textTheme.bodySmall),
               ],
             ),
           ),
@@ -636,7 +690,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               color: statusColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(6),
             ),
-            child: Text(statusText, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: statusColor)),
+            child: Text(statusText,
+                style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: statusColor)),
           ),
         ],
       ),
@@ -676,7 +734,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _subscriptionHistory.length,
               separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (context, i) => _buildSubscriptionHistoryItem(_subscriptionHistory[i]),
+              itemBuilder: (context, i) =>
+                  _buildSubscriptionHistoryItem(_subscriptionHistory[i]),
             ),
         ],
       ),
@@ -744,25 +803,36 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(description, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                Text(description,
+                    style: const TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.w500)),
                 const SizedBox(height: 4),
                 Row(
                   children: [
                     if (newStatus != null)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
                         margin: const EdgeInsets.only(right: 8),
                         decoration: BoxDecoration(
                           color: AppColors.accent.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(newStatus.toUpperCase(),
-                          style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: AppColors.accent)),
+                            style: const TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.accent)),
                       ),
                     if (timestamp != null)
                       Text(
-                        DateTime.tryParse(timestamp)?.toLocal().toString().split(' ')[0] ?? '',
-                        style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
+                        DateTime.tryParse(timestamp)
+                                ?.toLocal()
+                                .toString()
+                                .split(' ')[0] ??
+                            '',
+                        style:
+                            theme.textTheme.bodySmall?.copyWith(fontSize: 11),
                       ),
                   ],
                 ),

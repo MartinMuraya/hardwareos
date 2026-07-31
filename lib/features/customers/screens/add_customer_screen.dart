@@ -24,13 +24,19 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
 
   @override
   void dispose() {
-    _nameCtrl.dispose(); _phoneCtrl.dispose(); _idCtrl.dispose(); _limitCtrl.dispose();
+    _nameCtrl.dispose();
+    _phoneCtrl.dispose();
+    _idCtrl.dispose();
+    _limitCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() { _submitting = true; _error = null; });
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
     try {
       final bizId = context.read<AuthProvider>().businessId!;
       await FunctionsService.call('createCustomer', {
@@ -48,7 +54,11 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
         context.pop(true);
       }
     } on FunctionsException catch (e) {
-      if (mounted) setState(() { _error = e.message; _submitting = false; });
+      if (mounted)
+        setState(() {
+          _error = e.message;
+          _submitting = false;
+        });
     }
   }
 
@@ -64,7 +74,9 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
         appBar: AppBar(
           title: const Text('Add Customer'),
           actions: [
-            TextButton(onPressed: _submitting ? null : _submit, child: const Text('Save')),
+            TextButton(
+                onPressed: _submitting ? null : _submit,
+                child: const Text('Save')),
           ],
         ),
         body: SingleChildScrollView(
@@ -74,71 +86,99 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
               constraints: const BoxConstraints(maxWidth: 560),
               child: Form(
                 key: _formKey,
-                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  if (_error != null)
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: AppColors.error.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (_error != null)
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: AppColors.error.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                                color: AppColors.error.withValues(alpha: 0.3)),
+                          ),
+                          child: Row(children: [
+                            const Icon(Icons.error_outline,
+                                color: AppColors.error, size: 18),
+                            const SizedBox(width: 10),
+                            Expanded(
+                                child: Text(_error!,
+                                    style: const TextStyle(
+                                        color: AppColors.error, fontSize: 13))),
+                          ]),
+                        ),
+                      _Section(
+                          label: 'Personal Information',
+                          child: Column(children: [
+                            TextFormField(
+                              controller: _nameCtrl,
+                              decoration: const InputDecoration(
+                                  labelText: 'Full Name *',
+                                  hintText: 'e.g. John Kamau'),
+                              validator: (v) => v == null || v.trim().isEmpty
+                                  ? 'Full name is required'
+                                  : null,
+                              textCapitalization: TextCapitalization.words,
+                            ),
+                            const SizedBox(height: 14),
+                            TextFormField(
+                              controller: _phoneCtrl,
+                              decoration: const InputDecoration(
+                                  labelText: 'Phone Number *',
+                                  hintText: 'e.g. 0712345678'),
+                              keyboardType: TextInputType.phone,
+                              validator: (v) => v == null || v.trim().isEmpty
+                                  ? 'Phone number is required'
+                                  : null,
+                            ),
+                            const SizedBox(height: 14),
+                            TextFormField(
+                              controller: _idCtrl,
+                              decoration: const InputDecoration(
+                                  labelText: 'National ID (optional)',
+                                  hintText: 'e.g. 12345678'),
+                            ),
+                          ])),
+                      const SizedBox(height: 20),
+                      _Section(
+                          label: 'Loyalty & Rewards',
+                          child: Column(children: [
+                            SwitchListTile(
+                              title: const Text('Is this customer a Fundi?'),
+                              subtitle: const Text(
+                                  'Fundis earn reward points on purchases.'),
+                              value: _isFundi,
+                              onChanged: (val) =>
+                                  setState(() => _isFundi = val),
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ])),
+                      const SizedBox(height: 20),
+                      _Section(
+                          label: 'Credit Settings',
+                          child: Column(children: [
+                            TextFormField(
+                              controller: _limitCtrl,
+                              decoration: const InputDecoration(
+                                labelText: 'Credit Limit (KES)',
+                                hintText: 'Leave empty for no limit',
+                                prefixText: 'KES ',
+                              ),
+                              keyboardType: TextInputType.number,
+                            ),
+                          ])),
+                      const SizedBox(height: 32),
+                      FilledButton(
+                        onPressed: _submitting ? null : _submit,
+                        style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16)),
+                        child: const Text('Create Customer',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w700, fontSize: 15)),
                       ),
-                      child: Row(children: [
-                        const Icon(Icons.error_outline, color: AppColors.error, size: 18),
-                        const SizedBox(width: 10),
-                        Expanded(child: Text(_error!, style: const TextStyle(color: AppColors.error, fontSize: 13))),
-                      ]),
-                    ),
-                  _Section(label: 'Personal Information', child: Column(children: [
-                    TextFormField(
-                      controller: _nameCtrl,
-                      decoration: const InputDecoration(labelText: 'Full Name *', hintText: 'e.g. John Kamau'),
-                      validator: (v) => v == null || v.trim().isEmpty ? 'Full name is required' : null,
-                      textCapitalization: TextCapitalization.words,
-                    ),
-                    const SizedBox(height: 14),
-                    TextFormField(
-                      controller: _phoneCtrl,
-                      decoration: const InputDecoration(labelText: 'Phone Number *', hintText: 'e.g. 0712345678'),
-                      keyboardType: TextInputType.phone,
-                      validator: (v) => v == null || v.trim().isEmpty ? 'Phone number is required' : null,
-                    ),
-                    const SizedBox(height: 14),
-                    TextFormField(
-                      controller: _idCtrl,
-                      decoration: const InputDecoration(labelText: 'National ID (optional)', hintText: 'e.g. 12345678'),
-                    ),
-                  ])),
-                  const SizedBox(height: 20),
-                  _Section(label: 'Loyalty & Rewards', child: Column(children: [
-                    SwitchListTile(
-                      title: const Text('Is this customer a Fundi?'),
-                      subtitle: const Text('Fundis earn reward points on purchases.'),
-                      value: _isFundi,
-                      onChanged: (val) => setState(() => _isFundi = val),
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  ])),
-                  const SizedBox(height: 20),
-                  _Section(label: 'Credit Settings', child: Column(children: [
-                    TextFormField(
-                      controller: _limitCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Credit Limit (KES)',
-                        hintText: 'Leave empty for no limit',
-                        prefixText: 'KES ',
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ])),
-                  const SizedBox(height: 32),
-                  FilledButton(
-                    onPressed: _submitting ? null : _submit,
-                    style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-                    child: const Text('Create Customer', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-                  ),
-                ]),
+                    ]),
               ),
             ),
           ),
@@ -156,7 +196,11 @@ class _Section extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label, style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13, fontWeight: FontWeight.w600)),
+      Text(label,
+          style: TextStyle(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontSize: 13,
+              fontWeight: FontWeight.w600)),
       const SizedBox(height: 10),
       Container(
         padding: const EdgeInsets.all(16),
@@ -170,5 +214,3 @@ class _Section extends StatelessWidget {
     ]);
   }
 }
-
-

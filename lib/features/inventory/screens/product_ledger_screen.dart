@@ -49,9 +49,10 @@ class ProductLedgerScreen extends StatelessWidget {
               final data = docs[index].data() as Map<String, dynamic>;
               // Firebase timestamp to ISO string for the model
               if (data['timestamp'] is Timestamp) {
-                data['timestamp'] = (data['timestamp'] as Timestamp).toDate().toIso8601String();
+                data['timestamp'] =
+                    (data['timestamp'] as Timestamp).toDate().toIso8601String();
               }
-              
+
               final entry = InventoryLedgerEntry.fromMap(data);
 
               final isPositive = entry.quantity > 0;
@@ -62,8 +63,10 @@ class ProductLedgerScreen extends StatelessWidget {
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: _getColorForType(entry.movementType).withValues(alpha: 0.2),
-                    child: Icon(_getIconForType(entry.movementType), color: _getColorForType(entry.movementType)),
+                    backgroundColor: _getColorForType(entry.movementType)
+                        .withValues(alpha: 0.2),
+                    child: Icon(_getIconForType(entry.movementType),
+                        color: _getColorForType(entry.movementType)),
                   ),
                   title: Text(
                     entry.movementType,
@@ -72,15 +75,23 @@ class ProductLedgerScreen extends StatelessWidget {
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(DateFormat('MMM d, y, h:mm a').format(entry.timestamp)),
+                      Text(DateFormat('MMM d, y, h:mm a')
+                          .format(entry.timestamp)),
                       if (entry.reason != null && entry.reason!.isNotEmpty)
-                        Text('Reason: ${entry.reason}', style: const TextStyle(fontStyle: FontStyle.italic)),
-                      Text('Ref: ${entry.referenceId}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                        Text('Reason: ${entry.reason}',
+                            style:
+                                const TextStyle(fontStyle: FontStyle.italic)),
+                      Text('Ref: ${entry.referenceId}',
+                          style: const TextStyle(
+                              fontSize: 12, color: Colors.grey)),
                     ],
                   ),
                   trailing: Text(
                     '$qtyPrefix${entry.quantity}',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: qtyColor),
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: qtyColor),
                   ),
                 ),
               );
@@ -93,27 +104,43 @@ class ProductLedgerScreen extends StatelessWidget {
 
   Color _getColorForType(String type) {
     switch (type) {
-      case 'SALE': return AppColors.error;
-      case 'PURCHASE': return AppColors.success;
-      case 'RETURN': return Colors.blue;
-      case 'ADJUSTMENT': return Colors.orange;
-      case 'OPENING_BALANCE': return Colors.purple;
-      case 'TRANSFER_IN': return AppColors.success;
-      case 'TRANSFER_OUT': return AppColors.error;
-      default: return Colors.grey;
+      case 'SALE':
+        return AppColors.error;
+      case 'PURCHASE':
+        return AppColors.success;
+      case 'RETURN':
+        return Colors.blue;
+      case 'ADJUSTMENT':
+        return Colors.orange;
+      case 'OPENING_BALANCE':
+        return Colors.purple;
+      case 'TRANSFER_IN':
+        return AppColors.success;
+      case 'TRANSFER_OUT':
+        return AppColors.error;
+      default:
+        return Colors.grey;
     }
   }
 
   IconData _getIconForType(String type) {
     switch (type) {
-      case 'SALE': return Icons.shopping_cart_checkout;
-      case 'PURCHASE': return Icons.local_shipping;
-      case 'RETURN': return Icons.assignment_return;
-      case 'ADJUSTMENT': return Icons.edit_note;
-      case 'OPENING_BALANCE': return Icons.account_balance_wallet;
-      case 'TRANSFER_IN': return Icons.input;
-      case 'TRANSFER_OUT': return Icons.output;
-      default: return Icons.compare_arrows;
+      case 'SALE':
+        return Icons.shopping_cart_checkout;
+      case 'PURCHASE':
+        return Icons.local_shipping;
+      case 'RETURN':
+        return Icons.assignment_return;
+      case 'ADJUSTMENT':
+        return Icons.edit_note;
+      case 'OPENING_BALANCE':
+        return Icons.account_balance_wallet;
+      case 'TRANSFER_IN':
+        return Icons.input;
+      case 'TRANSFER_OUT':
+        return Icons.output;
+      default:
+        return Icons.compare_arrows;
     }
   }
 }

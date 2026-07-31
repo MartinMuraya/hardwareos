@@ -12,7 +12,7 @@ class AuthErrorScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final auth = context.watch<AuthProvider>();
-    
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: Center(
@@ -30,12 +30,15 @@ class AuthErrorScreen extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.cloud_off_rounded, size: 64, color: AppColors.error),
+                  const Icon(Icons.cloud_off_rounded,
+                      size: 64, color: AppColors.error),
                   const SizedBox(height: 24),
-                  Text('Connection Error', style: theme.textTheme.headlineMedium),
+                  Text('Connection Error',
+                      style: theme.textTheme.headlineMedium),
                   const SizedBox(height: 16),
                   Text(
-                    auth.profileLoadError ?? 'Unable to securely connect to the backend server.',
+                    auth.profileLoadError ??
+                        'Unable to securely connect to the backend server.',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium,
                   ),

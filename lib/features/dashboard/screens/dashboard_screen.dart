@@ -41,10 +41,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _load() async {
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final businessId = context.read<AuthProvider>().businessId;
-      if (businessId == null) { setState(() { _loading = false; _error = 'No business found.'; }); return; }
+      if (businessId == null) {
+        setState(() {
+          _loading = false;
+          _error = 'No business found.';
+        });
+        return;
+      }
 
       final results = await Future.wait([
         FunctionsService.call('getDashboardStats', {'businessId': businessId}),
@@ -52,9 +61,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         FunctionsService.call('getAdjustmentStats', {'businessId': businessId}),
         FunctionsService.call('getReturnStats', {'businessId': businessId}),
         FunctionsService.call('getRecentAuditLogs', {'businessId': businessId}),
-        FunctionsService.call('getCashVarianceReport', {'businessId': businessId}),
-        FunctionsService.call('getBranchPerformance', {'businessId': businessId}),
-        FunctionsService.call('getPendingTransfers', {'businessId': businessId}),
+        FunctionsService.call(
+            'getCashVarianceReport', {'businessId': businessId}),
+        FunctionsService.call(
+            'getBranchPerformance', {'businessId': businessId}),
+        FunctionsService.call(
+            'getPendingTransfers', {'businessId': businessId}),
       ]);
       final data = results[0];
       final debt = results[1];
@@ -66,37 +78,49 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final pt = results[7];
       if (mounted) {
         setState(() {
-          _stats = data; _debtStats = debt; _adjStats = adj; _returnStats = retStats;
-          _cashVariance = cashVar; _branchPerformance = branchPerf;
+          _stats = data;
+          _debtStats = debt;
+          _adjStats = adj;
+          _returnStats = retStats;
+          _cashVariance = cashVar;
+          _branchPerformance = branchPerf;
           _pendingTransfers = (pt['pendingCount'] as num?)?.toInt() ?? 0;
-          _recentLogs = (logs['logs'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+          _recentLogs =
+              (logs['logs'] as List?)?.cast<Map<String, dynamic>>() ?? [];
           _loading = false;
         });
         final sub = data['subscription'] as Map?;
         if (sub != null) {
           context.read<BusinessProvider>().setBusinessData({
-            'id':                 businessId,
-            'plan':               sub['plan'],
+            'id': businessId,
+            'plan': sub['plan'],
             'subscriptionStatus': sub['status'],
-            'trialEndsAt':        sub['trialEndsAt'],
+            'trialEndsAt': sub['trialEndsAt'],
           });
         }
       }
     } on FunctionsException catch (e) {
-      if (mounted) setState(() { _error = e.message; _loading = false; });
+      if (mounted)
+        setState(() {
+          _error = e.message;
+          _loading = false;
+        });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final kpis       = _stats?['kpis']        as Map?;
-    final lowStock   = (_stats?['lowStock']    as List?)?.cast<Map<String, dynamic>>() ?? [];
-    final topProducts= (_stats?['topProducts'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-    final recentSales= (_stats?['recentSales'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-    final sub        = _stats?['subscription'] as Map?;
-    final fmt        = NumberFormat.currency(locale: 'en_KE', symbol: 'KES ');
-    final padding    = Responsive.padding(context);
+    final kpis = _stats?['kpis'] as Map?;
+    final lowStock =
+        (_stats?['lowStock'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final topProducts =
+        (_stats?['topProducts'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final recentSales =
+        (_stats?['recentSales'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final sub = _stats?['subscription'] as Map?;
+    final fmt = NumberFormat.currency(locale: 'en_KE', symbol: 'KES ');
+    final padding = Responsive.padding(context);
 
     return LoadingOverlay(
       isLoading: _loading,
@@ -113,18 +137,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
             children: [
               Row(children: [
                 Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('Dashboard',
-                      style: theme.textTheme.displayMedium),
-                    const SizedBox(height: 4),
-                    Text(DateFormat('EEEE, MMM d').format(DateTime.now()),
-                      style: theme.textTheme.bodyMedium),
-                  ]),
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Dashboard', style: theme.textTheme.displayMedium),
+                        const SizedBox(height: 4),
+                        Text(DateFormat('EEEE, MMM d').format(DateTime.now()),
+                            style: theme.textTheme.bodyMedium),
+                      ]),
                 ),
                 IconButton(
                   icon: const Icon(Icons.auto_awesome, color: Colors.purple),
                   onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const AIIntelligenceScreen()));
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const AIIntelligenceScreen()));
                   },
                   tooltip: 'AI Inventory Intelligence',
                 ),
@@ -135,54 +163,49 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ]),
               const SizedBox(height: 20),
-
               if (sub != null) PlanStatusBanner(subscription: sub),
               if (sub != null) const SizedBox(height: 20),
               const PendingSyncCard(),
               const SizedBox(height: 12),
-
               if (_error != null && !_loading)
                 _ErrorCard(message: _error!, onRetry: _load, theme: theme),
-
               if (kpis != null) ...[
                 _SectionHeader(title: "Today's Performance", theme: theme),
                 const SizedBox(height: 12),
                 _KpiGrid(kpis: kpis, fmt: fmt),
                 const SizedBox(height: 28),
               ],
-
               if (_adjStats != null || _returnStats != null) ...[
                 _SectionHeader(title: 'Inventory & Returns', theme: theme),
                 const SizedBox(height: 12),
-                _InventoryReturnsRow(adjStats: _adjStats, returnStats: _returnStats, fmt: fmt),
+                _InventoryReturnsRow(
+                    adjStats: _adjStats, returnStats: _returnStats, fmt: fmt),
                 const SizedBox(height: 28),
               ],
-
               const _SectionHeader(title: 'Quick Actions'),
               const SizedBox(height: 12),
               _QuickActions(),
               const SizedBox(height: 28),
-
               if (lowStock.isNotEmpty) ...[
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  _SectionHeader(title: 'Low Stock Alert', theme: theme),
-                  TextButton(
-                    onPressed: () => context.go(RoutePaths.inventory),
-                    child: const Text('View All'),
-                  ),
-                ]),
+                Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _SectionHeader(title: 'Low Stock Alert', theme: theme),
+                      TextButton(
+                        onPressed: () => context.go(RoutePaths.inventory),
+                        child: const Text('View All'),
+                      ),
+                    ]),
                 const SizedBox(height: 12),
                 LowStockList(items: lowStock),
                 const SizedBox(height: 28),
               ],
-
               if (topProducts.isNotEmpty) ...[
                 _SectionHeader(title: 'Top Fast-Moving Items', theme: theme),
                 const SizedBox(height: 12),
                 _TopProductsList(items: topProducts, fmt: fmt),
                 const SizedBox(height: 28),
               ],
-
               if (_debtStats != null) ...[
                 _SectionHeader(title: 'Credit Overview', theme: theme),
                 const SizedBox(height: 12),
@@ -198,46 +221,66 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     child: Row(children: [
                       Container(
-                        width: 44, height: 44,
+                        width: 44,
+                        height: 44,
                         decoration: BoxDecoration(
                           color: AppColors.warning.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Icon(Icons.account_balance_wallet_rounded, color: AppColors.warning, size: 22),
+                        child: const Icon(Icons.account_balance_wallet_rounded,
+                            color: AppColors.warning, size: 22),
                       ),
                       const SizedBox(width: 14),
-                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text('Outstanding Debt',
-                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: theme.colorScheme.onSurface)),
-                        const SizedBox(height: 4),
-                        Text('${_debtStats!['overdueCount'] ?? 0} overdue customers',
-                          style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
-                      ])),
-                      Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                        Text(fmt.format(_debtStats!['totalOutstanding'] ?? 0),
-                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: AppColors.warning)),
-                        const SizedBox(height: 4),
-                        Text('Tap to view',
-                          style: TextStyle(fontSize: 11, color: theme.hintColor)),
-                      ]),
+                      Expanded(
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                            Text('Outstanding Debt',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                    color: theme.colorScheme.onSurface)),
+                            const SizedBox(height: 4),
+                            Text(
+                                '${_debtStats!['overdueCount'] ?? 0} overdue customers',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: theme.colorScheme.onSurfaceVariant)),
+                          ])),
+                      Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                                fmt.format(
+                                    _debtStats!['totalOutstanding'] ?? 0),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 16,
+                                    color: AppColors.warning)),
+                            const SizedBox(height: 4),
+                            Text('Tap to view',
+                                style: TextStyle(
+                                    fontSize: 11, color: theme.hintColor)),
+                          ]),
                     ]),
                   ),
                 ),
                 const SizedBox(height: 28),
               ],
-
               if (recentSales.isNotEmpty) ...[
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  _SectionHeader(title: 'Recent Sales', theme: theme),
-                  TextButton(
-                    onPressed: () => context.go('${RoutePaths.sales}/history'),
-                    child: const Text('View All'),
-                  ),
-                ]),
+                Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _SectionHeader(title: 'Recent Sales', theme: theme),
+                      TextButton(
+                        onPressed: () =>
+                            context.go('${RoutePaths.sales}/history'),
+                        child: const Text('View All'),
+                      ),
+                    ]),
                 const SizedBox(height: 12),
                 RecentSalesList(sales: recentSales, fmt: fmt),
               ],
-
               if (_cashVariance != null) ...[
                 _SectionHeader(title: 'Cash Drawer', theme: theme),
                 const SizedBox(height: 12),
@@ -253,38 +296,58 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     child: Row(children: [
                       Container(
-                        width: 44, height: 44,
+                        width: 44,
+                        height: 44,
                         decoration: BoxDecoration(
                           color: AppColors.accent.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Icon(Icons.monetization_on_rounded, color: AppColors.accent, size: 22),
+                        child: const Icon(Icons.monetization_on_rounded,
+                            color: AppColors.accent, size: 22),
                       ),
                       const SizedBox(width: 14),
-                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text('Session Variance',
-                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: theme.colorScheme.onSurface)),
-                        const SizedBox(height: 4),
-                        Text('${_cashVariance!['sessionCount'] ?? 0} sessions today',
-                          style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
-                      ])),
-                      Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                        Text(fmt.format(_cashVariance!['totalVariance'] ?? 0),
-                          style: TextStyle(
-                            fontWeight: FontWeight.w800, fontSize: 16,
-                            color: ((_cashVariance!['totalVariance'] as num?) ?? 0) < 0
-                              ? AppColors.error : AppColors.success,
-                          )),
-                        const SizedBox(height: 4),
-                        Text('Tap to view',
-                          style: TextStyle(fontSize: 11, color: theme.hintColor)),
-                      ]),
+                      Expanded(
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                            Text('Session Variance',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                    color: theme.colorScheme.onSurface)),
+                            const SizedBox(height: 4),
+                            Text(
+                                '${_cashVariance!['sessionCount'] ?? 0} sessions today',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: theme.colorScheme.onSurfaceVariant)),
+                          ])),
+                      Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                                fmt.format(
+                                    _cashVariance!['totalVariance'] ?? 0),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 16,
+                                  color: ((_cashVariance!['totalVariance']
+                                                  as num?) ??
+                                              0) <
+                                          0
+                                      ? AppColors.error
+                                      : AppColors.success,
+                                )),
+                            const SizedBox(height: 4),
+                            Text('Tap to view',
+                                style: TextStyle(
+                                    fontSize: 11, color: theme.hintColor)),
+                          ]),
                     ]),
                   ),
                 ),
                 const SizedBox(height: 28),
               ],
-
               if (_branchPerformance != null || _pendingTransfers > 0) ...[
                 _SectionHeader(title: 'Branches', theme: theme),
                 const SizedBox(height: 12),
@@ -300,37 +363,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     child: Row(children: [
                       Container(
-                        width: 44, height: 44,
+                        width: 44,
+                        height: 44,
                         decoration: BoxDecoration(
                           color: AppColors.chartBlue.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Icon(Icons.business_rounded, color: AppColors.chartBlue, size: 22),
+                        child: const Icon(Icons.business_rounded,
+                            color: AppColors.chartBlue, size: 22),
                       ),
                       const SizedBox(width: 14),
-                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text('Branch Operations',
-                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: theme.colorScheme.onSurface)),
-                        const SizedBox(height: 4),
-                        Text('$_pendingTransfers pending transfers',
-                          style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
-                      ])),
+                      Expanded(
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                            Text('Branch Operations',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                    color: theme.colorScheme.onSurface)),
+                            const SizedBox(height: 4),
+                            Text('$_pendingTransfers pending transfers',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: theme.colorScheme.onSurfaceVariant)),
+                          ])),
                       Icon(Icons.chevron_right_rounded, color: theme.hintColor),
                     ]),
                   ),
                 ),
                 const SizedBox(height: 28),
               ],
-
               if (_recentLogs.isNotEmpty) ...[
                 const SizedBox(height: 28),
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  _SectionHeader(title: 'Recent Activity', theme: theme),
-                  TextButton(
-                    onPressed: () => context.go(RoutePaths.auditLogs),
-                    child: const Text('View All'),
-                  ),
-                ]),
+                Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _SectionHeader(title: 'Recent Activity', theme: theme),
+                      TextButton(
+                        onPressed: () => context.go(RoutePaths.auditLogs),
+                        child: const Text('View All'),
+                      ),
+                    ]),
                 const SizedBox(height: 12),
                 _RecentActivityList(logs: _recentLogs),
               ],
@@ -420,10 +494,13 @@ class _QuickActions extends StatelessWidget {
           color: AppColors.chartRed,
           onTap: () => context.go('${RoutePaths.expenses}/add'),
         ),
-      ].map((btn) => isMobile
-        ? SizedBox(width: (MediaQuery.of(context).size.width - 24 - 24 - 24) / 3, child: btn)
-        : SizedBox(width: 160, child: btn)
-      ).toList(),
+      ]
+          .map((btn) => isMobile
+              ? SizedBox(
+                  width: (MediaQuery.of(context).size.width - 24 - 24 - 24) / 3,
+                  child: btn)
+              : SizedBox(width: 160, child: btn))
+          .toList(),
     );
   }
 }
@@ -433,7 +510,11 @@ class _ActionButton extends StatelessWidget {
   final String label;
   final Color color;
   final VoidCallback onTap;
-  const _ActionButton({required this.icon, required this.label, required this.color, required this.onTap});
+  const _ActionButton(
+      {required this.icon,
+      required this.label,
+      required this.color,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -452,7 +533,9 @@ class _ActionButton extends StatelessWidget {
           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
             Icon(icon, color: color, size: 26),
             const SizedBox(height: 8),
-            Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
+            Text(label,
+                style: TextStyle(
+                    color: color, fontSize: 12, fontWeight: FontWeight.w600)),
           ]),
         ),
       ),
@@ -464,7 +547,8 @@ class _InventoryReturnsRow extends StatelessWidget {
   final Map<String, dynamic>? adjStats;
   final Map<String, dynamic>? returnStats;
   final NumberFormat fmt;
-  const _InventoryReturnsRow({this.adjStats, this.returnStats, required this.fmt});
+  const _InventoryReturnsRow(
+      {this.adjStats, this.returnStats, required this.fmt});
 
   @override
   Widget build(BuildContext context) {
@@ -510,7 +594,13 @@ class _MiniCard extends StatelessWidget {
   final String label;
   final String subtitle;
   final ThemeData theme;
-  const _MiniCard({required this.icon, required this.iconColor, required this.value, required this.label, required this.subtitle, required this.theme});
+  const _MiniCard(
+      {required this.icon,
+      required this.iconColor,
+      required this.value,
+      required this.label,
+      required this.subtitle,
+      required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -523,7 +613,8 @@ class _MiniCard extends StatelessWidget {
       ),
       child: Row(children: [
         Container(
-          width: 40, height: 40,
+          width: 40,
+          height: 40,
           decoration: BoxDecoration(
             color: iconColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
@@ -531,10 +622,17 @@ class _MiniCard extends StatelessWidget {
           child: Icon(icon, color: iconColor, size: 20),
         ),
         const SizedBox(width: 12),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
-          Text(label, style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant)),
-          Text(subtitle, style: TextStyle(fontSize: 10, color: theme.hintColor)),
+        Expanded(
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(value,
+              style:
+                  const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 11, color: theme.colorScheme.onSurfaceVariant)),
+          Text(subtitle,
+              style: TextStyle(fontSize: 10, color: theme.hintColor)),
         ])),
       ]),
     );
@@ -555,36 +653,55 @@ class _RecentActivityList extends StatelessWidget {
 
         Color color;
         switch (module) {
-          case 'Inventory': color = AppColors.chartBlue; break;
-          case 'Sales': color = AppColors.accent; break;
-          case 'Credit': color = AppColors.warning; break;
-          case 'Quotation': color = AppColors.chartPurple; break;
-          case 'Suppliers': color = AppColors.chartGreen; break;
-          default: color = theme.colorScheme.onSurfaceVariant;
+          case 'Inventory':
+            color = AppColors.chartBlue;
+            break;
+          case 'Sales':
+            color = AppColors.accent;
+            break;
+          case 'Credit':
+            color = AppColors.warning;
+            break;
+          case 'Quotation':
+            color = AppColors.chartPurple;
+            break;
+          case 'Suppliers':
+            color = AppColors.chartGreen;
+            break;
+          default:
+            color = theme.colorScheme.onSurfaceVariant;
         }
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: Row(children: [
             Container(
-              width: 8, height: 8,
+              width: 8,
+              height: 8,
               decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('$module · $action',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(log['entityName'] as String? ?? '',
-                  style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ]),
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '$module · $action',
+                      style: const TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.w500),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      log['entityName'] as String? ?? '',
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: theme.colorScheme.onSurfaceVariant),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ]),
             ),
             Text(log['userName'] as String? ?? '',
-              style: TextStyle(fontSize: 10, color: theme.hintColor)),
+                style: TextStyle(fontSize: 10, color: theme.hintColor)),
           ]),
         );
       }).toList(),
@@ -598,33 +715,37 @@ class _SectionHeader extends StatelessWidget {
   const _SectionHeader({required this.title, this.theme});
 
   @override
-  Widget build(BuildContext context) => Text(title,
-    style: (theme ?? Theme.of(context)).textTheme.titleLarge,
-  );
+  Widget build(BuildContext context) => Text(
+        title,
+        style: (theme ?? Theme.of(context)).textTheme.titleLarge,
+      );
 }
 
 class _ErrorCard extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
   final ThemeData theme;
-  const _ErrorCard({required this.message, required this.onRetry, required this.theme});
+  const _ErrorCard(
+      {required this.message, required this.onRetry, required this.theme});
 
   @override
   Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.only(bottom: 20),
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: AppColors.error.withValues(alpha: 0.08),
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
-    ),
-    child: Row(children: [
-      const Icon(Icons.warning_rounded, color: AppColors.error),
-      const SizedBox(width: 12),
-      Expanded(child: Text(message, style: TextStyle(color: theme.colorScheme.onSurface))),
-      TextButton(onPressed: onRetry, child: const Text('Retry')),
-    ]),
-  );
+        margin: const EdgeInsets.only(bottom: 20),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.error.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+        ),
+        child: Row(children: [
+          const Icon(Icons.warning_rounded, color: AppColors.error),
+          const SizedBox(width: 12),
+          Expanded(
+              child: Text(message,
+                  style: TextStyle(color: theme.colorScheme.onSurface))),
+          TextButton(onPressed: onRetry, child: const Text('Retry')),
+        ]),
+      );
 }
 
 class _TopProductsList extends StatelessWidget {
@@ -646,17 +767,25 @@ class _TopProductsList extends StatelessWidget {
           final idx = entry.key;
           final item = entry.value;
           final isLast = idx == items.length - 1;
-          
+
           return Column(
             children: [
               ListTile(
                 leading: CircleAvatar(
                   backgroundColor: AppColors.accent.withValues(alpha: 0.1),
-                  child: Text('#${idx + 1}', style: const TextStyle(color: AppColors.accent, fontWeight: FontWeight.bold)),
+                  child: Text('#${idx + 1}',
+                      style: const TextStyle(
+                          color: AppColors.accent,
+                          fontWeight: FontWeight.bold)),
                 ),
-                title: Text(item['name'] ?? 'Unknown Item', style: const TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: Text('${item['qty']} units sold', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
-                trailing: Text(fmt.format(item['revenue'] ?? 0), style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.success)),
+                title: Text(item['name'] ?? 'Unknown Item',
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: Text('${item['qty']} units sold',
+                    style:
+                        TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+                trailing: Text(fmt.format(item['revenue'] ?? 0),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, color: AppColors.success)),
               ),
               if (!isLast) const Divider(height: 1),
             ],

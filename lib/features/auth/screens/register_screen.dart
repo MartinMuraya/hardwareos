@@ -13,17 +13,19 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final _formKey       = GlobalKey<FormState>();
-  final _emailCtrl     = TextEditingController();
-  final _passCtrl      = TextEditingController();
-  final _bizNameCtrl   = TextEditingController();
-  bool _obscure        = true;
-  bool _isSubmitting   = false;
+  final _formKey = GlobalKey<FormState>();
+  final _emailCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
+  final _bizNameCtrl = TextEditingController();
+  bool _obscure = true;
+  bool _isSubmitting = false;
   bool _accountCreated = false; // step 1 done, now enter biz name
 
   @override
   void dispose() {
-    _emailCtrl.dispose(); _passCtrl.dispose(); _bizNameCtrl.dispose();
+    _emailCtrl.dispose();
+    _passCtrl.dispose();
+    _bizNameCtrl.dispose();
     super.dispose();
   }
 
@@ -33,7 +35,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final auth = context.read<AuthProvider>();
     auth.clearError();
     final ok = await auth.createAccount(_emailCtrl.text.trim(), _passCtrl.text);
-    if (mounted) setState(() { _isSubmitting = false; if (ok) _accountCreated = true; });
+    if (mounted)
+      setState(() {
+        _isSubmitting = false;
+        if (ok) _accountCreated = true;
+      });
   }
 
   Future<void> _createBusiness() async {
@@ -62,19 +68,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Center(
                   child: Column(children: [
                     Container(
-                      width: 64, height: 64,
+                      width: 64,
+                      height: 64,
                       decoration: BoxDecoration(
-                        color: AppColors.accent, borderRadius: BorderRadius.circular(18),
+                        color: AppColors.accent,
+                        borderRadius: BorderRadius.circular(18),
                       ),
-                      child: const Icon(Icons.hardware_rounded, color: Colors.white, size: 36),
+                      child: const Icon(Icons.hardware_rounded,
+                          color: Colors.white, size: 36),
                     ),
                     const SizedBox(height: 16),
-                    Text('Get Started',
-                      style: theme.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w800),
+                    Text(
+                      'Get Started',
+                      style: theme.textTheme.displayMedium
+                          ?.copyWith(fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(height: 6),
-                    const Text('14-day free trial • No credit card required',
-                      style: TextStyle(color: AppColors.accent, fontSize: 13, fontWeight: FontWeight.w600),
+                    const Text(
+                      '14-day free trial • No credit card required',
+                      style: TextStyle(
+                          color: AppColors.accent,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600),
                     ),
                   ]),
                 ),
@@ -82,10 +97,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 // Progress indicator
                 Row(children: [
-                  _StepDot(active: true, done: auth.isAuthenticated || _accountCreated, label: '1. Account'),
-                  Expanded(child: Container(height: 2,
-                    color: (auth.isAuthenticated || _accountCreated) ? AppColors.accent : theme.dividerColor)),
-                  _StepDot(active: auth.isAuthenticated || _accountCreated, done: false, label: '2. Business'),
+                  _StepDot(
+                      active: true,
+                      done: auth.isAuthenticated || _accountCreated,
+                      label: '1. Account'),
+                  Expanded(
+                      child: Container(
+                          height: 2,
+                          color: (auth.isAuthenticated || _accountCreated)
+                              ? AppColors.accent
+                              : theme.dividerColor)),
+                  _StepDot(
+                      active: auth.isAuthenticated || _accountCreated,
+                      done: false,
+                      label: '2. Business'),
                 ]),
                 const SizedBox(height: 28),
 
@@ -99,18 +124,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: Form(
                     key: _formKey,
                     child: !(auth.isAuthenticated || _accountCreated)
-                      ? _AccountStep(
-                          emailCtrl: _emailCtrl, passCtrl: _passCtrl,
-                          obscure: _obscure, isSubmitting: _isSubmitting,
-                          error: auth.errorMessage,
-                          onToggleObscure: () => setState(() => _obscure = !_obscure),
-                          onSubmit: _createAccount,
-                          onLogin: () => context.go(RoutePaths.login),
-                        )
-                      : _BusinessStep(
-                          bizNameCtrl: _bizNameCtrl, isSubmitting: _isSubmitting,
-                          error: auth.errorMessage, onSubmit: _createBusiness,
-                        ),
+                        ? _AccountStep(
+                            emailCtrl: _emailCtrl,
+                            passCtrl: _passCtrl,
+                            obscure: _obscure,
+                            isSubmitting: _isSubmitting,
+                            error: auth.errorMessage,
+                            onToggleObscure: () =>
+                                setState(() => _obscure = !_obscure),
+                            onSubmit: _createAccount,
+                            onLogin: () => context.go(RoutePaths.login),
+                          )
+                        : _BusinessStep(
+                            bizNameCtrl: _bizNameCtrl,
+                            isSubmitting: _isSubmitting,
+                            error: auth.errorMessage,
+                            onSubmit: _createBusiness,
+                          ),
                   ),
                 ),
               ],
@@ -129,9 +159,14 @@ class _AccountStep extends StatelessWidget {
   final VoidCallback onToggleObscure, onSubmit, onLogin;
 
   const _AccountStep({
-    required this.emailCtrl, required this.passCtrl, required this.obscure,
-    required this.isSubmitting, required this.error,
-    required this.onToggleObscure, required this.onSubmit, required this.onLogin,
+    required this.emailCtrl,
+    required this.passCtrl,
+    required this.obscure,
+    required this.isSubmitting,
+    required this.error,
+    required this.onToggleObscure,
+    required this.onSubmit,
+    required this.onLogin,
   });
 
   @override
@@ -144,12 +179,15 @@ class _AccountStep extends StatelessWidget {
       TextFormField(
         controller: emailCtrl,
         keyboardType: TextInputType.emailAddress,
-        decoration: const InputDecoration(labelText: 'Email Address',
-          prefixIcon: Icon(Icons.email_outlined, size: 18)),
+        decoration: const InputDecoration(
+            labelText: 'Email Address',
+            prefixIcon: Icon(Icons.email_outlined, size: 18)),
         validator: (v) {
           if (v == null || v.trim().isEmpty) return 'Enter your email';
-          final emailRegExp = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
-          if (!emailRegExp.hasMatch(v.trim())) return 'Enter a valid email address';
+          final emailRegExp =
+              RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+          if (!emailRegExp.hasMatch(v.trim()))
+            return 'Enter a valid email address';
           return null;
         },
       ),
@@ -157,22 +195,29 @@ class _AccountStep extends StatelessWidget {
       TextFormField(
         controller: passCtrl,
         obscureText: obscure,
-        decoration: InputDecoration(labelText: 'Password',
-          prefixIcon: const Icon(Icons.lock_outline, size: 18),
-          suffixIcon: IconButton(
-            icon: Icon(obscure ? Icons.visibility_off : Icons.visibility, size: 18),
-            onPressed: onToggleObscure,
-          )),
-        validator: (v) => v == null || v.length < 8 ? 'Min 8 characters with letters & numbers' : null,
+        decoration: InputDecoration(
+            labelText: 'Password',
+            prefixIcon: const Icon(Icons.lock_outline, size: 18),
+            suffixIcon: IconButton(
+              icon: Icon(obscure ? Icons.visibility_off : Icons.visibility,
+                  size: 18),
+              onPressed: onToggleObscure,
+            )),
+        validator: (v) => v == null || v.length < 8
+            ? 'Min 8 characters with letters & numbers'
+            : null,
       ),
       const SizedBox(height: 24),
       ElevatedButton(
         onPressed: isSubmitting ? null : onSubmit,
         child: isSubmitting
-          ? const SizedBox(width: 20, height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation(Colors.white)))
-          : const Text('Create Account'),
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation(Colors.white)))
+            : const Text('Create Account'),
       ),
       const SizedBox(height: 24),
 
@@ -181,7 +226,8 @@ class _AccountStep extends StatelessWidget {
         Expanded(child: Divider(color: theme.dividerColor)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text('OR', style: theme.textTheme.labelSmall?.copyWith(fontSize: 10)),
+          child: Text('OR',
+              style: theme.textTheme.labelSmall?.copyWith(fontSize: 10)),
         ),
         Expanded(child: Divider(color: theme.dividerColor)),
       ]),
@@ -191,11 +237,14 @@ class _AccountStep extends StatelessWidget {
       SizedBox(
         width: double.infinity,
         child: OutlinedButton.icon(
-          onPressed: isSubmitting ? null : () => context.read<AuthProvider>().signInWithGoogle(),
+          onPressed: isSubmitting
+              ? null
+              : () => context.read<AuthProvider>().signInWithGoogle(),
           icon: SvgPicture.network(
             'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
             height: 18,
-            placeholderBuilder: (context) => const SizedBox(width: 18, height: 18),
+            placeholderBuilder: (context) =>
+                const SizedBox(width: 18, height: 18),
           ),
           label: const Text('Continue with Google'),
           style: OutlinedButton.styleFrom(
@@ -207,8 +256,7 @@ class _AccountStep extends StatelessWidget {
       ),
       const SizedBox(height: 12),
       Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Text('Already have an account? ',
-          style: theme.textTheme.bodySmall),
+        Text('Already have an account? ', style: theme.textTheme.bodySmall),
         TextButton(onPressed: onLogin, child: const Text('Sign In')),
       ]),
     ]);
@@ -222,8 +270,10 @@ class _BusinessStep extends StatelessWidget {
   final VoidCallback onSubmit;
 
   const _BusinessStep({
-    required this.bizNameCtrl, required this.isSubmitting,
-    required this.error, required this.onSubmit,
+    required this.bizNameCtrl,
+    required this.isSubmitting,
+    required this.error,
+    required this.onSubmit,
   });
 
   @override
@@ -237,7 +287,7 @@ class _BusinessStep extends StatelessWidget {
       ]),
       const SizedBox(height: 6),
       Text('This is your store name — visible to your team.',
-        style: theme.textTheme.bodySmall),
+          style: theme.textTheme.bodySmall),
       const SizedBox(height: 24),
       if (error != null) _ErrorBanner(message: error!),
       TextFormField(
@@ -247,7 +297,8 @@ class _BusinessStep extends StatelessWidget {
           prefixIcon: Icon(Icons.storefront_outlined, size: 18),
           hintText: 'e.g. Muraya Hardware Ltd',
         ),
-        validator: (v) => v == null || v.trim().length < 2 ? 'Enter a business name' : null,
+        validator: (v) =>
+            v == null || v.trim().length < 2 ? 'Enter a business name' : null,
         onFieldSubmitted: (_) => onSubmit(),
       ),
       const SizedBox(height: 24),
@@ -263,7 +314,8 @@ class _BusinessStep extends StatelessWidget {
         child: const Row(children: [
           Icon(Icons.star_rounded, color: AppColors.accent, size: 18),
           SizedBox(width: 10),
-          Expanded(child: Text(
+          Expanded(
+              child: Text(
             '14-day Pro trial included. No payment needed.',
             style: TextStyle(color: AppColors.accent, fontSize: 13),
           )),
@@ -274,10 +326,13 @@ class _BusinessStep extends StatelessWidget {
       ElevatedButton(
         onPressed: isSubmitting ? null : onSubmit,
         child: isSubmitting
-          ? const SizedBox(width: 20, height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation(Colors.white)))
-          : const Text('Launch My Store 🚀'),
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation(Colors.white)))
+            : const Text('Launch My Store 🚀'),
       ),
     ]);
   }
@@ -286,25 +341,33 @@ class _BusinessStep extends StatelessWidget {
 class _StepDot extends StatelessWidget {
   final bool active, done;
   final String label;
-  const _StepDot({required this.active, required this.done, required this.label});
+  const _StepDot(
+      {required this.active, required this.done, required this.label});
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final color = done || active ? AppColors.accent : theme.disabledColor;
     return Column(children: [
       Container(
-        width: 28, height: 28,
+        width: 28,
+        height: 28,
         decoration: BoxDecoration(
-          color: done ? AppColors.accent : (active ? AppColors.accent.withValues(alpha: 0.15) : theme.colorScheme.surfaceContainer),
+          color: done
+              ? AppColors.accent
+              : (active
+                  ? AppColors.accent.withValues(alpha: 0.15)
+                  : theme.colorScheme.surfaceContainer),
           shape: BoxShape.circle,
           border: Border.all(color: color, width: 2),
         ),
         child: done
-          ? Icon(Icons.check, size: 14, color: theme.colorScheme.onPrimary)
-          : null,
+            ? Icon(Icons.check, size: 14, color: theme.colorScheme.onPrimary)
+            : null,
       ),
       const SizedBox(height: 4),
-      Text(label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w500)),
+      Text(label,
+          style: TextStyle(
+              color: color, fontSize: 11, fontWeight: FontWeight.w500)),
     ]);
   }
 }
@@ -314,18 +377,20 @@ class _ErrorBanner extends StatelessWidget {
   const _ErrorBanner({required this.message});
   @override
   Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.only(bottom: 16),
-    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-    decoration: BoxDecoration(
-      color: AppColors.error.withValues(alpha: 0.1),
-      borderRadius: BorderRadius.circular(10),
-      border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
-    ),
-    child: Row(children: [
-      const Icon(Icons.error_outline, color: AppColors.error, size: 16),
-      const SizedBox(width: 10),
-      Expanded(child: Text(message,
-        style: const TextStyle(color: AppColors.error, fontSize: 13))),
-    ]),
-  );
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.error.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+        ),
+        child: Row(children: [
+          const Icon(Icons.error_outline, color: AppColors.error, size: 16),
+          const SizedBox(width: 10),
+          Expanded(
+              child: Text(message,
+                  style:
+                      const TextStyle(color: AppColors.error, fontSize: 13))),
+        ]),
+      );
 }

@@ -14,22 +14,22 @@ class SaleItem {
   });
 
   factory SaleItem.fromMap(Map<String, dynamic> map) => SaleItem(
-    productId:    map['productId'] as String,
-    name:         map['name'] as String,
-    quantity:     ((map['quantity'] ?? 0) as num).toInt(),
-    sellingPrice: ((map['sellingPrice'] ?? 0) as num).toDouble(),
-    costPrice:    ((map['costPrice'] ?? 0) as num).toDouble(),
-  );
+        productId: map['productId'] as String,
+        name: map['name'] as String,
+        quantity: ((map['quantity'] ?? 0) as num).toInt(),
+        sellingPrice: ((map['sellingPrice'] ?? 0) as num).toDouble(),
+        costPrice: ((map['costPrice'] ?? 0) as num).toDouble(),
+      );
 
   Map<String, dynamic> toMap() => {
-    'productId':    productId,
-    'name':         name,
-    'quantity':     quantity,
-    'sellingPrice': sellingPrice,
-    'costPrice':    costPrice,
-  };
+        'productId': productId,
+        'name': name,
+        'quantity': quantity,
+        'sellingPrice': sellingPrice,
+        'costPrice': costPrice,
+      };
 
-  double get lineTotal  => sellingPrice * quantity;
+  double get lineTotal => sellingPrice * quantity;
   double get lineProfit => (sellingPrice - costPrice) * quantity;
 }
 
@@ -67,19 +67,22 @@ class Sale {
   factory Sale.fromMap(Map<String, dynamic> map) {
     final rawItems = map['items'] as List<dynamic>? ?? [];
     return Sale(
-      id:            map['id'] as String,
-      businessId:    map['businessId'] as String,
-      items:         rawItems.map((i) => SaleItem.fromMap(Map<String, dynamic>.from(i as Map))).toList(),
-      total:         ((map['total'] ?? 0) as num).toDouble(),
-      profit:        ((map['profit'] ?? 0) as num).toDouble(),
+      id: map['id'] as String,
+      businessId: map['businessId'] as String,
+      items: rawItems
+          .map((i) => SaleItem.fromMap(Map<String, dynamic>.from(i as Map)))
+          .toList(),
+      total: ((map['total'] ?? 0) as num).toDouble(),
+      profit: ((map['profit'] ?? 0) as num).toDouble(),
       paymentMethod: map['paymentMethod'] as String? ?? 'cash',
-      note:          map['note'] as String? ?? '',
-      createdAt:     DateTime.tryParse(map['createdAt']?.toString() ?? '') ?? DateTime.now(),
-      cashierName:   map['cashierName'] as String?,
-      customerName:  map['customerName'] as String?,
-      pointsEarned:  ((map['pointsEarned'] ?? 0) as num).toDouble(),
+      note: map['note'] as String? ?? '',
+      createdAt: DateTime.tryParse(map['createdAt']?.toString() ?? '') ??
+          DateTime.now(),
+      cashierName: map['cashierName'] as String?,
+      customerName: map['customerName'] as String?,
+      pointsEarned: ((map['pointsEarned'] ?? 0) as num).toDouble(),
       pointsRedeemed: ((map['pointsRedeemed'] ?? 0) as num).toDouble(),
-      metadata:      map['metadata'] as Map<String, dynamic>?,
+      metadata: map['metadata'] as Map<String, dynamic>?,
     );
   }
 
@@ -98,8 +101,10 @@ class Sale {
       'pointsEarned': pointsEarned,
       'pointsRedeemed': pointsRedeemed,
       'metadata': metadata,
-      if (metadata?['timsCuInvoiceNumber'] != null) 'timsCuInvoiceNumber': metadata!['timsCuInvoiceNumber'],
-      if (metadata?['timsQrCode'] != null) 'timsQrCode': metadata!['timsQrCode'],
+      if (metadata?['timsCuInvoiceNumber'] != null)
+        'timsCuInvoiceNumber': metadata!['timsCuInvoiceNumber'],
+      if (metadata?['timsQrCode'] != null)
+        'timsQrCode': metadata!['timsQrCode'],
     };
   }
 }

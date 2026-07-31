@@ -7,12 +7,12 @@ import '../../../core/providers/business_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/responsive.dart';
 
-
 class AdvancedAnalyticsScreen extends StatefulWidget {
   const AdvancedAnalyticsScreen({super.key});
 
   @override
-  State<AdvancedAnalyticsScreen> createState() => _AdvancedAnalyticsScreenState();
+  State<AdvancedAnalyticsScreen> createState() =>
+      _AdvancedAnalyticsScreenState();
 }
 
 class _AdvancedAnalyticsScreenState extends State<AdvancedAnalyticsScreen> {
@@ -40,10 +40,14 @@ class _AdvancedAnalyticsScreenState extends State<AdvancedAnalyticsScreen> {
 
     try {
       final fns = FirebaseFunctions.instance;
-      
+
       final results = await Future.wait([
-        fns.httpsCallable('getAdvancedAnalytics').call({'businessId': biz.businessId}),
-        fns.httpsCallable('getDemandForecast').call({'businessId': biz.businessId}),
+        fns
+            .httpsCallable('getAdvancedAnalytics')
+            .call({'businessId': biz.businessId}),
+        fns
+            .httpsCallable('getDemandForecast')
+            .call({'businessId': biz.businessId}),
       ]);
 
       if (mounted) {
@@ -75,12 +79,15 @@ class _AdvancedAnalyticsScreenState extends State<AdvancedAnalyticsScreen> {
             Text('Pro Feature'),
           ],
         ),
-        content: const Text('Advanced Analytics is available exclusively on the Pro plan. Upgrade to unlock powerful insights.'),
+        content: const Text(
+            'Advanced Analytics is available exclusively on the Pro plan. Upgrade to unlock powerful insights.'),
         actions: [
-          TextButton(onPressed: () {
-            Navigator.pop(ctx);
-            Navigator.pop(context); // Go back
-          }, child: const Text('Go Back')),
+          TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                Navigator.pop(context); // Go back
+              },
+              child: const Text('Go Back')),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
@@ -101,7 +108,10 @@ class _AdvancedAnalyticsScreenState extends State<AdvancedAnalyticsScreen> {
     if (_loading) {
       return Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
-        appBar: AppBar(title: const Text('Advanced Analytics'), backgroundColor: Colors.transparent, elevation: 0),
+        appBar: AppBar(
+            title: const Text('Advanced Analytics'),
+            backgroundColor: Colors.transparent,
+            elevation: 0),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -109,12 +119,16 @@ class _AdvancedAnalyticsScreenState extends State<AdvancedAnalyticsScreen> {
     if (_data == null || _forecast == null) {
       return Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
-        appBar: AppBar(title: const Text('Advanced Analytics'), backgroundColor: Colors.transparent, elevation: 0),
+        appBar: AppBar(
+            title: const Text('Advanced Analytics'),
+            backgroundColor: Colors.transparent,
+            elevation: 0),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.workspace_premium, size: 64, color: AppColors.planPro),
+              const Icon(Icons.workspace_premium,
+                  size: 64, color: AppColors.planPro),
               const SizedBox(height: 16),
               Text('Available on Pro Plan', style: theme.textTheme.titleLarge),
             ],
@@ -123,10 +137,11 @@ class _AdvancedAnalyticsScreenState extends State<AdvancedAnalyticsScreen> {
       );
     }
 
-
-    final trends = List<Map<String, dynamic>>.from(_data!['salesTrend'] as List);
+    final trends =
+        List<Map<String, dynamic>>.from(_data!['salesTrend'] as List);
     final margins = List<Map<String, dynamic>>.from(_data!['margins'] as List);
-    final forecasts = List<Map<String, dynamic>>.from(_forecast!['forecast'] as List);
+    final forecasts =
+        List<Map<String, dynamic>>.from(_forecast!['forecast'] as List);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -150,7 +165,6 @@ class _AdvancedAnalyticsScreenState extends State<AdvancedAnalyticsScreen> {
               theme: theme,
             ),
             const SizedBox(height: 24),
-            
             _buildChartCard(
               title: 'Margin Analysis by Category',
               child: SizedBox(
@@ -160,8 +174,8 @@ class _AdvancedAnalyticsScreenState extends State<AdvancedAnalyticsScreen> {
               theme: theme,
             ),
             const SizedBox(height: 24),
-            
-            Text('Demand Forecast (Next 30 Days)', style: theme.textTheme.titleMedium),
+            Text('Demand Forecast (Next 30 Days)',
+                style: theme.textTheme.titleMedium),
             const SizedBox(height: 12),
             _buildForecastTable(forecasts, theme),
           ],
@@ -170,7 +184,10 @@ class _AdvancedAnalyticsScreenState extends State<AdvancedAnalyticsScreen> {
     );
   }
 
-  Widget _buildChartCard({required String title, required Widget child, required ThemeData theme}) {
+  Widget _buildChartCard(
+      {required String title,
+      required Widget child,
+      required ThemeData theme}) {
     return Card(
       color: theme.cardColor,
       child: Padding(
@@ -187,12 +204,13 @@ class _AdvancedAnalyticsScreenState extends State<AdvancedAnalyticsScreen> {
     );
   }
 
-  Widget _buildSalesLineChart(List<Map<String, dynamic>> trends, ThemeData theme) {
+  Widget _buildSalesLineChart(
+      List<Map<String, dynamic>> trends, ThemeData theme) {
     if (trends.isEmpty) return const Center(child: Text('No data'));
 
     final spots = <FlSpot>[];
     double maxVal = 0;
-    
+
     for (int i = 0; i < trends.length; i++) {
       final val = (trends[i]['revenue'] as num).toDouble();
       if (val > maxVal) maxVal = val;
@@ -205,11 +223,14 @@ class _AdvancedAnalyticsScreenState extends State<AdvancedAnalyticsScreen> {
           show: true,
           drawVerticalLine: false,
           horizontalInterval: maxVal > 0 ? maxVal / 4 : 1,
-          getDrawingHorizontalLine: (value) => FlLine(color: theme.dividerColor, strokeWidth: 1),
+          getDrawingHorizontalLine: (value) =>
+              FlLine(color: theme.dividerColor, strokeWidth: 1),
         ),
         titlesData: FlTitlesData(
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
@@ -221,7 +242,8 @@ class _AdvancedAnalyticsScreenState extends State<AdvancedAnalyticsScreen> {
                 final dt = DateTime.parse(dateStr);
                 return Padding(
                   padding: const EdgeInsets.only(top: 8.0),
-                  child: Text(DateFormat('MMM d').format(dt), style: theme.textTheme.bodySmall?.copyWith(fontSize: 10)),
+                  child: Text(DateFormat('MMM d').format(dt),
+                      style: theme.textTheme.bodySmall?.copyWith(fontSize: 10)),
                 );
               },
             ),
@@ -233,7 +255,8 @@ class _AdvancedAnalyticsScreenState extends State<AdvancedAnalyticsScreen> {
               getTitlesWidget: (val, meta) {
                 return Padding(
                   padding: const EdgeInsets.only(right: 8.0),
-                  child: Text(NumberFormat.compact().format(val), style: theme.textTheme.bodySmall?.copyWith(fontSize: 10)),
+                  child: Text(NumberFormat.compact().format(val),
+                      style: theme.textTheme.bodySmall?.copyWith(fontSize: 10)),
                 );
               },
             ),
@@ -262,11 +285,13 @@ class _AdvancedAnalyticsScreenState extends State<AdvancedAnalyticsScreen> {
     );
   }
 
-  Widget _buildMarginsBarChart(List<Map<String, dynamic>> margins, ThemeData theme) {
+  Widget _buildMarginsBarChart(
+      List<Map<String, dynamic>> margins, ThemeData theme) {
     if (margins.isEmpty) return const Center(child: Text('No data'));
 
     final barGroups = <BarChartGroupData>[];
-    for (int i = 0; i < margins.length && i < 10; i++) { // Max 10 categories
+    for (int i = 0; i < margins.length && i < 10; i++) {
+      // Max 10 categories
       final m = margins[i];
       final pct = (m['marginPercentage'] as num).toDouble();
       barGroups.add(
@@ -275,9 +300,12 @@ class _AdvancedAnalyticsScreenState extends State<AdvancedAnalyticsScreen> {
           barRods: [
             BarChartRodData(
               toY: pct,
-              color: pct >= 30 ? AppColors.success : (pct >= 15 ? AppColors.warning : AppColors.error),
+              color: pct >= 30
+                  ? AppColors.success
+                  : (pct >= 15 ? AppColors.warning : AppColors.error),
               width: 16,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(4)),
             ),
           ],
         ),
@@ -292,11 +320,14 @@ class _AdvancedAnalyticsScreenState extends State<AdvancedAnalyticsScreen> {
           show: true,
           drawVerticalLine: false,
           horizontalInterval: 25,
-          getDrawingHorizontalLine: (v) => FlLine(color: theme.dividerColor, strokeWidth: 1),
+          getDrawingHorizontalLine: (v) =>
+              FlLine(color: theme.dividerColor, strokeWidth: 1),
         ),
         titlesData: FlTitlesData(
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
@@ -304,10 +335,12 @@ class _AdvancedAnalyticsScreenState extends State<AdvancedAnalyticsScreen> {
                 final idx = val.toInt();
                 if (idx < 0 || idx >= margins.length) return const SizedBox();
                 final cat = margins[idx]['category'] as String;
-                final shortCat = cat.length > 8 ? '${cat.substring(0, 6)}..' : cat;
+                final shortCat =
+                    cat.length > 8 ? '${cat.substring(0, 6)}..' : cat;
                 return Padding(
                   padding: const EdgeInsets.only(top: 8.0),
-                  child: Text(shortCat, style: theme.textTheme.bodySmall?.copyWith(fontSize: 10)),
+                  child: Text(shortCat,
+                      style: theme.textTheme.bodySmall?.copyWith(fontSize: 10)),
                 );
               },
             ),
@@ -317,7 +350,8 @@ class _AdvancedAnalyticsScreenState extends State<AdvancedAnalyticsScreen> {
               showTitles: true,
               reservedSize: 30,
               getTitlesWidget: (val, meta) {
-                return Text('${val.toInt()}%', style: theme.textTheme.bodySmall?.copyWith(fontSize: 10));
+                return Text('${val.toInt()}%',
+                    style: theme.textTheme.bodySmall?.copyWith(fontSize: 10));
               },
             ),
           ),
@@ -328,8 +362,13 @@ class _AdvancedAnalyticsScreenState extends State<AdvancedAnalyticsScreen> {
     );
   }
 
-  Widget _buildForecastTable(List<Map<String, dynamic>> forecasts, ThemeData theme) {
-    if (forecasts.isEmpty) return const Card(child: Padding(padding: EdgeInsets.all(16), child: Text('Not enough sales data to generate forecast.')));
+  Widget _buildForecastTable(
+      List<Map<String, dynamic>> forecasts, ThemeData theme) {
+    if (forecasts.isEmpty)
+      return const Card(
+          child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Text('Not enough sales data to generate forecast.')));
 
     return Card(
       color: theme.cardColor,
@@ -344,17 +383,26 @@ class _AdvancedAnalyticsScreenState extends State<AdvancedAnalyticsScreen> {
           final stock = f['currentStock'] as num;
           final demand = f['predictedDemand30d'] as num;
           final reorder = f['suggestedReorderQuantity'] as num;
-          
+
           return ListTile(
-            title: Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
+            title:
+                Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
             subtitle: Text('Stock: $stock | Est. 30d Demand: $demand'),
             trailing: reorder > 0
                 ? Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(color: AppColors.error.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
-                    child: Text('Order $reorder', style: const TextStyle(color: AppColors.error, fontWeight: FontWeight.bold, fontSize: 12)),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                        color: AppColors.error.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(16)),
+                    child: Text('Order $reorder',
+                        style: const TextStyle(
+                            color: AppColors.error,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12)),
                   )
-                : const Icon(Icons.check_circle, color: AppColors.success, size: 20),
+                : const Icon(Icons.check_circle,
+                    color: AppColors.success, size: 20),
           );
         },
       ),

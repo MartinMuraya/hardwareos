@@ -42,10 +42,14 @@ class PlanCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14,
-                  color: theme.colorScheme.onSurface)),
+                Text(name,
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: theme.colorScheme.onSurface)),
                 if (isSelected)
-                  const Icon(Icons.check_circle_rounded, color: AppColors.accent, size: 18),
+                  const Icon(Icons.check_circle_rounded,
+                      color: AppColors.accent, size: 18),
               ],
             ),
             const SizedBox(height: 8),
@@ -54,11 +58,16 @@ class PlanCard extends StatelessWidget {
                 children: [
                   TextSpan(
                     text: price,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.accent),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: AppColors.accent),
                   ),
                   TextSpan(
                     text: billing,
-                    style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: theme.colorScheme.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -72,10 +81,15 @@ class PlanCard extends StatelessWidget {
                         padding: const EdgeInsets.only(bottom: 4),
                         child: Row(
                           children: [
-                            const Icon(Icons.check_rounded, size: 14, color: AppColors.success),
+                            const Icon(Icons.check_rounded,
+                                size: 14, color: AppColors.success),
                             const SizedBox(width: 6),
                             Expanded(
-                              child: Text(f.replaceAll('_', ' '), style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant)),
+                              child: Text(f.replaceAll('_', ' '),
+                                  style: TextStyle(
+                                      fontSize: 11,
+                                      color:
+                                          theme.colorScheme.onSurfaceVariant)),
                             ),
                           ],
                         ),
@@ -85,7 +99,10 @@ class PlanCard extends StatelessWidget {
             if (features.length > 3)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
-                child: Text('+ ${features.length - 3} more', style: TextStyle(fontSize: 10, color: theme.colorScheme.onSurfaceVariant)),
+                child: Text('+ ${features.length - 3} more',
+                    style: TextStyle(
+                        fontSize: 10,
+                        color: theme.colorScheme.onSurfaceVariant)),
               ),
           ],
         ),

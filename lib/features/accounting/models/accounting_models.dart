@@ -65,7 +65,10 @@ class TrialBalance {
   });
 
   factory TrialBalance.fromMap(Map<String, dynamic> map) {
-    final accs = (map['accounts'] as List?)?.map((e) => TrialBalanceAccount.fromMap(e as Map<String, dynamic>)).toList() ?? [];
+    final accs = (map['accounts'] as List?)
+            ?.map((e) => TrialBalanceAccount.fromMap(e as Map<String, dynamic>))
+            .toList() ??
+        [];
     return TrialBalance(
       accounts: accs,
       totalDebits: (map['totalDebits'] ?? 0).toDouble(),

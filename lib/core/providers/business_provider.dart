@@ -5,19 +5,20 @@ class BusinessProvider extends ChangeNotifier {
   Map<String, dynamic>? _businessData;
   bool _isLoading = false;
 
-  Map<String, dynamic>? get businessData       => _businessData;
-  bool                   get isLoading          => _isLoading;
-  String?                get businessId         => _businessData?['id'] as String?;
-  String?                get businessName       => _businessData?['name'] as String?;
-  String?                get plan               => _businessData?['plan'] as String?;
-  String?                get subscriptionStatus => _businessData?['subscriptionStatus'] as String?;
+  Map<String, dynamic>? get businessData => _businessData;
+  bool get isLoading => _isLoading;
+  String? get businessId => _businessData?['id'] as String?;
+  String? get businessName => _businessData?['name'] as String?;
+  String? get plan => _businessData?['plan'] as String?;
+  String? get subscriptionStatus =>
+      _businessData?['subscriptionStatus'] as String?;
 
-  bool get isOnTrial   => subscriptionStatus == 'trial';
-  bool get isExpired   => subscriptionStatus == 'expired';
-  bool get isActive    => subscriptionStatus == 'active';
-  bool get isPro       => plan == 'pro';
-  bool get isStarter   => plan == 'starter' || plan == 'pro';
-  bool get isFree      => plan == 'free';
+  bool get isOnTrial => subscriptionStatus == 'trial';
+  bool get isExpired => subscriptionStatus == 'expired';
+  bool get isActive => subscriptionStatus == 'active';
+  bool get isPro => plan == 'pro';
+  bool get isStarter => plan == 'starter' || plan == 'pro';
+  bool get isFree => plan == 'free';
 
   int? get trialDaysLeft {
     final trialEndsAt = _businessData?['trialEndsAt'];
@@ -51,10 +52,17 @@ class BusinessProvider extends ChangeNotifier {
   // Feature flags
   bool hasFeature(String featureName) {
     if (isPro) return true; // Pro has all features
-    
+
     // Starter features
-    const starterFeatures = ['inventory', 'sales', 'reports', 'customers', 'suppliers', 'expenses'];
-    
+    const starterFeatures = [
+      'inventory',
+      'sales',
+      'reports',
+      'customers',
+      'suppliers',
+      'expenses'
+    ];
+
     return starterFeatures.contains(featureName);
   }
 

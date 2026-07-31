@@ -7,7 +7,8 @@ import 'quotation_status_badge.dart';
 class QuotationCard extends StatelessWidget {
   final Quotation quotation;
   final VoidCallback onTap;
-  const QuotationCard({required this.quotation, required this.onTap, super.key});
+  const QuotationCard(
+      {required this.quotation, required this.onTap, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -24,26 +25,40 @@ class QuotationCard extends StatelessWidget {
           padding: const EdgeInsets.all(14),
           child: Row(children: [
             Container(
-              width: 44, height: 44,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
                 color: AppColors.accent.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.description_rounded, color: AppColors.accent, size: 22),
+              child: const Icon(Icons.description_rounded,
+                  color: AppColors.accent, size: 22),
             ),
             const SizedBox(width: 12),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(quotation.quotationNumber,
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: theme.colorScheme.onSurface)),
-              const SizedBox(height: 3),
-              Text(quotation.customerName,
-                style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ])),
+            Expanded(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                  Text(quotation.quotationNumber,
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: theme.colorScheme.onSurface)),
+                  const SizedBox(height: 3),
+                  Text(
+                    quotation.customerName,
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: theme.colorScheme.onSurfaceVariant),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ])),
             Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
               Text(fmt.format(quotation.total),
-                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: theme.colorScheme.onSurface)),
+                  style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                      color: theme.colorScheme.onSurface)),
               const SizedBox(height: 4),
               QuotationStatusBadge(status: quotation.status),
             ]),

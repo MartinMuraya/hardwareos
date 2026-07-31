@@ -69,5 +69,6 @@ class Subscription {
   bool get isPending => transactionStatus == 'pending';
   bool get isCompleted => transactionStatus == 'completed';
   bool get isFailed => transactionStatus == 'failed';
-  bool get isExpired => expiresAt != null && expiresAt!.isBefore(DateTime.now());
+  bool get isExpired =>
+      expiresAt != null && expiresAt!.isBefore(DateTime.now());
 }

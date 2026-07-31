@@ -44,23 +44,25 @@ class SupplierDebt {
       totalAmount: total,
       amountPaid: paid,
       outstanding: out,
-      paymentDueDate: DateTime.tryParse(map['paymentDueDate']?.toString() ?? ''),
+      paymentDueDate:
+          DateTime.tryParse(map['paymentDueDate']?.toString() ?? ''),
       status: map['status'] as String? ?? 'pending',
-      createdAt: DateTime.tryParse(map['createdAt']?.toString() ?? '') ?? DateTime.now(),
+      createdAt: DateTime.tryParse(map['createdAt']?.toString() ?? '') ??
+          DateTime.now(),
     );
   }
 
   Map<String, dynamic> toMap() => {
-    'id': id,
-    'businessId': businessId,
-    'supplierId': supplierId,
-    'supplierName': supplierName,
-    'purchaseOrderId': purchaseOrderId,
-    'totalAmount': totalAmount,
-    'amountPaid': amountPaid,
-    'outstanding': outstanding,
-    'paymentDueDate': paymentDueDate?.toIso8601String(),
-    'status': status,
-    'createdAt': createdAt.toIso8601String(),
-  };
+        'id': id,
+        'businessId': businessId,
+        'supplierId': supplierId,
+        'supplierName': supplierName,
+        'purchaseOrderId': purchaseOrderId,
+        'totalAmount': totalAmount,
+        'amountPaid': amountPaid,
+        'outstanding': outstanding,
+        'paymentDueDate': paymentDueDate?.toIso8601String(),
+        'status': status,
+        'createdAt': createdAt.toIso8601String(),
+      };
 }

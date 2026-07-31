@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/accounting_provider.dart';
 import 'tax_settings_screen.dart';
+import '../widgets/manual_journal_entry_dialog.dart';
 
 class AccountingDashboardScreen extends StatefulWidget {
   const AccountingDashboardScreen({super.key});
 
   @override
-  State<AccountingDashboardScreen> createState() => _AccountingDashboardScreenState();
+  State<AccountingDashboardScreen> createState() =>
+      _AccountingDashboardScreenState();
 }
 
 class _AccountingDashboardScreenState extends State<AccountingDashboardScreen> {
@@ -55,8 +57,10 @@ class _AccountingDashboardScreenState extends State<AccountingDashboardScreen> {
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () {
-            // TODO: Manual Journal Entry dialog
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Manual entries coming soon!')));
+            showDialog(
+              context: context,
+              builder: (context) => const ManualJournalEntryDialog(),
+            );
           },
           icon: const Icon(Icons.add),
           label: const Text('Journal Entry'),
@@ -78,7 +82,9 @@ class _TrialBalanceTab extends StatelessWidget {
     }
 
     if (provider.error != null) {
-      return Center(child: Text(provider.error!, style: const TextStyle(color: Colors.red)));
+      return Center(
+          child:
+              Text(provider.error!, style: const TextStyle(color: Colors.red)));
     }
 
     final tb = provider.trialBalance;
@@ -97,13 +103,16 @@ class _TrialBalanceTab extends StatelessWidget {
                   await provider.migrateHistoricalData();
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Historical data migrated to ledger!')),
+                      const SnackBar(
+                          content: Text('Historical data migrated to ledger!')),
                     );
                   }
                 } catch (e) {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Migration failed: $e'), backgroundColor: Colors.red),
+                      SnackBar(
+                          content: Text('Migration failed: $e'),
+                          backgroundColor: Colors.red),
                     );
                   }
                 }
@@ -122,29 +131,49 @@ class _TrialBalanceTab extends StatelessWidget {
         DataTable(
           headingRowColor: WidgetStateProperty.all(Colors.grey[200]),
           columns: const [
-            DataColumn(label: Text('Account', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('Type', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('Debit', style: TextStyle(fontWeight: FontWeight.bold)), numeric: true),
-            DataColumn(label: Text('Credit', style: TextStyle(fontWeight: FontWeight.bold)), numeric: true),
-            DataColumn(label: Text('Balance', style: TextStyle(fontWeight: FontWeight.bold)), numeric: true),
+            DataColumn(
+                label: Text('Account',
+                    style: TextStyle(fontWeight: FontWeight.bold))),
+            DataColumn(
+                label: Text('Type',
+                    style: TextStyle(fontWeight: FontWeight.bold))),
+            DataColumn(
+                label: Text('Debit',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                numeric: true),
+            DataColumn(
+                label: Text('Credit',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                numeric: true),
+            DataColumn(
+                label: Text('Balance',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                numeric: true),
           ],
           rows: [
             ...tb.accounts.map((acc) => DataRow(
-              cells: [
-                DataCell(Text('${acc.code} - ${acc.name}')),
-                DataCell(Text(acc.type)),
-                DataCell(Text(acc.debit > 0 ? acc.debit.toStringAsFixed(2) : '-')),
-                DataCell(Text(acc.credit > 0 ? acc.credit.toStringAsFixed(2) : '-')),
-                DataCell(Text(acc.balance.toStringAsFixed(2), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue))),
-              ],
-            )),
+                  cells: [
+                    DataCell(Text('${acc.code} - ${acc.name}')),
+                    DataCell(Text(acc.type)),
+                    DataCell(Text(
+                        acc.debit > 0 ? acc.debit.toStringAsFixed(2) : '-')),
+                    DataCell(Text(
+                        acc.credit > 0 ? acc.credit.toStringAsFixed(2) : '-')),
+                    DataCell(Text(acc.balance.toStringAsFixed(2),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, color: Colors.blue))),
+                  ],
+                )),
             DataRow(
               color: WidgetStateProperty.all(Colors.green[50]),
               cells: [
-                const DataCell(Text('TOTAL', style: TextStyle(fontWeight: FontWeight.bold))),
+                const DataCell(Text('TOTAL',
+                    style: TextStyle(fontWeight: FontWeight.bold))),
                 const DataCell(Text('')),
-                DataCell(Text(tb.totalDebits.toStringAsFixed(2), style: const TextStyle(fontWeight: FontWeight.bold))),
-                DataCell(Text(tb.totalCredits.toStringAsFixed(2), style: const TextStyle(fontWeight: FontWeight.bold))),
+                DataCell(Text(tb.totalDebits.toStringAsFixed(2),
+                    style: const TextStyle(fontWeight: FontWeight.bold))),
+                DataCell(Text(tb.totalCredits.toStringAsFixed(2),
+                    style: const TextStyle(fontWeight: FontWeight.bold))),
                 const DataCell(Text('')),
               ],
             ),
@@ -184,7 +213,8 @@ class _ChartOfAccountsTab extends StatelessWidget {
           child: ListTile(
             leading: CircleAvatar(
               backgroundColor: _getColor(acc.type),
-              child: Text(acc.type[0], style: const TextStyle(color: Colors.white)),
+              child: Text(acc.type[0],
+                  style: const TextStyle(color: Colors.white)),
             ),
             title: Text('${acc.code} - ${acc.name}'),
             subtitle: Text(acc.type),
@@ -196,12 +226,18 @@ class _ChartOfAccountsTab extends StatelessWidget {
 
   Color _getColor(String type) {
     switch (type) {
-      case 'Asset': return Colors.blue;
-      case 'Liability': return Colors.red;
-      case 'Equity': return Colors.purple;
-      case 'Revenue': return Colors.green;
-      case 'Expense': return Colors.orange;
-      default: return Colors.grey;
+      case 'Asset':
+        return Colors.blue;
+      case 'Liability':
+        return Colors.red;
+      case 'Equity':
+        return Colors.purple;
+      case 'Revenue':
+        return Colors.green;
+      case 'Expense':
+        return Colors.orange;
+      default:
+        return Colors.grey;
     }
   }
 }

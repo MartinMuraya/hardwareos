@@ -13,7 +13,7 @@ class LocaleProvider extends ChangeNotifier {
   Future<void> _loadLocale() async {
     final prefs = await SharedPreferences.getInstance();
     final langCode = prefs.getString('language_code') ?? 'en';
-    
+
     if (langCode == 'sw_KE') {
       _locale = const Locale('sw', 'KE');
     } else {

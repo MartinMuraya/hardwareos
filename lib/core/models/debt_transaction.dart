@@ -26,28 +26,32 @@ class DebtTransaction {
   });
 
   factory DebtTransaction.fromMap(Map<String, dynamic> map) => DebtTransaction(
-    id: map['id'] as String,
-    businessId: map['businessId'] as String,
-    customerId: map['customerId'] as String,
-    customerName: (map['customerName'] as String?) ?? '',
-    type: map['type'] as String,
-    amount: ((map['amount'] as num?) ?? 0).toDouble(),
-    referenceId: (map['referenceId'] as String?) ?? '',
-    previousBalance: ((map['previousBalance'] as num?) ?? 0).toDouble(),
-    newBalance: ((map['newBalance'] as num?) ?? 0).toDouble(),
-    note: (map['note'] as String?) ?? '',
-    createdAt: DateTime.parse(map['createdAt'] as String),
-  );
+        id: map['id'] as String,
+        businessId: map['businessId'] as String,
+        customerId: map['customerId'] as String,
+        customerName: (map['customerName'] as String?) ?? '',
+        type: map['type'] as String,
+        amount: ((map['amount'] as num?) ?? 0).toDouble(),
+        referenceId: (map['referenceId'] as String?) ?? '',
+        previousBalance: ((map['previousBalance'] as num?) ?? 0).toDouble(),
+        newBalance: ((map['newBalance'] as num?) ?? 0).toDouble(),
+        note: (map['note'] as String?) ?? '',
+        createdAt: DateTime.parse(map['createdAt'] as String),
+      );
 
   bool get isIncrease => amount > 0;
   bool get isDecrease => amount < 0;
 
   String get typeLabel {
     switch (type) {
-      case 'credit_sale': return 'Credit Sale';
-      case 'debt_payment': return 'Debt Payment';
-      case 'debt_adjustment': return 'Adjustment';
-      default: return type;
+      case 'credit_sale':
+        return 'Credit Sale';
+      case 'debt_payment':
+        return 'Debt Payment';
+      case 'debt_adjustment':
+        return 'Adjustment';
+      default:
+        return type;
     }
   }
 }

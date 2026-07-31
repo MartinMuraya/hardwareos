@@ -59,7 +59,8 @@ class OfflineSalesQueue extends ChangeNotifier {
     refresh();
   }
 
-  Future<void> enqueueOfflineInventoryUpdate(Map<String, dynamic> updateData) async {
+  Future<void> enqueueOfflineInventoryUpdate(
+      Map<String, dynamic> updateData) async {
     final update = PendingInventoryUpdate(
       id: 'inv_${const Uuid().v4()}',
       updateData: updateData,
@@ -90,7 +91,8 @@ class OfflineSalesQueue extends ChangeNotifier {
   }
 
   int get conflictedSalesCount => OfflineService.conflictedSaleCount;
-  List<ConflictedSale> get conflictedSalesList => OfflineService.getConflictedSales();
+  List<ConflictedSale> get conflictedSalesList =>
+      OfflineService.getConflictedSales();
 
   Future<void> removeConflictedSale(String id) async {
     await OfflineService.removeConflictedSale(id);
@@ -105,11 +107,13 @@ class OfflineSalesQueue extends ChangeNotifier {
     final bizId = auth.businessId;
 
     for (final sale in sales) {
-      if (sale.retryCount > _maxRetries || DateTime.now().difference(sale.createdAt).inDays > _maxAgeDays) {
+      if (sale.retryCount > _maxRetries ||
+          DateTime.now().difference(sale.createdAt).inDays > _maxAgeDays) {
         final conflicted = ConflictedSale(
           id: sale.id,
           saleData: sale.saleData,
-          conflictReason: 'Sale expired in offline queue (Max retries or TTL reached)',
+          conflictReason:
+              'Sale expired in offline queue (Max retries or TTL reached)',
           conflictedAt: DateTime.now(),
         );
         await OfflineService.addConflictedSale(conflicted);
@@ -161,7 +165,8 @@ class OfflineSalesQueue extends ChangeNotifier {
     final bizId = auth.businessId;
 
     for (final payment in payments) {
-      if (payment.retryCount > _maxRetries || DateTime.now().difference(payment.createdAt).inDays > _maxAgeDays) {
+      if (payment.retryCount > _maxRetries ||
+          DateTime.now().difference(payment.createdAt).inDays > _maxAgeDays) {
         await OfflineService.removePayment(payment.id);
         continue;
       }
@@ -188,7 +193,8 @@ class OfflineSalesQueue extends ChangeNotifier {
     final bizId = auth.businessId;
 
     for (final update in updates) {
-      if (update.retryCount > _maxRetries || DateTime.now().difference(update.createdAt).inDays > _maxAgeDays) {
+      if (update.retryCount > _maxRetries ||
+          DateTime.now().difference(update.createdAt).inDays > _maxAgeDays) {
         await OfflineService.removeInventoryUpdate(update.id);
         continue;
       }
@@ -213,9 +219,8 @@ class OfflineSalesQueue extends ChangeNotifier {
   void _scheduleRetry(AuthProvider auth) {
     _retryTimer?.cancel();
     final delays = [10, 30, 60];
-    final delay = _retryAttempt < delays.length
-        ? delays[_retryAttempt]
-        : delays.last;
+    final delay =
+        _retryAttempt < delays.length ? delays[_retryAttempt] : delays.last;
     _retryAttempt++;
     _retryTimer = Timer(Duration(seconds: delay), () {
       syncAll(auth);

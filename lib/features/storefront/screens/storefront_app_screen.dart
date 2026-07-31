@@ -50,11 +50,14 @@ class _StorefrontAppScreenState extends State<StorefrontAppScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.store_outlined, size: 64, color: Colors.grey),
+                    const Icon(Icons.store_outlined,
+                        size: 64, color: Colors.grey),
                     const SizedBox(height: 16),
-                    Text('Storefront not found or inactive.', style: Theme.of(context).textTheme.titleLarge),
+                    Text('Storefront not found or inactive.',
+                        style: Theme.of(context).textTheme.titleLarge),
                     const SizedBox(height: 8),
-                    Text(provider.error ?? '', style: const TextStyle(color: Colors.red)),
+                    Text(provider.error ?? '',
+                        style: const TextStyle(color: Colors.red)),
                   ],
                 ),
               ),
@@ -62,7 +65,8 @@ class _StorefrontAppScreenState extends State<StorefrontAppScreen> {
           }
 
           Color? brandColor;
-          if (provider.storeInfo?.primaryColor != null && provider.storeInfo!.primaryColor!.length >= 7) {
+          if (provider.storeInfo?.primaryColor != null &&
+              provider.storeInfo!.primaryColor!.length >= 7) {
             try {
               final hex = provider.storeInfo!.primaryColor!.substring(1, 7);
               brandColor = Color(int.parse(hex, radix: 16) + 0xFF000000);
@@ -70,13 +74,16 @@ class _StorefrontAppScreenState extends State<StorefrontAppScreen> {
           }
 
           final Color appBarColor = brandColor ?? Colors.white;
-          final Color iconColor = brandColor != null ? Colors.white : Colors.black87;
-          final Color textColor = brandColor != null ? Colors.white : Colors.black87;
+          final Color iconColor =
+              brandColor != null ? Colors.white : Colors.black87;
+          final Color textColor =
+              brandColor != null ? Colors.white : Colors.black87;
 
           return Theme(
             data: Theme.of(context).copyWith(
               primaryColor: brandColor ?? Colors.blue,
-              colorScheme: ColorScheme.fromSeed(seedColor: brandColor ?? Colors.blue),
+              colorScheme:
+                  ColorScheme.fromSeed(seedColor: brandColor ?? Colors.blue),
             ),
             child: Scaffold(
               appBar: AppBar(
@@ -88,20 +95,23 @@ class _StorefrontAppScreenState extends State<StorefrontAppScreen> {
                     onTap: _goToCatalog,
                     child: Row(
                       children: [
-                        if (provider.storeInfo?.logoUrl != null && provider.storeInfo!.logoUrl!.isNotEmpty)
+                        if (provider.storeInfo?.logoUrl != null &&
+                            provider.storeInfo!.logoUrl!.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(right: 12),
                             child: Image.network(
                               provider.storeInfo!.logoUrl!,
                               height: 40,
-                              errorBuilder: (_, __, ___) => Icon(Icons.storefront, color: iconColor),
+                              errorBuilder: (_, __, ___) =>
+                                  Icon(Icons.storefront, color: iconColor),
                             ),
                           )
                         else
                           Icon(Icons.storefront, color: iconColor),
-                        
                         const SizedBox(width: 8),
-                        Text(provider.storeInfo!.name, style: TextStyle(fontWeight: FontWeight.bold, color: textColor)),
+                        Text(provider.storeInfo!.name,
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, color: textColor)),
                       ],
                     ),
                   ),
@@ -112,7 +122,8 @@ class _StorefrontAppScreenState extends State<StorefrontAppScreen> {
                     alignment: Alignment.center,
                     children: [
                       IconButton(
-                        icon: Icon(Icons.shopping_cart_outlined, color: iconColor),
+                        icon: Icon(Icons.shopping_cart_outlined,
+                            color: iconColor),
                         onPressed: _goToCart,
                       ),
                       if (provider.cartItemCount > 0)
@@ -127,7 +138,10 @@ class _StorefrontAppScreenState extends State<StorefrontAppScreen> {
                             ),
                             child: Text(
                               '${provider.cartItemCount}',
-                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold),
                             ),
                           ),
                         ),
@@ -138,7 +152,9 @@ class _StorefrontAppScreenState extends State<StorefrontAppScreen> {
               ),
               body: Column(
                 children: [
-                  if (_currentIndex == 0 && provider.storeInfo?.bannerUrl != null && provider.storeInfo!.bannerUrl!.isNotEmpty)
+                  if (_currentIndex == 0 &&
+                      provider.storeInfo?.bannerUrl != null &&
+                      provider.storeInfo!.bannerUrl!.isNotEmpty)
                     Container(
                       width: double.infinity,
                       height: 160,
@@ -153,23 +169,32 @@ class _StorefrontAppScreenState extends State<StorefrontAppScreen> {
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 300),
                       child: _currentIndex == 0
-                          ? StorefrontCatalogView(onViewCart: _goToCart, key: const ValueKey('catalog'))
-                          : StorefrontCartView(onContinueShopping: _goToCatalog, key: const ValueKey('cart')),
+                          ? StorefrontCatalogView(
+                              onViewCart: _goToCart,
+                              key: const ValueKey('catalog'))
+                          : StorefrontCartView(
+                              onContinueShopping: _goToCatalog,
+                              key: const ValueKey('cart')),
                     ),
                   ),
                 ],
               ),
-              floatingActionButton: (provider.storeInfo?.whatsappNumber != null && provider.storeInfo!.whatsappNumber!.isNotEmpty)
-                ? FloatingActionButton.extended(
-                    onPressed: () {
-                      final url = Uri.parse('https://wa.me/${provider.storeInfo!.whatsappNumber}');
-                      launchUrl(url, mode: LaunchMode.externalApplication);
-                    },
-                    icon: const Icon(Icons.chat, color: Colors.white),
-                    label: const Text('WhatsApp Us', style: TextStyle(color: Colors.white)),
-                    backgroundColor: const Color(0xFF25D366), // WhatsApp Green
-                  )
-                : null,
+              floatingActionButton: (provider.storeInfo?.whatsappNumber !=
+                          null &&
+                      provider.storeInfo!.whatsappNumber!.isNotEmpty)
+                  ? FloatingActionButton.extended(
+                      onPressed: () {
+                        final url = Uri.parse(
+                            'https://wa.me/${provider.storeInfo!.whatsappNumber}');
+                        launchUrl(url, mode: LaunchMode.externalApplication);
+                      },
+                      icon: const Icon(Icons.chat, color: Colors.white),
+                      label: const Text('WhatsApp Us',
+                          style: TextStyle(color: Colors.white)),
+                      backgroundColor:
+                          const Color(0xFF25D366), // WhatsApp Green
+                    )
+                  : null,
             ),
           );
         },

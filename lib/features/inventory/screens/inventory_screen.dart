@@ -34,27 +34,41 @@ class _InventoryScreenState extends State<InventoryScreen> {
   }
 
   @override
-  void dispose() { _searchCtrl.dispose(); super.dispose(); }
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
 
   Future<void> _load() async {
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final bizId = context.read<AuthProvider>().businessId!;
-      final data = await FunctionsService.call('getProducts', {'businessId': bizId, 'limit': 100});
+      final data = await FunctionsService.call(
+          'getProducts', {'businessId': bizId, 'limit': 100});
       final rawList = (data['products'] as List?) ?? [];
       final prods = rawList
           .map((e) => Product.fromMap(Map<String, dynamic>.from(e as Map)))
           .toList();
 
-      final cats = <String>{'All', ...prods.map((p) => p.category)}.toList()..sort();
+      final cats = <String>{'All', ...prods.map((p) => p.category)}.toList()
+        ..sort();
       if (mounted) {
         setState(() {
-          _all = prods; _filtered = prods;
-          _categories = cats; _loading = false;
+          _all = prods;
+          _filtered = prods;
+          _categories = cats;
+          _loading = false;
         });
       }
     } on FunctionsException catch (e) {
-      if (mounted) setState(() { _error = e.message; _loading = false; });
+      if (mounted)
+        setState(() {
+          _error = e.message;
+          _loading = false;
+        });
     }
   }
 
@@ -62,8 +76,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
     final q = _searchCtrl.text.toLowerCase();
     setState(() {
       _filtered = _all.where((p) {
-        final matchCat = _selectedCategory == 'All' || p.category == _selectedCategory;
-        final matchQ   = q.isEmpty || p.name.toLowerCase().contains(q) || p.sku.toLowerCase().contains(q);
+        final matchCat =
+            _selectedCategory == 'All' || p.category == _selectedCategory;
+        final matchQ = q.isEmpty ||
+            p.name.toLowerCase().contains(q) ||
+            p.sku.toLowerCase().contains(q);
         return matchCat && matchQ;
       }).toList();
     });
@@ -89,12 +106,15 @@ class _InventoryScreenState extends State<InventoryScreen> {
             children: [
               Row(children: [
                 Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('Inventory', style: theme.textTheme.displayMedium),
-                    const SizedBox(height: 4),
-                    Text('${_all.length} products${lowCount > 0 ? ' · $lowCount low stock' : ''}',
-                      style: theme.textTheme.bodyMedium),
-                  ]),
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Inventory', style: theme.textTheme.displayMedium),
+                        const SizedBox(height: 4),
+                        Text(
+                            '${_all.length} products${lowCount > 0 ? ' · $lowCount low stock' : ''}',
+                            style: theme.textTheme.bodyMedium),
+                      ]),
                 ),
                 FilledButton.icon(
                   onPressed: () async {
@@ -118,7 +138,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 ),
               ]),
               const SizedBox(height: 20),
-
               Row(children: [
                 Expanded(
                   child: TextField(
@@ -133,60 +152,69 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 _CategoryFilter(
                   categories: _categories,
                   selected: _selectedCategory,
-                  onChanged: (c) { setState(() => _selectedCategory = c); _filter(); },
+                  onChanged: (c) {
+                    setState(() => _selectedCategory = c);
+                    _filter();
+                  },
                   theme: theme,
                 ),
               ]),
               const SizedBox(height: 16),
-
               if (_error != null)
                 _ErrorBar(message: _error!, onRetry: _load, theme: theme),
-
               Expanded(
                 child: _filtered.isEmpty && !_loading
                     ? EmptyState(
                         icon: Icons.inventory_2_outlined,
-                        title: _all.isEmpty ? 'No products yet' : 'No results found',
+                        title: _all.isEmpty
+                            ? 'No products yet'
+                            : 'No results found',
                         subtitle: _all.isEmpty
                             ? 'Add your first product to start tracking inventory.'
                             : 'Try a different search or category.',
                         actionLabel: _all.isEmpty ? 'Add Product' : null,
-                        onAction: _all.isEmpty ? () => context.go('${RoutePaths.inventory}/add') : null,
+                        onAction: _all.isEmpty
+                            ? () => context.go('${RoutePaths.inventory}/add')
+                            : null,
                       )
                     : RefreshIndicator(
                         onRefresh: _load,
                         color: AppColors.accent,
                         backgroundColor: theme.cardColor,
-                        child: isWide 
-                          ? GridView.builder(
-                              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                                maxCrossAxisExtent: 400,
-                                mainAxisSpacing: 12,
-                                crossAxisSpacing: 12,
-                                mainAxisExtent: 100,
+                        child: isWide
+                            ? GridView.builder(
+                                gridDelegate:
+                                    const SliverGridDelegateWithMaxCrossAxisExtent(
+                                  maxCrossAxisExtent: 400,
+                                  mainAxisSpacing: 12,
+                                  crossAxisSpacing: 12,
+                                  mainAxisExtent: 100,
+                                ),
+                                itemCount: _filtered.length,
+                                itemBuilder: (_, i) => _ProductCard(
+                                  product: _filtered[i],
+                                  theme: theme,
+                                  onTap: () async {
+                                    await context
+                                        .push('/inventory/${_filtered[i].id}');
+                                    _load();
+                                  },
+                                ),
+                              )
+                            : ListView.separated(
+                                itemCount: _filtered.length,
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(height: 8),
+                                itemBuilder: (_, i) => _ProductCard(
+                                  product: _filtered[i],
+                                  theme: theme,
+                                  onTap: () async {
+                                    await context
+                                        .push('/inventory/${_filtered[i].id}');
+                                    _load();
+                                  },
+                                ),
                               ),
-                              itemCount: _filtered.length,
-                              itemBuilder: (_, i) => _ProductCard(
-                                product: _filtered[i],
-                                theme: theme,
-                                onTap: () async {
-                                  await context.push('/inventory/${_filtered[i].id}');
-                                  _load();
-                                },
-                              ),
-                            )
-                          : ListView.separated(
-                              itemCount: _filtered.length,
-                              separatorBuilder: (_, __) => const SizedBox(height: 8),
-                              itemBuilder: (_, i) => _ProductCard(
-                                product: _filtered[i],
-                                theme: theme,
-                                onTap: () async {
-                                  await context.push('/inventory/${_filtered[i].id}');
-                                  _load();
-                                },
-                              ),
-                            ),
                       ),
               ),
             ],
@@ -201,15 +229,23 @@ class _ProductCard extends StatelessWidget {
   final Product product;
   final VoidCallback onTap;
   final ThemeData theme;
-  const _ProductCard({required this.product, required this.onTap, required this.theme});
+  const _ProductCard(
+      {required this.product, required this.onTap, required this.theme});
 
   @override
   Widget build(BuildContext context) {
     Color stockColor;
     String stockLabel;
-    if (product.isOutOfStock) { stockColor = AppColors.stockCritical; stockLabel = 'OUT'; }
-    else if (product.isLowStock) { stockColor = AppColors.stockLow; stockLabel = 'LOW'; }
-    else { stockColor = AppColors.stockGood; stockLabel = '${product.quantity}'; }
+    if (product.isOutOfStock) {
+      stockColor = AppColors.stockCritical;
+      stockLabel = 'OUT';
+    } else if (product.isLowStock) {
+      stockColor = AppColors.stockLow;
+      stockLabel = 'LOW';
+    } else {
+      stockColor = AppColors.stockGood;
+      stockLabel = '${product.quantity}';
+    }
 
     return Material(
       color: theme.cardColor,
@@ -224,71 +260,88 @@ class _ProductCard extends StatelessWidget {
             border: Border.all(color: theme.dividerColor),
           ),
           child: Row(children: [
-              Container(
-                width: 44, height: 44,
-                decoration: BoxDecoration(
-                  color: product.isBulkChild
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: product.isBulkChild
                     ? AppColors.warning.withValues(alpha: 0.1)
                     : product.isBulkParent
-                      ? AppColors.chartPurple.withValues(alpha: 0.1)
-                      : theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  product.isBulkChild ? Icons.content_copy_rounded
-                    : product.isBulkParent ? Icons.inventory_rounded
-                    : Icons.hardware_rounded,
-                  color: product.isBulkChild
+                        ? AppColors.chartPurple.withValues(alpha: 0.1)
+                        : theme.colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                product.isBulkChild
+                    ? Icons.content_copy_rounded
+                    : product.isBulkParent
+                        ? Icons.inventory_rounded
+                        : Icons.hardware_rounded,
+                color: product.isBulkChild
                     ? AppColors.warning
                     : product.isBulkParent
-                      ? AppColors.chartPurple
-                      : theme.colorScheme.onSurfaceVariant,
-                  size: 22,
-                ),
+                        ? AppColors.chartPurple
+                        : theme.colorScheme.onSurfaceVariant,
+                size: 22,
               ),
+            ),
             const SizedBox(width: 14),
             Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, 
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                Text(product.name,
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14,
-                    color: theme.colorScheme.onSurface),
-                  overflow: TextOverflow.ellipsis),
-                const SizedBox(height: 4),
-                Row(children: [
-                  _Chip(label: product.category, color: AppColors.chartBlue),
-                  if (product.sku.isNotEmpty) ...[
-                    const SizedBox(width: 6),
-                    _Chip(label: product.sku, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
-                  ],
-                  if (product.isBulkParent || product.isBulkChild) ...[
-                    const SizedBox(width: 6),
-                    _Chip(
-                      label: product.isBulkParent ? 'BULK' : 'Sub-unit',
-                      color: product.isBulkParent ? AppColors.chartPurple : AppColors.warning,
-                    ),
-                  ],
-                ]),
-              ]),
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(product.name,
+                        style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            color: theme.colorScheme.onSurface),
+                        overflow: TextOverflow.ellipsis),
+                    const SizedBox(height: 4),
+                    Row(children: [
+                      _Chip(
+                          label: product.category, color: AppColors.chartBlue),
+                      if (product.sku.isNotEmpty) ...[
+                        const SizedBox(width: 6),
+                        _Chip(
+                            label: product.sku,
+                            color: theme.colorScheme.onSurfaceVariant
+                                .withValues(alpha: 0.5)),
+                      ],
+                      if (product.isBulkParent || product.isBulkChild) ...[
+                        const SizedBox(width: 6),
+                        _Chip(
+                          label: product.isBulkParent ? 'BULK' : 'Sub-unit',
+                          color: product.isBulkParent
+                              ? AppColors.chartPurple
+                              : AppColors.warning,
+                        ),
+                      ],
+                    ]),
+                  ]),
             ),
             const SizedBox(width: 12),
-            Column(crossAxisAlignment: CrossAxisAlignment.end, 
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: stockColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(stockLabel,
-                  style: TextStyle(color: stockColor, fontWeight: FontWeight.w700, fontSize: 13)),
-              ),
-              const SizedBox(height: 6),
-              Text('KES ${product.sellingPrice.toStringAsFixed(0)}',
-                style: theme.textTheme.bodySmall),
-            ]),
+            Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: stockColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(stockLabel,
+                        style: TextStyle(
+                            color: stockColor,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13)),
+                  ),
+                  const SizedBox(height: 6),
+                  Text('KES ${product.sellingPrice.toStringAsFixed(0)}',
+                      style: theme.textTheme.bodySmall),
+                ]),
           ]),
         ),
       ),
@@ -297,15 +350,19 @@ class _ProductCard extends StatelessWidget {
 }
 
 class _Chip extends StatelessWidget {
-  final String label; final Color color;
+  final String label;
+  final Color color;
   const _Chip({required this.label, required this.color});
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-    decoration: BoxDecoration(
-      color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
-    child: Text(label, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w500)),
-  );
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(4)),
+        child: Text(label,
+            style: TextStyle(
+                color: color, fontSize: 10, fontWeight: FontWeight.w500)),
+      );
 }
 
 class _CategoryFilter extends StatelessWidget {
@@ -313,15 +370,22 @@ class _CategoryFilter extends StatelessWidget {
   final String selected;
   final ValueChanged<String> onChanged;
   final ThemeData theme;
-  const _CategoryFilter({required this.categories, required this.selected, required this.onChanged, required this.theme});
+  const _CategoryFilter(
+      {required this.categories,
+      required this.selected,
+      required this.onChanged,
+      required this.theme});
   @override
   Widget build(BuildContext context) {
     return DropdownButtonHideUnderline(
       child: DropdownButton<String>(
         value: selected,
         dropdownColor: theme.cardColor,
-        style: TextStyle(color: theme.textTheme.bodyMedium?.color, fontSize: 13),
-        items: categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+        style:
+            TextStyle(color: theme.textTheme.bodyMedium?.color, fontSize: 13),
+        items: categories
+            .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+            .toList(),
         onChanged: (v) => onChanged(v!),
       ),
     );
@@ -329,21 +393,27 @@ class _CategoryFilter extends StatelessWidget {
 }
 
 class _ErrorBar extends StatelessWidget {
-  final String message; final VoidCallback onRetry;
+  final String message;
+  final VoidCallback onRetry;
   final ThemeData theme;
-  const _ErrorBar({required this.message, required this.onRetry, required this.theme});
+  const _ErrorBar(
+      {required this.message, required this.onRetry, required this.theme});
   @override
   Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.only(bottom: 12),
-    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-    decoration: BoxDecoration(
-      color: AppColors.error.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10),
-      border: Border.all(color: AppColors.error.withValues(alpha: 0.3))),
-    child: Row(children: [
-      const Icon(Icons.error_outline, color: AppColors.error, size: 16),
-      const SizedBox(width: 8),
-      Expanded(child: Text(message, style: const TextStyle(color: AppColors.error, fontSize: 12))),
-      TextButton(onPressed: onRetry, child: const Text('Retry')),
-    ]),
-  );
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+            color: AppColors.error.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppColors.error.withValues(alpha: 0.3))),
+        child: Row(children: [
+          const Icon(Icons.error_outline, color: AppColors.error, size: 16),
+          const SizedBox(width: 8),
+          Expanded(
+              child: Text(message,
+                  style:
+                      const TextStyle(color: AppColors.error, fontSize: 12))),
+          TextButton(onPressed: onRetry, child: const Text('Retry')),
+        ]),
+      );
 }

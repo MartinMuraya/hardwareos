@@ -14,7 +14,7 @@ class AdminDashboardScreen extends StatefulWidget {
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   bool _loadingStats = true;
   String? _error;
-  
+
   int _totalBusinesses = 0;
   int _activeBusinesses = 0;
   int _pendingBusinessesCount = 0;
@@ -58,7 +58,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         });
       }
     } catch (e) {
-      if (mounted) setState(() { _error = e.toString(); _loadingStats = false; });
+      if (mounted)
+        setState(() {
+          _error = e.toString();
+          _loadingStats = false;
+        });
     }
   }
 
@@ -66,7 +70,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final titleCtrl = TextEditingController();
     final msgCtrl = TextEditingController();
     final messenger = ScaffoldMessenger.of(context);
-    
+
     final res = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -74,13 +78,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Title')),
+            TextField(
+                controller: titleCtrl,
+                decoration: const InputDecoration(labelText: 'Title')),
             const SizedBox(height: 12),
-            TextField(controller: msgCtrl, decoration: const InputDecoration(labelText: 'Message'), maxLines: 3),
+            TextField(
+                controller: msgCtrl,
+                decoration: const InputDecoration(labelText: 'Message'),
+                maxLines: 3),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Send'),
@@ -88,21 +99,24 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         ],
       ),
     );
-    
+
     if (res != true) return;
-    
+
     if (titleCtrl.text.isEmpty || msgCtrl.text.isEmpty) {
-      messenger.showSnackBar(const SnackBar(content: Text('Please fill all fields')));
+      messenger.showSnackBar(
+          const SnackBar(content: Text('Please fill all fields')));
       return;
     }
-    
+
     try {
       await FunctionsService.call('createGlobalAnnouncement', {
         'title': titleCtrl.text,
         'message': msgCtrl.text,
         'type': 'info',
       });
-      if (mounted) messenger.showSnackBar(const SnackBar(content: Text('Broadcast sent successfully')));
+      if (mounted)
+        messenger.showSnackBar(
+            const SnackBar(content: Text('Broadcast sent successfully')));
     } catch (e) {
       if (mounted) messenger.showSnackBar(SnackBar(content: Text('Error: $e')));
     }
@@ -115,7 +129,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('Platform Admin', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+        title: Text('Platform Admin',
+            style: theme.textTheme.titleLarge
+                ?.copyWith(fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
@@ -135,10 +151,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               Container(
                 margin: const EdgeInsets.only(bottom: 24),
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(color: AppColors.error.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-                child: Text(_error!, style: const TextStyle(color: AppColors.error)),
+                decoration: BoxDecoration(
+                    color: AppColors.error.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10)),
+                child: Text(_error!,
+                    style: const TextStyle(color: AppColors.error)),
               ),
-            
+
             // KPI Cards
             LayoutBuilder(
               builder: (context, constraints) {
@@ -153,18 +172,80 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   physics: const NeverScrollableScrollPhysics(),
                   childAspectRatio: aspectRatio,
                   children: [
-                      _AdminKpiCard(title: 'Total Businesses',      value: _loadingStats ? '...' : '$_totalBusinesses',      icon: Icons.store_rounded,           color: AppColors.chartBlue, theme: theme),
-                      _AdminKpiCard(title: 'Active Businesses',      value: _loadingStats ? '...' : '$_activeBusinesses',      icon: Icons.verified_rounded,         color: AppColors.chartGreen, theme: theme),
-                      _AdminKpiCard(title: 'Pending Approvals',      value: _loadingStats ? '...' : '$_pendingBusinessesCount', icon: Icons.hourglass_empty_rounded,  color: AppColors.chartAmber, theme: theme),
-                      _AdminKpiCard(title: 'Suspended Businesses',   value: _loadingStats ? '...' : '$_suspendedBusinessesCount', icon: Icons.block_rounded,          color: AppColors.error, theme: theme),
-                      _AdminKpiCard(title: 'Trial Accounts',         value: _loadingStats ? '...' : '$_trialAccounts',         icon: Icons.timer_rounded,            color: AppColors.accent, theme: theme),
-                      _AdminKpiCard(title: 'Expired Subscriptions',  value: _loadingStats ? '...' : '$_expiredSubscriptions',  icon: Icons.alarm_off_rounded,        color: theme.colorScheme.onSurfaceVariant, theme: theme),
-                      _AdminKpiCard(title: 'Platform Users',         value: _loadingStats ? '...' : '$_totalUsers',            icon: Icons.people_rounded,           color: AppColors.chartPurple, theme: theme),
-                      _AdminKpiCard(title: 'Sales Transactions',     value: _loadingStats ? '...' : '$_totalSales',            icon: Icons.point_of_sale_rounded,    color: AppColors.success, theme: theme),
-                      _AdminKpiCard(title: 'Revenue This Month',     value: _loadingStats ? '...' : 'KES ${_monthlyRevenue.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}', icon: Icons.trending_up_rounded, color: AppColors.chartGreen, theme: theme),
-                      _AdminKpiCard(title: 'Total Revenue (All-Time)', value: _loadingStats ? '...' : 'KES ${_totalRevenue.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}', icon: Icons.monetization_on_rounded, color: AppColors.chartBlue, theme: theme),
-                      _AdminKpiCard(title: 'Paid Subscriptions',     value: _loadingStats ? '...' : '$_totalTransactions',     icon: Icons.receipt_long_rounded,     color: AppColors.chartAmber, theme: theme),
-                    ],
+                    _AdminKpiCard(
+                        title: 'Total Businesses',
+                        value: _loadingStats ? '...' : '$_totalBusinesses',
+                        icon: Icons.store_rounded,
+                        color: AppColors.chartBlue,
+                        theme: theme),
+                    _AdminKpiCard(
+                        title: 'Active Businesses',
+                        value: _loadingStats ? '...' : '$_activeBusinesses',
+                        icon: Icons.verified_rounded,
+                        color: AppColors.chartGreen,
+                        theme: theme),
+                    _AdminKpiCard(
+                        title: 'Pending Approvals',
+                        value:
+                            _loadingStats ? '...' : '$_pendingBusinessesCount',
+                        icon: Icons.hourglass_empty_rounded,
+                        color: AppColors.chartAmber,
+                        theme: theme),
+                    _AdminKpiCard(
+                        title: 'Suspended Businesses',
+                        value: _loadingStats
+                            ? '...'
+                            : '$_suspendedBusinessesCount',
+                        icon: Icons.block_rounded,
+                        color: AppColors.error,
+                        theme: theme),
+                    _AdminKpiCard(
+                        title: 'Trial Accounts',
+                        value: _loadingStats ? '...' : '$_trialAccounts',
+                        icon: Icons.timer_rounded,
+                        color: AppColors.accent,
+                        theme: theme),
+                    _AdminKpiCard(
+                        title: 'Expired Subscriptions',
+                        value: _loadingStats ? '...' : '$_expiredSubscriptions',
+                        icon: Icons.alarm_off_rounded,
+                        color: theme.colorScheme.onSurfaceVariant,
+                        theme: theme),
+                    _AdminKpiCard(
+                        title: 'Platform Users',
+                        value: _loadingStats ? '...' : '$_totalUsers',
+                        icon: Icons.people_rounded,
+                        color: AppColors.chartPurple,
+                        theme: theme),
+                    _AdminKpiCard(
+                        title: 'Sales Transactions',
+                        value: _loadingStats ? '...' : '$_totalSales',
+                        icon: Icons.point_of_sale_rounded,
+                        color: AppColors.success,
+                        theme: theme),
+                    _AdminKpiCard(
+                        title: 'Revenue This Month',
+                        value: _loadingStats
+                            ? '...'
+                            : 'KES ${_monthlyRevenue.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}',
+                        icon: Icons.trending_up_rounded,
+                        color: AppColors.chartGreen,
+                        theme: theme),
+                    _AdminKpiCard(
+                        title: 'Total Revenue (All-Time)',
+                        value: _loadingStats
+                            ? '...'
+                            : 'KES ${_totalRevenue.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}',
+                        icon: Icons.monetization_on_rounded,
+                        color: AppColors.chartBlue,
+                        theme: theme),
+                    _AdminKpiCard(
+                        title: 'Paid Subscriptions',
+                        value: _loadingStats ? '...' : '$_totalTransactions',
+                        icon: Icons.receipt_long_rounded,
+                        color: AppColors.chartAmber,
+                        theme: theme),
+                  ],
                 );
               },
             ),
@@ -183,7 +264,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Subscription Health', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                      Text('Subscription Health',
+                          style: theme.textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold)),
                       TextButton.icon(
                         onPressed: () => context.go(RoutePaths.adminAnalytics),
                         icon: const Icon(Icons.analytics_rounded, size: 16),
@@ -194,13 +277,25 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      _MiniStat(label: 'Active', value: '$_activeBusinesses', color: AppColors.success),
+                      _MiniStat(
+                          label: 'Active',
+                          value: '$_activeBusinesses',
+                          color: AppColors.success),
                       const SizedBox(width: 24),
-                      _MiniStat(label: 'Trial', value: '$_trialAccounts', color: AppColors.info),
+                      _MiniStat(
+                          label: 'Trial',
+                          value: '$_trialAccounts',
+                          color: AppColors.info),
                       const SizedBox(width: 24),
-                      _MiniStat(label: 'Expired', value: '$_expiredSubscriptions', color: AppColors.error),
+                      _MiniStat(
+                          label: 'Expired',
+                          value: '$_expiredSubscriptions',
+                          color: AppColors.error),
                       const SizedBox(width: 24),
-                      _MiniStat(label: 'Revenue', value: 'KES ${_monthlyRevenue.toStringAsFixed(0)}', color: AppColors.accent),
+                      _MiniStat(
+                          label: 'Revenue',
+                          value: 'KES ${_monthlyRevenue.toStringAsFixed(0)}',
+                          color: AppColors.accent),
                     ],
                   ),
                 ],
@@ -226,7 +321,8 @@ class _MiniStat extends StatelessWidget {
   final String value;
   final Color color;
 
-  const _MiniStat({required this.label, required this.value, required this.color});
+  const _MiniStat(
+      {required this.label, required this.value, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -234,13 +330,23 @@ class _MiniStat extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: theme.colorScheme.onSurface)),
+        Text(value,
+            style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                color: theme.colorScheme.onSurface)),
         const SizedBox(height: 2),
         Row(
           children: [
-            Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+            Container(
+                width: 8,
+                height: 8,
+                decoration:
+                    BoxDecoration(color: color, shape: BoxShape.circle)),
             const SizedBox(width: 4),
-            Text(label, style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
+            Text(label,
+                style: TextStyle(
+                    fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
           ],
         ),
       ],
@@ -255,7 +361,12 @@ class _AdminKpiCard extends StatelessWidget {
   final Color color;
   final ThemeData theme;
 
-  const _AdminKpiCard({required this.title, required this.value, required this.icon, required this.color, required this.theme});
+  const _AdminKpiCard(
+      {required this.title,
+      required this.value,
+      required this.icon,
+      required this.color,
+      required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -285,9 +396,17 @@ class _AdminKpiCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(title, style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13, fontWeight: FontWeight.w500)),
+                  Text(title,
+                      style: TextStyle(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500)),
                   const SizedBox(height: 4),
-                  Text(value, style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 24, fontWeight: FontWeight.bold)),
+                  Text(value,
+                      style: TextStyle(
+                          color: theme.colorScheme.onSurface,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold)),
                 ],
               ),
             ),

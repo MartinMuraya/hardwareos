@@ -7,18 +7,22 @@ void main() {
       expect(FeatureAccessService.hasFeature('starter', 'inventory'), true);
       expect(FeatureAccessService.hasFeature('starter', 'sales'), true);
       expect(FeatureAccessService.hasFeature('starter', 'ai_assistant'), false);
-      expect(FeatureAccessService.hasFeature('starter', 'whatsapp_integration'), false);
+      expect(FeatureAccessService.hasFeature('starter', 'whatsapp_integration'),
+          false);
     });
 
     test('Pro plan features check', () {
       expect(FeatureAccessService.hasFeature('pro', 'inventory'), true);
       expect(FeatureAccessService.hasFeature('pro', 'ai_assistant'), true);
-      expect(FeatureAccessService.hasFeature('pro', 'whatsapp_integration'), true);
-      expect(FeatureAccessService.hasFeature('pro', 'advanced_analytics'), true);
+      expect(
+          FeatureAccessService.hasFeature('pro', 'whatsapp_integration'), true);
+      expect(
+          FeatureAccessService.hasFeature('pro', 'advanced_analytics'), true);
     });
 
     test('needsUpgrade detects missing features', () {
-      expect(FeatureAccessService.needsUpgrade('starter', 'ai_assistant'), true);
+      expect(
+          FeatureAccessService.needsUpgrade('starter', 'ai_assistant'), true);
       expect(FeatureAccessService.needsUpgrade('pro', 'ai_assistant'), false);
     });
 
@@ -31,8 +35,10 @@ void main() {
     });
 
     test('Grace period restrictions applied correctly', () {
-      final starterNormal = FeatureAccessService.getFeatures('starter', isGracePeriod: false);
-      final starterGrace = FeatureAccessService.getFeatures('starter', isGracePeriod: true);
+      final starterNormal =
+          FeatureAccessService.getFeatures('starter', isGracePeriod: false);
+      final starterGrace =
+          FeatureAccessService.getFeatures('starter', isGracePeriod: true);
 
       expect(starterNormal, contains('sales'));
       expect(starterGrace, isNot(contains('sales')));

@@ -7,7 +7,8 @@ class AdminSubscriptionsScreen extends StatefulWidget {
   const AdminSubscriptionsScreen({super.key});
 
   @override
-  State<AdminSubscriptionsScreen> createState() => _AdminSubscriptionsScreenState();
+  State<AdminSubscriptionsScreen> createState() =>
+      _AdminSubscriptionsScreenState();
 }
 
 class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
@@ -22,13 +23,17 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
   }
 
   Future<void> _loadSubscriptions() async {
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final res = await FunctionsService.call('adminGetSubscriptions', {});
       final list = (res['subscriptions'] as List?) ?? [];
       if (mounted) {
         setState(() {
-          _subscriptions = list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+          _subscriptions =
+              list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
           _loading = false;
         });
       }
@@ -42,8 +47,8 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
         setState(() {
           _error = isPermissionDenied
               ? 'Access Denied: Your account has not been registered as a Platform Administrator.\n\n'
-                'To fix this, go to Firebase Console → Firestore → platformAdmins collection '
-                'and add a document with your UID as the document ID.'
+                  'To fix this, go to Firebase Console → Firestore → platformAdmins collection '
+                  'and add a document with your UID as the document ID.'
               : msg;
           _loading = false;
         });
@@ -56,9 +61,12 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
     String selectedPlan = sub['plan'] ?? 'free';
     String selectedStatus = sub['subscriptionStatus'] ?? 'trial';
     bool active = sub['active'] ?? false;
-    
-    DateTime? trialEndsAt = sub['trialEndsAt'] != null ? DateTime.parse(sub['trialEndsAt']) : null;
-    DateTime? subscriptionEndsAt = sub['subscriptionEndsAt'] != null ? DateTime.parse(sub['subscriptionEndsAt']) : null;
+
+    DateTime? trialEndsAt =
+        sub['trialEndsAt'] != null ? DateTime.parse(sub['trialEndsAt']) : null;
+    DateTime? subscriptionEndsAt = sub['subscriptionEndsAt'] != null
+        ? DateTime.parse(sub['subscriptionEndsAt'])
+        : null;
 
     final result = await showDialog<bool>(
       context: context,
@@ -78,26 +86,33 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
                       dropdownColor: theme.cardColor,
                       items: const [
                         DropdownMenuItem(value: 'free', child: Text('Free')),
-                        DropdownMenuItem(value: 'starter', child: Text('Starter')),
+                        DropdownMenuItem(
+                            value: 'starter', child: Text('Starter')),
                         DropdownMenuItem(value: 'pro', child: Text('Pro')),
                       ],
                       onChanged: (val) {
-                        if (val != null) setDialogState(() => selectedPlan = val);
+                        if (val != null)
+                          setDialogState(() => selectedPlan = val);
                       },
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
                       initialValue: selectedStatus,
-                      decoration: const InputDecoration(labelText: 'Subscription Status'),
+                      decoration: const InputDecoration(
+                          labelText: 'Subscription Status'),
                       dropdownColor: theme.cardColor,
                       items: const [
                         DropdownMenuItem(value: 'trial', child: Text('Trial')),
-                        DropdownMenuItem(value: 'active', child: Text('Active')),
-                        DropdownMenuItem(value: 'grace_period', child: Text('Grace Period')),
-                        DropdownMenuItem(value: 'expired', child: Text('Expired')),
+                        DropdownMenuItem(
+                            value: 'active', child: Text('Active')),
+                        DropdownMenuItem(
+                            value: 'grace_period', child: Text('Grace Period')),
+                        DropdownMenuItem(
+                            value: 'expired', child: Text('Expired')),
                       ],
                       onChanged: (val) {
-                        if (val != null) setDialogState(() => selectedStatus = val);
+                        if (val != null)
+                          setDialogState(() => selectedStatus = val);
                       },
                     ),
                     const SizedBox(height: 16),
@@ -109,14 +124,17 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
                     ),
                     const SizedBox(height: 16),
                     ListTile(
-                      title: Text('Trial Ends: ${trialEndsAt?.toLocal().toString().split(' ')[0] ?? 'None'}'),
+                      title: Text(
+                          'Trial Ends: ${trialEndsAt?.toLocal().toString().split(' ')[0] ?? 'None'}'),
                       trailing: const Icon(Icons.calendar_today_rounded),
                       onTap: () async {
                         final picked = await showDatePicker(
                           context: context,
                           initialDate: trialEndsAt ?? DateTime.now(),
-                          firstDate: DateTime.now().subtract(const Duration(days: 365)),
-                          lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+                          firstDate: DateTime.now()
+                              .subtract(const Duration(days: 365)),
+                          lastDate:
+                              DateTime.now().add(const Duration(days: 365 * 5)),
                         );
                         if (picked != null) {
                           setDialogState(() => trialEndsAt = picked);
@@ -124,14 +142,17 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
                       },
                     ),
                     ListTile(
-                      title: Text('Subscription Ends: ${subscriptionEndsAt?.toLocal().toString().split(' ')[0] ?? 'None'}'),
+                      title: Text(
+                          'Subscription Ends: ${subscriptionEndsAt?.toLocal().toString().split(' ')[0] ?? 'None'}'),
                       trailing: const Icon(Icons.calendar_today_rounded),
                       onTap: () async {
                         final picked = await showDatePicker(
                           context: context,
                           initialDate: subscriptionEndsAt ?? DateTime.now(),
-                          firstDate: DateTime.now().subtract(const Duration(days: 365)),
-                          lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+                          firstDate: DateTime.now()
+                              .subtract(const Duration(days: 365)),
+                          lastDate:
+                              DateTime.now().add(const Duration(days: 365 * 5)),
                         );
                         if (picked != null) {
                           setDialogState(() => subscriptionEndsAt = picked);
@@ -171,7 +192,8 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
         _loadSubscriptions();
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(e.toString())));
           setState(() => _loading = false);
         }
       }
@@ -184,9 +206,13 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('Subscriptions', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+        title: Text('Subscriptions',
+            style: theme.textTheme.titleLarge
+                ?.copyWith(fontWeight: FontWeight.bold)),
         actions: [
-          IconButton(icon: const Icon(Icons.refresh_rounded), onPressed: _loadSubscriptions),
+          IconButton(
+              icon: const Icon(Icons.refresh_rounded),
+              onPressed: _loadSubscriptions),
           const SizedBox(width: 24),
         ],
       ),
@@ -199,12 +225,16 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.lock_outline_rounded, color: AppColors.error, size: 56),
+                        const Icon(Icons.lock_outline_rounded,
+                            color: AppColors.error, size: 56),
                         const SizedBox(height: 16),
                         Text(
                           _error!,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(color: AppColors.error, fontSize: 14, height: 1.6),
+                          style: const TextStyle(
+                              color: AppColors.error,
+                              fontSize: 14,
+                              height: 1.6),
                         ),
                         const SizedBox(height: 24),
                         FilledButton.icon(
@@ -228,9 +258,15 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
                       itemBuilder: (context, i) {
                         final sub = _subscriptions[i];
                         final expires = sub['subscriptionEndsAt'] != null
-                            ? DateTime.parse(sub['subscriptionEndsAt']).toLocal().toString().split(' ')[0]
+                            ? DateTime.parse(sub['subscriptionEndsAt'])
+                                .toLocal()
+                                .toString()
+                                .split(' ')[0]
                             : (sub['trialEndsAt'] != null
-                                ? DateTime.parse(sub['trialEndsAt']).toLocal().toString().split(' ')[0]
+                                ? DateTime.parse(sub['trialEndsAt'])
+                                    .toLocal()
+                                    .toString()
+                                    .split(' ')[0]
                                 : 'Never');
 
                         return Container(
@@ -246,10 +282,12 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
                                 width: 50,
                                 height: 50,
                                 decoration: BoxDecoration(
-                                  color: AppColors.accent.withValues(alpha: 0.1),
+                                  color:
+                                      AppColors.accent.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: const Icon(Icons.credit_card_rounded, color: AppColors.accent),
+                                child: const Icon(Icons.credit_card_rounded,
+                                    color: AppColors.accent),
                               ),
                               const SizedBox(width: 16),
                               Expanded(
@@ -257,26 +295,40 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(sub['businessName'] ?? 'Unknown',
-                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16,
-                                        color: theme.colorScheme.onSurface)),
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                            color:
+                                                theme.colorScheme.onSurface)),
                                     const SizedBox(height: 4),
                                     Row(
                                       children: [
-                                        _Badge(label: (sub['plan'] ?? 'free').toUpperCase(), color: AppColors.accent),
+                                        _Badge(
+                                            label: (sub['plan'] ?? 'free')
+                                                .toUpperCase(),
+                                            color: AppColors.accent),
                                         const SizedBox(width: 8),
                                         _Badge(
-                                            label: _statusLabel(sub['subscriptionStatus'] ?? 'trial'),
-                                            color: _statusColor(sub['subscriptionStatus'] ?? 'trial')),
+                                            label: _statusLabel(
+                                                sub['subscriptionStatus'] ??
+                                                    'trial'),
+                                            color: _statusColor(
+                                                sub['subscriptionStatus'] ??
+                                                    'trial')),
                                       ],
                                     ),
                                     const SizedBox(height: 8),
                                     Text('Expires/Trial Ends: $expires',
-                                      style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13)),
+                                        style: TextStyle(
+                                            color: theme
+                                                .colorScheme.onSurfaceVariant,
+                                            fontSize: 13)),
                                   ],
                                 ),
                               ),
                               IconButton(
-                                icon: Icon(Icons.edit_rounded, color: theme.colorScheme.onSurfaceVariant),
+                                icon: Icon(Icons.edit_rounded,
+                                    color: theme.colorScheme.onSurfaceVariant),
                                 onPressed: () => _editSubscription(sub),
                                 tooltip: 'Edit Subscription',
                               ),
@@ -290,21 +342,31 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
 
   String _statusLabel(String status) {
     switch (status) {
-      case 'active': return 'ACTIVE';
-      case 'trial': return 'TRIAL';
-      case 'grace_period': return 'GRACE PERIOD';
-      case 'expired': return 'EXPIRED';
-      default: return status.toUpperCase();
+      case 'active':
+        return 'ACTIVE';
+      case 'trial':
+        return 'TRIAL';
+      case 'grace_period':
+        return 'GRACE PERIOD';
+      case 'expired':
+        return 'EXPIRED';
+      default:
+        return status.toUpperCase();
     }
   }
 
   Color _statusColor(String status) {
     switch (status) {
-      case 'active': return AppColors.success;
-      case 'trial': return AppColors.info;
-      case 'grace_period': return AppColors.warning;
-      case 'expired': return AppColors.error;
-      default: return AppColors.warning;
+      case 'active':
+        return AppColors.success;
+      case 'trial':
+        return AppColors.info;
+      case 'grace_period':
+        return AppColors.warning;
+      case 'expired':
+        return AppColors.error;
+      default:
+        return AppColors.warning;
     }
   }
 }
@@ -324,7 +386,9 @@ class _Badge extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
-      child: Text(label, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+      child: Text(label,
+          style: TextStyle(
+              color: color, fontSize: 10, fontWeight: FontWeight.bold)),
     );
   }
 }

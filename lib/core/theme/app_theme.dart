@@ -10,13 +10,16 @@ class AppTheme {
 
   static ThemeData _buildTheme(Brightness brightness) {
     final isDark = brightness == Brightness.dark;
-    
+
     final bgColor = isDark ? AppColors.bgDark : AppColors.bgLight;
-    final surfaceColor = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
+    final surfaceColor =
+        isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
     final cardColor = isDark ? AppColors.cardDark : AppColors.cardLight;
     final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
-    final textPrimary = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
-    final textSecondary = isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+    final textPrimary =
+        isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
+    final textSecondary =
+        isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
     final inputFill = isDark ? AppColors.inputFill : AppColors.inputFillLight;
 
     const inter = GoogleFonts.inter;
@@ -27,45 +30,55 @@ class AppTheme {
       scaffoldBackgroundColor: bgColor,
       dividerColor: borderColor,
       cardColor: cardColor,
-      colorScheme: isDark 
-        ? const ColorScheme.dark(
-            primary: AppColors.accent,
-            onPrimary: AppColors.bgDark,
-            secondary: AppColors.accentLight,
-            onSecondary: AppColors.bgDark,
-            surface: AppColors.surfaceDark,
-            onSurface: AppColors.textPrimaryDark,
-            error: AppColors.error,
-            onError: Colors.white,
-          )
-        : const ColorScheme.light(
-            primary: AppColors.accent,
-            onPrimary: Colors.white,
-            secondary: AppColors.accentDark,
-            onSecondary: Colors.white,
-            surface: AppColors.surfaceLight,
-            onSurface: AppColors.textPrimaryLight,
-            error: AppColors.error,
-            onError: Colors.white,
-          ),
+      colorScheme: isDark
+          ? const ColorScheme.dark(
+              primary: AppColors.accent,
+              onPrimary: AppColors.bgDark,
+              secondary: AppColors.accentLight,
+              onSecondary: AppColors.bgDark,
+              surface: AppColors.surfaceDark,
+              onSurface: AppColors.textPrimaryDark,
+              error: AppColors.error,
+              onError: Colors.white,
+            )
+          : const ColorScheme.light(
+              primary: AppColors.accent,
+              onPrimary: Colors.white,
+              secondary: AppColors.accentDark,
+              onSecondary: Colors.white,
+              surface: AppColors.surfaceLight,
+              onSurface: AppColors.textPrimaryLight,
+              error: AppColors.error,
+              onError: Colors.white,
+            ),
       textTheme: GoogleFonts.interTextTheme(
-        isDark ? ThemeData.dark().textTheme : ThemeData.light().textTheme
-      ).copyWith(
-        displayLarge: inter(fontSize: 32, fontWeight: FontWeight.w700, color: textPrimary),
-        displayMedium: inter(fontSize: 26, fontWeight: FontWeight.w700, color: textPrimary),
-        headlineLarge: inter(fontSize: 22, fontWeight: FontWeight.w700, color: textPrimary),
-        headlineMedium: inter(fontSize: 18, fontWeight: FontWeight.w600, color: textPrimary),
-        titleLarge: inter(fontSize: 16, fontWeight: FontWeight.w600, color: textPrimary),
-        titleMedium: inter(fontSize: 14, fontWeight: FontWeight.w500, color: textPrimary),
-        bodyLarge: inter(fontSize: 16, fontWeight: FontWeight.w400, color: textPrimary),
-        bodyMedium: inter(fontSize: 14, fontWeight: FontWeight.w400, color: textSecondary),
-        labelLarge: inter(fontSize: 14, fontWeight: FontWeight.w600, color: textPrimary),
+              isDark ? ThemeData.dark().textTheme : ThemeData.light().textTheme)
+          .copyWith(
+        displayLarge: inter(
+            fontSize: 32, fontWeight: FontWeight.w700, color: textPrimary),
+        displayMedium: inter(
+            fontSize: 26, fontWeight: FontWeight.w700, color: textPrimary),
+        headlineLarge: inter(
+            fontSize: 22, fontWeight: FontWeight.w700, color: textPrimary),
+        headlineMedium: inter(
+            fontSize: 18, fontWeight: FontWeight.w600, color: textPrimary),
+        titleLarge: inter(
+            fontSize: 16, fontWeight: FontWeight.w600, color: textPrimary),
+        titleMedium: inter(
+            fontSize: 14, fontWeight: FontWeight.w500, color: textPrimary),
+        bodyLarge: inter(
+            fontSize: 16, fontWeight: FontWeight.w400, color: textPrimary),
+        bodyMedium: inter(
+            fontSize: 14, fontWeight: FontWeight.w400, color: textSecondary),
+        labelLarge: inter(
+            fontSize: 14, fontWeight: FontWeight.w600, color: textPrimary),
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: surfaceColor,
         elevation: 0,
         centerTitle: false,
-        titleTextStyle: inter(fontSize: 18, fontWeight: FontWeight.w700, color: textPrimary),
+        titleTextStyle: inter(
+            fontSize: 18, fontWeight: FontWeight.w700, color: textPrimary),
         iconTheme: IconThemeData(color: textPrimary),
       ),
       cardTheme: CardThemeData(
@@ -83,7 +96,8 @@ class AppTheme {
           foregroundColor: isDark ? AppColors.bgDark : Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           textStyle: inter(fontSize: 14, fontWeight: FontWeight.w600),
         ),
       ),
@@ -92,7 +106,8 @@ class AppTheme {
           foregroundColor: AppColors.accent,
           side: const BorderSide(color: AppColors.accent),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           textStyle: inter(fontSize: 14, fontWeight: FontWeight.w600),
         ),
       ),
@@ -105,7 +120,8 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: inputFill,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: borderColor),
@@ -141,8 +157,10 @@ class AppTheme {
         backgroundColor: surfaceColor,
         selectedIconTheme: const IconThemeData(color: AppColors.accent),
         unselectedIconTheme: const IconThemeData(color: AppColors.textHint),
-        selectedLabelTextStyle: inter(color: AppColors.accent, fontSize: 12, fontWeight: FontWeight.w600),
-        unselectedLabelTextStyle: inter(color: AppColors.textHint, fontSize: 12),
+        selectedLabelTextStyle: inter(
+            color: AppColors.accent, fontSize: 12, fontWeight: FontWeight.w600),
+        unselectedLabelTextStyle:
+            inter(color: AppColors.textHint, fontSize: 12),
         indicatorColor: AppColors.accent.withValues(alpha: 0.15),
       ),
       snackBarTheme: SnackBarThemeData(

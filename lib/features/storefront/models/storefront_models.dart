@@ -23,7 +23,10 @@ class StorefrontProduct {
       name: json['name'] as String,
       category: json['category'] as String? ?? 'General',
       sellingPrice: (json['sellingPrice'] as num).toDouble(),
-      images: (json['images'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
+      images: (json['images'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
       description: json['description'] as String? ?? '',
       inStock: json['inStock'] as bool? ?? false,
     );
@@ -40,21 +43,22 @@ class StorefrontCartItem {
   });
 
   Map<String, dynamic> toJson() => {
-    'product': {
-      'id': product.id,
-      'name': product.name,
-      'category': product.category,
-      'sellingPrice': product.sellingPrice,
-      'images': product.images,
-      'description': product.description,
-      'inStock': product.inStock,
-    },
-    'quantity': quantity,
-  };
+        'product': {
+          'id': product.id,
+          'name': product.name,
+          'category': product.category,
+          'sellingPrice': product.sellingPrice,
+          'images': product.images,
+          'description': product.description,
+          'inStock': product.inStock,
+        },
+        'quantity': quantity,
+      };
 
   factory StorefrontCartItem.fromJson(Map<String, dynamic> json) {
     return StorefrontCartItem(
-      product: StorefrontProduct.fromJson(Map<String, dynamic>.from(json['product'] as Map)),
+      product: StorefrontProduct.fromJson(
+          Map<String, dynamic>.from(json['product'] as Map)),
       quantity: json['quantity'] as int,
     );
   }
@@ -76,10 +80,10 @@ class DeliveryZone {
   }
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'fee': fee,
-  };
+        'id': id,
+        'name': name,
+        'fee': fee,
+      };
 }
 
 class StorefrontInfo {
@@ -115,19 +119,23 @@ class StorefrontInfo {
       bannerUrl: json['bannerUrl'] as String?,
       primaryColor: json['primaryColor'] as String?,
       whatsappNumber: json['whatsappNumber'] as String?,
-      deliveryZones: (json['deliveryZones'] as List<dynamic>?)?.map((e) => DeliveryZone.fromJson(Map<String, dynamic>.from(e as Map))).toList() ?? [],
+      deliveryZones: (json['deliveryZones'] as List<dynamic>?)
+              ?.map((e) =>
+                  DeliveryZone.fromJson(Map<String, dynamic>.from(e as Map)))
+              .toList() ??
+          [],
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'businessId': businessId,
-    'name': name,
-    'tenantSlug': tenantSlug,
-    'active': active,
-    'logoUrl': logoUrl,
-    'bannerUrl': bannerUrl,
-    'primaryColor': primaryColor,
-    'whatsappNumber': whatsappNumber,
-    'deliveryZones': deliveryZones.map((e) => e.toJson()).toList(),
-  };
+        'businessId': businessId,
+        'name': name,
+        'tenantSlug': tenantSlug,
+        'active': active,
+        'logoUrl': logoUrl,
+        'bannerUrl': bannerUrl,
+        'primaryColor': primaryColor,
+        'whatsappNumber': whatsappNumber,
+        'deliveryZones': deliveryZones.map((e) => e.toJson()).toList(),
+      };
 }

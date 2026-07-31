@@ -30,12 +30,12 @@ class Plan {
   }
 
   Map<String, dynamic> toMap() => {
-    'id': id,
-    'name': name,
-    'price': price,
-    'currency': currency,
-    'billingCycle': billingCycle,
-    'maxUsers': maxUsers,
-    'features': features,
-  };
+        'id': id,
+        'name': name,
+        'price': price,
+        'currency': currency,
+        'billingCycle': billingCycle,
+        'maxUsers': maxUsers,
+        'features': features,
+      };
 }

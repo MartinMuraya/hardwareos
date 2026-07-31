@@ -113,7 +113,8 @@ class AccountingProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> postManualJournal(String description, List<Map<String, dynamic>> lines) async {
+  Future<void> postManualJournal(
+      String description, List<Map<String, dynamic>> lines) async {
     _setLoading(true);
     try {
       await FunctionsService.call('createJournalEntry', {

@@ -11,12 +11,12 @@ class SupportScreen extends StatefulWidget {
 
 class _SupportScreenState extends State<SupportScreen> {
   bool _loading = false;
-  
+
   Future<void> _createTicket() async {
     final subjectCtrl = TextEditingController();
     final msgCtrl = TextEditingController();
     final messenger = ScaffoldMessenger.of(context);
-    
+
     final res = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -26,18 +26,22 @@ class _SupportScreenState extends State<SupportScreen> {
           children: [
             TextField(
               controller: subjectCtrl,
-              decoration: const InputDecoration(labelText: 'Subject', border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                  labelText: 'Subject', border: OutlineInputBorder()),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: msgCtrl,
-              decoration: const InputDecoration(labelText: 'Message', border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                  labelText: 'Message', border: OutlineInputBorder()),
               maxLines: 4,
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Submit Ticket'),
@@ -45,14 +49,15 @@ class _SupportScreenState extends State<SupportScreen> {
         ],
       ),
     );
-    
+
     if (res != true) return;
-    
+
     if (subjectCtrl.text.isEmpty || msgCtrl.text.isEmpty) {
-      messenger.showSnackBar(const SnackBar(content: Text('Please fill all fields')));
+      messenger.showSnackBar(
+          const SnackBar(content: Text('Please fill all fields')));
       return;
     }
-    
+
     setState(() => _loading = true);
     try {
       await FunctionsService.call('createSupportTicket', {
@@ -60,7 +65,9 @@ class _SupportScreenState extends State<SupportScreen> {
         'message': msgCtrl.text,
       });
       if (mounted) {
-        messenger.showSnackBar(const SnackBar(content: Text('Support ticket created successfully. We will get back to you soon.')));
+        messenger.showSnackBar(const SnackBar(
+            content: Text(
+                'Support ticket created successfully. We will get back to you soon.')));
       }
     } catch (e) {
       if (mounted) messenger.showSnackBar(SnackBar(content: Text('Error: $e')));
@@ -72,7 +79,7 @@ class _SupportScreenState extends State<SupportScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(title: const Text('Help & Support')),
@@ -87,7 +94,8 @@ class _SupportScreenState extends State<SupportScreen> {
                     const EmptyState(
                       icon: Icons.support_agent_rounded,
                       title: 'Need Help?',
-                      subtitle: 'If you are facing any issues or have questions, feel free to contact our support team.',
+                      subtitle:
+                          'If you are facing any issues or have questions, feel free to contact our support team.',
                     ),
                     const SizedBox(height: 32),
                     FilledButton.icon(
@@ -95,7 +103,8 @@ class _SupportScreenState extends State<SupportScreen> {
                       icon: const Icon(Icons.add),
                       label: const Text('Create Support Ticket'),
                       style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 32, vertical: 16),
                       ),
                     ),
                   ],

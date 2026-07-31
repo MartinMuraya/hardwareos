@@ -13,13 +13,14 @@ class PurchaseOrderItem {
     required this.total,
   });
 
-  factory PurchaseOrderItem.fromMap(Map<String, dynamic> map) => PurchaseOrderItem(
-    productId: (map['productId'] as String?) ?? '',
-    name: map['name'] as String,
-    quantity: ((map['quantity'] as num?) ?? 0).toInt(),
-    unitCost: ((map['unitCost'] as num?) ?? 0).toDouble(),
-    total: ((map['total'] as num?) ?? 0).toDouble(),
-  );
+  factory PurchaseOrderItem.fromMap(Map<String, dynamic> map) =>
+      PurchaseOrderItem(
+        productId: (map['productId'] as String?) ?? '',
+        name: map['name'] as String,
+        quantity: ((map['quantity'] as num?) ?? 0).toInt(),
+        unitCost: ((map['unitCost'] as num?) ?? 0).toDouble(),
+        total: ((map['total'] as num?) ?? 0).toDouble(),
+      );
 }
 
 class PurchaseOrder {
@@ -63,7 +64,10 @@ class PurchaseOrder {
       poNumber: (map['poNumber'] as String?) ?? '',
       supplierId: (map['supplierId'] as String?) ?? '',
       supplierName: (map['supplierName'] as String?) ?? '',
-      items: rawItems.map((e) => PurchaseOrderItem.fromMap(Map<String, dynamic>.from(e as Map))).toList(),
+      items: rawItems
+          .map((e) =>
+              PurchaseOrderItem.fromMap(Map<String, dynamic>.from(e as Map)))
+          .toList(),
       subtotal: ((map['subtotal'] as num?) ?? 0).toDouble(),
       total: ((map['total'] as num?) ?? 0).toDouble(),
       status: (map['status'] as String?) ?? 'draft',
@@ -71,17 +75,24 @@ class PurchaseOrder {
       createdBy: (map['createdBy'] as String?) ?? '',
       createdAt: DateTime.parse(map['createdAt'] as String),
       updatedAt: DateTime.parse(map['updatedAt'] as String),
-      receivedAt: map['receivedAt'] != null ? DateTime.tryParse(map['receivedAt'].toString()) : null,
+      receivedAt: map['receivedAt'] != null
+          ? DateTime.tryParse(map['receivedAt'].toString())
+          : null,
     );
   }
 
   String get statusLabel {
     switch (status) {
-      case 'draft': return 'Draft';
-      case 'sent': return 'Sent';
-      case 'received': return 'Received';
-      case 'cancelled': return 'Cancelled';
-      default: return status;
+      case 'draft':
+        return 'Draft';
+      case 'sent':
+        return 'Sent';
+      case 'received':
+        return 'Received';
+      case 'cancelled':
+        return 'Cancelled';
+      default:
+        return status;
     }
   }
 

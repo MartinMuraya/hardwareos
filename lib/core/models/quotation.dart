@@ -52,14 +52,19 @@ class Quotation {
       customerId: (map['customerId'] as String?) ?? '',
       customerName: (map['customerName'] as String?) ?? '',
       customerPhone: (map['customerPhone'] as String?) ?? '',
-      items: rawItems.map((e) => QuotationItem.fromMap(Map<String, dynamic>.from(e as Map))).toList(),
+      items: rawItems
+          .map(
+              (e) => QuotationItem.fromMap(Map<String, dynamic>.from(e as Map)))
+          .toList(),
       subtotal: ((map['subtotal'] as num?) ?? 0).toDouble(),
       discount: ((map['discount'] as num?) ?? 0).toDouble(),
       discountType: (map['discountType'] as String?) ?? 'fixed',
       discountAmount: ((map['discountAmount'] as num?) ?? 0).toDouble(),
       total: ((map['total'] as num?) ?? 0).toDouble(),
       status: (map['status'] as String?) ?? 'draft',
-      validUntil: map['validUntil'] != null ? DateTime.tryParse(map['validUntil'].toString()) : null,
+      validUntil: map['validUntil'] != null
+          ? DateTime.tryParse(map['validUntil'].toString())
+          : null,
       notes: (map['notes'] as String?) ?? '',
       terms: (map['terms'] as String?) ?? '',
       createdBy: (map['createdBy'] as String?) ?? '',
@@ -70,12 +75,18 @@ class Quotation {
 
   String get statusLabel {
     switch (status) {
-      case 'draft': return 'Draft';
-      case 'sent': return 'Sent';
-      case 'accepted': return 'Accepted';
-      case 'rejected': return 'Rejected';
-      case 'converted': return 'Converted';
-      default: return status;
+      case 'draft':
+        return 'Draft';
+      case 'sent':
+        return 'Sent';
+      case 'accepted':
+        return 'Accepted';
+      case 'rejected':
+        return 'Rejected';
+      case 'converted':
+        return 'Converted';
+      default:
+        return status;
     }
   }
 

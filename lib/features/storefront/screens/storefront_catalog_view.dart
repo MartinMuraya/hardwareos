@@ -16,7 +16,10 @@ class _StorefrontCatalogViewState extends State<StorefrontCatalogView> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<StorefrontProvider>();
-    final products = provider.products.where((p) => _selectedCategory == 'All' || p.category == _selectedCategory).toList();
+    final products = provider.products
+        .where((p) =>
+            _selectedCategory == 'All' || p.category == _selectedCategory)
+        .toList();
 
     return Column(
       children: [
@@ -41,7 +44,7 @@ class _StorefrontCatalogViewState extends State<StorefrontCatalogView> {
             },
           ),
         ),
-        
+
         // Product Grid
         Expanded(
           child: products.isEmpty
@@ -65,10 +68,15 @@ class _StorefrontCatalogViewState extends State<StorefrontCatalogView> {
                         children: [
                           Expanded(
                             child: p.images.isNotEmpty
-                                ? Image.network(p.images.first, fit: BoxFit.cover, errorBuilder: (_,__,___) => const Icon(Icons.broken_image, color: Colors.grey))
+                                ? Image.network(p.images.first,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => const Icon(
+                                        Icons.broken_image,
+                                        color: Colors.grey))
                                 : Container(
                                     color: Colors.grey[200],
-                                    child: const Icon(Icons.inventory_2, size: 50, color: Colors.grey),
+                                    child: const Icon(Icons.inventory_2,
+                                        size: 50, color: Colors.grey),
                                   ),
                           ),
                           Padding(
@@ -76,39 +84,48 @@ class _StorefrontCatalogViewState extends State<StorefrontCatalogView> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  p.name, 
-                                  maxLines: 2, 
-                                  overflow: TextOverflow.ellipsis, 
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)
-                                ),
+                                Text(p.name,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16)),
                                 const SizedBox(height: 4),
-                                Text(
-                                  '\$${p.sellingPrice.toStringAsFixed(2)}', 
-                                  style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 16)
-                                ),
+                                Text('\$${p.sellingPrice.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                        color: Colors.green,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16)),
                                 const SizedBox(height: 12),
                                 SizedBox(
                                   width: double.infinity,
                                   child: ElevatedButton.icon(
                                     style: ElevatedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 12),
                                     ),
-                                    onPressed: p.inStock ? () {
-                                      provider.addToCart(p);
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text('${p.name} added to cart'), 
-                                          duration: const Duration(seconds: 1),
-                                          action: SnackBarAction(
-                                            label: 'VIEW CART',
-                                            onPressed: widget.onViewCart,
-                                          ),
-                                        ),
-                                      );
-                                    } : null,
-                                    icon: const Icon(Icons.add_shopping_cart, size: 18),
-                                    label: Text(p.inStock ? 'Add' : 'Out of Stock'),
+                                    onPressed: p.inStock
+                                        ? () {
+                                            provider.addToCart(p);
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                    '${p.name} added to cart'),
+                                                duration:
+                                                    const Duration(seconds: 1),
+                                                action: SnackBarAction(
+                                                  label: 'VIEW CART',
+                                                  onPressed: widget.onViewCart,
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                        : null,
+                                    icon: const Icon(Icons.add_shopping_cart,
+                                        size: 18),
+                                    label: Text(
+                                        p.inStock ? 'Add' : 'Out of Stock'),
                                   ),
                                 ),
                               ],

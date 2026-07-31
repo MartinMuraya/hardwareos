@@ -44,7 +44,8 @@ pw.Widget _header(Quotation q) {
       pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Text('QUOTATION',
+          pw.Text(
+            'QUOTATION',
             style: pw.TextStyle(
               fontSize: 28,
               fontWeight: pw.FontWeight.bold,
@@ -52,7 +53,8 @@ pw.Widget _header(Quotation q) {
             ),
           ),
           pw.SizedBox(height: 4),
-          pw.Text(q.quotationNumber,
+          pw.Text(
+            q.quotationNumber,
             style: const pw.TextStyle(
               fontSize: 14,
               color: PdfColors.grey700,
@@ -66,7 +68,8 @@ pw.Widget _header(Quotation q) {
           color: _statusColor(q.status),
           borderRadius: pw.BorderRadius.circular(6),
         ),
-        child: pw.Text(q.statusLabel.toUpperCase(),
+        child: pw.Text(
+          q.statusLabel.toUpperCase(),
           style: pw.TextStyle(
             fontSize: 11,
             fontWeight: pw.FontWeight.bold,
@@ -88,7 +91,8 @@ pw.Widget _companyInfo() {
     child: pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        pw.Text('YOUR BUSINESS NAME',
+        pw.Text(
+          'YOUR BUSINESS NAME',
           style: pw.TextStyle(
             fontSize: 16,
             fontWeight: pw.FontWeight.bold,
@@ -97,11 +101,11 @@ pw.Widget _companyInfo() {
         ),
         pw.SizedBox(height: 4),
         pw.Text('123 Business Street, Nairobi',
-          style: const pw.TextStyle(fontSize: 11, color: PdfColors.grey600)),
+            style: const pw.TextStyle(fontSize: 11, color: PdfColors.grey600)),
         pw.Text('Phone: +254 712 345 678',
-          style: const pw.TextStyle(fontSize: 11, color: PdfColors.grey600)),
+            style: const pw.TextStyle(fontSize: 11, color: PdfColors.grey600)),
         pw.Text('Email: info@hardwareos.com',
-          style: const pw.TextStyle(fontSize: 11, color: PdfColors.grey600)),
+            style: const pw.TextStyle(fontSize: 11, color: PdfColors.grey600)),
       ],
     ),
   );
@@ -121,7 +125,8 @@ pw.Widget _customerInfo(Quotation q) {
         pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            pw.Text('BILL TO',
+            pw.Text(
+              'BILL TO',
               style: pw.TextStyle(
                 fontSize: 11,
                 fontWeight: pw.FontWeight.bold,
@@ -130,16 +135,19 @@ pw.Widget _customerInfo(Quotation q) {
             ),
             pw.SizedBox(height: 4),
             pw.Text(q.customerName,
-              style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                style:
+                    pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
             if (q.customerPhone.isNotEmpty)
               pw.Text(q.customerPhone,
-                style: const pw.TextStyle(fontSize: 11, color: PdfColors.grey600)),
+                  style: const pw.TextStyle(
+                      fontSize: 11, color: PdfColors.grey600)),
           ],
         ),
         pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.end,
           children: [
-            pw.Text('DATE',
+            pw.Text(
+              'DATE',
               style: pw.TextStyle(
                 fontSize: 11,
                 fontWeight: pw.FontWeight.bold,
@@ -147,11 +155,13 @@ pw.Widget _customerInfo(Quotation q) {
               ),
             ),
             pw.SizedBox(height: 4),
-            pw.Text('${q.createdAt.day}/${q.createdAt.month}/${q.createdAt.year}',
-              style: const pw.TextStyle(fontSize: 12)),
+            pw.Text(
+                '${q.createdAt.day}/${q.createdAt.month}/${q.createdAt.year}',
+                style: const pw.TextStyle(fontSize: 12)),
             if (q.validUntil != null) ...[
               pw.SizedBox(height: 8),
-              pw.Text('VALID UNTIL',
+              pw.Text(
+                'VALID UNTIL',
                 style: pw.TextStyle(
                   fontSize: 11,
                   fontWeight: pw.FontWeight.bold,
@@ -159,8 +169,9 @@ pw.Widget _customerInfo(Quotation q) {
                 ),
               ),
               pw.SizedBox(height: 4),
-              pw.Text('${q.validUntil!.day}/${q.validUntil!.month}/${q.validUntil!.year}',
-                style: const pw.TextStyle(fontSize: 12)),
+              pw.Text(
+                  '${q.validUntil!.day}/${q.validUntil!.month}/${q.validUntil!.year}',
+                  style: const pw.TextStyle(fontSize: 12)),
             ],
           ],
         ),
@@ -201,7 +212,9 @@ pw.TableRow _tableRow(List<String> cells, {bool isHeader = false}) {
       final i = entry.key;
       return pw.Container(
         padding: const pw.EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-        alignment: i == 0 ? pw.Alignment.center : (i >= 2 ? pw.Alignment.centerRight : pw.Alignment.centerLeft),
+        alignment: i == 0
+            ? pw.Alignment.center
+            : (i >= 2 ? pw.Alignment.centerRight : pw.Alignment.centerLeft),
         child: pw.Text(
           entry.value,
           style: pw.TextStyle(
@@ -227,7 +240,9 @@ pw.Widget _totals(Quotation q) {
       children: [
         _totalRow('Subtotal', q.subtotal),
         if (q.discountAmount > 0)
-          _totalRow('Discount (${q.discountType == 'percentage' ? '${q.discount}%' : 'KES ${q.discount.toStringAsFixed(2)}'})', -q.discountAmount),
+          _totalRow(
+              'Discount (${q.discountType == 'percentage' ? '${q.discount}%' : 'KES ${q.discount.toStringAsFixed(2)}'})',
+              -q.discountAmount),
         pw.Divider(height: 16),
         _totalRow('Total', q.total, bold: true, color: PdfColors.blue800),
       ],
@@ -235,13 +250,15 @@ pw.Widget _totals(Quotation q) {
   );
 }
 
-pw.Widget _totalRow(String label, double amount, {bool bold = false, PdfColor? color}) {
+pw.Widget _totalRow(String label, double amount,
+    {bool bold = false, PdfColor? color}) {
   return pw.Padding(
     padding: const pw.EdgeInsets.symmetric(vertical: 2),
     child: pw.Row(
       mainAxisAlignment: pw.MainAxisAlignment.end,
       children: [
-        pw.Text(label,
+        pw.Text(
+          label,
           style: pw.TextStyle(
             fontSize: 12,
             fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
@@ -275,7 +292,8 @@ pw.Widget _notes(Quotation q) {
     child: pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        pw.Text('NOTES',
+        pw.Text(
+          'NOTES',
           style: pw.TextStyle(
             fontSize: 11,
             fontWeight: pw.FontWeight.bold,
@@ -284,7 +302,7 @@ pw.Widget _notes(Quotation q) {
         ),
         pw.SizedBox(height: 6),
         pw.Text(q.notes,
-          style: const pw.TextStyle(fontSize: 11, color: PdfColors.grey700)),
+            style: const pw.TextStyle(fontSize: 11, color: PdfColors.grey700)),
       ],
     ),
   );
@@ -300,7 +318,8 @@ pw.Widget _terms(Quotation q) {
     child: pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        pw.Text('TERMS & CONDITIONS',
+        pw.Text(
+          'TERMS & CONDITIONS',
           style: pw.TextStyle(
             fontSize: 11,
             fontWeight: pw.FontWeight.bold,
@@ -309,7 +328,7 @@ pw.Widget _terms(Quotation q) {
         ),
         pw.SizedBox(height: 6),
         pw.Text(q.terms,
-          style: const pw.TextStyle(fontSize: 11, color: PdfColors.grey700)),
+            style: const pw.TextStyle(fontSize: 11, color: PdfColors.grey700)),
       ],
     ),
   );
@@ -324,9 +343,9 @@ pw.Widget _footer(Quotation q) {
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
           pw.Text('Generated by HardwareOS',
-            style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey400)),
+              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey400)),
           pw.Text('Page 1 of 1',
-            style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey400)),
+              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey400)),
         ],
       ),
     ],
@@ -335,11 +354,17 @@ pw.Widget _footer(Quotation q) {
 
 PdfColor _statusColor(String status) {
   switch (status) {
-    case 'draft':    return PdfColors.orange;
-    case 'sent':     return PdfColors.blue;
-    case 'accepted': return PdfColors.green;
-    case 'rejected': return PdfColors.red;
-    case 'converted':return PdfColors.purple;
-    default:         return PdfColors.grey;
+    case 'draft':
+      return PdfColors.orange;
+    case 'sent':
+      return PdfColors.blue;
+    case 'accepted':
+      return PdfColors.green;
+    case 'rejected':
+      return PdfColors.red;
+    case 'converted':
+      return PdfColors.purple;
+    default:
+      return PdfColors.grey;
   }
 }

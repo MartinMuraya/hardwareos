@@ -26,13 +26,27 @@ class _CustomersScreenState extends State<CustomersScreen> {
   final _searchCtrl = TextEditingController();
 
   @override
-  void initState() { super.initState(); _load(); _searchCtrl.addListener(_filter); }
+  void initState() {
+    super.initState();
+    _load();
+    _searchCtrl.addListener(_filter);
+  }
 
   @override
-  void dispose() { _searchCtrl.dispose(); super.dispose(); }
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
 
   Future<void> _load({bool refresh = false}) async {
-    if (refresh) { setState(() { _loading = true; _error = null; _lastDocId = null; _hasMore = true; }); }
+    if (refresh) {
+      setState(() {
+        _loading = true;
+        _error = null;
+        _lastDocId = null;
+        _hasMore = true;
+      });
+    }
     try {
       final bizId = context.read<AuthProvider>().businessId!;
       final data = await FunctionsService.call('getCustomers', {
@@ -41,7 +55,9 @@ class _CustomersScreenState extends State<CustomersScreen> {
         if (_lastDocId != null && !refresh) 'startAfter': _lastDocId,
       });
       final rawList = (data['customers'] as List?) ?? [];
-      final items = rawList.map((e) => Customer.fromMap(Map<String, dynamic>.from(e as Map))).toList();
+      final items = rawList
+          .map((e) => Customer.fromMap(Map<String, dynamic>.from(e as Map)))
+          .toList();
       if (mounted) {
         setState(() {
           if (refresh || _lastDocId == null) {
@@ -57,7 +73,12 @@ class _CustomersScreenState extends State<CustomersScreen> {
         });
       }
     } on FunctionsException catch (e) {
-      if (mounted) setState(() { _error = e.message; _loading = false; _loadingMore = false; });
+      if (mounted)
+        setState(() {
+          _error = e.message;
+          _loading = false;
+          _loadingMore = false;
+        });
     }
   }
 
@@ -66,8 +87,11 @@ class _CustomersScreenState extends State<CustomersScreen> {
     setState(() {
       _filtered = q.isEmpty
           ? _customers
-          : _customers.where((c) =>
-              c.fullName.toLowerCase().contains(q) || c.phoneNumber.contains(q)).toList();
+          : _customers
+              .where((c) =>
+                  c.fullName.toLowerCase().contains(q) ||
+                  c.phoneNumber.contains(q))
+              .toList();
     });
   }
 
@@ -81,14 +105,18 @@ class _CustomersScreenState extends State<CustomersScreen> {
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(padding),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Customers', style: theme.textTheme.displayMedium),
-                const SizedBox(height: 4),
-                Text('Manage customer accounts and credit',
-                  style: theme.textTheme.bodyMedium),
-              ])),
+              Expanded(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                    Text('Customers', style: theme.textTheme.displayMedium),
+                    const SizedBox(height: 4),
+                    Text('Manage customer accounts and credit',
+                        style: theme.textTheme.bodyMedium),
+                  ])),
               FilledButton.icon(
                 onPressed: () async {
                   final result = await context.push('/customers/add');
@@ -105,8 +133,12 @@ class _CustomersScreenState extends State<CustomersScreen> {
                 hintText: 'Search by name or phone...',
                 prefixIcon: const Icon(Icons.search, size: 18),
                 suffixIcon: _searchCtrl.text.isNotEmpty
-                    ? IconButton(icon: const Icon(Icons.clear, size: 18),
-                        onPressed: () { _searchCtrl.clear(); _filter(); })
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, size: 18),
+                        onPressed: () {
+                          _searchCtrl.clear();
+                          _filter();
+                        })
                     : null,
               ),
             ),
@@ -117,12 +149,17 @@ class _CustomersScreenState extends State<CustomersScreen> {
                 decoration: BoxDecoration(
                   color: AppColors.error.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                  border:
+                      Border.all(color: AppColors.error.withValues(alpha: 0.3)),
                 ),
                 child: Row(children: [
-                  const Icon(Icons.error_outline, color: AppColors.error, size: 18),
+                  const Icon(Icons.error_outline,
+                      color: AppColors.error, size: 18),
                   const SizedBox(width: 10),
-                  Expanded(child: Text(_error!, style: const TextStyle(color: AppColors.error, fontSize: 13))),
+                  Expanded(
+                      child: Text(_error!,
+                          style: const TextStyle(
+                              color: AppColors.error, fontSize: 13))),
                 ]),
               ),
             Expanded(
@@ -132,7 +169,8 @@ class _CustomersScreenState extends State<CustomersScreen> {
                       ? EmptyState(
                           icon: Icons.people_outline_rounded,
                           title: 'No customers yet',
-                          subtitle: 'Add your first customer to start tracking credit sales.',
+                          subtitle:
+                              'Add your first customer to start tracking credit sales.',
                           actionLabel: 'Add Customer',
                           onAction: () async {
                             final result = await context.push('/customers/add');
@@ -151,7 +189,8 @@ class _CustomersScreenState extends State<CustomersScreen> {
                                 }
                                 return const Padding(
                                   padding: EdgeInsets.symmetric(vertical: 20),
-                                  child: Center(child: CircularProgressIndicator()),
+                                  child: Center(
+                                      child: CircularProgressIndicator()),
                                 );
                               }
                               final c = _filtered[i];

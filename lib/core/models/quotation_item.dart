@@ -14,18 +14,18 @@ class QuotationItem {
   });
 
   factory QuotationItem.fromMap(Map<String, dynamic> map) => QuotationItem(
-    productId: (map['productId'] as String?) ?? '',
-    name: map['name'] as String,
-    quantity: ((map['quantity'] as num?) ?? 0).toInt(),
-    unitPrice: ((map['unitPrice'] as num?) ?? 0).toDouble(),
-    total: ((map['total'] as num?) ?? 0).toDouble(),
-  );
+        productId: (map['productId'] as String?) ?? '',
+        name: map['name'] as String,
+        quantity: ((map['quantity'] as num?) ?? 0).toInt(),
+        unitPrice: ((map['unitPrice'] as num?) ?? 0).toDouble(),
+        total: ((map['total'] as num?) ?? 0).toDouble(),
+      );
 
   Map<String, dynamic> toMap() => {
-    'productId': productId,
-    'name': name,
-    'quantity': quantity,
-    'unitPrice': unitPrice,
-    'total': total,
-  };
+        'productId': productId,
+        'name': name,
+        'quantity': quantity,
+        'unitPrice': unitPrice,
+        'total': total,
+      };
 }

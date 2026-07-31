@@ -77,26 +77,34 @@ class AppRouter {
       refreshListenable: authProvider,
       redirect: (context, state) {
         final isAuthenticated = authProvider.isAuthenticated;
-        final isRegistered    = authProvider.isRegistered;
-        final isAuthRoute     = state.matchedLocation == RoutePaths.login ||
-                                state.matchedLocation == RoutePaths.register ||
-                                state.matchedLocation == RoutePaths.forgotPassword;
-        final isSubscriptionRoute = state.matchedLocation == RoutePaths.subscription;
-        final isStorefrontRoute = state.matchedLocation == RoutePaths.storefront || state.matchedLocation.startsWith('${RoutePaths.storefront}/');
+        final isRegistered = authProvider.isRegistered;
+        final isAuthRoute = state.matchedLocation == RoutePaths.login ||
+            state.matchedLocation == RoutePaths.register ||
+            state.matchedLocation == RoutePaths.forgotPassword;
+        final isSubscriptionRoute =
+            state.matchedLocation == RoutePaths.subscription;
+        final isStorefrontRoute =
+            state.matchedLocation == RoutePaths.storefront ||
+                state.matchedLocation.startsWith('${RoutePaths.storefront}/');
 
         // If the provider previously failed to load the profile, redirect to a dedicated auth-error screen
         // This is defensive: even if auth state is inconsistent, surface the error to the user and block normal navigation.
-        if (authProvider.profileLoadError != null && !isAuthRoute && state.matchedLocation != RoutePaths.authError) {
+        if (authProvider.profileLoadError != null &&
+            !isAuthRoute &&
+            state.matchedLocation != RoutePaths.authError) {
           return RoutePaths.authError;
         }
 
-        if (!isAuthenticated && !isAuthRoute && !isStorefrontRoute) return RoutePaths.login;
+        if (!isAuthenticated && !isAuthRoute && !isStorefrontRoute)
+          return RoutePaths.login;
 
         if (isAuthenticated) {
-          if (!authProvider.isEmailVerified && state.matchedLocation != RoutePaths.verifyEmail) {
+          if (!authProvider.isEmailVerified &&
+              state.matchedLocation != RoutePaths.verifyEmail) {
             return RoutePaths.verifyEmail;
           }
-          if (authProvider.isEmailVerified && state.matchedLocation == RoutePaths.verifyEmail) {
+          if (authProvider.isEmailVerified &&
+              state.matchedLocation == RoutePaths.verifyEmail) {
             return isRegistered ? null : '/register';
           }
 
@@ -113,49 +121,54 @@ class AppRouter {
             return null;
           }
 
-          if (!isRegistered && state.matchedLocation != RoutePaths.register && state.matchedLocation != RoutePaths.verifyEmail) {
+          if (!isRegistered &&
+              state.matchedLocation != RoutePaths.register &&
+              state.matchedLocation != RoutePaths.verifyEmail) {
             return '/register';
           }
           if (isRegistered) {
-            if (authProvider.businessStatus == 'pending' && state.matchedLocation != RoutePaths.pendingApproval) {
+            if (authProvider.businessStatus == 'pending' &&
+                state.matchedLocation != RoutePaths.pendingApproval) {
               return RoutePaths.pendingApproval;
             }
             if (authProvider.businessStatus != 'pending' && isAuthRoute) {
               return RoutePaths.dashboard;
             }
-            if (authProvider.businessStatus != 'pending' && state.matchedLocation == RoutePaths.pendingApproval) {
+            if (authProvider.businessStatus != 'pending' &&
+                state.matchedLocation == RoutePaths.pendingApproval) {
               return RoutePaths.dashboard;
             }
 
             final isExpired = authProvider.subscriptionStatus == 'expired';
-            final isProtectedRoute = state.matchedLocation.startsWith('/dashboard') ||
-                                     state.matchedLocation.startsWith('/inventory') ||
-                                     state.matchedLocation.startsWith('/sales') ||
-                                     state.matchedLocation.startsWith('/expenses') ||
-                                     state.matchedLocation.startsWith('/reports') ||
-                                     state.matchedLocation.startsWith('/team') ||
-                                     state.matchedLocation.startsWith('/profile') ||
-                                     state.matchedLocation.startsWith('/customers') ||
-                                     state.matchedLocation.startsWith('/credit-ledger') ||
-                                     state.matchedLocation.startsWith('/quotations') ||
-                                     state.matchedLocation.startsWith('/suppliers') ||
-                                     state.matchedLocation.startsWith('/purchase-orders') ||
-                                     state.matchedLocation.startsWith('/stock-adjustments') ||
-                                     state.matchedLocation.startsWith('/audit-logs') ||
-                                     state.matchedLocation.startsWith('/returns') ||
-                                     state.matchedLocation.startsWith('/cash-drawer') ||
-                                     state.matchedLocation.startsWith('/branches') ||
-                                     state.matchedLocation.startsWith('/storefront-settings') ||
-                                     state.matchedLocation.startsWith('/printer-settings') ||
-                                     state.matchedLocation.startsWith('/stock-transfers') ||
-                                     state.matchedLocation.startsWith('/accounting') ||
-                                     state.matchedLocation.startsWith('/hr') ||
-                                     state.matchedLocation.startsWith('/advanced-analytics') ||
-                                     state.matchedLocation.startsWith('/supplier-debt') ||
-                                     state.matchedLocation.startsWith('/ai-assistant') ||
-                                     state.matchedLocation.startsWith('/support') ||
-                                     state.matchedLocation.startsWith('/notifications') ||
-                                     state.matchedLocation.startsWith('/label-settings');
+            final isProtectedRoute =
+                state.matchedLocation.startsWith('/dashboard') ||
+                    state.matchedLocation.startsWith('/inventory') ||
+                    state.matchedLocation.startsWith('/sales') ||
+                    state.matchedLocation.startsWith('/expenses') ||
+                    state.matchedLocation.startsWith('/reports') ||
+                    state.matchedLocation.startsWith('/team') ||
+                    state.matchedLocation.startsWith('/profile') ||
+                    state.matchedLocation.startsWith('/customers') ||
+                    state.matchedLocation.startsWith('/credit-ledger') ||
+                    state.matchedLocation.startsWith('/quotations') ||
+                    state.matchedLocation.startsWith('/suppliers') ||
+                    state.matchedLocation.startsWith('/purchase-orders') ||
+                    state.matchedLocation.startsWith('/stock-adjustments') ||
+                    state.matchedLocation.startsWith('/audit-logs') ||
+                    state.matchedLocation.startsWith('/returns') ||
+                    state.matchedLocation.startsWith('/cash-drawer') ||
+                    state.matchedLocation.startsWith('/branches') ||
+                    state.matchedLocation.startsWith('/storefront-settings') ||
+                    state.matchedLocation.startsWith('/printer-settings') ||
+                    state.matchedLocation.startsWith('/stock-transfers') ||
+                    state.matchedLocation.startsWith('/accounting') ||
+                    state.matchedLocation.startsWith('/hr') ||
+                    state.matchedLocation.startsWith('/advanced-analytics') ||
+                    state.matchedLocation.startsWith('/supplier-debt') ||
+                    state.matchedLocation.startsWith('/ai-assistant') ||
+                    state.matchedLocation.startsWith('/support') ||
+                    state.matchedLocation.startsWith('/notifications') ||
+                    state.matchedLocation.startsWith('/label-settings');
 
             if (isExpired && isProtectedRoute && !isSubscriptionRoute) {
               return '/subscription';
@@ -168,25 +181,26 @@ class AppRouter {
 
             // Restrict cashiers (staff) from sensitive routes
             if (!isManager) {
-              final isStaffRoute = state.matchedLocation.startsWith('/dashboard') ||
-                                   state.matchedLocation.startsWith('/sales') ||
-                                   state.matchedLocation.startsWith('/customers') ||
-                                   state.matchedLocation.startsWith('/credit-ledger') ||
-                                   state.matchedLocation.startsWith('/quotations') ||
-                                   state.matchedLocation.startsWith('/returns') ||
-                                   state.matchedLocation.startsWith('/notifications') ||
-                                   state.matchedLocation.startsWith('/profile') ||
-                                   state.matchedLocation.startsWith('/support');
+              final isStaffRoute =
+                  state.matchedLocation.startsWith('/dashboard') ||
+                      state.matchedLocation.startsWith('/sales') ||
+                      state.matchedLocation.startsWith('/customers') ||
+                      state.matchedLocation.startsWith('/credit-ledger') ||
+                      state.matchedLocation.startsWith('/quotations') ||
+                      state.matchedLocation.startsWith('/returns') ||
+                      state.matchedLocation.startsWith('/notifications') ||
+                      state.matchedLocation.startsWith('/profile') ||
+                      state.matchedLocation.startsWith('/support');
               if (!isStaffRoute && isProtectedRoute) return '/dashboard';
             }
 
             // Restrict managers from owner routes (Team, Subscription, Branches, Accounting, HR)
             if (!isOwner) {
               final isOwnerRoute = state.matchedLocation.startsWith('/team') ||
-                                   state.matchedLocation.startsWith('/subscription') ||
-                                   state.matchedLocation.startsWith('/branches') ||
-                                   state.matchedLocation.startsWith('/accounting') ||
-                                   state.matchedLocation.startsWith('/hr');
+                  state.matchedLocation.startsWith('/subscription') ||
+                  state.matchedLocation.startsWith('/branches') ||
+                  state.matchedLocation.startsWith('/accounting') ||
+                  state.matchedLocation.startsWith('/hr');
               if (isOwnerRoute && isProtectedRoute) return '/dashboard';
             }
           }
@@ -203,56 +217,75 @@ class AppRouter {
         ),
 
         // Auth
-        GoRoute(path: RoutePaths.login,    builder: (_, __) => const LoginScreen()),
+        GoRoute(
+            path: RoutePaths.login, builder: (_, __) => const LoginScreen()),
         GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
-        GoRoute(path: RoutePaths.verifyEmail, builder: (_, __) => const EmailVerificationScreen()),
-        GoRoute(path: RoutePaths.forgotPassword, builder: (_, __) => const ForgotPasswordScreen()),
-        GoRoute(path: RoutePaths.pendingApproval, builder: (_, __) => const PendingApprovalScreen()),
-        GoRoute(path: RoutePaths.authError, builder: (_, __) => const AuthErrorScreen()),
-        
+        GoRoute(
+            path: RoutePaths.verifyEmail,
+            builder: (_, __) => const EmailVerificationScreen()),
+        GoRoute(
+            path: RoutePaths.forgotPassword,
+            builder: (_, __) => const ForgotPasswordScreen()),
+        GoRoute(
+            path: RoutePaths.pendingApproval,
+            builder: (_, __) => const PendingApprovalScreen()),
+        GoRoute(
+            path: RoutePaths.authError,
+            builder: (_, __) => const AuthErrorScreen()),
+
         // Super Admin Shell
         ShellRoute(
           builder: (context, state, child) => AdminScaffold(child: child),
           routes: [
             GoRoute(
               path: '/admin/dashboard',
-              pageBuilder: (context, state) => const NoTransitionPage(child: AdminDashboardScreen()),
+              pageBuilder: (context, state) =>
+                  const NoTransitionPage(child: AdminDashboardScreen()),
             ),
             GoRoute(
               path: '/admin/businesses',
-              pageBuilder: (context, state) => const NoTransitionPage(child: AdminBusinessesScreen()),
+              pageBuilder: (context, state) =>
+                  const NoTransitionPage(child: AdminBusinessesScreen()),
             ),
             GoRoute(
               path: '/admin/subscriptions',
-              pageBuilder: (context, state) => const NoTransitionPage(child: AdminSubscriptionsScreen()),
+              pageBuilder: (context, state) =>
+                  const NoTransitionPage(child: AdminSubscriptionsScreen()),
             ),
             GoRoute(
               path: '/admin/analytics',
-              pageBuilder: (context, state) => const NoTransitionPage(child: AdminAnalyticsScreen()),
+              pageBuilder: (context, state) =>
+                  const NoTransitionPage(child: AdminAnalyticsScreen()),
             ),
             GoRoute(
               path: '/admin/plans',
-              pageBuilder: (context, state) => const NoTransitionPage(child: AdminPlanConfigsScreen()),
+              pageBuilder: (context, state) =>
+                  const NoTransitionPage(child: AdminPlanConfigsScreen()),
             ),
             GoRoute(
               path: '/admin/users',
-              pageBuilder: (context, state) => const NoTransitionPage(child: AdminUsersScreen()),
+              pageBuilder: (context, state) =>
+                  const NoTransitionPage(child: AdminUsersScreen()),
             ),
             GoRoute(
               path: '/admin/settings',
-              pageBuilder: (context, state) => const NoTransitionPage(child: AdminSettingsScreen()),
+              pageBuilder: (context, state) =>
+                  const NoTransitionPage(child: AdminSettingsScreen()),
             ),
             GoRoute(
               path: '/admin/security',
-              pageBuilder: (context, state) => const NoTransitionPage(child: AdminSecurityScreen()),
+              pageBuilder: (context, state) =>
+                  const NoTransitionPage(child: AdminSecurityScreen()),
             ),
             GoRoute(
               path: RoutePaths.adminSystemLogs,
-              pageBuilder: (context, state) => const NoTransitionPage(child: AdminSystemLogsScreen()),
+              pageBuilder: (context, state) =>
+                  const NoTransitionPage(child: AdminSystemLogsScreen()),
             ),
             GoRoute(
               path: '/admin/support',
-              pageBuilder: (context, state) => const NoTransitionPage(child: AdminSupportScreen()),
+              pageBuilder: (context, state) =>
+                  const NoTransitionPage(child: AdminSupportScreen()),
             ),
           ],
         ),
@@ -337,19 +370,23 @@ class AppRouter {
             ),
             GoRoute(
               path: '/reports',
-              pageBuilder: (context, state) => const NoTransitionPage(child: ReportsScreen()),
+              pageBuilder: (context, state) =>
+                  const NoTransitionPage(child: ReportsScreen()),
             ),
             GoRoute(
               path: '/advanced-analytics',
-              pageBuilder: (context, state) => const NoTransitionPage(child: AdvancedAnalyticsScreen()),
+              pageBuilder: (context, state) =>
+                  const NoTransitionPage(child: AdvancedAnalyticsScreen()),
             ),
             GoRoute(
               path: '/team',
-              pageBuilder: (context, state) => const NoTransitionPage(child: TeamScreen()),
+              pageBuilder: (context, state) =>
+                  const NoTransitionPage(child: TeamScreen()),
             ),
             GoRoute(
               path: '/subscription',
-              pageBuilder: (context, state) => const NoTransitionPage(child: SubscriptionScreen()),
+              pageBuilder: (context, state) =>
+                  const NoTransitionPage(child: SubscriptionScreen()),
             ),
             GoRoute(
               path: '/customers',
@@ -461,19 +498,23 @@ class AppRouter {
             ),
             GoRoute(
               path: '/notifications',
-              pageBuilder: (context, state) => const NoTransitionPage(child: NotificationsScreen()),
+              pageBuilder: (context, state) =>
+                  const NoTransitionPage(child: NotificationsScreen()),
             ),
             GoRoute(
               path: '/profile',
-              pageBuilder: (context, state) => const NoTransitionPage(child: ProfileScreen()),
+              pageBuilder: (context, state) =>
+                  const NoTransitionPage(child: ProfileScreen()),
             ),
             GoRoute(
               path: '/ai-assistant',
-              pageBuilder: (context, state) => const NoTransitionPage(child: AIAssistantScreen()),
+              pageBuilder: (context, state) =>
+                  const NoTransitionPage(child: AIAssistantScreen()),
             ),
             GoRoute(
               path: '/support',
-              pageBuilder: (context, state) => const NoTransitionPage(child: SupportScreen()),
+              pageBuilder: (context, state) =>
+                  const NoTransitionPage(child: SupportScreen()),
             ),
           ],
         ),

@@ -25,14 +25,21 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
 
   @override
   void dispose() {
-    _nameCtrl.dispose(); _phoneCtrl.dispose(); _emailCtrl.dispose();
-    _addressCtrl.dispose(); _contactCtrl.dispose(); _termsCtrl.dispose();
+    _nameCtrl.dispose();
+    _phoneCtrl.dispose();
+    _emailCtrl.dispose();
+    _addressCtrl.dispose();
+    _contactCtrl.dispose();
+    _termsCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() { _submitting = true; _error = null; });
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
     try {
       final bizId = context.read<AuthProvider>().businessId!;
       await FunctionsService.call('createSupplier', {
@@ -51,7 +58,11 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
         context.pop(true);
       }
     } on FunctionsException catch (e) {
-      if (mounted) setState(() { _error = e.message; _submitting = false; });
+      if (mounted)
+        setState(() {
+          _error = e.message;
+          _submitting = false;
+        });
     }
   }
 
@@ -67,7 +78,9 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
         appBar: AppBar(
           title: const Text('Add Supplier'),
           actions: [
-            TextButton(onPressed: _submitting ? null : _submit, child: const Text('Save')),
+            TextButton(
+                onPressed: _submitting ? null : _submit,
+                child: const Text('Save')),
           ],
         ),
         body: SingleChildScrollView(
@@ -77,70 +90,93 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
               constraints: const BoxConstraints(maxWidth: 560),
               child: Form(
                 key: _formKey,
-                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  if (_error != null)
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: AppColors.error.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (_error != null)
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: AppColors.error.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                                color: AppColors.error.withValues(alpha: 0.3)),
+                          ),
+                          child: Row(children: [
+                            const Icon(Icons.error_outline,
+                                color: AppColors.error, size: 18),
+                            const SizedBox(width: 10),
+                            Expanded(
+                                child: Text(_error!,
+                                    style: const TextStyle(
+                                        color: AppColors.error, fontSize: 13))),
+                          ]),
+                        ),
+                      _Section(
+                          label: 'Business Info',
+                          child: Column(children: [
+                            TextFormField(
+                              controller: _nameCtrl,
+                              decoration: const InputDecoration(
+                                  labelText: 'Supplier Name *'),
+                              validator: (v) => v == null || v.trim().isEmpty
+                                  ? 'Required'
+                                  : null,
+                            ),
+                            const SizedBox(height: 14),
+                            TextFormField(
+                              controller: _phoneCtrl,
+                              decoration: const InputDecoration(
+                                  labelText: 'Phone Number *'),
+                              keyboardType: TextInputType.phone,
+                              validator: (v) => v == null || v.trim().isEmpty
+                                  ? 'Required'
+                                  : null,
+                            ),
+                            const SizedBox(height: 14),
+                            TextFormField(
+                              controller: _emailCtrl,
+                              decoration: const InputDecoration(
+                                  labelText: 'Email (optional)'),
+                              keyboardType: TextInputType.emailAddress,
+                            ),
+                            const SizedBox(height: 14),
+                            TextFormField(
+                              controller: _addressCtrl,
+                              decoration: const InputDecoration(
+                                  labelText: 'Address (optional)'),
+                              maxLines: 2,
+                            ),
+                          ])),
+                      const SizedBox(height: 20),
+                      _Section(
+                          label: 'Contact & Terms',
+                          child: Column(children: [
+                            TextFormField(
+                              controller: _contactCtrl,
+                              decoration: const InputDecoration(
+                                  labelText: 'Contact Person (optional)'),
+                            ),
+                            const SizedBox(height: 14),
+                            TextFormField(
+                              controller: _termsCtrl,
+                              decoration: const InputDecoration(
+                                labelText: 'Payment Terms',
+                                hintText: 'e.g. 30 days',
+                              ),
+                            ),
+                          ])),
+                      const SizedBox(height: 32),
+                      FilledButton(
+                        onPressed: _submitting ? null : _submit,
+                        style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16)),
+                        child: const Text('Create Supplier',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w700, fontSize: 15)),
                       ),
-                      child: Row(children: [
-                        const Icon(Icons.error_outline, color: AppColors.error, size: 18),
-                        const SizedBox(width: 10),
-                        Expanded(child: Text(_error!, style: const TextStyle(color: AppColors.error, fontSize: 13))),
-                      ]),
-                    ),
-                  _Section(label: 'Business Info', child: Column(children: [
-                    TextFormField(
-                      controller: _nameCtrl,
-                      decoration: const InputDecoration(labelText: 'Supplier Name *'),
-                      validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
-                    ),
-                    const SizedBox(height: 14),
-                    TextFormField(
-                      controller: _phoneCtrl,
-                      decoration: const InputDecoration(labelText: 'Phone Number *'),
-                      keyboardType: TextInputType.phone,
-                      validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
-                    ),
-                    const SizedBox(height: 14),
-                    TextFormField(
-                      controller: _emailCtrl,
-                      decoration: const InputDecoration(labelText: 'Email (optional)'),
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-                    const SizedBox(height: 14),
-                    TextFormField(
-                      controller: _addressCtrl,
-                      decoration: const InputDecoration(labelText: 'Address (optional)'),
-                      maxLines: 2,
-                    ),
-                  ])),
-                  const SizedBox(height: 20),
-                  _Section(label: 'Contact & Terms', child: Column(children: [
-                    TextFormField(
-                      controller: _contactCtrl,
-                      decoration: const InputDecoration(labelText: 'Contact Person (optional)'),
-                    ),
-                    const SizedBox(height: 14),
-                    TextFormField(
-                      controller: _termsCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Payment Terms',
-                        hintText: 'e.g. 30 days',
-                      ),
-                    ),
-                  ])),
-                  const SizedBox(height: 32),
-                  FilledButton(
-                    onPressed: _submitting ? null : _submit,
-                    style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-                    child: const Text('Create Supplier', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-                  ),
-                ]),
+                    ]),
               ),
             ),
           ),
@@ -159,7 +195,11 @@ class _Section extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label, style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13, fontWeight: FontWeight.w600)),
+      Text(label,
+          style: TextStyle(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontSize: 13,
+              fontWeight: FontWeight.w600)),
       const SizedBox(height: 10),
       Container(
         padding: const EdgeInsets.all(16),

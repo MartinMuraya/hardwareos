@@ -20,25 +20,28 @@ class AuthProvider extends ChangeNotifier {
   String? _businessStatus;
   Map<String, dynamic>? _userProfile;
   String? _errorMessage;
-  String? _profileLoadError; // tracks network/internal errors during profile fetch
+  String?
+      _profileLoadError; // tracks network/internal errors during profile fetch
 
-  User?                  get user          => _user;
-  AuthState              get state         => _state;
-  bool                   get isAuthenticated => _state == AuthState.authenticated;
-  bool                   get isEmailVerified => _user?.emailVerified ?? false;
-  bool                   get isRegistered  => _isRegistered;
-  bool                   get isSuperAdmin  => _isSuperAdmin;
-  String?                get businessStatus => _businessStatus;
-  bool                   get isLoading     => _state == AuthState.loading;
-  Map<String, dynamic>?  get userProfile   => _userProfile;
-  String?                get errorMessage  => _errorMessage;
-  String?                get profileLoadError => _profileLoadError;
-  String?                get businessId    => _userProfile?['businessId'] as String?;
-  String?                get userRole      => _userProfile?['role'] as String?;
-  String?                get subscriptionStatus => _userProfile?['subscriptionStatus'] as String?;
-  String?                get photoUrl      => _user?.photoURL ?? _userProfile?['photoUrl'] as String?;
-  
-  DateTime?              get subscriptionEndsAt {
+  User? get user => _user;
+  AuthState get state => _state;
+  bool get isAuthenticated => _state == AuthState.authenticated;
+  bool get isEmailVerified => _user?.emailVerified ?? false;
+  bool get isRegistered => _isRegistered;
+  bool get isSuperAdmin => _isSuperAdmin;
+  String? get businessStatus => _businessStatus;
+  bool get isLoading => _state == AuthState.loading;
+  Map<String, dynamic>? get userProfile => _userProfile;
+  String? get errorMessage => _errorMessage;
+  String? get profileLoadError => _profileLoadError;
+  String? get businessId => _userProfile?['businessId'] as String?;
+  String? get userRole => _userProfile?['role'] as String?;
+  String? get subscriptionStatus =>
+      _userProfile?['subscriptionStatus'] as String?;
+  String? get photoUrl =>
+      _user?.photoURL ?? _userProfile?['photoUrl'] as String?;
+
+  DateTime? get subscriptionEndsAt {
     final val = _userProfile?['subscriptionEndsAt'];
     if (val == null) return null;
     if (val is String) return DateTime.tryParse(val);
@@ -64,10 +67,12 @@ class AuthProvider extends ChangeNotifier {
     // create the provider without requiring Firebase.initializeApp().
     _auth = firebaseAuth ?? (attachAuthState ? FirebaseAuth.instance : null);
     // If a profileFetcher is provided by tests, we don't need real FirebaseFunctions
-    _functions = functions ?? (profileFetcher == null ? FirebaseFunctions.instance : null);
+    _functions = functions ??
+        (profileFetcher == null ? FirebaseFunctions.instance : null);
     _repo = repo ?? (attachAuthState ? AuthRepository() : null);
     if (attachAuthState && _auth != null) {
-      _authStateSubscription = _auth!.authStateChanges().listen(_onAuthStateChanged);
+      _authStateSubscription =
+          _auth!.authStateChanges().listen(_onAuthStateChanged);
     }
   }
 
@@ -88,7 +93,7 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       // Ensure we have the latest emailVerified status
       await user.reload();
-      _user = _auth?.currentUser; 
+      _user = _auth?.currentUser;
       await _loadUserProfile();
     }
     notifyListeners();
@@ -102,19 +107,19 @@ class AuthProvider extends ChangeNotifier {
         // Test injection path
         data = await _profileFetcher!();
       } else {
-       final fn = _functions!.httpsCallable('getMyProfile');
+        final fn = _functions!.httpsCallable('getMyProfile');
         final result = await fn.call();
         data = Map<String, dynamic>.from(result.data as Map);
       }
 
       _isRegistered = data['registered'] == true;
       _isSuperAdmin = data['isSuperAdmin'] == true;
-    
+
       if (_isRegistered) {
         _userProfile = Map<String, dynamic>.from(data['user'] as Map);
         final biz = Map<String, dynamic>.from(data['business'] as Map);
         _businessStatus = biz['status'] as String?;
-      
+
         // Ensure subscription info is available in the profile for the router/getters
         _userProfile!['subscriptionStatus'] = biz['subscriptionStatus'];
         _userProfile!['subscriptionEndsAt'] = biz['subscriptionEndsAt'];
@@ -133,7 +138,8 @@ class AuthProvider extends ChangeNotifier {
       _isSuperAdmin = false;
       _businessStatus = null;
       _state = AuthState.unauthenticated;
-      _profileLoadError = e.message ?? 'An error occurred connecting to the server.';
+      _profileLoadError =
+          e.message ?? 'An error occurred connecting to the server.';
       _errorMessage = 'Failed to load profile. Please sign in again.';
     } catch (e) {
       // Generic fallback - mark unauthenticated and surface message
@@ -176,10 +182,14 @@ class AuthProvider extends ChangeNotifier {
         return false;
       }
       await _repo!.signInWithEmail(email, password);
-      try { await fn('reportSuccessfulLogin').call({'email': email}); } catch (_) {}
+      try {
+        await fn('reportSuccessfulLogin').call({'email': email});
+      } catch (_) {}
       return true;
     } on FirebaseAuthException catch (e) {
-      try { await fn('reportFailedLogin').call({'email': email}); } catch (_) {}
+      try {
+        await fn('reportFailedLogin').call({'email': email});
+      } catch (_) {}
       _errorMessage = _mapAuthError(e.code);
       _state = AuthState.unauthenticated;
       notifyListeners();
@@ -199,7 +209,8 @@ class AuthProvider extends ChangeNotifier {
         return false;
       }
       final cred = await _repo!.registerWithEmail(email, password);
-      await cred.user?.sendEmailVerification(); // Automatically send verification email
+      await cred.user
+          ?.sendEmailVerification(); // Automatically send verification email
       return true;
     } on FirebaseAuthException catch (e) {
       _errorMessage = _mapAuthError(e.code);
@@ -242,7 +253,8 @@ class AuthProvider extends ChangeNotifier {
 
   Future<bool> sendPasswordResetEmail(String email) async {
     try {
-      final fn = FirebaseFunctions.instance.httpsCallable('requestPasswordReset');
+      final fn =
+          FirebaseFunctions.instance.httpsCallable('requestPasswordReset');
       await fn.call({'email': email});
     } catch (_) {}
     // Always return the same generic message to prevent account enumeration
@@ -259,7 +271,8 @@ class AuthProvider extends ChangeNotifier {
       await _repo!.sendEmailVerification();
       return true;
     } catch (e) {
-      _errorMessage = 'Failed to send verification email. Please try again later.';
+      _errorMessage =
+          'Failed to send verification email. Please try again later.';
       notifyListeners();
       return false;
     }
@@ -275,8 +288,9 @@ class AuthProvider extends ChangeNotifier {
     if (_user == null) return false;
     _state = AuthState.loading;
     notifyListeners();
-    
-    final url = _repo == null ? null : await _repo!.uploadProfilePicture(_user!.uid);
+
+    final url =
+        _repo == null ? null : await _repo!.uploadProfilePicture(_user!.uid);
     if (url != null) {
       await reloadUser();
       _state = AuthState.authenticated;
@@ -332,13 +346,20 @@ class AuthProvider extends ChangeNotifier {
     switch (code) {
       case 'user-not-found':
       case 'wrong-password':
-      case 'invalid-credential':  return 'Invalid email or password.';
-      case 'email-already-in-use':return 'An account with this email already exists.';
-      case 'weak-password':       return 'Password must be at least 8 characters with a mix of letters and numbers.';
-      case 'invalid-email':       return 'Please enter a valid email address.';
-      case 'too-many-requests':   return 'Too many attempts. Please try again later.';
-      case 'network-request-failed': return 'Network error. Check your connection.';
-      default:                    return 'Authentication failed. Please try again. (Code: $code)';
+      case 'invalid-credential':
+        return 'Invalid email or password.';
+      case 'email-already-in-use':
+        return 'An account with this email already exists.';
+      case 'weak-password':
+        return 'Password must be at least 8 characters with a mix of letters and numbers.';
+      case 'invalid-email':
+        return 'Please enter a valid email address.';
+      case 'too-many-requests':
+        return 'Too many attempts. Please try again later.';
+      case 'network-request-failed':
+        return 'Network error. Check your connection.';
+      default:
+        return 'Authentication failed. Please try again. (Code: $code)';
     }
   }
 }

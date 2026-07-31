@@ -16,7 +16,8 @@ class UomConfig {
       baseUnit: map['baseUnit'] as String? ?? 'Piece',
       purchaseUnit: map['purchaseUnit'] as String? ?? 'Piece',
       sellingUnit: map['sellingUnit'] as String? ?? 'Piece',
-      conversionMultiplier: (map['conversionMultiplier'] as num?)?.toDouble() ?? 1.0,
+      conversionMultiplier:
+          (map['conversionMultiplier'] as num?)?.toDouble() ?? 1.0,
     );
   }
 
@@ -87,20 +88,24 @@ class Product {
 
   factory Product.fromMap(Map<String, dynamic> map) {
     final rawImages = (map['imageUrls'] as List?) ?? (map['images'] as List?);
-    final List<String> images = rawImages?.map((e) => e.toString()).toList() ?? <String>[];
-    final String? primary = map['imageUrl'] as String? ?? (images.isNotEmpty ? images.first : null);
+    final List<String> images =
+        rawImages?.map((e) => e.toString()).toList() ?? <String>[];
+    final String? primary =
+        map['imageUrl'] as String? ?? (images.isNotEmpty ? images.first : null);
 
     return Product(
-      id:           map['id'] as String,
-      businessId:   map['businessId'] as String,
-      name:         map['name'] as String,
-      sku:          map['sku'] as String? ?? '',
-      category:     map['category'] as String? ?? 'General',
-      quantity:     ((map['quantity'] ?? 0) as num).toDouble(),
-      costPrice:    ((map['costPrice'] ?? map['buyingPrice'] ?? 0) as num).toDouble(),
+      id: map['id'] as String,
+      businessId: map['businessId'] as String,
+      name: map['name'] as String,
+      sku: map['sku'] as String? ?? '',
+      category: map['category'] as String? ?? 'General',
+      quantity: ((map['quantity'] ?? 0) as num).toDouble(),
+      costPrice:
+          ((map['costPrice'] ?? map['buyingPrice'] ?? 0) as num).toDouble(),
       sellingPrice: ((map['sellingPrice'] ?? 0) as num).toDouble(),
       reorderLevel: ((map['reorderLevel'] ?? 0) as num).toDouble(),
-      barcodes:     (map['barcodes'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      barcodes:
+          (map['barcodes'] as List?)?.map((e) => e.toString()).toList() ?? [],
       isBulkParent: map['isBulkParent'] == true,
       isBulkChild: map['isBulkChild'] == true,
       isWeighed: map['isWeighed'] == true,
@@ -113,18 +118,22 @@ class Product {
       isPublishedOnline: map['isPublishedOnline'] == true,
       imageUrl: primary,
       imageUrls: images,
-      uomConfig: map['uomConfig'] != null ? UomConfig.fromMap(Map<String, dynamic>.from(map['uomConfig'])) : null,
-      createdAt:    DateTime.tryParse(map['createdAt']?.toString() ?? '') ?? DateTime.now(),
-      updatedAt:    DateTime.tryParse(map['updatedAt']?.toString() ?? '') ?? DateTime.now(),
+      uomConfig: map['uomConfig'] != null
+          ? UomConfig.fromMap(Map<String, dynamic>.from(map['uomConfig']))
+          : null,
+      createdAt: DateTime.tryParse(map['createdAt']?.toString() ?? '') ??
+          DateTime.now(),
+      updatedAt: DateTime.tryParse(map['updatedAt']?.toString() ?? '') ??
+          DateTime.now(),
     );
   }
 
   double get margin =>
       sellingPrice > 0 ? ((sellingPrice - costPrice) / sellingPrice) * 100 : 0;
 
-  bool get isLowStock    => quantity <= reorderLevel && quantity > 0;
-  bool get isOutOfStock  => quantity <= 0;
-  bool get isCritical    => quantity <= (reorderLevel * 0.5).ceil();
+  bool get isLowStock => quantity <= reorderLevel && quantity > 0;
+  bool get isOutOfStock => quantity <= 0;
+  bool get isCritical => quantity <= (reorderLevel * 0.5).ceil();
 
   String get bulkLabel {
     if (isBulkParent) return 'Bulk Parent';
@@ -141,16 +150,27 @@ class Product {
     List<String>? imageUrls,
   }) {
     return Product(
-      id: id, businessId: businessId, name: name, sku: sku,
-      category: category, costPrice: costPrice, sellingPrice: sellingPrice ?? this.sellingPrice,
-      reorderLevel: reorderLevel, createdAt: createdAt, updatedAt: updatedAt,
+      id: id,
+      businessId: businessId,
+      name: name,
+      sku: sku,
+      category: category,
+      costPrice: costPrice,
+      sellingPrice: sellingPrice ?? this.sellingPrice,
+      reorderLevel: reorderLevel,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
       quantity: quantity ?? this.quantity,
       barcodes: barcodes ?? this.barcodes,
-      isBulkParent: isBulkParent, isBulkChild: isBulkChild,
+      isBulkParent: isBulkParent,
+      isBulkChild: isBulkChild,
       isWeighed: isWeighed,
-      parentProductId: parentProductId, conversionRatio: conversionRatio,
-      baseUnit: baseUnit, sellingUnit: sellingUnit,
-      trackBatches: trackBatches, trackSerials: trackSerials,
+      parentProductId: parentProductId,
+      conversionRatio: conversionRatio,
+      baseUnit: baseUnit,
+      sellingUnit: sellingUnit,
+      trackBatches: trackBatches,
+      trackSerials: trackSerials,
       isPublishedOnline: isPublishedOnline ?? this.isPublishedOnline,
       imageUrl: imageUrl ?? this.imageUrl,
       imageUrls: imageUrls ?? this.imageUrls,

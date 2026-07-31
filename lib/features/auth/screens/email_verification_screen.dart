@@ -8,7 +8,8 @@ class EmailVerificationScreen extends StatefulWidget {
   const EmailVerificationScreen({super.key});
 
   @override
-  State<EmailVerificationScreen> createState() => _EmailVerificationScreenState();
+  State<EmailVerificationScreen> createState() =>
+      _EmailVerificationScreenState();
 }
 
 class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
@@ -19,14 +20,14 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     setState(() => _isSending = true);
     final auth = context.read<AuthProvider>();
     final success = await auth.sendEmailVerification();
-    
+
     if (mounted) {
       setState(() => _isSending = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(success 
-            ? 'Verification email sent!' 
-            : auth.errorMessage ?? 'Failed to send email.'),
+          content: Text(success
+              ? 'Verification email sent!'
+              : auth.errorMessage ?? 'Failed to send email.'),
           backgroundColor: success ? Colors.green : Colors.red,
         ),
       );
@@ -37,7 +38,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     setState(() => _isChecking = true);
     final auth = context.read<AuthProvider>();
     await auth.reloadUser();
-    
+
     if (mounted) {
       setState(() => _isChecking = false);
       if (auth.isEmailVerified) {
@@ -79,11 +80,13 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.mark_email_unread_outlined, size: 80, color: Colors.blue),
+                  const Icon(Icons.mark_email_unread_outlined,
+                      size: 80, color: Colors.blue),
                   const SizedBox(height: 24),
                   Text(
                     'Check your email',
-                    style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.headlineSmall
+                        ?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -96,16 +99,22 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: _isChecking ? null : _checkStatus,
-                      child: _isChecking 
-                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Text('I have verified my email'),
+                      child: _isChecking
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2))
+                          : const Text('I have verified my email'),
                     ),
                   ),
                   const SizedBox(height: 16),
                   TextButton(
                     onPressed: _isSending ? null : _resendEmail,
                     child: _isSending
-                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2))
                         : const Text('Resend Verification Email'),
                   ),
                 ],

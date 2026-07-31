@@ -25,17 +25,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() => _isSubmitting = true);
     final auth = context.read<AuthProvider>();
     final success = await auth.sendPasswordResetEmail(_emailCtrl.text.trim());
-    
+
     if (mounted) {
       setState(() => _isSubmitting = false);
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Password reset email sent! Please check your inbox.'),
+            content:
+                Text('Password reset email sent! Please check your inbox.'),
             backgroundColor: Colors.green,
           ),
         );
@@ -75,15 +76,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 Center(
                   child: Column(children: [
                     Container(
-                      width: 64, height: 64,
+                      width: 64,
+                      height: 64,
                       decoration: BoxDecoration(
                         color: AppColors.accent.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(18),
                       ),
-                      child: const Icon(Icons.lock_reset_rounded, color: AppColors.accent, size: 36),
+                      child: const Icon(Icons.lock_reset_rounded,
+                          color: AppColors.accent, size: 36),
                     ),
                     const SizedBox(height: 16),
-                    Text('Reset Password',
+                    Text(
+                      'Reset Password',
                       style: theme.textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.w800,
                       ),
@@ -97,7 +101,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ]),
                 ),
                 const SizedBox(height: 48),
-
                 Container(
                   padding: const EdgeInsets.all(28),
                   decoration: BoxDecoration(
@@ -119,20 +122,26 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             prefixIcon: Icon(Icons.email_outlined, size: 18),
                           ),
                           validator: (v) {
-                            if (v == null || v.trim().isEmpty) return 'Enter your email';
-                            final emailRegExp = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
-                            if (!emailRegExp.hasMatch(v.trim())) return 'Enter a valid email address';
+                            if (v == null || v.trim().isEmpty)
+                              return 'Enter your email';
+                            final emailRegExp = RegExp(
+                                r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+                            if (!emailRegExp.hasMatch(v.trim()))
+                              return 'Enter a valid email address';
                             return null;
                           },
                         ),
                         const SizedBox(height: 24),
-
                         ElevatedButton(
                           onPressed: _isSubmitting ? null : _submit,
                           child: _isSubmitting
-                              ? const SizedBox(width: 20, height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation(Colors.white)),
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor:
+                                          AlwaysStoppedAnimation(Colors.white)),
                                 )
                               : const Text('Send Reset Link'),
                         ),

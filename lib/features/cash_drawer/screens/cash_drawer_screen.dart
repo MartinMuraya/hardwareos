@@ -29,20 +29,35 @@ class _CashDrawerScreenState extends State<CashDrawerScreen> {
   }
 
   Future<void> _load() async {
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final bizId = context.read<AuthProvider>().businessId!;
       final results = await Future.wait([
-        FunctionsService.call('getCashSessions', {'businessId': bizId, 'limit': 100}),
+        FunctionsService.call(
+            'getCashSessions', {'businessId': bizId, 'limit': 100}),
         FunctionsService.call('getCashVarianceReport', {'businessId': bizId}),
       ]);
       final data = results[0];
       final varData = results[1];
       final raw = (data['sessions'] as List?) ?? [];
-      final sessions = raw.map((e) => CashSession.fromMap(Map<String, dynamic>.from(e as Map))).toList();
-      if (mounted) setState(() { _sessions = sessions; _varianceReport = varData; _loading = false; });
+      final sessions = raw
+          .map((e) => CashSession.fromMap(Map<String, dynamic>.from(e as Map)))
+          .toList();
+      if (mounted)
+        setState(() {
+          _sessions = sessions;
+          _varianceReport = varData;
+          _loading = false;
+        });
     } on FunctionsException catch (e) {
-      if (mounted) setState(() { _error = e.message; _loading = false; });
+      if (mounted)
+        setState(() {
+          _error = e.message;
+          _loading = false;
+        });
     }
   }
 
@@ -65,25 +80,33 @@ class _CashDrawerScreenState extends State<CashDrawerScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(children: [
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Cash Drawer', style: theme.textTheme.displayMedium),
-                  const SizedBox(height: 4),
-                  Text(openSession != null
-                    ? 'Session open · Float: ${_fmt.format(openSession.openingFloat)}'
-                    : 'No open session · ${_sessions.length} total',
-                    style: theme.textTheme.bodyMedium),
-                ])),
+                Expanded(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                      Text('Cash Drawer', style: theme.textTheme.displayMedium),
+                      const SizedBox(height: 4),
+                      Text(
+                          openSession != null
+                              ? 'Session open · Float: ${_fmt.format(openSession.openingFloat)}'
+                              : 'No open session · ${_sessions.length} total',
+                          style: theme.textTheme.bodyMedium),
+                    ])),
                 if (canManage)
                   FilledButton.icon(
                     onPressed: openSession == null
-                      ? () => _openSession(context)
-                      : () => _closeSession(context, openSession),
-                    icon: Icon(openSession == null ? Icons.lock_open_rounded : Icons.lock_rounded, size: 18),
-                    label: Text(openSession == null ? 'Open Session' : 'Close Session'),
+                        ? () => _openSession(context)
+                        : () => _closeSession(context, openSession),
+                    icon: Icon(
+                        openSession == null
+                            ? Icons.lock_open_rounded
+                            : Icons.lock_rounded,
+                        size: 18),
+                    label: Text(
+                        openSession == null ? 'Open Session' : 'Close Session'),
                   ),
               ]),
               const SizedBox(height: 20),
-
               if (_varianceReport != null) ...[
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -93,34 +116,43 @@ class _CashDrawerScreenState extends State<CashDrawerScreen> {
                     border: Border.all(color: theme.dividerColor),
                   ),
                   child: Row(children: [
-                    Expanded(child: _ReportStat(
+                    Expanded(
+                        child: _ReportStat(
                       label: 'Expected',
-                      value: _fmt.format(_varianceReport!['totalExpectedCash'] ?? 0),
+                      value: _fmt
+                          .format(_varianceReport!['totalExpectedCash'] ?? 0),
                       theme: theme,
                     )),
                     Container(width: 1, height: 32, color: theme.dividerColor),
-                    Expanded(child: _ReportStat(
+                    Expanded(
+                        child: _ReportStat(
                       label: 'Actual',
-                      value: _fmt.format(_varianceReport!['totalActualCash'] ?? 0),
+                      value:
+                          _fmt.format(_varianceReport!['totalActualCash'] ?? 0),
                       theme: theme,
                     )),
                     Container(width: 1, height: 32, color: theme.dividerColor),
-                    Expanded(child: _ReportStat(
+                    Expanded(
+                        child: _ReportStat(
                       label: 'Variance',
-                      value: _fmt.format(_varianceReport!['totalVariance'] ?? 0),
-                      color: ((_varianceReport!['totalVariance'] as num?) ?? 0) < 0
-                        ? AppColors.error : ((_varianceReport!['totalVariance'] as num?) ?? 0) > 0
-                          ? AppColors.warning : null,
+                      value:
+                          _fmt.format(_varianceReport!['totalVariance'] ?? 0),
+                      color:
+                          ((_varianceReport!['totalVariance'] as num?) ?? 0) < 0
+                              ? AppColors.error
+                              : ((_varianceReport!['totalVariance'] as num?) ??
+                                          0) >
+                                      0
+                                  ? AppColors.warning
+                                  : null,
                       theme: theme,
                     )),
                   ]),
                 ),
                 const SizedBox(height: 16),
               ],
-
               if (_error != null)
                 _ErrorBar(message: _error!, onRetry: _load, theme: theme),
-
               Expanded(
                 child: _sessions.isEmpty && !_loading
                     ? const EmptyState(
@@ -133,7 +165,8 @@ class _CashDrawerScreenState extends State<CashDrawerScreen> {
                         color: AppColors.accent,
                         child: ListView.separated(
                           itemCount: _sessions.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 8),
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 8),
                           itemBuilder: (_, i) => _SessionCard(
                             session: _sessions[i],
                             fmt: _fmt,
@@ -161,8 +194,12 @@ class _CashDrawerScreenState extends State<CashDrawerScreen> {
           decoration: const InputDecoration(labelText: 'Opening Float (KES)'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dCtx), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(dCtx, floatCtrl.text), child: const Text('Open')),
+          TextButton(
+              onPressed: () => Navigator.pop(dCtx),
+              child: const Text('Cancel')),
+          FilledButton(
+              onPressed: () => Navigator.pop(dCtx, floatCtrl.text),
+              child: const Text('Open')),
         ],
       ),
     );
@@ -174,18 +211,19 @@ class _CashDrawerScreenState extends State<CashDrawerScreen> {
     if (!mounted) return; // guard against using context after async gaps
     try {
       final bizId = context.read<AuthProvider>().businessId!;
-      await FunctionsService.call('openCashSession', {'businessId': bizId, 'openingFloat': float});
+      await FunctionsService.call(
+          'openCashSession', {'businessId': bizId, 'openingFloat': float});
       _load();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Session opened')),
-      );
+          const SnackBar(content: Text('Session opened')),
+        );
       }
     } on FunctionsException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
-      );
+          SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
+        );
       }
     }
   }
@@ -205,13 +243,18 @@ class _CashDrawerScreenState extends State<CashDrawerScreen> {
             TextField(
               controller: cashCtrl,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Actual Cash Counted (KES)'),
+              decoration:
+                  const InputDecoration(labelText: 'Actual Cash Counted (KES)'),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dCtx), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(dCtx, cashCtrl.text), child: const Text('Close')),
+          TextButton(
+              onPressed: () => Navigator.pop(dCtx),
+              child: const Text('Cancel')),
+          FilledButton(
+              onPressed: () => Navigator.pop(dCtx, cashCtrl.text),
+              child: const Text('Close')),
         ],
       ),
     );
@@ -234,18 +277,18 @@ class _CashDrawerScreenState extends State<CashDrawerScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(variance == 0
-              ? 'Session closed with zero variance'
-              : variance > 0
-                ? 'Session closed · Variance: +${_fmt.format(variance)}'
-                : 'Session closed · Variance: ${_fmt.format(variance)}'),
+                ? 'Session closed with zero variance'
+                : variance > 0
+                    ? 'Session closed · Variance: +${_fmt.format(variance)}'
+                    : 'Session closed · Variance: ${_fmt.format(variance)}'),
           ),
         );
       }
     } on FunctionsException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
-      );
+          SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
+        );
       }
     }
   }
@@ -255,7 +298,8 @@ class _SessionCard extends StatelessWidget {
   final CashSession session;
   final NumberFormat fmt;
   final ThemeData theme;
-  const _SessionCard({required this.session, required this.fmt, required this.theme});
+  const _SessionCard(
+      {required this.session, required this.fmt, required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -266,34 +310,54 @@ class _SessionCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: session.isOpen ? AppColors.success.withValues(alpha: 0.3) : theme.dividerColor),
+          border: Border.all(
+              color: session.isOpen
+                  ? AppColors.success.withValues(alpha: 0.3)
+                  : theme.dividerColor),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
             Container(
-              width: 12, height: 12,
+              width: 12,
+              height: 12,
               decoration: BoxDecoration(
-                color: session.isOpen ? AppColors.success : theme.colorScheme.onSurfaceVariant,
+                color: session.isOpen
+                    ? AppColors.success
+                    : theme.colorScheme.onSurfaceVariant,
                 shape: BoxShape.circle,
               ),
             ),
             const SizedBox(width: 8),
             Text(session.isOpen ? 'OPEN' : 'CLOSED',
-              style: TextStyle(
-                fontWeight: FontWeight.w700, fontSize: 12,
-                color: session.isOpen ? AppColors.success : theme.colorScheme.onSurfaceVariant,
-              )),
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  color: session.isOpen
+                      ? AppColors.success
+                      : theme.colorScheme.onSurfaceVariant,
+                )),
             const Spacer(),
             Text(session.openedByName, style: theme.textTheme.bodySmall),
           ]),
           const SizedBox(height: 12),
           Row(children: [
-            Expanded(child: _LabeledValue(label: 'Float', value: fmt.format(session.openingFloat), theme: theme)),
-            Expanded(child: _LabeledValue(label: 'Expected', value: fmt.format(session.expectedCash), theme: theme)),
-            Expanded(child: _LabeledValue(
+            Expanded(
+                child: _LabeledValue(
+                    label: 'Float',
+                    value: fmt.format(session.openingFloat),
+                    theme: theme)),
+            Expanded(
+                child: _LabeledValue(
+                    label: 'Expected',
+                    value: fmt.format(session.expectedCash),
+                    theme: theme)),
+            Expanded(
+                child: _LabeledValue(
               label: 'Variance',
               value: fmt.format(session.variance),
-              color: session.variance < 0 ? AppColors.error : (session.variance > 0 ? AppColors.warning : null),
+              color: session.variance < 0
+                  ? AppColors.error
+                  : (session.variance > 0 ? AppColors.warning : null),
               theme: theme,
             )),
           ]),
@@ -308,12 +372,21 @@ class _LabeledValue extends StatelessWidget {
   final String value;
   final Color? color;
   final ThemeData theme;
-  const _LabeledValue({required this.label, required this.value, this.color, required this.theme});
+  const _LabeledValue(
+      {required this.label,
+      required this.value,
+      this.color,
+      required this.theme});
   @override
-  Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-    Text(value, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: color)),
-    Text(label, style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant)),
-  ]);
+  Widget build(BuildContext context) =>
+      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(value,
+            style: TextStyle(
+                fontWeight: FontWeight.w700, fontSize: 15, color: color)),
+        Text(label,
+            style: TextStyle(
+                fontSize: 11, color: theme.colorScheme.onSurfaceVariant)),
+      ]);
 }
 
 class _ReportStat extends StatelessWidget {
@@ -321,31 +394,47 @@ class _ReportStat extends StatelessWidget {
   final String value;
   final Color? color;
   final ThemeData theme;
-  const _ReportStat({required this.label, required this.value, this.color, required this.theme});
+  const _ReportStat(
+      {required this.label,
+      required this.value,
+      this.color,
+      required this.theme});
   @override
   Widget build(BuildContext context) => Column(children: [
-    Text(value, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: color ?? theme.colorScheme.onSurface)),
-    const SizedBox(height: 2),
-    Text(label, style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant)),
-  ]);
+        Text(value,
+            style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 15,
+                color: color ?? theme.colorScheme.onSurface)),
+        const SizedBox(height: 2),
+        Text(label,
+            style: TextStyle(
+                fontSize: 11, color: theme.colorScheme.onSurfaceVariant)),
+      ]);
 }
 
 class _ErrorBar extends StatelessWidget {
-  final String message; final VoidCallback onRetry;
+  final String message;
+  final VoidCallback onRetry;
   final ThemeData theme;
-  const _ErrorBar({required this.message, required this.onRetry, required this.theme});
+  const _ErrorBar(
+      {required this.message, required this.onRetry, required this.theme});
   @override
   Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.only(bottom: 12),
-    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-    decoration: BoxDecoration(
-      color: AppColors.error.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10),
-      border: Border.all(color: AppColors.error.withValues(alpha: 0.3))),
-    child: Row(children: [
-      const Icon(Icons.error_outline, color: AppColors.error, size: 16),
-      const SizedBox(width: 8),
-      Expanded(child: Text(message, style: const TextStyle(color: AppColors.error, fontSize: 12))),
-      TextButton(onPressed: onRetry, child: const Text('Retry')),
-    ]),
-  );
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+            color: AppColors.error.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppColors.error.withValues(alpha: 0.3))),
+        child: Row(children: [
+          const Icon(Icons.error_outline, color: AppColors.error, size: 16),
+          const SizedBox(width: 8),
+          Expanded(
+              child: Text(message,
+                  style:
+                      const TextStyle(color: AppColors.error, fontSize: 12))),
+          TextButton(onPressed: onRetry, child: const Text('Retry')),
+        ]),
+      );
 }

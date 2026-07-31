@@ -21,45 +21,59 @@ class AdminScaffold extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      drawer: !isWide ? Drawer(
-        child: _Sidebar(
-          location: location,
-          theme: theme,
-          themeProvider: themeProvider,
-          isDrawer: true,
-        ),
-      ) : null,
-      appBar: !isWide ? AppBar(
-        title: const Text('Admin Console'),
-        actions: [
-          IconButton(
-            icon: Icon(themeProvider.isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded),
-            onPressed: () => themeProvider.toggleTheme(!themeProvider.isDarkMode),
-          ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: () => context.go(RoutePaths.profile),
-            child: CircleAvatar(
-              radius: 16,
-              backgroundColor: theme.colorScheme.primaryContainer,
-              backgroundImage: context.read<AuthProvider>().photoUrl != null
-                  ? NetworkImage(context.read<AuthProvider>().photoUrl!)
-                  : null,
-              child: context.read<AuthProvider>().photoUrl == null
-                  ? Text(
-                      context.read<AuthProvider>().user?.displayName?.substring(0, 1).toUpperCase() ?? 'U',
-                      style: TextStyle(
-                        color: theme.colorScheme.onPrimaryContainer,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    )
-                  : null,
-            ),
-          ),
-          const SizedBox(width: 16),
-        ],
-      ) : null,
+      drawer: !isWide
+          ? Drawer(
+              child: _Sidebar(
+                location: location,
+                theme: theme,
+                themeProvider: themeProvider,
+                isDrawer: true,
+              ),
+            )
+          : null,
+      appBar: !isWide
+          ? AppBar(
+              title: const Text('Admin Console'),
+              actions: [
+                IconButton(
+                  icon: Icon(themeProvider.isDarkMode
+                      ? Icons.light_mode_rounded
+                      : Icons.dark_mode_rounded),
+                  onPressed: () =>
+                      themeProvider.toggleTheme(!themeProvider.isDarkMode),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () => context.go(RoutePaths.profile),
+                  child: CircleAvatar(
+                    radius: 16,
+                    backgroundColor: theme.colorScheme.primaryContainer,
+                    backgroundImage: context.read<AuthProvider>().photoUrl !=
+                            null
+                        ? NetworkImage(context.read<AuthProvider>().photoUrl!)
+                        : null,
+                    child: context.read<AuthProvider>().photoUrl == null
+                        ? Text(
+                            context
+                                    .read<AuthProvider>()
+                                    .user
+                                    ?.displayName
+                                    ?.substring(0, 1)
+                                    .toUpperCase() ??
+                                'U',
+                            style: TextStyle(
+                              color: theme.colorScheme.onPrimaryContainer,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          )
+                        : null,
+                  ),
+                ),
+                const SizedBox(width: 16),
+              ],
+            )
+          : null,
       body: Row(
         children: [
           if (isWide)
@@ -76,12 +90,14 @@ class AdminScaffold extends StatelessWidget {
               leading: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Container(
-                  width: 36, height: 36,
+                  width: 36,
+                  height: 36,
                   decoration: BoxDecoration(
                     color: AppColors.accent,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.shield_rounded, color: Colors.white, size: 20),
+                  child: const Icon(Icons.shield_rounded,
+                      color: Colors.white, size: 20),
                 ),
               ),
               trailing: Expanded(
@@ -89,8 +105,11 @@ class AdminScaffold extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     IconButton(
-                      icon: Icon(themeProvider.isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded),
-                      onPressed: () => themeProvider.toggleTheme(!themeProvider.isDarkMode),
+                      icon: Icon(themeProvider.isDarkMode
+                          ? Icons.light_mode_rounded
+                          : Icons.dark_mode_rounded),
+                      onPressed: () =>
+                          themeProvider.toggleTheme(!themeProvider.isDarkMode),
                     ),
                     const SizedBox(height: 12),
                     IconButton(
@@ -102,16 +121,33 @@ class AdminScaffold extends StatelessWidget {
                 ),
               ),
               destinations: const [
-                NavigationRailDestination(icon: Icon(Icons.dashboard_rounded), label: Text('Overview')),
-                NavigationRailDestination(icon: Icon(Icons.store_rounded), label: Text('Businesses')),
-                NavigationRailDestination(icon: Icon(Icons.card_membership_rounded), label: Text('Subscriptions')),
-                NavigationRailDestination(icon: Icon(Icons.analytics_rounded), label: Text('Analytics')),
-                NavigationRailDestination(icon: Icon(Icons.people_rounded), label: Text('Users')),
-                NavigationRailDestination(icon: Icon(Icons.view_list_rounded), label: Text('Plans')),
-                NavigationRailDestination(icon: Icon(Icons.security_rounded), label: Text('Security')),
-                NavigationRailDestination(icon: Icon(Icons.support_agent_rounded), label: Text('Support')),
-                NavigationRailDestination(icon: Icon(Icons.history_edu_rounded), label: Text('System Logs')),
-                NavigationRailDestination(icon: Icon(Icons.settings_rounded), label: Text('Settings')),
+                NavigationRailDestination(
+                    icon: Icon(Icons.dashboard_rounded),
+                    label: Text('Overview')),
+                NavigationRailDestination(
+                    icon: Icon(Icons.store_rounded), label: Text('Businesses')),
+                NavigationRailDestination(
+                    icon: Icon(Icons.card_membership_rounded),
+                    label: Text('Subscriptions')),
+                NavigationRailDestination(
+                    icon: Icon(Icons.analytics_rounded),
+                    label: Text('Analytics')),
+                NavigationRailDestination(
+                    icon: Icon(Icons.people_rounded), label: Text('Users')),
+                NavigationRailDestination(
+                    icon: Icon(Icons.view_list_rounded), label: Text('Plans')),
+                NavigationRailDestination(
+                    icon: Icon(Icons.security_rounded),
+                    label: Text('Security')),
+                NavigationRailDestination(
+                    icon: Icon(Icons.support_agent_rounded),
+                    label: Text('Support')),
+                NavigationRailDestination(
+                    icon: Icon(Icons.history_edu_rounded),
+                    label: Text('System Logs')),
+                NavigationRailDestination(
+                    icon: Icon(Icons.settings_rounded),
+                    label: Text('Settings')),
               ],
             ),
           if (isWide || isMedium) const VerticalDivider(width: 1),
@@ -137,16 +173,36 @@ class AdminScaffold extends StatelessWidget {
 
   void _onNavTap(BuildContext context, int i) {
     switch (i) {
-      case 0: context.go(RoutePaths.adminDashboard); break;
-      case 1: context.go(RoutePaths.adminBusinesses); break;
-      case 2: context.go(RoutePaths.adminSubscriptions); break;
-      case 3: context.go(RoutePaths.adminAnalytics); break;
-      case 4: context.go(RoutePaths.adminUsers); break;
-      case 5: context.go(RoutePaths.adminPlans); break;
-      case 6: context.go(RoutePaths.adminSecurity); break;
-      case 7: context.go(RoutePaths.adminSupport); break;
-      case 8: context.go(RoutePaths.adminSystemLogs); break;
-      case 9: context.go(RoutePaths.adminSettings); break;
+      case 0:
+        context.go(RoutePaths.adminDashboard);
+        break;
+      case 1:
+        context.go(RoutePaths.adminBusinesses);
+        break;
+      case 2:
+        context.go(RoutePaths.adminSubscriptions);
+        break;
+      case 3:
+        context.go(RoutePaths.adminAnalytics);
+        break;
+      case 4:
+        context.go(RoutePaths.adminUsers);
+        break;
+      case 5:
+        context.go(RoutePaths.adminPlans);
+        break;
+      case 6:
+        context.go(RoutePaths.adminSecurity);
+        break;
+      case 7:
+        context.go(RoutePaths.adminSupport);
+        break;
+      case 8:
+        context.go(RoutePaths.adminSystemLogs);
+        break;
+      case 9:
+        context.go(RoutePaths.adminSettings);
+        break;
     }
   }
 }
@@ -181,7 +237,8 @@ class _Sidebar extends StatelessWidget {
                     color: AppColors.accent.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.hardware_rounded, color: AppColors.accent, size: 24),
+                  child: const Icon(Icons.hardware_rounded,
+                      color: AppColors.accent, size: 24),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -195,14 +252,18 @@ class _Sidebar extends StatelessWidget {
                 ),
                 if (!isDrawer)
                   IconButton(
-                    icon: Icon(themeProvider.isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded, size: 20),
-                    onPressed: () => themeProvider.toggleTheme(!themeProvider.isDarkMode),
+                    icon: Icon(
+                        themeProvider.isDarkMode
+                            ? Icons.light_mode_rounded
+                            : Icons.dark_mode_rounded,
+                        size: 20),
+                    onPressed: () =>
+                        themeProvider.toggleTheme(!themeProvider.isDarkMode),
                     visualDensity: VisualDensity.compact,
                   ),
               ],
             ),
           ),
-          
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -210,7 +271,8 @@ class _Sidebar extends StatelessWidget {
                 _NavItem(
                   icon: Icons.dashboard_rounded,
                   label: 'Overview',
-                  isSelected: location == '/admin' || location == '/admin/dashboard',
+                  isSelected:
+                      location == '/admin' || location == '/admin/dashboard',
                   onTap: () {
                     if (isDrawer) Navigator.pop(context);
                     context.go(RoutePaths.adminDashboard);
@@ -300,7 +362,6 @@ class _Sidebar extends StatelessWidget {
               ],
             ),
           ),
-          
           const Divider(height: 1),
           Padding(
             padding: const EdgeInsets.all(20),
@@ -309,7 +370,8 @@ class _Sidebar extends StatelessWidget {
                 const CircleAvatar(
                   radius: 18,
                   backgroundColor: AppColors.accent,
-                  child: Icon(Icons.shield_rounded, size: 18, color: Colors.white),
+                  child:
+                      Icon(Icons.shield_rounded, size: 18, color: Colors.white),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -317,12 +379,14 @@ class _Sidebar extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('Super Admin', style: theme.textTheme.labelLarge),
-                      Text('Platform Control', style: theme.textTheme.bodySmall),
+                      Text('Platform Control',
+                          style: theme.textTheme.bodySmall),
                     ],
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.logout_rounded, size: 20, color: theme.colorScheme.onSurfaceVariant),
+                  icon: Icon(Icons.logout_rounded,
+                      size: 20, color: theme.colorScheme.onSurfaceVariant),
                   onPressed: () => context.read<AuthProvider>().signOut(),
                   tooltip: 'Sign Out',
                 ),
@@ -356,10 +420,11 @@ class _NavItem extends StatelessWidget {
         onTap: onTap,
         selected: isSelected,
         leading: Icon(icon, color: isSelected ? AppColors.accent : null),
-        title: Text(label, style: TextStyle(
-          color: isSelected ? AppColors.accent : null,
-          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-        )),
+        title: Text(label,
+            style: TextStyle(
+              color: isSelected ? AppColors.accent : null,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            )),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         selectedTileColor: AppColors.accent.withValues(alpha: 0.1),
         dense: true,

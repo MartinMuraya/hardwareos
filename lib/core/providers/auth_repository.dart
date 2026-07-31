@@ -16,11 +16,14 @@ class AuthRepository {
   AuthRepository();
 
   Future<UserCredential> signInWithEmail(String email, String password) async {
-    return await _auth.signInWithEmailAndPassword(email: email, password: password);
+    return await _auth.signInWithEmailAndPassword(
+        email: email, password: password);
   }
 
-  Future<UserCredential> registerWithEmail(String email, String password) async {
-    return await _auth.createUserWithEmailAndPassword(email: email, password: password);
+  Future<UserCredential> registerWithEmail(
+      String email, String password) async {
+    return await _auth.createUserWithEmailAndPassword(
+        email: email, password: password);
   }
 
   Future<UserCredential?> signInWithGoogle() async {
@@ -65,19 +68,22 @@ class AuthRepository {
       await user.sendEmailVerification();
     }
   }
-  
+
   Future<void> sendPasswordResetEmail(String email) async {
     await _auth.sendPasswordResetEmail(email: email);
   }
 
   Future<String?> uploadProfilePicture(String userId) async {
     try {
-      final XFile? image = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+      final XFile? image = await _picker.pickImage(
+          source: ImageSource.gallery, imageQuality: 70);
       if (image == null) return null;
 
       final ext = image.name.split('.').last;
-      final ref = _storage.ref().child('users/$userId/profile_${const Uuid().v4()}.$ext');
-      
+      final ref = _storage
+          .ref()
+          .child('users/$userId/profile_${const Uuid().v4()}.$ext');
+
       if (kIsWeb) {
         final bytes = await image.readAsBytes();
         await ref.putData(bytes);
@@ -87,12 +93,12 @@ class AuthRepository {
         final bytes = await image.readAsBytes();
         await ref.putData(bytes);
       }
-      
+
       final downloadUrl = await ref.getDownloadURL();
-      
+
       // Update the user's profile photo url in Firebase Auth
       await _auth.currentUser?.updatePhotoURL(downloadUrl);
-      
+
       return downloadUrl;
     } catch (e) {
       debugPrint('Error uploading profile picture: $e');

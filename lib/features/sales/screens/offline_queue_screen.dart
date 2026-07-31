@@ -32,7 +32,8 @@ class _OfflineQueueScreenState extends State<OfflineQueueScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sync failed: $e'), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text('Sync failed: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -45,9 +46,12 @@ class _OfflineQueueScreenState extends State<OfflineQueueScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Discard Sale?'),
-        content: const Text('Are you sure you want to permanently delete this offline sale? This cannot be undone.'),
+        content: const Text(
+            'Are you sure you want to permanently delete this offline sale? This cannot be undone.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -74,7 +78,10 @@ class _OfflineQueueScreenState extends State<OfflineQueueScreen> {
             const Center(
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16.0),
-                child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2)),
               ),
             )
           else
@@ -94,10 +101,14 @@ class _OfflineQueueScreenState extends State<OfflineQueueScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.cloud_done_outlined, size: 64, color: AppColors.success),
+                  Icon(Icons.cloud_done_outlined,
+                      size: 64, color: AppColors.success),
                   SizedBox(height: 16),
-                  Text('All caught up!', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-                  Text('No offline sales pending synchronization.', style: TextStyle(color: Colors.grey)),
+                  Text('All caught up!',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                  Text('No offline sales pending synchronization.',
+                      style: TextStyle(color: Colors.grey)),
                 ],
               ),
             );
@@ -118,7 +129,8 @@ class _OfflineQueueScreenState extends State<OfflineQueueScreen> {
                   backgroundColor: AppColors.warning,
                   child: Icon(Icons.wifi_off, color: Colors.white, size: 20),
                 ),
-                title: Text('${items.length} Items - ${_fmt.format(total)}', style: const TextStyle(fontWeight: FontWeight.w600)),
+                title: Text('${items.length} Items - ${_fmt.format(total)}',
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
                 subtitle: Text(DateFormat('MMM dd, yyyy - HH:mm').format(date)),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete_outline, color: Colors.red),

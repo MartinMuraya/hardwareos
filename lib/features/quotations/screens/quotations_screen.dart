@@ -26,18 +26,37 @@ class _QuotationsScreenState extends State<QuotationsScreen> {
   static const _tabs = ['all', 'draft', 'sent', 'accepted', 'rejected'];
 
   @override
-  void initState() { super.initState(); _tabFilter = widget.filterStatus ?? 'all'; _load(); }
+  void initState() {
+    super.initState();
+    _tabFilter = widget.filterStatus ?? 'all';
+    _load();
+  }
 
   Future<void> _load() async {
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final bizId = context.read<AuthProvider>().businessId!;
-      final data = await FunctionsService.call('getQuotations', {'businessId': bizId, 'limit': 100});
+      final data = await FunctionsService.call(
+          'getQuotations', {'businessId': bizId, 'limit': 100});
       final rawList = (data['quotations'] as List?) ?? [];
-      final items = rawList.map((e) => Quotation.fromMap(Map<String, dynamic>.from(e as Map))).toList();
-      if (mounted) setState(() { _quotations = items; _filtered = items; _loading = false; });
+      final items = rawList
+          .map((e) => Quotation.fromMap(Map<String, dynamic>.from(e as Map)))
+          .toList();
+      if (mounted)
+        setState(() {
+          _quotations = items;
+          _filtered = items;
+          _loading = false;
+        });
     } on FunctionsException catch (e) {
-      if (mounted) setState(() { _error = e.message; _loading = false; });
+      if (mounted)
+        setState(() {
+          _error = e.message;
+          _loading = false;
+        });
     }
   }
 
@@ -66,16 +85,18 @@ class _QuotationsScreenState extends State<QuotationsScreen> {
         },
         backgroundColor: AppColors.accent,
         icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: const Text('New Quotation', style: TextStyle(color: Colors.white)),
+        label:
+            const Text('New Quotation', style: TextStyle(color: Colors.white)),
       ),
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(padding),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('Quotations', style: theme.textTheme.displayMedium),
             const SizedBox(height: 4),
             Text('Create and manage proforma invoices',
-              style: theme.textTheme.bodyMedium),
+                style: theme.textTheme.bodyMedium),
             const SizedBox(height: 16),
 
             // Filter chips
@@ -89,10 +110,15 @@ class _QuotationsScreenState extends State<QuotationsScreen> {
                   final tab = _tabs[i];
                   final sel = _tabFilter == tab;
                   return FilterChip(
-                    label: Text(tab == 'all' ? 'All' : tab[0].toUpperCase() + tab.substring(1),
+                    label: Text(
+                      tab == 'all'
+                          ? 'All'
+                          : tab[0].toUpperCase() + tab.substring(1),
                       style: TextStyle(
                         fontSize: 12,
-                        color: sel ? AppColors.accent : theme.colorScheme.onSurfaceVariant,
+                        color: sel
+                            ? AppColors.accent
+                            : theme.colorScheme.onSurfaceVariant,
                         fontWeight: sel ? FontWeight.w700 : FontWeight.w400,
                       ),
                     ),
@@ -101,7 +127,8 @@ class _QuotationsScreenState extends State<QuotationsScreen> {
                     visualDensity: VisualDensity.compact,
                     backgroundColor: theme.cardColor,
                     selectedColor: AppColors.accent.withValues(alpha: 0.12),
-                    side: BorderSide(color: sel ? AppColors.accent : theme.dividerColor),
+                    side: BorderSide(
+                        color: sel ? AppColors.accent : theme.dividerColor),
                   );
                 },
               ),
@@ -115,12 +142,17 @@ class _QuotationsScreenState extends State<QuotationsScreen> {
                 decoration: BoxDecoration(
                   color: AppColors.error.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                  border:
+                      Border.all(color: AppColors.error.withValues(alpha: 0.3)),
                 ),
                 child: Row(children: [
-                  const Icon(Icons.error_outline, color: AppColors.error, size: 18),
+                  const Icon(Icons.error_outline,
+                      color: AppColors.error, size: 18),
                   const SizedBox(width: 10),
-                  Expanded(child: Text(_error!, style: const TextStyle(color: AppColors.error, fontSize: 13))),
+                  Expanded(
+                      child: Text(_error!,
+                          style: const TextStyle(
+                              color: AppColors.error, fontSize: 13))),
                 ]),
               ),
 
@@ -130,13 +162,16 @@ class _QuotationsScreenState extends State<QuotationsScreen> {
                   : _filtered.isEmpty
                       ? EmptyState(
                           icon: Icons.description_outlined,
-                          title: _tabFilter == 'all' ? 'No quotations yet' : 'No $_tabFilter quotations',
+                          title: _tabFilter == 'all'
+                              ? 'No quotations yet'
+                              : 'No $_tabFilter quotations',
                           subtitle: _tabFilter == 'all'
                               ? 'Create your first quotation to get started.'
                               : 'No quotations match this status.',
                           actionLabel: 'New Quotation',
                           onAction: () async {
-                            final result = await context.push('/quotations/add');
+                            final result =
+                                await context.push('/quotations/add');
                             if (result == true) _load();
                           },
                         )
@@ -146,7 +181,8 @@ class _QuotationsScreenState extends State<QuotationsScreen> {
                             itemCount: _filtered.length,
                             itemBuilder: (_, i) => QuotationCard(
                               quotation: _filtered[i],
-                              onTap: () => context.push('/quotations/${_filtered[i].id}'),
+                              onTap: () => context
+                                  .push('/quotations/${_filtered[i].id}'),
                             ),
                           ),
                         ),

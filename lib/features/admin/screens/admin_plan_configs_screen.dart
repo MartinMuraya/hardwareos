@@ -21,13 +21,17 @@ class _AdminPlanConfigsScreenState extends State<AdminPlanConfigsScreen> {
   }
 
   Future<void> _loadPlans() async {
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final res = await FunctionsService.call('adminGetPlanConfigs', {});
       final list = (res['plans'] as List?) ?? [];
       if (mounted) {
         setState(() {
-          _plans = list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+          _plans =
+              list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
           _loading = false;
         });
       }
@@ -47,10 +51,14 @@ class _AdminPlanConfigsScreenState extends State<AdminPlanConfigsScreen> {
     final planData = plan ?? {};
 
     final idCtrl = TextEditingController(text: planData['id'] ?? '');
-    final nameCtrl = TextEditingController(text: planData['name'] ?? planData['id']);
-    final priceCtrl = TextEditingController(text: (planData['priceKes'] ?? 0).toString());
-    final maxProdCtrl = TextEditingController(text: (planData['maxProducts'] ?? -1).toString());
-    final maxUsersCtrl = TextEditingController(text: (planData['maxUsers'] ?? -1).toString());
+    final nameCtrl =
+        TextEditingController(text: planData['name'] ?? planData['id']);
+    final priceCtrl =
+        TextEditingController(text: (planData['priceKes'] ?? 0).toString());
+    final maxProdCtrl =
+        TextEditingController(text: (planData['maxProducts'] ?? -1).toString());
+    final maxUsersCtrl =
+        TextEditingController(text: (planData['maxUsers'] ?? -1).toString());
 
     bool aiBasic = planData['aiBasicEnabled'] ?? false;
     bool aiAnalyst = planData['aiAnalystEnabled'] ?? false;
@@ -66,7 +74,9 @@ class _AdminPlanConfigsScreenState extends State<AdminPlanConfigsScreen> {
           builder: (ctx, setDialogState) {
             return AlertDialog(
               backgroundColor: theme.cardColor,
-              title: Text(isNew ? 'Create New Plan Tier' : 'Edit Plan Tier: ${planData['id'].toUpperCase()}'),
+              title: Text(isNew
+                  ? 'Create New Plan Tier'
+                  : 'Edit Plan Tier: ${planData['id'].toUpperCase()}'),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -75,19 +85,22 @@ class _AdminPlanConfigsScreenState extends State<AdminPlanConfigsScreen> {
                     if (isNew) ...[
                       TextField(
                         controller: idCtrl,
-                        decoration: const InputDecoration(labelText: 'Plan ID (e.g. basic, ultra)'),
+                        decoration: const InputDecoration(
+                            labelText: 'Plan ID (e.g. basic, ultra)'),
                       ),
                       const SizedBox(height: 12),
                     ],
                     TextField(
                       controller: nameCtrl,
-                      decoration: const InputDecoration(labelText: 'Plan Display Name'),
+                      decoration:
+                          const InputDecoration(labelText: 'Plan Display Name'),
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: priceCtrl,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Monthly Price (KES)'),
+                      decoration: const InputDecoration(
+                          labelText: 'Monthly Price (KES)'),
                     ),
                     const SizedBox(height: 12),
                     TextField(
@@ -106,7 +119,9 @@ class _AdminPlanConfigsScreenState extends State<AdminPlanConfigsScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Text('Feature Toggles & Gating', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                    Text('Feature Toggles & Gating',
+                        style: theme.textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
                     SwitchListTile(
                       title: const Text('AI Chatbot (Basic Q&A)'),
@@ -117,7 +132,8 @@ class _AdminPlanConfigsScreenState extends State<AdminPlanConfigsScreen> {
                     ),
                     SwitchListTile(
                       title: const Text('AI Business Analyst & Workflows'),
-                      subtitle: const Text('Run-out predictions & draft PO approvals (Pro exclusive)'),
+                      subtitle: const Text(
+                          'Run-out predictions & draft PO approvals (Pro exclusive)'),
                       value: aiAnalyst,
                       onChanged: (v) => setDialogState(() => aiAnalyst = v),
                       activeThumbColor: AppColors.accent,
@@ -143,14 +159,17 @@ class _AdminPlanConfigsScreenState extends State<AdminPlanConfigsScreen> {
                     SwitchListTile(
                       title: const Text('Advanced Analytics'),
                       value: advancedAnalytics,
-                      onChanged: (v) => setDialogState(() => advancedAnalytics = v),
+                      onChanged: (v) =>
+                          setDialogState(() => advancedAnalytics = v),
                       activeThumbColor: AppColors.accent,
                     ),
                   ],
                 ),
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: const Text('Cancel')),
                 FilledButton(
                   onPressed: () => Navigator.pop(ctx, true),
                   child: const Text('Save Plan Config'),
@@ -162,12 +181,15 @@ class _AdminPlanConfigsScreenState extends State<AdminPlanConfigsScreen> {
       },
     );
 
-    if (!mounted) return; // Guard against using context after the dialog if the state was disposed
+    if (!mounted)
+      return; // Guard against using context after the dialog if the state was disposed
     final messenger = ScaffoldMessenger.of(context);
 
     if (result == true) {
       if (isNew && idCtrl.text.trim().isEmpty) {
-        messenger.showSnackBar(const SnackBar(content: Text('Plan ID is required'), backgroundColor: AppColors.error));
+        messenger.showSnackBar(const SnackBar(
+            content: Text('Plan ID is required'),
+            backgroundColor: AppColors.error));
         return;
       }
       try {
@@ -187,12 +209,15 @@ class _AdminPlanConfigsScreenState extends State<AdminPlanConfigsScreen> {
           },
         });
         if (mounted) {
-          messenger.showSnackBar(const SnackBar(content: Text('Plan configuration updated successfully!')));
+          messenger.showSnackBar(const SnackBar(
+              content: Text('Plan configuration updated successfully!')));
           _loadPlans();
         }
       } catch (e) {
         if (mounted) {
-          messenger.showSnackBar(SnackBar(content: Text('Failed saving plan: $e'), backgroundColor: AppColors.error));
+          messenger.showSnackBar(SnackBar(
+              content: Text('Failed saving plan: $e'),
+              backgroundColor: AppColors.error));
         }
       }
     }
@@ -208,28 +233,40 @@ class _AdminPlanConfigsScreenState extends State<AdminPlanConfigsScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Subscription Plan CRUD', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-            Text('Super Admin Tier & Feature Configuration', style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
+            Text('Subscription Plan CRUD',
+                style: theme.textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.bold)),
+            Text('Super Admin Tier & Feature Configuration',
+                style: TextStyle(
+                    fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
           ],
         ),
         actions: [
-          IconButton(icon: const Icon(Icons.refresh_rounded), onPressed: _loadPlans),
+          IconButton(
+              icon: const Icon(Icons.refresh_rounded), onPressed: _loadPlans),
           const SizedBox(width: 16),
         ],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(child: Text(_error!, style: const TextStyle(color: AppColors.error)))
+              ? Center(
+                  child: Text(_error!,
+                      style: const TextStyle(color: AppColors.error)))
               : SingleChildScrollView(
                   padding: const EdgeInsets.all(24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Dynamic Tier Pricing & Feature Gating', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                      Text('Dynamic Tier Pricing & Feature Gating',
+                          style: theme.textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 8),
-                      Text('Configure feature access for Free, Starter, and Pro tiers dynamically.',
-                        style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
+                      Text(
+                        'Configure feature access for Free, Starter, and Pro tiers dynamically.',
+                        style: TextStyle(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            fontSize: 13),
                       ),
                       const SizedBox(height: 24),
                       ListView.separated(
@@ -246,7 +283,11 @@ class _AdminPlanConfigsScreenState extends State<AdminPlanConfigsScreen> {
                             color: theme.cardColor,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
-                              side: BorderSide(color: isPro ? AppColors.accent : theme.dividerColor, width: isPro ? 2 : 1),
+                              side: BorderSide(
+                                  color: isPro
+                                      ? AppColors.accent
+                                      : theme.dividerColor,
+                                  width: isPro ? 2 : 1),
                             ),
                             child: Padding(
                               padding: const EdgeInsets.all(20),
@@ -254,24 +295,40 @@ class _AdminPlanConfigsScreenState extends State<AdminPlanConfigsScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Row(
                                         children: [
                                           Icon(
-                                            isPro ? Icons.workspace_premium_rounded : (isStarter ? Icons.stars_rounded : Icons.label_rounded),
-                                            color: isPro ? AppColors.accent : (isStarter ? Colors.blue : Colors.grey),
+                                            isPro
+                                                ? Icons
+                                                    .workspace_premium_rounded
+                                                : (isStarter
+                                                    ? Icons.stars_rounded
+                                                    : Icons.label_rounded),
+                                            color: isPro
+                                                ? AppColors.accent
+                                                : (isStarter
+                                                    ? Colors.blue
+                                                    : Colors.grey),
                                           ),
                                           const SizedBox(width: 12),
                                           Text(
-                                            plan['name'] ?? plan['id'].toUpperCase(),
-                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                                            plan['name'] ??
+                                                plan['id'].toUpperCase(),
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 18),
                                           ),
                                         ],
                                       ),
                                       Text(
                                         'KES ${plan['priceKes'] ?? 0} / mo',
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.accent),
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18,
+                                            color: AppColors.accent),
                                       ),
                                     ],
                                   ),
@@ -280,18 +337,33 @@ class _AdminPlanConfigsScreenState extends State<AdminPlanConfigsScreen> {
                                     spacing: 8,
                                     runSpacing: 8,
                                     children: [
-                                      _FeatureBadge(label: 'Max Products: ${plan['maxProducts'] == -1 ? 'Unlimited' : plan['maxProducts']}'),
-                                      _FeatureBadge(label: 'Max Users: ${plan['maxUsers'] == -1 ? 'Unlimited' : plan['maxUsers']}'),
+                                      _FeatureBadge(
+                                          label:
+                                              'Max Products: ${plan['maxProducts'] == -1 ? 'Unlimited' : plan['maxProducts']}'),
+                                      _FeatureBadge(
+                                          label:
+                                              'Max Users: ${plan['maxUsers'] == -1 ? 'Unlimited' : plan['maxUsers']}'),
                                       if (plan['aiBasicEnabled'] == true)
-                                        const _FeatureBadge(label: '🤖 AI Chatbot', color: Colors.green),
+                                        const _FeatureBadge(
+                                            label: '🤖 AI Chatbot',
+                                            color: Colors.green),
                                       if (plan['aiAnalystEnabled'] == true)
-                                        const _FeatureBadge(label: '🧠 AI Business Analyst & Workflows', color: AppColors.accent),
+                                        const _FeatureBadge(
+                                            label:
+                                                '🧠 AI Business Analyst & Workflows',
+                                            color: AppColors.accent),
                                       if (plan['whatsappEnabled'] == true)
-                                        const _FeatureBadge(label: '📲 WhatsApp', color: Colors.teal),
+                                        const _FeatureBadge(
+                                            label: '📲 WhatsApp',
+                                            color: Colors.teal),
                                       if (plan['etimsEnabled'] == true)
-                                        const _FeatureBadge(label: '📋 eTIMS KRA', color: Colors.blue),
+                                        const _FeatureBadge(
+                                            label: '📋 eTIMS KRA',
+                                            color: Colors.blue),
                                       if (plan['storefrontEnabled'] == true)
-                                        const _FeatureBadge(label: '🛒 Storefront', color: Colors.purple),
+                                        const _FeatureBadge(
+                                            label: '🛒 Storefront',
+                                            color: Colors.purple),
                                     ],
                                   ),
                                   const SizedBox(height: 16),
@@ -299,7 +371,8 @@ class _AdminPlanConfigsScreenState extends State<AdminPlanConfigsScreen> {
                                     alignment: Alignment.centerRight,
                                     child: OutlinedButton.icon(
                                       onPressed: () => _editPlanModal(plan),
-                                      icon: const Icon(Icons.edit_rounded, size: 16),
+                                      icon: const Icon(Icons.edit_rounded,
+                                          size: 16),
                                       label: const Text('Edit Plan Config'),
                                     ),
                                   ),
@@ -339,7 +412,9 @@ class _FeatureBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: bg.withValues(alpha: 0.3)),
       ),
-      child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: bg)),
+      child: Text(label,
+          style:
+              TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: bg)),
     );
   }
 }

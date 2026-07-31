@@ -29,7 +29,8 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
       setState(() => _devices = devices);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error loading devices: $e')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error loading devices: $e')));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -47,7 +48,10 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
         }
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(connected ? 'Connected to ${device.name}' : 'Failed to connect')),
+        SnackBar(
+            content: Text(connected
+                ? 'Connected to ${device.name}'
+                : 'Failed to connect')),
       );
     }
   }
@@ -74,7 +78,28 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
   Future<void> _testPrint() async {
     // Generate dummy bytes for test print
     // In a real application, we would use esc_pos_utils_plus
-    List<int> dummyBytes = [0x1B, 0x40, 0x0A, 0x54, 0x65, 0x73, 0x74, 0x20, 0x50, 0x72, 0x69, 0x6E, 0x74, 0x0A, 0x0A, 0x0A, 0x1D, 0x56, 0x41, 0x00];
+    List<int> dummyBytes = [
+      0x1B,
+      0x40,
+      0x0A,
+      0x54,
+      0x65,
+      0x73,
+      0x74,
+      0x20,
+      0x50,
+      0x72,
+      0x69,
+      0x6E,
+      0x74,
+      0x0A,
+      0x0A,
+      0x0A,
+      0x1D,
+      0x56,
+      0x41,
+      0x00
+    ];
     await ThermalPrinterService.printReceipt(dummyBytes);
   }
 
@@ -107,7 +132,8 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
               children: [
                 ListTile(
                   title: const Text('Bluetooth Package'),
-                  subtitle: const Text('Select the underlying library used for printing'),
+                  subtitle: const Text(
+                      'Select the underlying library used for printing'),
                   trailing: DropdownButton<ThermalPackage>(
                     value: _package,
                     onChanged: (p) {
@@ -131,23 +157,27 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Paired Devices', style: theme.textTheme.titleMedium),
+                      Text('Paired Devices',
+                          style: theme.textTheme.titleMedium),
                       if (_connectedAddress != null)
-                         ElevatedButton(
-                           onPressed: _testPrint,
-                           child: const Text('Test Print'),
-                         ),
+                        ElevatedButton(
+                          onPressed: _testPrint,
+                          child: const Text('Test Print'),
+                        ),
                     ],
                   ),
                 ),
                 Expanded(
                   child: _devices.isEmpty
-                      ? const Center(child: Text('No paired devices found. Pair a printer in Android Settings first.'))
+                      ? const Center(
+                          child: Text(
+                              'No paired devices found. Pair a printer in Android Settings first.'))
                       : ListView.builder(
                           itemCount: _devices.length,
                           itemBuilder: (context, index) {
                             final device = _devices[index];
-                            final isConnected = device.address == _connectedAddress;
+                            final isConnected =
+                                device.address == _connectedAddress;
                             return ListTile(
                               leading: const Icon(Icons.print),
                               title: Text(device.name),
@@ -155,7 +185,8 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                               trailing: isConnected
                                   ? OutlinedButton(
                                       onPressed: _disconnect,
-                                      child: const Text('Disconnect', style: TextStyle(color: Colors.red)),
+                                      child: const Text('Disconnect',
+                                          style: TextStyle(color: Colors.red)),
                                     )
                                   : ElevatedButton(
                                       onPressed: () => _connect(device),

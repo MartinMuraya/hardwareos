@@ -57,7 +57,8 @@ class ReceiptItem {
 }
 
 class ReceiptService {
-  static Future<List<int>> generateEscPos(ReceiptData data, {String paperSize = '58mm'}) async {
+  static Future<List<int>> generateEscPos(ReceiptData data,
+      {String paperSize = '58mm'}) async {
     final profile = await CapabilityProfile.load();
     final size = paperSize == '80mm' ? PaperSize.mm80 : PaperSize.mm58;
     final generator = Generator(size, profile);
@@ -66,11 +67,16 @@ class ReceiptService {
     bytes += generator.reset();
     bytes += generator.text(
       data.storeName,
-      styles: const PosStyles(align: PosAlign.center, bold: true, height: PosTextSize.size2, width: PosTextSize.size2),
+      styles: const PosStyles(
+          align: PosAlign.center,
+          bold: true,
+          height: PosTextSize.size2,
+          width: PosTextSize.size2),
     );
 
     if (data.kraPin != null && data.kraPin!.isNotEmpty) {
-      bytes += generator.text('PIN: ${data.kraPin}', styles: const PosStyles(align: PosAlign.center));
+      bytes += generator.text('PIN: ${data.kraPin}',
+          styles: const PosStyles(align: PosAlign.center));
     }
 
     if (data.storePhone.isNotEmpty) {
@@ -80,26 +86,46 @@ class ReceiptService {
       );
     }
 
-    final timeStr = '${data.date.day}/${data.date.month}/${data.date.year} ${data.date.hour}:${data.date.minute}';
-    bytes += generator.text(timeStr, styles: const PosStyles(align: PosAlign.center));
-    bytes += generator.text('Cashier: ${data.cashier}', styles: const PosStyles(align: PosAlign.center));
-    bytes += generator.text('Receipt: ${data.receiptNumber}', styles: const PosStyles(align: PosAlign.center));
+    final timeStr =
+        '${data.date.day}/${data.date.month}/${data.date.year} ${data.date.hour}:${data.date.minute}';
+    bytes += generator.text(timeStr,
+        styles: const PosStyles(align: PosAlign.center));
+    bytes += generator.text('Cashier: ${data.cashier}',
+        styles: const PosStyles(align: PosAlign.center));
+    bytes += generator.text('Receipt: ${data.receiptNumber}',
+        styles: const PosStyles(align: PosAlign.center));
 
     bytes += generator.hr();
     bytes += generator.row([
       PosColumn(text: 'Qty', width: 1, styles: const PosStyles(bold: true)),
       PosColumn(text: 'Item', width: 5, styles: const PosStyles(bold: true)),
-      PosColumn(text: 'Price', width: 3, styles: const PosStyles(bold: true, align: PosAlign.right)),
-      PosColumn(text: 'Total', width: 3, styles: const PosStyles(bold: true, align: PosAlign.right)),
+      PosColumn(
+          text: 'Price',
+          width: 3,
+          styles: const PosStyles(bold: true, align: PosAlign.right)),
+      PosColumn(
+          text: 'Total',
+          width: 3,
+          styles: const PosStyles(bold: true, align: PosAlign.right)),
     ]);
 
     for (final item in data.items) {
-      final name = item.name.length > 14 ? '${item.name.substring(0, 14)}..' : item.name;
+      final name =
+          item.name.length > 14 ? '${item.name.substring(0, 14)}..' : item.name;
       bytes += generator.row([
-        PosColumn(text: '${item.quantity}', width: 1, styles: const PosStyles(align: PosAlign.center)),
+        PosColumn(
+            text: '${item.quantity}',
+            width: 1,
+            styles: const PosStyles(align: PosAlign.center)),
         PosColumn(text: name, width: 5),
-        PosColumn(text: item.price.toStringAsFixed(0), width: 3, styles: const PosStyles(align: PosAlign.right)),
-        PosColumn(text: item.subtotal.toStringAsFixed(0), width: 3, styles: const PosStyles(align: PosAlign.right)),
+        PosColumn(
+            text: item.price.toStringAsFixed(0),
+            width: 3,
+            styles: const PosStyles(align: PosAlign.right)),
+        PosColumn(
+            text: item.subtotal.toStringAsFixed(0),
+            width: 3,
+            styles: const PosStyles(align: PosAlign.right)),
       ]);
     }
 
@@ -107,32 +133,55 @@ class ReceiptService {
 
     if (data.discount > 0) {
       bytes += generator.row([
-        PosColumn(text: 'Discount', width: 6, styles: const PosStyles(align: PosAlign.right)),
-        PosColumn(text: '-${data.discount.toStringAsFixed(0)}', width: 6, styles: const PosStyles(align: PosAlign.right)),
+        PosColumn(
+            text: 'Discount',
+            width: 6,
+            styles: const PosStyles(align: PosAlign.right)),
+        PosColumn(
+            text: '-${data.discount.toStringAsFixed(0)}',
+            width: 6,
+            styles: const PosStyles(align: PosAlign.right)),
       ]);
     }
 
     if (data.tax > 0) {
       bytes += generator.row([
-        PosColumn(text: 'Tax', width: 6, styles: const PosStyles(align: PosAlign.right)),
-        PosColumn(text: data.tax.toStringAsFixed(0), width: 6, styles: const PosStyles(align: PosAlign.right)),
+        PosColumn(
+            text: 'Tax',
+            width: 6,
+            styles: const PosStyles(align: PosAlign.right)),
+        PosColumn(
+            text: data.tax.toStringAsFixed(0),
+            width: 6,
+            styles: const PosStyles(align: PosAlign.right)),
       ]);
     }
 
     bytes += generator.row([
-      PosColumn(text: 'TOTAL', width: 6, styles: const PosStyles(bold: true, align: PosAlign.right)),
-      PosColumn(text: data.grandTotal.toStringAsFixed(0), width: 6, styles: const PosStyles(bold: true, align: PosAlign.right)),
+      PosColumn(
+          text: 'TOTAL',
+          width: 6,
+          styles: const PosStyles(bold: true, align: PosAlign.right)),
+      PosColumn(
+          text: data.grandTotal.toStringAsFixed(0),
+          width: 6,
+          styles: const PosStyles(bold: true, align: PosAlign.right)),
     ]);
 
-    bytes += generator.text('Payment: ${data.paymentMethod.toUpperCase()}', styles: const PosStyles(align: PosAlign.center));
+    bytes += generator.text('Payment: ${data.paymentMethod.toUpperCase()}',
+        styles: const PosStyles(align: PosAlign.center));
     bytes += generator.emptyLines(1);
-    bytes += generator.text('Thank you for your business!', styles: const PosStyles(align: PosAlign.center, bold: true));
-    
+    bytes += generator.text('Thank you for your business!',
+        styles: const PosStyles(align: PosAlign.center, bold: true));
+
     if (data.timsCuInvoiceNumber != null && data.timsQrCode != null) {
       bytes += generator.emptyLines(1);
-      bytes += generator.text('--- eTIMS RECEIPT ---', styles: const PosStyles(align: PosAlign.center, bold: true));
-      bytes += generator.text('CU Invoice No:', styles: const PosStyles(align: PosAlign.center));
-      bytes += generator.text(data.timsCuInvoiceNumber!, styles: const PosStyles(align: PosAlign.center, bold: true));
+      bytes += generator.text('--- eTIMS RECEIPT ---',
+          styles: const PosStyles(align: PosAlign.center, bold: true));
+      bytes += generator.text('CU Invoice No:',
+          styles: const PosStyles(align: PosAlign.center));
+      bytes += generator.text(data.timsCuInvoiceNumber!,
+          styles: const PosStyles(align: PosAlign.center, bold: true));
       bytes += generator.emptyLines(1);
       bytes += generator.qrcode(data.timsQrCode!, size: QRSize.size5);
     }
@@ -151,48 +200,72 @@ class ReceiptService {
         build: (context) => pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.center,
           children: [
-            pw.Text(data.storeName, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 18)),
+            pw.Text(data.storeName,
+                style:
+                    pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 18)),
             if (data.storePhone.isNotEmpty)
-              pw.Text('Tel: ${data.storePhone}', style: const pw.TextStyle(fontSize: 10)),
+              pw.Text('Tel: ${data.storePhone}',
+                  style: const pw.TextStyle(fontSize: 10)),
             pw.SizedBox(height: 8),
-            pw.Text('${data.date.day}/${data.date.month}/${data.date.year}  ${data.date.hour}:${data.date.minute}',
-              style: const pw.TextStyle(fontSize: 10)),
-            pw.Text('Cashier: ${data.cashier}', style: const pw.TextStyle(fontSize: 10)),
-            pw.Text('Receipt: ${data.receiptNumber}', style: const pw.TextStyle(fontSize: 10)),
+            pw.Text(
+                '${data.date.day}/${data.date.month}/${data.date.year}  ${data.date.hour}:${data.date.minute}',
+                style: const pw.TextStyle(fontSize: 10)),
+            pw.Text('Cashier: ${data.cashier}',
+                style: const pw.TextStyle(fontSize: 10)),
+            pw.Text('Receipt: ${data.receiptNumber}',
+                style: const pw.TextStyle(fontSize: 10)),
             pw.Divider(),
-            pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
-              pw.Text('Qty', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
-              pw.Text('Item', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
-              pw.Text('Price', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
-              pw.Text('Total', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
-            ]),
+            pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text('Qty',
+                      style: pw.TextStyle(
+                          fontWeight: pw.FontWeight.bold, fontSize: 10)),
+                  pw.Text('Item',
+                      style: pw.TextStyle(
+                          fontWeight: pw.FontWeight.bold, fontSize: 10)),
+                  pw.Text('Price',
+                      style: pw.TextStyle(
+                          fontWeight: pw.FontWeight.bold, fontSize: 10)),
+                  pw.Text('Total',
+                      style: pw.TextStyle(
+                          fontWeight: pw.FontWeight.bold, fontSize: 10)),
+                ]),
             ...data.items.map((item) => pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: [
-                pw.Text('${item.quantity}', style: const pw.TextStyle(fontSize: 10)),
-                pw.Text(item.name, style: const pw.TextStyle(fontSize: 10)),
-                pw.Text(item.price.toStringAsFixed(0), style: const pw.TextStyle(fontSize: 10)),
-                pw.Text(item.subtotal.toStringAsFixed(0), style: const pw.TextStyle(fontSize: 10)),
-              ],
-            )),
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text('${item.quantity}',
+                        style: const pw.TextStyle(fontSize: 10)),
+                    pw.Text(item.name, style: const pw.TextStyle(fontSize: 10)),
+                    pw.Text(item.price.toStringAsFixed(0),
+                        style: const pw.TextStyle(fontSize: 10)),
+                    pw.Text(item.subtotal.toStringAsFixed(0),
+                        style: const pw.TextStyle(fontSize: 10)),
+                  ],
+                )),
             pw.Divider(),
             if (data.discount > 0)
               pw.Row(mainAxisAlignment: pw.MainAxisAlignment.end, children: [
-                pw.Text('Discount: -${data.discount.toStringAsFixed(0)}', style: const pw.TextStyle(fontSize: 10)),
+                pw.Text('Discount: -${data.discount.toStringAsFixed(0)}',
+                    style: const pw.TextStyle(fontSize: 10)),
               ]),
             if (data.tax > 0)
               pw.Row(mainAxisAlignment: pw.MainAxisAlignment.end, children: [
-                pw.Text('Tax: ${data.tax.toStringAsFixed(0)}', style: const pw.TextStyle(fontSize: 10)),
+                pw.Text('Tax: ${data.tax.toStringAsFixed(0)}',
+                    style: const pw.TextStyle(fontSize: 10)),
               ]),
             pw.Row(mainAxisAlignment: pw.MainAxisAlignment.end, children: [
               pw.Text('TOTAL: ${data.grandTotal.toStringAsFixed(0)}',
-                style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                  style: pw.TextStyle(
+                      fontWeight: pw.FontWeight.bold, fontSize: 12)),
             ]),
             pw.SizedBox(height: 8),
-            pw.Text('Payment: ${data.paymentMethod.toUpperCase()}', style: const pw.TextStyle(fontSize: 10)),
+            pw.Text('Payment: ${data.paymentMethod.toUpperCase()}',
+                style: const pw.TextStyle(fontSize: 10)),
             pw.SizedBox(height: 16),
             pw.Text('Thank You For Shopping',
-              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                style:
+                    pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12)),
           ],
         ),
       ),
@@ -204,7 +277,8 @@ class ReceiptService {
     try {
       if (!await ThermalPrinterService.isConnected()) {
         if (ThermalPrinterService.connectedAddress != null) {
-          final reconnected = await ThermalPrinterService.connect(ThermalPrinterService.connectedAddress!);
+          final reconnected = await ThermalPrinterService.connect(
+              ThermalPrinterService.connectedAddress!);
           if (!reconnected) return false;
         } else {
           return false;
@@ -218,13 +292,15 @@ class ReceiptService {
   }
 
   static Future<void> printViaWifi(String ip, int port, List<int> bytes) async {
-    final socket = await Socket.connect(ip, port, timeout: const Duration(seconds: 5));
+    final socket =
+        await Socket.connect(ip, port, timeout: const Duration(seconds: 5));
     socket.add(bytes);
     await socket.flush();
     await socket.close();
   }
 
-  static Future<Uint8List> generateA4Invoice(ReceiptData data, {String? qrData}) async {
+  static Future<Uint8List> generateA4Invoice(ReceiptData data,
+      {String? qrData}) async {
     final doc = pw.Document();
     doc.addPage(
       pw.MultiPage(
@@ -239,32 +315,50 @@ class ReceiptService {
               pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
-                  pw.Text(data.storeName, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 24)),
+                  pw.Text(data.storeName,
+                      style: pw.TextStyle(
+                          fontWeight: pw.FontWeight.bold, fontSize: 24)),
                   pw.SizedBox(height: 4),
                   if (data.kraPin != null && data.kraPin!.isNotEmpty)
-                    pw.Text('KRA PIN: ${data.kraPin}', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
+                    pw.Text('KRA PIN: ${data.kraPin}',
+                        style: pw.TextStyle(
+                            fontSize: 12, fontWeight: pw.FontWeight.bold)),
                   if (data.storePhone.isNotEmpty)
-                    pw.Text('Phone: ${data.storePhone}', style: const pw.TextStyle(fontSize: 12)),
+                    pw.Text('Phone: ${data.storePhone}',
+                        style: const pw.TextStyle(fontSize: 12)),
                 ],
               ),
               pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.end,
                 children: [
-                  pw.Text('INVOICE', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 28, color: PdfColors.blueGrey800)),
+                  pw.Text('INVOICE',
+                      style: pw.TextStyle(
+                          fontWeight: pw.FontWeight.bold,
+                          fontSize: 28,
+                          color: PdfColors.blueGrey800)),
                   pw.SizedBox(height: 8),
-                  pw.Text('Date: ${data.date.day}/${data.date.month}/${data.date.year}', style: const pw.TextStyle(fontSize: 12)),
-                  pw.Text('Invoice No: ${data.receiptNumber}', style: const pw.TextStyle(fontSize: 12)),
+                  pw.Text(
+                      'Date: ${data.date.day}/${data.date.month}/${data.date.year}',
+                      style: const pw.TextStyle(fontSize: 12)),
+                  pw.Text('Invoice No: ${data.receiptNumber}',
+                      style: const pw.TextStyle(fontSize: 12)),
                 ],
               ),
             ],
           ),
           pw.SizedBox(height: 30),
-          
+
           // Billed To
           if (data.customerName != null && data.customerName!.isNotEmpty) ...[
-            pw.Text('Billed To:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 14, color: PdfColors.grey700)),
+            pw.Text('Billed To:',
+                style: pw.TextStyle(
+                    fontWeight: pw.FontWeight.bold,
+                    fontSize: 14,
+                    color: PdfColors.grey700)),
             pw.SizedBox(height: 4),
-            pw.Text(data.customerName!, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16)),
+            pw.Text(data.customerName!,
+                style:
+                    pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16)),
             pw.SizedBox(height: 30),
           ],
 
@@ -272,8 +366,10 @@ class ReceiptService {
           pw.TableHelper.fromTextArray(
             context: context,
             border: pw.TableBorder.all(color: PdfColors.grey300, width: 1),
-            headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
-            headerDecoration: const pw.BoxDecoration(color: PdfColors.blueGrey800),
+            headerStyle: pw.TextStyle(
+                fontWeight: pw.FontWeight.bold, color: PdfColors.white),
+            headerDecoration:
+                const pw.BoxDecoration(color: PdfColors.blueGrey800),
             cellAlignment: pw.Alignment.centerRight,
             cellAlignments: {
               0: pw.Alignment.centerLeft,
@@ -333,8 +429,12 @@ class ReceiptService {
                     pw.Row(
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
-                        pw.Text('Grand Total:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16)),
-                        pw.Text(data.grandTotal.toStringAsFixed(2), style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16)),
+                        pw.Text('Grand Total:',
+                            style: pw.TextStyle(
+                                fontWeight: pw.FontWeight.bold, fontSize: 16)),
+                        pw.Text(data.grandTotal.toStringAsFixed(2),
+                            style: pw.TextStyle(
+                                fontWeight: pw.FontWeight.bold, fontSize: 16)),
                       ],
                     ),
                   ],
@@ -352,9 +452,11 @@ class ReceiptService {
               pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
-                  pw.Text('Payment Method: ${data.paymentMethod.toUpperCase()}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                  pw.Text('Payment Method: ${data.paymentMethod.toUpperCase()}',
+                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                   pw.SizedBox(height: 8),
-                  pw.Text('Thank you for your business!', style: const pw.TextStyle(color: PdfColors.grey700)),
+                  pw.Text('Thank you for your business!',
+                      style: const pw.TextStyle(color: PdfColors.grey700)),
                 ],
               ),
               if (data.timsQrCode != null || qrData != null)
@@ -362,8 +464,12 @@ class ReceiptService {
                   crossAxisAlignment: pw.CrossAxisAlignment.end,
                   children: [
                     if (data.timsCuInvoiceNumber != null) ...[
-                      pw.Text('eTIMS CU Invoice No:', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
-                      pw.Text(data.timsCuInvoiceNumber!, style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
+                      pw.Text('eTIMS CU Invoice No:',
+                          style: const pw.TextStyle(
+                              fontSize: 10, color: PdfColors.grey700)),
+                      pw.Text(data.timsCuInvoiceNumber!,
+                          style: pw.TextStyle(
+                              fontSize: 12, fontWeight: pw.FontWeight.bold)),
                       pw.SizedBox(height: 4),
                     ],
                     pw.Container(
@@ -385,8 +491,12 @@ class ReceiptService {
     return doc.save();
   }
 
-  static Future<void> sharePdf(ReceiptData data, {bool isA4 = false, String? qrData}) async {
-    final pdfBytes = isA4 ? await generateA4Invoice(data, qrData: qrData) : await generatePdf(data);
-    await Printing.sharePdf(bytes: pdfBytes, filename: 'invoice_${data.receiptNumber}.pdf');
+  static Future<void> sharePdf(ReceiptData data,
+      {bool isA4 = false, String? qrData}) async {
+    final pdfBytes = isA4
+        ? await generateA4Invoice(data, qrData: qrData)
+        : await generatePdf(data);
+    await Printing.sharePdf(
+        bytes: pdfBytes, filename: 'invoice_${data.receiptNumber}.pdf');
   }
 }

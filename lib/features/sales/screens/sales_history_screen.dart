@@ -36,10 +36,19 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
 
   Future<void> _loadSales({bool refresh = false}) async {
     if (refresh) {
-      setState(() { _loading = true; _error = null; _lastDocId = null; _hasMore = true; _sales.clear(); });
+      setState(() {
+        _loading = true;
+        _error = null;
+        _lastDocId = null;
+        _hasMore = true;
+        _sales.clear();
+      });
     } else {
       if (!_hasMore || _loadingMore) return;
-      setState(() { _loadingMore = true; _error = null; });
+      setState(() {
+        _loadingMore = true;
+        _error = null;
+      });
     }
 
     try {
@@ -51,7 +60,9 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
       });
 
       final rawList = (data['sales'] as List?) ?? [];
-      final newSales = rawList.map((e) => Sale.fromMap(Map<String, dynamic>.from(e as Map))).toList();
+      final newSales = rawList
+          .map((e) => Sale.fromMap(Map<String, dynamic>.from(e as Map)))
+          .toList();
 
       if (mounted) {
         setState(() {
@@ -92,7 +103,9 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
         isLoading: _loading && _sales.isEmpty,
         message: 'Loading sales...',
         child: _error != null && _sales.isEmpty
-            ? Center(child: Text(_error!, style: TextStyle(color: theme.colorScheme.onSurface)))
+            ? Center(
+                child: Text(_error!,
+                    style: TextStyle(color: theme.colorScheme.onSurface)))
             : _sales.isEmpty && !_loading
                 ? const EmptyState(
                     icon: Icons.receipt_long_rounded,
@@ -112,7 +125,9 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
                           _loadSales();
                           return const Padding(
                             padding: EdgeInsets.symmetric(vertical: 20),
-                            child: Center(child: CircularProgressIndicator(color: AppColors.accent)),
+                            child: Center(
+                                child: CircularProgressIndicator(
+                                    color: AppColors.accent)),
                           );
                         }
                         final sale = _sales[i];
@@ -149,7 +164,8 @@ class _SaleCard extends StatelessWidget {
             children: [
               Text(
                 DateFormat('MMM d, y • h:mm a').format(sale.createdAt),
-                style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
+                style: TextStyle(
+                    color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
               ),
               _PaymentChip(method: sale.paymentMethod),
             ],
@@ -161,9 +177,11 @@ class _SaleCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('${item.quantity}x ${item.name}',
-                      style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurface)),
+                        style: TextStyle(
+                            fontSize: 14, color: theme.colorScheme.onSurface)),
                     Text(fmt.format(item.lineTotal),
-                      style: TextStyle(fontSize: 14, color: theme.colorScheme.onSurface)),
+                        style: TextStyle(
+                            fontSize: 14, color: theme.colorScheme.onSurface)),
                   ],
                 ),
               )),
@@ -171,16 +189,28 @@ class _SaleCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Total', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-              Text(fmt.format(sale.total), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: AppColors.accent)),
+              const Text('Total',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+              Text(fmt.format(sale.total),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                      color: AppColors.accent)),
             ],
           ),
           const SizedBox(height: 4),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Profit', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12)),
-              Text(fmt.format(sale.profit), style: const TextStyle(color: AppColors.success, fontWeight: FontWeight.w600, fontSize: 12)),
+              Text('Profit',
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 12)),
+              Text(fmt.format(sale.profit),
+                  style: const TextStyle(
+                      color: AppColors.success,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12)),
             ],
           ),
           const SizedBox(height: 12),
@@ -200,17 +230,20 @@ class _SaleCard extends StatelessWidget {
   Future<void> _printReceipt(BuildContext context, Sale sale) async {
     final auth = context.read<AuthProvider>();
     final data = ReceiptData(
-      storeName: auth.userProfile?['businessName'] as String? ?? 'Hardware Store',
+      storeName:
+          auth.userProfile?['businessName'] as String? ?? 'Hardware Store',
       storePhone: auth.userProfile?['phone'] as String? ?? '',
       date: sale.createdAt,
       cashier: sale.cashierName ?? 'Staff',
       receiptNumber: sale.id,
-      items: sale.items.map((e) => ReceiptItem(
-        name: e.name,
-        quantity: e.quantity.toDouble(),
-        price: e.sellingPrice,
-        subtotal: e.lineTotal,
-      )).toList(),
+      items: sale.items
+          .map((e) => ReceiptItem(
+                name: e.name,
+                quantity: e.quantity.toDouble(),
+                price: e.sellingPrice,
+                subtotal: e.lineTotal,
+              ))
+          .toList(),
       subtotal: sale.total,
       grandTotal: sale.total,
       paymentMethod: sale.paymentMethod,
@@ -230,9 +263,14 @@ class _PaymentChip extends StatelessWidget {
   Widget build(BuildContext context) {
     Color color;
     switch (method) {
-      case 'mpesa':  color = AppColors.success; break;
-      case 'credit': color = AppColors.warning; break;
-      default:       color = AppColors.chartBlue;
+      case 'mpesa':
+        color = AppColors.success;
+        break;
+      case 'credit':
+        color = AppColors.warning;
+        break;
+      default:
+        color = AppColors.chartBlue;
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -241,7 +279,8 @@ class _PaymentChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(method.toUpperCase(),
-        style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w700)),
+          style: TextStyle(
+              color: color, fontSize: 10, fontWeight: FontWeight.w700)),
     );
   }
 }

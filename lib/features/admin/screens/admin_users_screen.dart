@@ -28,7 +28,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       final list = (res['users'] as List?) ?? [];
       if (mounted) {
         setState(() {
-          _users = list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+          _users =
+              list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
           _loading = false;
         });
       }
@@ -46,12 +47,15 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     setState(() => _loading = true);
     try {
       await FunctionsService.call('adminGrantSuperAdmin', {'targetUid': uid});
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Granted Super Admin rights successfully.')));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Granted Super Admin rights successfully.')));
       _loadUsers();
     } catch (e) {
       if (mounted) {
         setState(() => _loading = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.toString())));
       }
     }
   }
@@ -60,12 +64,15 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     setState(() => _loading = true);
     try {
       await FunctionsService.call('adminRevokeSuperAdmin', {'targetUid': uid});
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Revoked Super Admin rights successfully.')));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Revoked Super Admin rights successfully.')));
       _loadUsers();
     } catch (e) {
       if (mounted) {
         setState(() => _loading = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.toString())));
       }
     }
   }
@@ -93,7 +100,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                     dropdownColor: theme.cardColor,
                     items: const [
                       DropdownMenuItem(value: 'owner', child: Text('Owner')),
-                      DropdownMenuItem(value: 'manager', child: Text('Manager')),
+                      DropdownMenuItem(
+                          value: 'manager', child: Text('Manager')),
                       DropdownMenuItem(value: 'staff', child: Text('Staff')),
                     ],
                     onChanged: (val) {
@@ -112,7 +120,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                     title: const Text('Generate Password Reset Link'),
                     value: resetPassword,
                     activeColor: AppColors.accent,
-                    onChanged: (val) => setDialogState(() => resetPassword = val ?? false),
+                    onChanged: (val) =>
+                        setDialogState(() => resetPassword = val ?? false),
                   ),
                 ],
               ),
@@ -150,9 +159,12 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
               builder: (context) => AlertDialog(
                 backgroundColor: theme.cardColor,
                 title: const Text('Password Reset Link'),
-                content: SelectableText(link, style: const TextStyle(fontFamily: 'monospace')),
+                content: SelectableText(link,
+                    style: const TextStyle(fontFamily: 'monospace')),
                 actions: [
-                  TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+                  TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Close')),
                 ],
               ),
             );
@@ -161,7 +173,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         _loadUsers();
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(e.toString())));
           setState(() => _loading = false);
         }
       }
@@ -174,16 +187,21 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('Platform Users', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+        title: Text('Platform Users',
+            style: theme.textTheme.titleLarge
+                ?.copyWith(fontWeight: FontWeight.bold)),
         actions: [
-          IconButton(icon: const Icon(Icons.refresh_rounded), onPressed: _loadUsers),
+          IconButton(
+              icon: const Icon(Icons.refresh_rounded), onPressed: _loadUsers),
           const SizedBox(width: 24),
         ],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(child: Text(_error!, style: const TextStyle(color: AppColors.error)))
+              ? Center(
+                  child: Text(_error!,
+                      style: const TextStyle(color: AppColors.error)))
               : _users.isEmpty
                   ? const EmptyState(
                       icon: Icons.people_rounded,
@@ -210,13 +228,16 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                 width: 50,
                                 height: 50,
                                 decoration: BoxDecoration(
-                                  color: AppColors.accent.withValues(alpha: 0.1),
+                                  color:
+                                      AppColors.accent.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Icon(
                                   u['role'] == 'owner'
                                       ? Icons.admin_panel_settings_rounded
-                                      : (u['role'] == 'manager' ? Icons.shield_rounded : Icons.person_rounded),
+                                      : (u['role'] == 'manager'
+                                          ? Icons.shield_rounded
+                                          : Icons.person_rounded),
                                   color: AppColors.accent,
                                 ),
                               ),
@@ -226,72 +247,124 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      (u['displayName'] as String).isNotEmpty ? u['displayName'] : 'No Name Set',
-                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16,
-                                        color: theme.colorScheme.onSurface),
+                                      (u['displayName'] as String).isNotEmpty
+                                          ? u['displayName']
+                                          : 'No Name Set',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: theme.colorScheme.onSurface),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(u['email'] ?? '',
-                                      style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13)),
+                                        style: TextStyle(
+                                            color: theme
+                                                .colorScheme.onSurfaceVariant,
+                                            fontSize: 13)),
                                     const SizedBox(height: 8),
                                     Row(
                                       children: [
                                         Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 2),
                                           decoration: BoxDecoration(
-                                            color: AppColors.accent.withValues(alpha: 0.1),
-                                            borderRadius: BorderRadius.circular(6),
-                                            border: Border.all(color: AppColors.accent.withValues(alpha: 0.2)),
+                                            color: AppColors.accent
+                                                .withValues(alpha: 0.1),
+                                            borderRadius:
+                                                BorderRadius.circular(6),
+                                            border: Border.all(
+                                                color: AppColors.accent
+                                                    .withValues(alpha: 0.2)),
                                           ),
-                                          child: Text((u['role'] ?? 'staff').toUpperCase(),
-                                            style: const TextStyle(color: AppColors.accent, fontSize: 10, fontWeight: FontWeight.bold)),
+                                          child: Text(
+                                              (u['role'] ?? 'staff')
+                                                  .toUpperCase(),
+                                              style: const TextStyle(
+                                                  color: AppColors.accent,
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.bold)),
                                         ),
                                         if (isSuspended) ...[
                                           const SizedBox(width: 8),
                                           Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 8, vertical: 2),
                                             decoration: BoxDecoration(
-                                              color: AppColors.error.withValues(alpha: 0.1),
-                                              borderRadius: BorderRadius.circular(6),
-                                              border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
+                                              color: AppColors.error
+                                                  .withValues(alpha: 0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                              border: Border.all(
+                                                  color: AppColors.error
+                                                      .withValues(alpha: 0.2)),
                                             ),
-                                            child: const Text('SUSPENDED', style: TextStyle(color: AppColors.error, fontSize: 10, fontWeight: FontWeight.bold)),
+                                            child: const Text('SUSPENDED',
+                                                style: TextStyle(
+                                                    color: AppColors.error,
+                                                    fontSize: 10,
+                                                    fontWeight:
+                                                        FontWeight.bold)),
                                           ),
                                         ],
                                         if (u['isSuperAdmin'] == true) ...[
                                           const SizedBox(width: 8),
                                           Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 8, vertical: 2),
                                             decoration: BoxDecoration(
-                                              color: Colors.purple.withValues(alpha: 0.1),
-                                              borderRadius: BorderRadius.circular(6),
-                                              border: Border.all(color: Colors.purple.withValues(alpha: 0.2)),
+                                              color: Colors.purple
+                                                  .withValues(alpha: 0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                              border: Border.all(
+                                                  color: Colors.purple
+                                                      .withValues(alpha: 0.2)),
                                             ),
-                                            child: const Text('SUPER ADMIN', style: TextStyle(color: Colors.purple, fontSize: 10, fontWeight: FontWeight.bold)),
+                                            child: const Text('SUPER ADMIN',
+                                                style: TextStyle(
+                                                    color: Colors.purple,
+                                                    fontSize: 10,
+                                                    fontWeight:
+                                                        FontWeight.bold)),
                                           ),
                                         ],
                                         const SizedBox(width: 12),
                                         Text('Business: ${u['businessId']}',
-                                          style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12)),
+                                            style: TextStyle(
+                                                color: theme.colorScheme
+                                                    .onSurfaceVariant,
+                                                fontSize: 12)),
                                       ],
                                     ),
                                   ],
                                 ),
                               ),
                               PopupMenuButton<String>(
-                                icon: Icon(Icons.more_vert_rounded, color: theme.colorScheme.onSurfaceVariant),
+                                icon: Icon(Icons.more_vert_rounded,
+                                    color: theme.colorScheme.onSurfaceVariant),
                                 onSelected: (value) {
                                   if (value == 'edit') _editUser(u);
-                                  if (value == 'grant_sa') _grantSuperAdmin(u['uid']);
-                                  if (value == 'revoke_sa') _revokeSuperAdmin(u['uid']);
+                                  if (value == 'grant_sa')
+                                    _grantSuperAdmin(u['uid']);
+                                  if (value == 'revoke_sa')
+                                    _revokeSuperAdmin(u['uid']);
                                 },
                                 itemBuilder: (context) => [
-                                  const PopupMenuItem(value: 'edit', child: Text('Edit User')),
+                                  const PopupMenuItem(
+                                      value: 'edit', child: Text('Edit User')),
                                   const PopupMenuDivider(),
                                   if (u['isSuperAdmin'] != true)
-                                    const PopupMenuItem(value: 'grant_sa', child: Text('Grant Super Admin', style: TextStyle(color: Colors.purple))),
+                                    const PopupMenuItem(
+                                        value: 'grant_sa',
+                                        child: Text('Grant Super Admin',
+                                            style: TextStyle(
+                                                color: Colors.purple))),
                                   if (u['isSuperAdmin'] == true)
-                                    const PopupMenuItem(value: 'revoke_sa', child: Text('Revoke Super Admin', style: TextStyle(color: AppColors.error))),
+                                    const PopupMenuItem(
+                                        value: 'revoke_sa',
+                                        child: Text('Revoke Super Admin',
+                                            style: TextStyle(
+                                                color: AppColors.error))),
                                 ],
                               ),
                             ],

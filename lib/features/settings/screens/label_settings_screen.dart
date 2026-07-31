@@ -68,7 +68,9 @@ class _LabelSettingsScreenState extends State<LabelSettingsScreen> {
             }
           },
         ),
-        title: Text('Barcode Label Settings', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+        title: Text('Barcode Label Settings',
+            style: theme.textTheme.titleLarge
+                ?.copyWith(fontWeight: FontWeight.bold)),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -91,7 +93,9 @@ class _LabelSettingsScreenState extends State<LabelSettingsScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Paper Size & Layout', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                              Text('Paper Size & Layout',
+                                  style: theme.textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.bold)),
                               const SizedBox(height: 16),
                               DropdownButtonFormField<String>(
                                 initialValue: _paperSize,
@@ -101,31 +105,44 @@ class _LabelSettingsScreenState extends State<LabelSettingsScreen> {
                                 ),
                                 dropdownColor: theme.cardColor,
                                 items: const [
-                                  DropdownMenuItem(value: '38mm', child: Text('38mm × 25mm (Small Jewelry / Hardware Roll)')),
-                                  DropdownMenuItem(value: '58mm', child: Text('58mm × 30mm (Standard Desktop Thermal Printer)')),
-                                  DropdownMenuItem(value: '80mm', child: Text('80mm × 40mm (Large Product Tag)')),
+                                  DropdownMenuItem(
+                                      value: '38mm',
+                                      child: Text(
+                                          '38mm × 25mm (Small Jewelry / Hardware Roll)')),
+                                  DropdownMenuItem(
+                                      value: '58mm',
+                                      child: Text(
+                                          '58mm × 30mm (Standard Desktop Thermal Printer)')),
+                                  DropdownMenuItem(
+                                      value: '80mm',
+                                      child: Text(
+                                          '80mm × 40mm (Large Product Tag)')),
                                 ],
                                 onChanged: (val) {
-                                  if (val != null) setState(() => _paperSize = val);
+                                  if (val != null)
+                                    setState(() => _paperSize = val);
                                 },
                               ),
                               const SizedBox(height: 20),
                               SwitchListTile(
                                 title: const Text('Show Store / Business Name'),
                                 value: _showBusinessName,
-                                onChanged: (val) => setState(() => _showBusinessName = val),
+                                onChanged: (val) =>
+                                    setState(() => _showBusinessName = val),
                                 activeThumbColor: AppColors.accent,
                               ),
                               SwitchListTile(
                                 title: const Text('Show Price (KES)'),
                                 value: _showPrice,
-                                onChanged: (val) => setState(() => _showPrice = val),
+                                onChanged: (val) =>
+                                    setState(() => _showPrice = val),
                                 activeThumbColor: AppColors.accent,
                               ),
                               SwitchListTile(
                                 title: const Text('Show SKU Code'),
                                 value: _showSku,
-                                onChanged: (val) => setState(() => _showSku = val),
+                                onChanged: (val) =>
+                                    setState(() => _showSku = val),
                                 activeThumbColor: AppColors.accent,
                               ),
                             ],
@@ -144,33 +161,58 @@ class _LabelSettingsScreenState extends State<LabelSettingsScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Label Preview', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                              Text('Label Preview',
+                                  style: theme.textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.bold)),
                               const SizedBox(height: 16),
                               Center(
                                 child: Container(
-                                  width: _paperSize == '38mm' ? 160 : (_paperSize == '58mm' ? 220 : 280),
+                                  width: _paperSize == '38mm'
+                                      ? 160
+                                      : (_paperSize == '58mm' ? 220 : 280),
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(color: Colors.black26),
-                                    boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+                                    boxShadow: const [
+                                      BoxShadow(
+                                          color: Colors.black12, blurRadius: 4)
+                                    ],
                                   ),
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       if (_showBusinessName)
-                                        const Text('KAMAU HARDWARE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black)),
+                                        const Text('KAMAU HARDWARE',
+                                            style: TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.black)),
                                       const SizedBox(height: 2),
-                                      const Text('Portland Cement 50kg', style: TextStyle(fontSize: 9, color: Colors.black)),
+                                      const Text('Portland Cement 50kg',
+                                          style: TextStyle(
+                                              fontSize: 9,
+                                              color: Colors.black)),
                                       if (_showSku)
-                                        const Text('SKU: CEM-50', style: TextStyle(fontSize: 8, color: Colors.black54)),
+                                        const Text('SKU: CEM-50',
+                                            style: TextStyle(
+                                                fontSize: 8,
+                                                color: Colors.black54)),
                                       const SizedBox(height: 4),
-                                      const Icon(Icons.view_column_rounded, size: 28, color: Colors.black),
-                                      const Text('123456789', style: TextStyle(fontSize: 8, color: Colors.black)),
+                                      const Icon(Icons.view_column_rounded,
+                                          size: 28, color: Colors.black),
+                                      const Text('123456789',
+                                          style: TextStyle(
+                                              fontSize: 8,
+                                              color: Colors.black)),
                                       if (_showPrice) ...[
                                         const SizedBox(height: 2),
-                                        const Text('KES 850.00', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black)),
+                                        const Text('KES 850.00',
+                                            style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.black)),
                                       ],
                                     ],
                                   ),
@@ -182,10 +224,12 @@ class _LabelSettingsScreenState extends State<LabelSettingsScreen> {
                       ),
                       const SizedBox(height: 32),
                       FilledButton.icon(
-                        style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
+                        style: FilledButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16)),
                         onPressed: _saveSettings,
                         icon: const Icon(Icons.save_rounded),
-                        label: const Text('Save Settings', style: TextStyle(fontSize: 16)),
+                        label: const Text('Save Settings',
+                            style: TextStyle(fontSize: 16)),
                       ),
                     ],
                   ),

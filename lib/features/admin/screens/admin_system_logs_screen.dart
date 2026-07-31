@@ -24,9 +24,13 @@ class _AdminSystemLogsScreenState extends State<AdminSystemLogsScreen> {
   }
 
   Future<void> _loadLogs() async {
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
-      final res = await FunctionsService.call('adminGetSystemLogs', {'limit': 100});
+      final res =
+          await FunctionsService.call('adminGetSystemLogs', {'limit': 100});
       final raw = (res['logs'] as List?) ?? [];
       if (mounted) {
         setState(() {
@@ -35,7 +39,11 @@ class _AdminSystemLogsScreenState extends State<AdminSystemLogsScreen> {
         });
       }
     } catch (e) {
-      if (mounted) setState(() { _error = e.toString(); _loading = false; });
+      if (mounted)
+        setState(() {
+          _error = e.toString();
+          _loading = false;
+        });
     }
   }
 
@@ -54,57 +62,66 @@ class _AdminSystemLogsScreenState extends State<AdminSystemLogsScreen> {
       body: LoadingOverlay(
         isLoading: _loading,
         child: _error != null
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, color: AppColors.error, size: 48),
-                  const SizedBox(height: 16),
-                  Text(_error!, style: const TextStyle(color: AppColors.error)),
-                ],
-              ),
-            )
-          : _logs.isEmpty
-            ? const EmptyState(
-                icon: Icons.history_edu,
-                title: 'No Logs Found',
-                subtitle: 'No system audit logs found for the platform.',
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline,
+                        color: AppColors.error, size: 48),
+                    const SizedBox(height: 16),
+                    Text(_error!,
+                        style: const TextStyle(color: AppColors.error)),
+                  ],
+                ),
               )
-            : ListView.separated(
-                padding: const EdgeInsets.all(24),
-                itemCount: _logs.length,
-                separatorBuilder: (_, __) => const Divider(),
-                itemBuilder: (context, index) {
-                  final log = _logs[index];
-                  final action = log['action'] ?? 'Unknown Action';
-                  final targetId = log['targetId'] ?? '';
-                  final targetType = log['targetType'] ?? '';
-                  final performedBy = log['performedBy'] ?? 'system';
-                  final timestamp = log['timestamp'] != null 
-                      ? DateTime.tryParse(log['timestamp']) 
-                      : null;
-                  
-                  return ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                      child: const Icon(Icons.list_alt_rounded, size: 20),
-                    ),
-                    title: Text(action.toString().toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 4),
-                        Text('Target: $targetType ($targetId)'),
-                        Text('Performed by: $performedBy'),
-                      ],
-                    ),
-                    trailing: timestamp != null
-                        ? Text(DateFormat('MMM dd, HH:mm').format(timestamp), style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12))
-                        : const SizedBox(),
-                    isThreeLine: true,
-                  );
-                },
-              ),
+            : _logs.isEmpty
+                ? const EmptyState(
+                    icon: Icons.history_edu,
+                    title: 'No Logs Found',
+                    subtitle: 'No system audit logs found for the platform.',
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.all(24),
+                    itemCount: _logs.length,
+                    separatorBuilder: (_, __) => const Divider(),
+                    itemBuilder: (context, index) {
+                      final log = _logs[index];
+                      final action = log['action'] ?? 'Unknown Action';
+                      final targetId = log['targetId'] ?? '';
+                      final targetType = log['targetType'] ?? '';
+                      final performedBy = log['performedBy'] ?? 'system';
+                      final timestamp = log['timestamp'] != null
+                          ? DateTime.tryParse(log['timestamp'])
+                          : null;
+
+                      return ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor:
+                              theme.colorScheme.surfaceContainerHighest,
+                          child: const Icon(Icons.list_alt_rounded, size: 20),
+                        ),
+                        title: Text(action.toString().toUpperCase(),
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 14)),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 4),
+                            Text('Target: $targetType ($targetId)'),
+                            Text('Performed by: $performedBy'),
+                          ],
+                        ),
+                        trailing: timestamp != null
+                            ? Text(
+                                DateFormat('MMM dd, HH:mm').format(timestamp),
+                                style: TextStyle(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    fontSize: 12))
+                            : const SizedBox(),
+                        isThreeLine: true,
+                      );
+                    },
+                  ),
       ),
     );
   }

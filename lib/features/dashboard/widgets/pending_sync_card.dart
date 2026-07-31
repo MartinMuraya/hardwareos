@@ -26,18 +26,24 @@ class PendingSyncCard extends StatelessWidget {
           const Icon(Icons.sync_rounded, color: AppColors.warning, size: 20),
           const SizedBox(width: 8),
           Text('Pending Sync',
-            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: theme.colorScheme.onSurface)),
+              style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  color: theme.colorScheme.onSurface)),
           const Spacer(),
           if (queue.isSyncing)
             const SizedBox(
-              width: 16, height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.warning),
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                  strokeWidth: 2, color: AppColors.warning),
             )
           else
             TextButton(
               onPressed: () => queue.syncAll(context.read<AuthProvider>()),
               style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
@@ -47,11 +53,20 @@ class PendingSyncCard extends StatelessWidget {
         const SizedBox(height: 8),
         Wrap(spacing: 16, children: [
           if (queue.pendingSales > 0)
-            _SyncCount(label: 'Sales', count: queue.pendingSales, icon: Icons.point_of_sale_rounded),
+            _SyncCount(
+                label: 'Sales',
+                count: queue.pendingSales,
+                icon: Icons.point_of_sale_rounded),
           if (queue.pendingPayments > 0)
-            _SyncCount(label: 'Payments', count: queue.pendingPayments, icon: Icons.payments_rounded),
+            _SyncCount(
+                label: 'Payments',
+                count: queue.pendingPayments,
+                icon: Icons.payments_rounded),
           if (queue.pendingInventory > 0)
-            _SyncCount(label: 'Inventory', count: queue.pendingInventory, icon: Icons.inventory_2_rounded),
+            _SyncCount(
+                label: 'Inventory',
+                count: queue.pendingInventory,
+                icon: Icons.inventory_2_rounded),
         ]),
         if (queue.lastError != null) ...[
           const SizedBox(height: 8),
@@ -59,7 +74,8 @@ class PendingSyncCard extends StatelessWidget {
             const Icon(Icons.error_outline, color: AppColors.error, size: 14),
             const SizedBox(width: 4),
             Expanded(
-              child: Text(queue.lastError!, style: const TextStyle(color: AppColors.error, fontSize: 11)),
+              child: Text(queue.lastError!,
+                  style: const TextStyle(color: AppColors.error, fontSize: 11)),
             ),
           ]),
         ],
@@ -73,7 +89,8 @@ class _SyncCount extends StatelessWidget {
   final int count;
   final IconData icon;
 
-  const _SyncCount({required this.label, required this.count, required this.icon});
+  const _SyncCount(
+      {required this.label, required this.count, required this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +99,8 @@ class _SyncCount extends StatelessWidget {
       Icon(icon, size: 14, color: theme.colorScheme.onSurfaceVariant),
       const SizedBox(width: 4),
       Text('$label: $count',
-        style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
+          style: TextStyle(
+              fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
     ]);
   }
 }

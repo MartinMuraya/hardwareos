@@ -39,11 +39,15 @@ class _AddPurchaseOrderScreenState extends State<AddPurchaseOrderScreen> {
   final _fmt = NumberFormat.currency(locale: 'en_KE', symbol: 'KES ');
 
   @override
-  void initState() { super.initState(); _loadData(); }
+  void initState() {
+    super.initState();
+    _loadData();
+  }
 
   @override
   void dispose() {
-    _nameCtrl.dispose(); _notesCtrl.dispose();
+    _nameCtrl.dispose();
+    _notesCtrl.dispose();
     super.dispose();
   }
 
@@ -51,8 +55,10 @@ class _AddPurchaseOrderScreenState extends State<AddPurchaseOrderScreen> {
     try {
       final bizId = context.read<AuthProvider>().businessId!;
       final results = await Future.wait([
-        FunctionsService.call('getSuppliers', {'businessId': bizId, 'limit': 200}),
-        FunctionsService.call('getProducts', {'businessId': bizId, 'limit': 200}),
+        FunctionsService.call(
+            'getSuppliers', {'businessId': bizId, 'limit': 200}),
+        FunctionsService.call(
+            'getProducts', {'businessId': bizId, 'limit': 200}),
       ]);
       _suppliers = ((results[0]['suppliers'] as List?) ?? [])
           .map((e) => Supplier.fromMap(Map<String, dynamic>.from(e as Map)))
@@ -74,27 +80,36 @@ class _AddPurchaseOrderScreenState extends State<AddPurchaseOrderScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: theme.cardColor,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) {
         final searchCtrl = TextEditingController();
         return StatefulBuilder(builder: (ctx, setSheetState) {
           final q = searchCtrl.text.toLowerCase();
-          final filtered = _suppliers.where((s) =>
-            s.name.toLowerCase().contains(q) || s.phoneNumber.contains(q)).toList();
+          final filtered = _suppliers
+              .where((s) =>
+                  s.name.toLowerCase().contains(q) || s.phoneNumber.contains(q))
+              .toList();
           return Column(mainAxisSize: MainAxisSize.min, children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
               child: Row(children: [
-                Text('Select Supplier', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                Text('Select Supplier',
+                    style: theme.textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w600)),
                 const Spacer(),
-                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Cancel')),
               ]),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: TextField(
                 controller: searchCtrl,
-                decoration: const InputDecoration(hintText: 'Search...', prefixIcon: Icon(Icons.search, size: 18)),
+                decoration: const InputDecoration(
+                    hintText: 'Search...',
+                    prefixIcon: Icon(Icons.search, size: 18)),
                 onChanged: (_) => setSheetState(() {}),
               ),
             ),
@@ -105,12 +120,16 @@ class _AddPurchaseOrderScreenState extends State<AddPurchaseOrderScreen> {
                   ? const Center(child: Text('No suppliers found'))
                   : ListView.separated(
                       itemCount: filtered.length,
-                      separatorBuilder: (_, __) => Divider(height: 1, color: theme.dividerColor),
+                      separatorBuilder: (_, __) =>
+                          Divider(height: 1, color: theme.dividerColor),
                       itemBuilder: (_, idx) {
                         final s = filtered[idx];
                         return ListTile(
-                          title: Text(s.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                          subtitle: Text(s.phoneNumber, style: const TextStyle(fontSize: 12)),
+                          title: Text(s.name,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w600, fontSize: 14)),
+                          subtitle: Text(s.phoneNumber,
+                              style: const TextStyle(fontSize: 12)),
                           onTap: () {
                             setState(() {
                               _selectedSupplierId = s.id;
@@ -133,27 +152,37 @@ class _AddPurchaseOrderScreenState extends State<AddPurchaseOrderScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: theme.cardColor,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) {
         final searchCtrl = TextEditingController();
         return StatefulBuilder(builder: (ctx, setSheetState) {
           final q = searchCtrl.text.toLowerCase();
-          final filtered = _products.where((p) =>
-            p.name.toLowerCase().contains(q) || p.sku.toLowerCase().contains(q)).toList();
+          final filtered = _products
+              .where((p) =>
+                  p.name.toLowerCase().contains(q) ||
+                  p.sku.toLowerCase().contains(q))
+              .toList();
           return Column(mainAxisSize: MainAxisSize.min, children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
               child: Row(children: [
-                Text('Select Product', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                Text('Select Product',
+                    style: theme.textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w600)),
                 const Spacer(),
-                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Cancel')),
               ]),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: TextField(
                 controller: searchCtrl,
-                decoration: const InputDecoration(hintText: 'Search...', prefixIcon: Icon(Icons.search, size: 18)),
+                decoration: const InputDecoration(
+                    hintText: 'Search...',
+                    prefixIcon: Icon(Icons.search, size: 18)),
                 onChanged: (_) => setSheetState(() {}),
               ),
             ),
@@ -164,15 +193,21 @@ class _AddPurchaseOrderScreenState extends State<AddPurchaseOrderScreen> {
                   ? const Center(child: Text('No products found'))
                   : ListView.separated(
                       itemCount: filtered.length,
-                      separatorBuilder: (_, __) => Divider(height: 1, color: theme.dividerColor),
+                      separatorBuilder: (_, __) =>
+                          Divider(height: 1, color: theme.dividerColor),
                       itemBuilder: (_, idx) {
                         final p = filtered[idx];
                         return ListTile(
-                          title: Text(p.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                          subtitle: Text('Cost: ${_fmt.format(p.costPrice)}  •  Stock: ${p.quantity}',
-                            style: const TextStyle(fontSize: 12)),
+                          title: Text(p.name,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w600, fontSize: 14)),
+                          subtitle: Text(
+                              'Cost: ${_fmt.format(p.costPrice)}  •  Stock: ${p.quantity}',
+                              style: const TextStyle(fontSize: 12)),
                           trailing: Text(_fmt.format(p.costPrice),
-                            style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.accent)),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.accent)),
                           onTap: () {
                             setState(() {
                               _lines[i].productId = p.id;
@@ -202,19 +237,24 @@ class _AddPurchaseOrderScreenState extends State<AddPurchaseOrderScreen> {
       return;
     }
 
-    setState(() { _submitting = true; _error = null; });
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
     try {
       final bizId = context.read<AuthProvider>().businessId!;
       await FunctionsService.call('createPurchaseOrder', {
         'businessId': bizId,
         'supplierId': _selectedSupplierId ?? '',
         'supplierName': _nameCtrl.text.trim(),
-        'items': _lines.map((l) => {
-          'productId': l.productId,
-          'name': l.productName,
-          'quantity': l.quantity,
-          'unitCost': l.unitCost,
-        }).toList(),
+        'items': _lines
+            .map((l) => {
+                  'productId': l.productId,
+                  'name': l.productName,
+                  'quantity': l.quantity,
+                  'unitCost': l.unitCost,
+                })
+            .toList(),
         'notes': _notesCtrl.text.trim(),
       });
 
@@ -225,7 +265,11 @@ class _AddPurchaseOrderScreenState extends State<AddPurchaseOrderScreen> {
         context.pop(true);
       }
     } on FunctionsException catch (e) {
-      if (mounted) setState(() { _error = e.message; _submitting = false; });
+      if (mounted)
+        setState(() {
+          _error = e.message;
+          _submitting = false;
+        });
     }
   }
 
@@ -241,7 +285,9 @@ class _AddPurchaseOrderScreenState extends State<AddPurchaseOrderScreen> {
         appBar: AppBar(
           title: const Text('New Purchase Order'),
           actions: [
-            TextButton(onPressed: _submitting ? null : _submit, child: const Text('Save')),
+            TextButton(
+                onPressed: _submitting ? null : _submit,
+                child: const Text('Save')),
           ],
         ),
         body: Form(
@@ -251,139 +297,186 @@ class _AddPurchaseOrderScreenState extends State<AddPurchaseOrderScreen> {
             child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 600),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  if (_error != null)
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: AppColors.error.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
-                      ),
-                      child: Row(children: [
-                        const Icon(Icons.error_outline, color: AppColors.error, size: 18),
-                        const SizedBox(width: 10),
-                        Expanded(child: Text(_error!, style: const TextStyle(color: AppColors.error, fontSize: 13))),
-                      ]),
-                    ),
-
-                  _Section(label: 'Supplier', child: Column(children: [
-                    TextFormField(
-                      controller: _nameCtrl,
-                      decoration: InputDecoration(
-                        labelText: 'Supplier Name *',
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.person_search_rounded, size: 20),
-                          onPressed: _pickSupplier,
-                          tooltip: 'Select existing supplier',
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (_error != null)
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: AppColors.error.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                                color: AppColors.error.withValues(alpha: 0.3)),
+                          ),
+                          child: Row(children: [
+                            const Icon(Icons.error_outline,
+                                color: AppColors.error, size: 18),
+                            const SizedBox(width: 10),
+                            Expanded(
+                                child: Text(_error!,
+                                    style: const TextStyle(
+                                        color: AppColors.error, fontSize: 13))),
+                          ]),
                         ),
-                      ),
-                      validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
-                    ),
-                  ])),
-                  const SizedBox(height: 20),
-
-                  _Section(label: 'Items', child: Column(children: [
-                    ...List.generate(_lines.length, (i) {
-                      final line = _lines[i];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Expanded(
-                            flex: 3,
-                            child: GestureDetector(
-                              onTap: () => _pickProduct(i),
-                              child: AbsorbPointer(
-                                child: TextFormField(
-                                  decoration: InputDecoration(
-                                    labelText: 'Product',
-                                    hintText: line.productName.isEmpty ? 'Tap to select' : null,
-                                    suffixIcon: const Icon(Icons.search, size: 18),
-                                  ),
-                                  controller: TextEditingController(text: line.productName),
-                                  validator: (v) => line.productName.isEmpty ? 'Select product' : null,
+                      _Section(
+                          label: 'Supplier',
+                          child: Column(children: [
+                            TextFormField(
+                              controller: _nameCtrl,
+                              decoration: InputDecoration(
+                                labelText: 'Supplier Name *',
+                                suffixIcon: IconButton(
+                                  icon: const Icon(Icons.person_search_rounded,
+                                      size: 20),
+                                  onPressed: _pickSupplier,
+                                  tooltip: 'Select existing supplier',
                                 ),
                               ),
+                              validator: (v) => v == null || v.trim().isEmpty
+                                  ? 'Required'
+                                  : null,
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: TextFormField(
-                              initialValue: line.quantity.toString(),
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(labelText: 'Qty'),
-                              onChanged: (v) {
-                                final n = int.tryParse(v);
-                                if (n != null && n > 0) setState(() => _lines[i].quantity = n);
-                              },
-                              validator: (v) {
-                                final n = int.tryParse(v ?? '');
-                                return n == null || n <= 0 ? 'Invalid' : null;
-                              },
+                          ])),
+                      const SizedBox(height: 20),
+                      _Section(
+                          label: 'Items',
+                          child: Column(children: [
+                            ...List.generate(_lines.length, (i) {
+                              final line = _lines[i];
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        flex: 3,
+                                        child: GestureDetector(
+                                          onTap: () => _pickProduct(i),
+                                          child: AbsorbPointer(
+                                            child: TextFormField(
+                                              decoration: InputDecoration(
+                                                labelText: 'Product',
+                                                hintText:
+                                                    line.productName.isEmpty
+                                                        ? 'Tap to select'
+                                                        : null,
+                                                suffixIcon: const Icon(
+                                                    Icons.search,
+                                                    size: 18),
+                                              ),
+                                              controller: TextEditingController(
+                                                  text: line.productName),
+                                              validator: (v) =>
+                                                  line.productName.isEmpty
+                                                      ? 'Select product'
+                                                      : null,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: TextFormField(
+                                          initialValue:
+                                              line.quantity.toString(),
+                                          keyboardType: TextInputType.number,
+                                          decoration: const InputDecoration(
+                                              labelText: 'Qty'),
+                                          onChanged: (v) {
+                                            final n = int.tryParse(v);
+                                            if (n != null && n > 0)
+                                              setState(
+                                                  () => _lines[i].quantity = n);
+                                          },
+                                          validator: (v) {
+                                            final n = int.tryParse(v ?? '');
+                                            return n == null || n <= 0
+                                                ? 'Invalid'
+                                                : null;
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: TextFormField(
+                                          initialValue: line.unitCost > 0
+                                              ? line.unitCost.toStringAsFixed(0)
+                                              : '',
+                                          keyboardType: TextInputType.number,
+                                          decoration: const InputDecoration(
+                                              labelText: 'Unit Cost'),
+                                          onChanged: (v) {
+                                            final n = double.tryParse(v);
+                                            if (n != null && n > 0)
+                                              setState(
+                                                  () => _lines[i].unitCost = n);
+                                          },
+                                          validator: (v) {
+                                            final n = double.tryParse(v ?? '');
+                                            return n == null || n <= 0
+                                                ? 'Invalid'
+                                                : null;
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      IconButton(
+                                        icon: const Icon(
+                                            Icons.remove_circle_outline,
+                                            color: AppColors.error,
+                                            size: 20),
+                                        onPressed: () => _removeLine(i),
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(
+                                            minWidth: 32, minHeight: 40),
+                                      ),
+                                    ]),
+                              );
+                            }),
+                            OutlinedButton.icon(
+                              onPressed: _addLine,
+                              icon: const Icon(Icons.add_rounded, size: 16),
+                              label: const Text('Add Item'),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: TextFormField(
-                              initialValue: line.unitCost > 0 ? line.unitCost.toStringAsFixed(0) : '',
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(labelText: 'Unit Cost'),
-                              onChanged: (v) {
-                                final n = double.tryParse(v);
-                                if (n != null && n > 0) setState(() => _lines[i].unitCost = n);
-                              },
-                              validator: (v) {
-                                final n = double.tryParse(v ?? '');
-                                return n == null || n <= 0 ? 'Invalid' : null;
-                              },
+                          ])),
+                      const SizedBox(height: 20),
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: theme.cardColor,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: theme.dividerColor),
+                        ),
+                        child: _Row(
+                            label: 'Total',
+                            value: _fmt.format(_total),
+                            theme: theme),
+                      ),
+                      const SizedBox(height: 20),
+                      _Section(
+                          label: 'Notes',
+                          child: Column(children: [
+                            TextFormField(
+                              controller: _notesCtrl,
+                              decoration: const InputDecoration(
+                                  labelText: 'Notes (optional)'),
+                              maxLines: 3,
                             ),
-                          ),
-                          const SizedBox(width: 4),
-                          IconButton(
-                            icon: const Icon(Icons.remove_circle_outline, color: AppColors.error, size: 20),
-                            onPressed: () => _removeLine(i),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(minWidth: 32, minHeight: 40),
-                          ),
-                        ]),
-                      );
-                    }),
-                    OutlinedButton.icon(
-                      onPressed: _addLine,
-                      icon: const Icon(Icons.add_rounded, size: 16),
-                      label: const Text('Add Item'),
-                    ),
-                  ])),
-                  const SizedBox(height: 20),
-
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: theme.cardColor,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: theme.dividerColor),
-                    ),
-                    child: _Row(label: 'Total', value: _fmt.format(_total), theme: theme),
-                  ),
-                  const SizedBox(height: 20),
-
-                  _Section(label: 'Notes', child: Column(children: [
-                    TextFormField(
-                      controller: _notesCtrl,
-                      decoration: const InputDecoration(labelText: 'Notes (optional)'),
-                      maxLines: 3,
-                    ),
-                  ])),
-                  const SizedBox(height: 32),
-
-                  ElevatedButton(
-                    onPressed: _submitting ? null : _submit,
-                    style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-                    child: const Text('Create Purchase Order', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-                  ),
-                  const SizedBox(height: 24),
-                ]),
+                          ])),
+                      const SizedBox(height: 32),
+                      ElevatedButton(
+                        onPressed: _submitting ? null : _submit,
+                        style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16)),
+                        child: const Text('Create Purchase Order',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w700, fontSize: 15)),
+                      ),
+                      const SizedBox(height: 24),
+                    ]),
               ),
             ),
           ),
@@ -402,7 +495,11 @@ class _Section extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label, style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12, fontWeight: FontWeight.w600)),
+      Text(label,
+          style: TextStyle(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontSize: 12,
+              fontWeight: FontWeight.w600)),
       const SizedBox(height: 10),
       Container(
         padding: const EdgeInsets.all(16),
@@ -424,10 +521,16 @@ class _Row extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    children: [
-      Text(label, style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13)),
-      Text(value, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: AppColors.accent)),
-    ],
-  );
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label,
+              style: TextStyle(
+                  color: theme.colorScheme.onSurfaceVariant, fontSize: 13)),
+          Text(value,
+              style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                  color: AppColors.accent)),
+        ],
+      );
 }

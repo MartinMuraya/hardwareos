@@ -29,12 +29,16 @@ class _TeamScreenState extends State<TeamScreen> {
   }
 
   Future<void> _loadTeam() async {
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final bizId = context.read<AuthProvider>().businessId!;
-      final result = await FunctionsService.call('getUsers', {'businessId': bizId});
+      final result =
+          await FunctionsService.call('getUsers', {'businessId': bizId});
       final rawList = (result['users'] as List?) ?? [];
-      
+
       final users = rawList
           .map((e) => User.fromMap(Map<String, dynamic>.from(e as Map)))
           .toList();
@@ -46,7 +50,11 @@ class _TeamScreenState extends State<TeamScreen> {
         });
       }
     } on FunctionsException catch (e) {
-      if (mounted) setState(() { _error = e.message; _loading = false; });
+      if (mounted)
+        setState(() {
+          _error = e.message;
+          _loading = false;
+        });
     }
   }
 
@@ -80,7 +88,8 @@ class _TeamScreenState extends State<TeamScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Team Management', style: theme.textTheme.displayMedium),
+                        Text('Team Management',
+                            style: theme.textTheme.displayMedium),
                         const SizedBox(height: 4),
                         Text(
                           '${_team.length} member(s)',
@@ -92,13 +101,13 @@ class _TeamScreenState extends State<TeamScreen> {
                   if (canInvite)
                     FilledButton.icon(
                       onPressed: _showInviteDialog,
-                      icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
+                      icon:
+                          const Icon(Icons.person_add_alt_1_rounded, size: 18),
                       label: const Text('Invite Staff'),
                     ),
                 ],
               ),
               const SizedBox(height: 24),
-              
               if (_error != null)
                 Container(
                   margin: const EdgeInsets.only(bottom: 16),
@@ -106,17 +115,19 @@ class _TeamScreenState extends State<TeamScreen> {
                   decoration: BoxDecoration(
                     color: AppColors.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                    border: Border.all(
+                        color: AppColors.error.withValues(alpha: 0.3)),
                   ),
-                  child: Text(_error!, style: const TextStyle(color: AppColors.error)),
+                  child: Text(_error!,
+                      style: const TextStyle(color: AppColors.error)),
                 ),
-
               Expanded(
                 child: _team.isEmpty && !_loading
                     ? EmptyState(
                         icon: Icons.people_outline_rounded,
                         title: 'No team members yet',
-                        subtitle: 'Invite staff or managers to help run your business.',
+                        subtitle:
+                            'Invite staff or managers to help run your business.',
                         actionLabel: canInvite ? 'Invite Staff' : null,
                         onAction: canInvite ? _showInviteDialog : null,
                       )
@@ -126,8 +137,12 @@ class _TeamScreenState extends State<TeamScreen> {
                         backgroundColor: theme.cardColor,
                         child: ListView.separated(
                           itemCount: _team.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 12),
-                          itemBuilder: (_, i) => _TeamMemberCard(user: _team[i], theme: theme, onRefresh: _loadTeam),
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 12),
+                          itemBuilder: (_, i) => _TeamMemberCard(
+                              user: _team[i],
+                              theme: theme,
+                              onRefresh: _loadTeam),
                         ),
                       ),
               ),
@@ -143,15 +158,21 @@ class _TeamMemberCard extends StatelessWidget {
   final User user;
   final ThemeData theme;
   final VoidCallback onRefresh;
-  const _TeamMemberCard({required this.user, required this.theme, required this.onRefresh});
+  const _TeamMemberCard(
+      {required this.user, required this.theme, required this.onRefresh});
 
   @override
   Widget build(BuildContext context) {
     Color roleColor;
     switch (user.role) {
-      case 'owner':   roleColor = AppColors.chartBlue; break;
-      case 'manager': roleColor = AppColors.chartPurple; break;
-      default:        roleColor = theme.hintColor;
+      case 'owner':
+        roleColor = AppColors.chartBlue;
+        break;
+      case 'manager':
+        roleColor = AppColors.chartPurple;
+        break;
+      default:
+        roleColor = theme.hintColor;
     }
 
     return InkWell(
@@ -171,71 +192,83 @@ class _TeamMemberCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest,
-              shape: BoxShape.circle,
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  user.displayName.isNotEmpty
+                      ? user.displayName[0].toUpperCase()
+                      : '?',
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 18,
+                  ),
+                ),
+              ),
             ),
-            child: Center(
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    user.displayName.isNotEmpty
+                        ? user.displayName
+                        : 'Unknown User',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        color: theme.colorScheme.onSurface),
+                  ),
+                  if (user.email.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      user.email,
+                      style: TextStyle(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontSize: 13),
+                    ),
+                  ],
+                  if (user.commissionRate != null &&
+                      user.commissionRate! > 0) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      'Commission: ${(user.commissionRate! * 100).toStringAsFixed(1)}%',
+                      style: const TextStyle(
+                          color: AppColors.chartGreen,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: roleColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: Text(
-                user.displayName.isNotEmpty ? user.displayName[0].toUpperCase() : '?',
+                user.role.toUpperCase(),
                 style: TextStyle(
-                  color: theme.colorScheme.onSurface,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 18,
+                  color: roleColor,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11,
+                  letterSpacing: 0.5,
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  user.displayName.isNotEmpty ? user.displayName : 'Unknown User',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15,
-                    color: theme.colorScheme.onSurface),
-                ),
-                if (user.email.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    user.email,
-                    style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
-                  ),
-                ],
-                if (user.commissionRate != null && user.commissionRate! > 0) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    'Commission: ${(user.commissionRate! * 100).toStringAsFixed(1)}%',
-                    style: const TextStyle(color: AppColors.chartGreen, fontSize: 13, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: roleColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              user.role.toUpperCase(),
-              style: TextStyle(
-                color: roleColor,
-                fontWeight: FontWeight.w700,
-                fontSize: 11,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
+    );
   }
 }

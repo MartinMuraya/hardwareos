@@ -26,7 +26,8 @@ class FunctionsService {
     } on FirebaseFunctionsException catch (e) {
       String msg = e.message ?? 'An error occurred.';
       if (e.code == 'internal' || msg.toLowerCase().contains('internal')) {
-        msg = 'Unable to connect to the backend server. Please check your connection or ensure backend services are running.';
+        msg =
+            'Unable to connect to the backend server. Please check your connection or ensure backend services are running.';
       } else if (e.code == 'unavailable') {
         msg = 'The service is temporarily unavailable. Please try again later.';
       }

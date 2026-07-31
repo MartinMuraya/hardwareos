@@ -17,7 +17,8 @@ class _StaffCommissionsTabState extends State<StaffCommissionsTab> {
   final _currencyFormat = NumberFormat.currency(symbol: 'KES ');
   bool _isPayingOut = false;
 
-  Future<void> _payout(BuildContext context, String targetUserId, double amount) async {
+  Future<void> _payout(
+      BuildContext context, String targetUserId, double amount) async {
     final bizId = context.read<AuthProvider>().businessId!;
     final messenger = ScaffoldMessenger.of(context);
 
@@ -25,10 +26,15 @@ class _StaffCommissionsTabState extends State<StaffCommissionsTab> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Confirm Payout'),
-        content: Text('Are you sure you want to payout ${_currencyFormat.format(amount)} to this user?\n\nThis will zero their balance and create an Expense record.'),
+        content: Text(
+            'Are you sure you want to payout ${_currencyFormat.format(amount)} to this user?\n\nThis will zero their balance and create an Expense record.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Payout')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
+          ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Payout')),
         ],
       ),
     );
@@ -42,9 +48,13 @@ class _StaffCommissionsTabState extends State<StaffCommissionsTab> {
         'targetUserId': targetUserId,
         'amount': amount,
       });
-      if (mounted) messenger.showSnackBar(const SnackBar(content: Text('Payout successful! Expense recorded.')));
+      if (mounted)
+        messenger.showSnackBar(const SnackBar(
+            content: Text('Payout successful! Expense recorded.')));
     } catch (e) {
-      if (mounted) messenger.showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+      if (mounted)
+        messenger.showSnackBar(
+            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
     } finally {
       if (mounted) setState(() => _isPayingOut = false);
     }
@@ -66,12 +76,15 @@ class _StaffCommissionsTabState extends State<StaffCommissionsTab> {
                 .where('commissionBalance', isGreaterThan: 0)
                 .snapshots(),
             builder: (context, snapshot) {
-              if (snapshot.hasError) return Center(child: Text('Error: ${snapshot.error}'));
-              if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+              if (snapshot.hasError)
+                return Center(child: Text('Error: ${snapshot.error}'));
+              if (snapshot.connectionState == ConnectionState.waiting)
+                return const Center(child: CircularProgressIndicator());
 
               final docs = snapshot.data?.docs ?? [];
               if (docs.isEmpty) {
-                return const Center(child: Text('No outstanding commissions to pay.'));
+                return const Center(
+                    child: Text('No outstanding commissions to pay.'));
               }
 
               return ListView.builder(
@@ -85,21 +98,29 @@ class _StaffCommissionsTabState extends State<StaffCommissionsTab> {
                     margin: const EdgeInsets.only(bottom: 12),
                     child: ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                        child: Text(user.displayName.isNotEmpty ? user.displayName[0].toUpperCase() : '?'),
+                        backgroundColor:
+                            Theme.of(context).colorScheme.primaryContainer,
+                        child: Text(user.displayName.isNotEmpty
+                            ? user.displayName[0].toUpperCase()
+                            : '?'),
                       ),
                       title: Text(user.displayName),
-                      subtitle: Text('Rate: ${((user.commissionRate ?? 0) * 100).toStringAsFixed(1)}%'),
+                      subtitle: Text(
+                          'Rate: ${((user.commissionRate ?? 0) * 100).toStringAsFixed(1)}%'),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
                             _currencyFormat.format(user.commissionBalance ?? 0),
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16),
                           ),
                           const SizedBox(width: 16),
                           ElevatedButton(
-                            onPressed: _isPayingOut ? null : () => _payout(context, user.uid, user.commissionBalance ?? 0),
+                            onPressed: _isPayingOut
+                                ? null
+                                : () => _payout(context, user.uid,
+                                    user.commissionBalance ?? 0),
                             child: const Text('Payout'),
                           ),
                         ],

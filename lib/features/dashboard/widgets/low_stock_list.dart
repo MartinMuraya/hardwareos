@@ -27,39 +27,51 @@ class LowStockList extends StatelessWidget {
             children: [
               if (i > 0) Divider(height: 1, color: theme.dividerColor),
               ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 leading: Container(
-                  width: 36, height: 36,
+                  width: 36,
+                  height: 36,
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                    color: theme.colorScheme.surfaceContainerHighest
+                        .withValues(alpha: 0.5),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    isOut ? Icons.remove_circle_outline : Icons.warning_amber_rounded,
-                    color: color, size: 18,
+                    isOut
+                        ? Icons.remove_circle_outline
+                        : Icons.warning_amber_rounded,
+                    color: color,
+                    size: 18,
                   ),
                 ),
                 title: Text(item['name'] as String,
-                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14,
-                    color: theme.colorScheme.onSurface)),
+                    style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                        color: theme.colorScheme.onSurface)),
                 subtitle: Text(item['category'] as String? ?? '',
-                  style: TextStyle(color: theme.hintColor, fontSize: 12)),
+                    style: TextStyle(color: theme.hintColor, fontSize: 12)),
                 trailing: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: color.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(isOut ? 'OUT' : 'Qty: $qty',
-                        style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w700)),
+                          style: TextStyle(
+                              color: color,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700)),
                     ),
                     const SizedBox(height: 2),
                     Text('Reorder: $reorder',
-                      style: TextStyle(color: theme.hintColor, fontSize: 10)),
+                        style: TextStyle(color: theme.hintColor, fontSize: 10)),
                   ],
                 ),
               ),

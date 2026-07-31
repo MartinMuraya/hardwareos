@@ -8,11 +8,11 @@ class PlanStatusBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme         = Theme.of(context);
-    final plan          = subscription['plan'] as String? ?? 'free';
-    final status        = subscription['status'] as String? ?? 'trial';
+    final theme = Theme.of(context);
+    final plan = subscription['plan'] as String? ?? 'free';
+    final status = subscription['status'] as String? ?? 'trial';
     final trialDaysLeft = subscription['trialDaysLeft'] as int?;
-    final isExpired     = subscription['isExpired'] == true;
+    final isExpired = subscription['isExpired'] == true;
 
     if (isExpired) {
       return _BannerCard(
@@ -22,12 +22,16 @@ class PlanStatusBanner extends StatelessWidget {
         iconColor: AppColors.error,
         child: Row(children: [
           const Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('Subscription Expired',
-                style: TextStyle(color: AppColors.error, fontWeight: FontWeight.w700, fontSize: 14)),
+                  style: TextStyle(
+                      color: AppColors.error,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14)),
               SizedBox(height: 2),
               Text('Renew your plan to continue using all features.',
-                style: TextStyle(color: AppColors.error, fontSize: 12)),
+                  style: TextStyle(color: AppColors.error, fontSize: 12)),
             ]),
           ),
           FilledButton(
@@ -47,24 +51,31 @@ class PlanStatusBanner extends StatelessWidget {
       final urgent = trialDaysLeft <= 3;
       return _BannerCard(
         icon: Icons.access_time_rounded,
-        bgColor: (urgent ? AppColors.warning : AppColors.accent).withValues(alpha: 0.08),
-        borderColor: (urgent ? AppColors.warning : AppColors.accent).withValues(alpha: 0.25),
+        bgColor: (urgent ? AppColors.warning : AppColors.accent)
+            .withValues(alpha: 0.08),
+        borderColor: (urgent ? AppColors.warning : AppColors.accent)
+            .withValues(alpha: 0.25),
         iconColor: urgent ? AppColors.warning : AppColors.accent,
         child: Row(children: [
           Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(
                 urgent ? '⚠️ Trial ending soon!' : '🎉 Free Trial Active',
                 style: TextStyle(
                   color: urgent ? AppColors.warning : AppColors.accent,
-                  fontWeight: FontWeight.w700, fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
                 ),
               ),
               const SizedBox(height: 2),
               Text('$trialDaysLeft days remaining on your trial.',
-                style: TextStyle(
-                  color: urgent ? AppColors.warning : theme.textTheme.bodySmall?.color, fontSize: 12,
-                )),
+                  style: TextStyle(
+                    color: urgent
+                        ? AppColors.warning
+                        : theme.textTheme.bodySmall?.color,
+                    fontSize: 12,
+                  )),
             ]),
           ),
           OutlinedButton(
@@ -90,7 +101,10 @@ class PlanStatusBanner extends StatelessWidget {
         child: Row(children: [
           Expanded(
             child: Text('${_planLabel(plan)} Plan — Active',
-              style: const TextStyle(color: AppColors.success, fontWeight: FontWeight.w600, fontSize: 13)),
+                style: const TextStyle(
+                    color: AppColors.success,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13)),
           ),
           OutlinedButton(
             onPressed: () => GoRouter.of(context).go('/subscription'),
@@ -110,10 +124,10 @@ class PlanStatusBanner extends StatelessWidget {
   }
 
   String _planLabel(String plan) => switch (plan) {
-    'starter' => 'Starter',
-    'pro'     => 'Pro',
-    _         => 'Free',
-  };
+        'starter' => 'Starter',
+        'pro' => 'Pro',
+        _ => 'Free',
+      };
 }
 
 class _BannerCard extends StatelessWidget {
@@ -121,8 +135,11 @@ class _BannerCard extends StatelessWidget {
   final Color bgColor, borderColor, iconColor;
   final Widget child;
   const _BannerCard({
-    required this.icon, required this.bgColor,
-    required this.borderColor, required this.iconColor, required this.child,
+    required this.icon,
+    required this.bgColor,
+    required this.borderColor,
+    required this.iconColor,
+    required this.child,
   });
   @override
   Widget build(BuildContext context) {

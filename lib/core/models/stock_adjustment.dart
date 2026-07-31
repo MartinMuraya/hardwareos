@@ -40,7 +40,8 @@ class StockAdjustment {
       notes: map['notes'] as String? ?? '',
       adjustedBy: map['adjustedBy'] as String,
       adjustedByName: map['adjustedByName'] as String? ?? '',
-      createdAt: DateTime.tryParse(map['createdAt']?.toString() ?? '') ?? DateTime.now(),
+      createdAt: DateTime.tryParse(map['createdAt']?.toString() ?? '') ??
+          DateTime.now(),
     );
   }
 }

@@ -29,15 +29,18 @@ class EmptyState extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 64, height: 64,
+              width: 64,
+              height: 64,
               decoration: BoxDecoration(
                 color: theme.colorScheme.surfaceContainerHighest,
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 28, color: theme.colorScheme.onSurfaceVariant),
+              child: Icon(icon,
+                  size: 28, color: theme.colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 16),
-            Text(title,
+            Text(
+              title,
               textAlign: TextAlign.center,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
@@ -45,7 +48,8 @@ class EmptyState extends StatelessWidget {
             ),
             if (subtitle != null) ...[
               const SizedBox(height: 6),
-              Text(subtitle!,
+              Text(
+                subtitle!,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodySmall,
               ),

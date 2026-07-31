@@ -73,7 +73,9 @@ class _PlanSeederDialogState extends State<PlanSeederDialog> {
               child: Row(
                 children: [
                   Icon(
-                    plansExist ? Icons.check_circle_rounded : Icons.info_rounded,
+                    plansExist
+                        ? Icons.check_circle_rounded
+                        : Icons.info_rounded,
                     color: plansExist ? AppColors.success : AppColors.warning,
                   ),
                   const SizedBox(width: 12),
@@ -91,10 +93,12 @@ class _PlanSeederDialogState extends State<PlanSeederDialog> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: (_isSuccess ? AppColors.success : AppColors.error).withValues(alpha: 0.1),
+                color: (_isSuccess ? AppColors.success : AppColors.error)
+                    .withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: (_isSuccess ? AppColors.success : AppColors.error).withValues(alpha: 0.3),
+                  color: (_isSuccess ? AppColors.success : AppColors.error)
+                      .withValues(alpha: 0.3),
                 ),
               ),
               child: Text(
@@ -123,15 +127,18 @@ class _PlanSeederDialogState extends State<PlanSeederDialog> {
                 const SizedBox(height: 8),
                 Text(
                   '• Standard: KES 2,600/month (3 users)',
-                  style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
+                  style: TextStyle(
+                      fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
                 ),
                 Text(
                   '• Pro: KES 5,200/month (unlimited users)',
-                  style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
+                  style: TextStyle(
+                      fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
                 ),
                 Text(
                   '• Trial: Free 14-day trial',
-                  style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
+                  style: TextStyle(
+                      fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
                 ),
               ],
             ),
@@ -147,7 +154,10 @@ class _PlanSeederDialogState extends State<PlanSeederDialog> {
           FilledButton(
             onPressed: _isLoading ? null : _seedPlans,
             child: _isLoading
-                ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                ? const SizedBox(
+                    height: 18,
+                    width: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2))
                 : const Text('Seed Plans'),
           ),
       ],

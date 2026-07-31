@@ -13,7 +13,10 @@ class QuotationStatusBadge extends StatelessWidget {
       'accepted' => (AppColors.success, Icons.check_circle_rounded),
       'rejected' => (AppColors.error, Icons.cancel_rounded),
       'converted' => (AppColors.planPro, Icons.sell_rounded),
-      _ => (Theme.of(context).colorScheme.onSurfaceVariant, Icons.help_outline_rounded),
+      _ => (
+          Theme.of(context).colorScheme.onSurfaceVariant,
+          Icons.help_outline_rounded
+        ),
     };
 
     return Container(
@@ -26,19 +29,27 @@ class QuotationStatusBadge extends StatelessWidget {
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Icon(icon, size: 12, color: color),
         const SizedBox(width: 4),
-        Text(_label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w700)),
+        Text(_label,
+            style: TextStyle(
+                color: color, fontSize: 11, fontWeight: FontWeight.w700)),
       ]),
     );
   }
 
   String get _label {
     switch (status) {
-      case 'draft': return 'Draft';
-      case 'sent': return 'Sent';
-      case 'accepted': return 'Accepted';
-      case 'rejected': return 'Rejected';
-      case 'converted': return 'Converted';
-      default: return status;
+      case 'draft':
+        return 'Draft';
+      case 'sent':
+        return 'Sent';
+      case 'accepted':
+        return 'Accepted';
+      case 'rejected':
+        return 'Rejected';
+      case 'converted':
+        return 'Converted';
+      default:
+        return status;
     }
   }
 }

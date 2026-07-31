@@ -11,7 +11,8 @@ class AIMessage {
   final String text;
   final List<Map<String, dynamic>> draftActions;
 
-  AIMessage({required this.role, required this.text, this.draftActions = const []});
+  AIMessage(
+      {required this.role, required this.text, this.draftActions = const []});
 }
 
 class AIAssistantScreen extends StatefulWidget {
@@ -44,7 +45,8 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
     }
   }
 
-  Future<void> _runAnalystQuery({required String queryType, String? userText}) async {
+  Future<void> _runAnalystQuery(
+      {required String queryType, String? userText}) async {
     final auth = context.read<AuthProvider>();
     final bizId = auth.businessId;
 
@@ -69,13 +71,16 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
         'customPrompt': prompt,
       });
 
-      final analysisText = res.data['analysisText'] as String? ?? 'Analysis complete.';
+      final analysisText =
+          res.data['analysisText'] as String? ?? 'Analysis complete.';
       final rawActions = (res.data['draftActions'] as List?) ?? [];
-      final draftActions = rawActions.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      final draftActions =
+          rawActions.map((e) => Map<String, dynamic>.from(e as Map)).toList();
 
       if (mounted) {
         setState(() {
-          _messages.add(AIMessage(role: 'ai', text: analysisText, draftActions: draftActions));
+          _messages.add(AIMessage(
+              role: 'ai', text: analysisText, draftActions: draftActions));
           _loading = false;
         });
         WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
@@ -90,7 +95,8 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _messages.add(AIMessage(role: 'ai', text: 'Failed to complete analysis: $e'));
+          _messages.add(
+              AIMessage(role: 'ai', text: 'Failed to complete analysis: $e'));
           _loading = false;
         });
       }
@@ -99,13 +105,20 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
 
   String _getAnalystLabel(String queryType, String prompt) {
     switch (queryType) {
-      case 'runout_forecast': return 'Which products will run out next week?';
-      case 'profit_variance': return 'Why did profit decrease this month?';
-      case 'supplier_reorder': return 'Which supplier should I reorder from?';
-      case 'anomaly_detection': return 'Detect suspicious inventory adjustments';
-      case 'revenue_forecast': return 'Forecast next month\'s revenue';
-      case 'optimal_reorder': return 'Recommend optimal reorder quantities';
-      default: return prompt;
+      case 'runout_forecast':
+        return 'Which products will run out next week?';
+      case 'profit_variance':
+        return 'Why did profit decrease this month?';
+      case 'supplier_reorder':
+        return 'Which supplier should I reorder from?';
+      case 'anomaly_detection':
+        return 'Detect suspicious inventory adjustments';
+      case 'revenue_forecast':
+        return 'Forecast next month\'s revenue';
+      case 'optimal_reorder':
+        return 'Recommend optimal reorder quantities';
+      default:
+        return prompt;
     }
   }
 
@@ -115,7 +128,9 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
     final messenger = ScaffoldMessenger.of(context);
 
     try {
-      final res = await FirebaseFunctions.instance.httpsCallable('approveAIDraftedAction').call({
+      final res = await FirebaseFunctions.instance
+          .httpsCallable('approveAIDraftedAction')
+          .call({
         'businessId': bizId,
         'actionType': action['actionType'],
         'payload': action['payload'],
@@ -123,13 +138,17 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
 
       if (mounted) {
         messenger.showSnackBar(
-          SnackBar(content: Text(res.data['message'] ?? 'Action approved successfully!')),
+          SnackBar(
+              content:
+                  Text(res.data['message'] ?? 'Action approved successfully!')),
         );
       }
     } catch (e) {
       if (mounted) {
         messenger.showSnackBar(
-          SnackBar(content: Text('Approval failed: $e'), backgroundColor: AppColors.error),
+          SnackBar(
+              content: Text('Approval failed: $e'),
+              backgroundColor: AppColors.error),
         );
       }
     }
@@ -146,8 +165,12 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('AI Business Analyst', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-            Text('Autonomous Operations & Risk Intelligence', style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
+            Text('AI Business Analyst',
+                style: theme.textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.bold)),
+            Text('Autonomous Operations & Risk Intelligence',
+                style: TextStyle(
+                    fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
           ],
         ),
         actions: [
@@ -175,14 +198,18 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                           color: AppColors.accent.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.analytics_rounded, size: 64, color: AppColors.accent),
+                        child: const Icon(Icons.analytics_rounded,
+                            size: 64, color: AppColors.accent),
                       ),
                       const SizedBox(height: 24),
-                      Text('Senior Retail Business Analyst', style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+                      Text('Senior Retail Business Analyst',
+                          style: theme.textTheme.headlineSmall
+                              ?.copyWith(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 8),
                       Text(
                         'Select an executive analytical query or ask custom operational questions below.',
-                        style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                        style: TextStyle(
+                            color: theme.colorScheme.onSurfaceVariant),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 32),
@@ -191,12 +218,30 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                         runSpacing: 12,
                         alignment: WrapAlignment.center,
                         children: [
-                          _buildAnalystQueryChip('Which products run out next week?', Icons.speed_rounded, 'runout_forecast'),
-                          _buildAnalystQueryChip('Why did profit change this month?', Icons.trending_down_rounded, 'profit_variance'),
-                          _buildAnalystQueryChip('Which supplier to reorder from?', Icons.local_shipping_rounded, 'supplier_reorder'),
-                          _buildAnalystQueryChip('Detect suspicious inventory losses', Icons.security_rounded, 'anomaly_detection'),
-                          _buildAnalystQueryChip('Forecast next month\'s revenue', Icons.insights_rounded, 'revenue_forecast'),
-                          _buildAnalystQueryChip('Recommend optimal reorder quantities', Icons.auto_awesome_rounded, 'optimal_reorder'),
+                          _buildAnalystQueryChip(
+                              'Which products run out next week?',
+                              Icons.speed_rounded,
+                              'runout_forecast'),
+                          _buildAnalystQueryChip(
+                              'Why did profit change this month?',
+                              Icons.trending_down_rounded,
+                              'profit_variance'),
+                          _buildAnalystQueryChip(
+                              'Which supplier to reorder from?',
+                              Icons.local_shipping_rounded,
+                              'supplier_reorder'),
+                          _buildAnalystQueryChip(
+                              'Detect suspicious inventory losses',
+                              Icons.security_rounded,
+                              'anomaly_detection'),
+                          _buildAnalystQueryChip(
+                              'Forecast next month\'s revenue',
+                              Icons.insights_rounded,
+                              'revenue_forecast'),
+                          _buildAnalystQueryChip(
+                              'Recommend optimal reorder quantities',
+                              Icons.auto_awesome_rounded,
+                              'optimal_reorder'),
                         ],
                       ),
                     ],
@@ -215,31 +260,47 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                   final isUser = msg.role == 'user';
 
                   return Align(
-                    alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                    alignment:
+                        isUser ? Alignment.centerRight : Alignment.centerLeft,
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 16),
                       padding: const EdgeInsets.all(16),
-                      constraints: BoxConstraints(maxWidth: Responsive.isMobile(context) ? 320 : 650),
+                      constraints: BoxConstraints(
+                          maxWidth: Responsive.isMobile(context) ? 320 : 650),
                       decoration: BoxDecoration(
                         color: isUser ? AppColors.accent : theme.cardColor,
                         borderRadius: BorderRadius.circular(16).copyWith(
-                          bottomRight: isUser ? const Radius.circular(0) : const Radius.circular(16),
-                          bottomLeft: !isUser ? const Radius.circular(0) : const Radius.circular(16),
+                          bottomRight: isUser
+                              ? const Radius.circular(0)
+                              : const Radius.circular(16),
+                          bottomLeft: !isUser
+                              ? const Radius.circular(0)
+                              : const Radius.circular(16),
                         ),
-                        border: isUser ? null : Border.all(color: theme.dividerColor),
+                        border: isUser
+                            ? null
+                            : Border.all(color: theme.dividerColor),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (isUser)
-                            Text(msg.text, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600))
+                            Text(msg.text,
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600))
                           else
                             MarkdownBody(data: msg.text),
                           if (!isUser && msg.draftActions.isNotEmpty) ...[
                             const Divider(height: 24),
-                            Text('🤖 Proposed Autonomous Actions:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: theme.colorScheme.onSurface)),
+                            Text('🤖 Proposed Autonomous Actions:',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                    color: theme.colorScheme.onSurface)),
                             const SizedBox(height: 8),
-                            ...msg.draftActions.map((action) => _buildActionProposalCard(action, theme)),
+                            ...msg.draftActions.map((action) =>
+                                _buildActionProposalCard(action, theme)),
                           ],
                         ],
                       ),
@@ -255,9 +316,16 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                  const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2)),
                   const SizedBox(width: 12),
-                  Text('Analyst evaluating sales velocity, inventory, and profit drivers...', style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13)),
+                  Text(
+                      'Analyst evaluating sales velocity, inventory, and profit drivers...',
+                      style: TextStyle(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontSize: 13)),
                 ],
               ),
             ),
@@ -267,7 +335,9 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
             padding: EdgeInsets.all(pad),
             decoration: BoxDecoration(
               color: theme.scaffoldBackgroundColor,
-              border: Border(top: BorderSide(color: theme.dividerColor.withValues(alpha: 0.15))),
+              border: Border(
+                  top: BorderSide(
+                      color: theme.dividerColor.withValues(alpha: 0.15))),
             ),
             child: Row(
               children: [
@@ -275,14 +345,16 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                   child: TextField(
                     controller: _promptController,
                     decoration: InputDecoration(
-                      hintText: 'Ask the analyst (e.g. "Forecast profit for next quarter")...',
+                      hintText:
+                          'Ask the analyst (e.g. "Forecast profit for next quarter")...',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
                         borderSide: BorderSide.none,
                       ),
                       filled: true,
                       fillColor: theme.cardColor,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 14),
                     ),
                     onSubmitted: (_) => _runAnalystQuery(queryType: 'custom'),
                   ),
@@ -293,7 +365,9 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                   backgroundColor: AppColors.accent,
                   child: IconButton(
                     icon: const Icon(Icons.send_rounded, color: Colors.white),
-                    onPressed: _loading ? null : () => _runAnalystQuery(queryType: 'custom'),
+                    onPressed: _loading
+                        ? null
+                        : () => _runAnalystQuery(queryType: 'custom'),
                   ),
                 ),
               ],
@@ -314,7 +388,8 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
     );
   }
 
-  Widget _buildActionProposalCard(Map<String, dynamic> action, ThemeData theme) {
+  Widget _buildActionProposalCard(
+      Map<String, dynamic> action, ThemeData theme) {
     final payload = Map<String, dynamic>.from(action['payload'] as Map? ?? {});
     final items = (payload['items'] as List?) ?? [];
 
@@ -336,19 +411,29 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
               Expanded(
                 child: Text(
                   action['title'] ?? 'Proposed Action',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 14),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 6),
-          Text(action['description'] ?? '', style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
+          Text(action['description'] ?? '',
+              style: TextStyle(
+                  fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
           if (items.isNotEmpty) ...[
             const SizedBox(height: 8),
-            Text('Items in Draft:', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)),
+            Text('Items in Draft:',
+                style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface)),
             ...items.map((it) {
               final map = Map<String, dynamic>.from(it as Map);
-              return Text('• ${map['productName'] ?? 'Item'}: Qty ${map['quantity']}', style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant));
+              return Text(
+                  '• ${map['productName'] ?? 'Item'}: Qty ${map['quantity']}',
+                  style: TextStyle(
+                      fontSize: 11, color: theme.colorScheme.onSurfaceVariant));
             }),
           ],
           const SizedBox(height: 12),

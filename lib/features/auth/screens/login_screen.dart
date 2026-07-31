@@ -13,10 +13,10 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _formKey     = GlobalKey<FormState>();
-  final _emailCtrl   = TextEditingController();
-  final _passCtrl    = TextEditingController();
-  bool _obscure      = true;
+  final _formKey = GlobalKey<FormState>();
+  final _emailCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
+  bool _obscure = true;
   bool _isSubmitting = false;
 
   @override
@@ -52,21 +52,25 @@ class _LoginScreenState extends State<LoginScreen> {
                 Center(
                   child: Column(children: [
                     Container(
-                      width: 64, height: 64,
+                      width: 64,
+                      height: 64,
                       decoration: BoxDecoration(
                         color: AppColors.accent,
                         borderRadius: BorderRadius.circular(18),
                       ),
-                      child: const Icon(Icons.hardware_rounded, color: Colors.white, size: 36),
+                      child: const Icon(Icons.hardware_rounded,
+                          color: Colors.white, size: 36),
                     ),
                     const SizedBox(height: 16),
-                    Text('HardwareOS',
+                    Text(
+                      'HardwareOS',
                       style: theme.textTheme.displayMedium?.copyWith(
                         fontWeight: FontWeight.w800,
                       ),
                     ),
                     const SizedBox(height: 6),
-                    Text('Your Store, Fully Operated.',
+                    Text(
+                      'Your Store, Fully Operated.',
                       style: theme.textTheme.bodyMedium,
                     ),
                   ]),
@@ -81,16 +85,32 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: theme.dividerColor),
                   ),
-                  child: Form(
+                  child: _isSubmitting
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 48),
+                          child: Column(
+                            children: [
+                              const CircularProgressIndicator(),
+                              const SizedBox(height: 24),
+                              Text(
+                                'Waiting to log you in...',
+                                style: theme.textTheme.bodyLarge,
+                              ),
+                            ],
+                          ),
+                        )
+                      : Form(
                     key: _formKey,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text('Sign In',
+                        Text(
+                          'Sign In',
                           style: theme.textTheme.headlineMedium,
                         ),
                         const SizedBox(height: 6),
-                        Text('Welcome back to your store dashboard.',
+                        Text(
+                          'Welcome back to your store dashboard.',
                           style: theme.textTheme.bodySmall,
                         ),
                         const SizedBox(height: 24),
@@ -108,9 +128,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             prefixIcon: Icon(Icons.email_outlined, size: 18),
                           ),
                           validator: (v) {
-                            if (v == null || v.trim().isEmpty) return 'Enter your email';
-                            final emailRegExp = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
-                            if (!emailRegExp.hasMatch(v.trim())) return 'Enter a valid email address';
+                            if (v == null || v.trim().isEmpty)
+                              return 'Enter your email';
+                            final emailRegExp = RegExp(
+                                r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+                            if (!emailRegExp.hasMatch(v.trim()))
+                              return 'Enter a valid email address';
                             return null;
                           },
                         ),
@@ -122,14 +145,21 @@ class _LoginScreenState extends State<LoginScreen> {
                           obscureText: _obscure,
                           decoration: InputDecoration(
                             labelText: 'Password',
-                            prefixIcon: const Icon(Icons.lock_outline, size: 18),
+                            prefixIcon:
+                                const Icon(Icons.lock_outline, size: 18),
                             suffixIcon: IconButton(
-                              icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility, size: 18),
-                              onPressed: () => setState(() => _obscure = !_obscure),
+                              icon: Icon(
+                                  _obscure
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                  size: 18),
+                              onPressed: () =>
+                                  setState(() => _obscure = !_obscure),
                             ),
                           ),
                           validator: (v) => v == null || v.length < 8
-                              ? 'Password must be 8+ characters' : null,
+                              ? 'Password must be 8+ characters'
+                              : null,
                           onFieldSubmitted: (_) => _submit(),
                         ),
                         const SizedBox(height: 8),
@@ -137,20 +167,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed: () => context.go(RoutePaths.forgotPassword),
-                            child: const Text('Forgot Password?', style: TextStyle(fontSize: 13)),
+                            onPressed: () =>
+                                context.go(RoutePaths.forgotPassword),
+                            child: const Text('Forgot Password?',
+                                style: TextStyle(fontSize: 13)),
                           ),
                         ),
                         const SizedBox(height: 12),
 
                         ElevatedButton(
-                          onPressed: _isSubmitting ? null : _submit,
-                          child: _isSubmitting
-                              ? const SizedBox(width: 20, height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation(Colors.white)),
-                                )
-                              : const Text('Sign In'),
+                          onPressed: _submit,
+                          child: const Text('Sign In'),
                         ),
                         const SizedBox(height: 24),
 
@@ -159,7 +186,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           Expanded(child: Divider(color: theme.dividerColor)),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Text('OR', style: theme.textTheme.labelSmall?.copyWith(fontSize: 10)),
+                            child: Text('OR',
+                                style: theme.textTheme.labelSmall
+                                    ?.copyWith(fontSize: 10)),
                           ),
                           Expanded(child: Divider(color: theme.dividerColor)),
                         ]),
@@ -169,11 +198,16 @@ class _LoginScreenState extends State<LoginScreen> {
                         SizedBox(
                           width: double.infinity,
                           child: OutlinedButton.icon(
-                            onPressed: _isSubmitting ? null : () => auth.signInWithGoogle(),
+                            onPressed: () async {
+                              setState(() => _isSubmitting = true);
+                              await auth.signInWithGoogle();
+                              if (mounted) setState(() => _isSubmitting = false);
+                            },
                             icon: SvgPicture.network(
                               'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
                               height: 18,
-                              placeholderBuilder: (context) => const SizedBox(width: 18, height: 18),
+                              placeholderBuilder: (context) =>
+                                  const SizedBox(width: 18, height: 18),
                             ),
                             label: const Text('Continue with Google'),
                             style: OutlinedButton.styleFrom(
@@ -188,7 +222,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text("Don't have an account? ",
+                            Text(
+                              "Don't have an account? ",
                               style: theme.textTheme.bodySmall,
                             ),
                             TextButton(
@@ -226,7 +261,9 @@ class _ErrorBanner extends StatelessWidget {
       child: Row(children: [
         const Icon(Icons.error_outline, color: AppColors.error, size: 16),
         const SizedBox(width: 10),
-        Expanded(child: Text(message,
+        Expanded(
+            child: Text(
+          message,
           style: const TextStyle(color: AppColors.error, fontSize: 13),
         )),
       ]),

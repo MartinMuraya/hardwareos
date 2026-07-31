@@ -19,7 +19,8 @@ class _AIIntelligenceScreenState extends State<AIIntelligenceScreen> {
   String? _error;
 
   Future<void> _runAIAnalysis() async {
-    final businessId = context.read<AuthProvider>().userProfile?['businessId'] as String?;
+    final businessId =
+        context.read<AuthProvider>().userProfile?['businessId'] as String?;
     if (businessId == null) {
       setState(() => _error = "Business ID not found.");
       return;
@@ -32,7 +33,8 @@ class _AIIntelligenceScreenState extends State<AIIntelligenceScreen> {
     });
 
     try {
-      final callable = FirebaseFunctions.instance.httpsCallable('analyzeInventoryHealth');
+      final callable =
+          FirebaseFunctions.instance.httpsCallable('analyzeInventoryHealth');
       final result = await callable.call({'businessId': businessId});
 
       setState(() {
@@ -76,7 +78,10 @@ class _AIIntelligenceScreenState extends State<AIIntelligenceScreen> {
                     const SizedBox(height: 24),
                     Text(
                       'Gemini is analyzing your inventory ledger...',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.textSecondary),
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(color: AppColors.textSecondary),
                     ),
                   ],
                 ),
@@ -88,12 +93,14 @@ class _AIIntelligenceScreenState extends State<AIIntelligenceScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.error_outline, size: 64, color: AppColors.error),
+                          const Icon(Icons.error_outline,
+                              size: 64, color: AppColors.error),
                           const SizedBox(height: 16),
                           Text(
                             _error!,
                             textAlign: TextAlign.center,
-                            style: const TextStyle(color: AppColors.error, fontSize: 16),
+                            style: const TextStyle(
+                                color: AppColors.error, fontSize: 16),
                           ),
                           const SizedBox(height: 24),
                           ElevatedButton(
@@ -106,8 +113,9 @@ class _AIIntelligenceScreenState extends State<AIIntelligenceScreen> {
                   )
                 : _reportMarkdown != null
                     ? Container(
-                        margin: Responsive.isDesktop(context) 
-                            ? const EdgeInsets.symmetric(horizontal: 120, vertical: 24)
+                        margin: Responsive.isDesktop(context)
+                            ? const EdgeInsets.symmetric(
+                                horizontal: 120, vertical: 24)
                             : const EdgeInsets.all(16),
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
@@ -125,8 +133,14 @@ class _AIIntelligenceScreenState extends State<AIIntelligenceScreen> {
                           data: _reportMarkdown!,
                           selectable: true,
                           styleSheet: MarkdownStyleSheet(
-                            h1: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.accent),
-                            h2: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.black87),
+                            h1: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.accent),
+                            h2: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87),
                             p: const TextStyle(fontSize: 16, height: 1.5),
                             listBullet: const TextStyle(fontSize: 16),
                           ),
@@ -136,24 +150,32 @@ class _AIIntelligenceScreenState extends State<AIIntelligenceScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.auto_awesome, size: 80, color: AppColors.accent.withValues(alpha: 0.5)),
+                            Icon(Icons.auto_awesome,
+                                size: 80,
+                                color: AppColors.accent.withValues(alpha: 0.5)),
                             const SizedBox(height: 24),
                             Text(
                               'Ready for AI Analysis',
-                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .headlineSmall
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 12),
                             const Text(
                               'Generate a mathematically-backed report on your stock health.',
-                              style: TextStyle(color: Colors.black54, fontSize: 16),
+                              style: TextStyle(
+                                  color: Colors.black54, fontSize: 16),
                             ),
                             const SizedBox(height: 32),
                             ElevatedButton.icon(
                               onPressed: _runAIAnalysis,
                               icon: const Icon(Icons.analytics),
-                              label: const Text('Analyze Now', style: TextStyle(fontSize: 16)),
+                              label: const Text('Analyze Now',
+                                  style: TextStyle(fontSize: 16)),
                               style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 32, vertical: 16),
                               ),
                             ),
                           ],

@@ -39,8 +39,11 @@ class AuditLog {
       entityName: map['entityName'] as String? ?? '',
       oldValues: Map<String, dynamic>.from(map['oldValues'] as Map? ?? {}),
       newValues: Map<String, dynamic>.from(map['newValues'] as Map? ?? {}),
-      metadata: map['metadata'] != null ? Map<String, dynamic>.from(map['metadata'] as Map) : null,
-      createdAt: DateTime.tryParse(map['createdAt']?.toString() ?? '') ?? DateTime.now(),
+      metadata: map['metadata'] != null
+          ? Map<String, dynamic>.from(map['metadata'] as Map)
+          : null,
+      createdAt: DateTime.tryParse(map['createdAt']?.toString() ?? '') ??
+          DateTime.now(),
     );
   }
 }

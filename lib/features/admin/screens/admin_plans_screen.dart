@@ -28,7 +28,8 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
       final list = (res['plans'] as List?) ?? [];
       if (mounted) {
         setState(() {
-          _plans = list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+          _plans =
+              list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
           _loading = false;
         });
       }
@@ -49,9 +50,12 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: theme.cardColor,
         title: const Text('Delete Plan'),
-        content: Text('Are you sure you want to delete plan: $id? This cannot be undone.'),
+        content: Text(
+            'Are you sure you want to delete plan: $id? This cannot be undone.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
@@ -68,7 +72,8 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
         _loadPlans();
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(e.toString())));
           setState(() => _loading = false);
         }
       }
@@ -80,11 +85,16 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
     final isNew = plan == null;
     final idController = TextEditingController(text: plan?['id'] ?? '');
     final nameController = TextEditingController(text: plan?['name'] ?? '');
-    final priceController = TextEditingController(text: plan?['price']?.toString() ?? '0');
-    final maxProductsController = TextEditingController(text: plan?['maxProducts']?.toString() ?? '50');
-    final maxUsersController = TextEditingController(text: plan?['maxUsers']?.toString() ?? '1');
-    final maxDailySalesController = TextEditingController(text: plan?['maxDailySales']?.toString() ?? '-1');
-    final trialDaysController = TextEditingController(text: plan?['trialDays']?.toString() ?? '14');
+    final priceController =
+        TextEditingController(text: plan?['price']?.toString() ?? '0');
+    final maxProductsController =
+        TextEditingController(text: plan?['maxProducts']?.toString() ?? '50');
+    final maxUsersController =
+        TextEditingController(text: plan?['maxUsers']?.toString() ?? '1');
+    final maxDailySalesController =
+        TextEditingController(text: plan?['maxDailySales']?.toString() ?? '-1');
+    final trialDaysController =
+        TextEditingController(text: plan?['trialDays']?.toString() ?? '14');
 
     bool reportsEnabled = plan?['reportsEnabled'] ?? true;
     bool aiEnabled = plan?['aiEnabled'] ?? false;
@@ -107,7 +117,8 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
               if (isNew)
                 TextField(
                   controller: idController,
-                  decoration: const InputDecoration(labelText: 'Plan ID (e.g. enterprise)'),
+                  decoration: const InputDecoration(
+                      labelText: 'Plan ID (e.g. enterprise)'),
                 ),
               TextField(
                 controller: nameController,
@@ -115,27 +126,32 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
               ),
               TextField(
                 controller: priceController,
-                decoration: const InputDecoration(labelText: 'Price (\$/month)'),
+                decoration:
+                    const InputDecoration(labelText: 'Price (\$/month)'),
                 keyboardType: TextInputType.number,
               ),
               TextField(
                 controller: maxProductsController,
-                decoration: const InputDecoration(labelText: 'Max Products (-1 for unlimited)'),
+                decoration: const InputDecoration(
+                    labelText: 'Max Products (-1 for unlimited)'),
                 keyboardType: TextInputType.number,
               ),
               TextField(
                 controller: maxUsersController,
-                decoration: const InputDecoration(labelText: 'Max Users (-1 for unlimited)'),
+                decoration: const InputDecoration(
+                    labelText: 'Max Users (-1 for unlimited)'),
                 keyboardType: TextInputType.number,
               ),
               TextField(
                 controller: maxDailySalesController,
-                decoration: const InputDecoration(labelText: 'Max Daily Sales (-1 for unlimited)'),
+                decoration: const InputDecoration(
+                    labelText: 'Max Daily Sales (-1 for unlimited)'),
                 keyboardType: TextInputType.number,
               ),
               TextField(
                 controller: trialDaysController,
-                decoration: const InputDecoration(labelText: 'Trial Duration (Days)'),
+                decoration:
+                    const InputDecoration(labelText: 'Trial Duration (Days)'),
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 12),
@@ -147,49 +163,57 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
                         title: const Text('Reports Enabled'),
                         value: reportsEnabled,
                         activeColor: AppColors.accent,
-                        onChanged: (val) => setCheckState(() => reportsEnabled = val ?? true),
+                        onChanged: (val) =>
+                            setCheckState(() => reportsEnabled = val ?? true),
                       ),
                       CheckboxListTile(
                         title: const Text('AI Features Enabled'),
                         value: aiEnabled,
                         activeColor: AppColors.accent,
-                        onChanged: (val) => setCheckState(() => aiEnabled = val ?? false),
+                        onChanged: (val) =>
+                            setCheckState(() => aiEnabled = val ?? false),
                       ),
                       CheckboxListTile(
                         title: const Text('WhatsApp Integration Enabled'),
                         value: whatsappEnabled,
                         activeColor: AppColors.accent,
-                        onChanged: (val) => setCheckState(() => whatsappEnabled = val ?? false),
+                        onChanged: (val) =>
+                            setCheckState(() => whatsappEnabled = val ?? false),
                       ),
                       CheckboxListTile(
                         title: const Text('eTIMS Integration Enabled'),
                         value: etimsEnabled,
                         activeColor: AppColors.accent,
-                        onChanged: (val) => setCheckState(() => etimsEnabled = val ?? false),
+                        onChanged: (val) =>
+                            setCheckState(() => etimsEnabled = val ?? false),
                       ),
                       CheckboxListTile(
                         title: const Text('B2B/B2C Storefront Enabled'),
                         value: storefrontEnabled,
                         activeColor: AppColors.accent,
-                        onChanged: (val) => setCheckState(() => storefrontEnabled = val ?? false),
+                        onChanged: (val) => setCheckState(
+                            () => storefrontEnabled = val ?? false),
                       ),
                       CheckboxListTile(
                         title: const Text('Multi-Language Support Enabled'),
                         value: multiLanguageEnabled,
                         activeColor: AppColors.accent,
-                        onChanged: (val) => setCheckState(() => multiLanguageEnabled = val ?? false),
+                        onChanged: (val) => setCheckState(
+                            () => multiLanguageEnabled = val ?? false),
                       ),
                       CheckboxListTile(
                         title: const Text('Receipt Printing Enabled'),
                         value: receiptPrintingEnabled,
                         activeColor: AppColors.accent,
-                        onChanged: (val) => setCheckState(() => receiptPrintingEnabled = val ?? true),
+                        onChanged: (val) => setCheckState(
+                            () => receiptPrintingEnabled = val ?? true),
                       ),
                       CheckboxListTile(
                         title: const Text('Advanced Analytics Enabled'),
                         value: advancedAnalyticsEnabled,
                         activeColor: AppColors.accent,
-                        onChanged: (val) => setCheckState(() => advancedAnalyticsEnabled = val ?? false),
+                        onChanged: (val) => setCheckState(
+                            () => advancedAnalyticsEnabled = val ?? false),
                       ),
                     ],
                   );
@@ -199,8 +223,12 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Save')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
+          FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Save')),
         ],
       ),
     );
@@ -234,7 +262,8 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
         _loadPlans();
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(e.toString())));
           setState(() => _loading = false);
         }
       }
@@ -247,9 +276,12 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('Subscription Plans', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+        title: Text('Subscription Plans',
+            style: theme.textTheme.titleLarge
+                ?.copyWith(fontWeight: FontWeight.bold)),
         actions: [
-          IconButton(icon: const Icon(Icons.refresh_rounded), onPressed: _loadPlans),
+          IconButton(
+              icon: const Icon(Icons.refresh_rounded), onPressed: _loadPlans),
           const SizedBox(width: 8),
           FilledButton.icon(
             onPressed: () => _savePlan(),
@@ -262,15 +294,19 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(child: Text(_error!, style: const TextStyle(color: AppColors.error)))
+              ? Center(
+                  child: Text(_error!,
+                      style: const TextStyle(color: AppColors.error)))
               : _plans.isEmpty
                   ? const EmptyState(
                       icon: Icons.view_list_rounded,
                       title: 'No Plans Found',
-                      subtitle: 'Click "Create Plan" to define your subscription structures.')
+                      subtitle:
+                          'Click "Create Plan" to define your subscription structures.')
                   : GridView.builder(
                       padding: const EdgeInsets.all(24),
-                      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                      gridDelegate:
+                          const SliverGridDelegateWithMaxCrossAxisExtent(
                         maxCrossAxisExtent: 400,
                         crossAxisSpacing: 20,
                         mainAxisSpacing: 20,
@@ -290,49 +326,106 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Expanded(
                                     child: Text(
                                       p['name'] ?? 'Unnamed Plan',
-                                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold,
-                                        color: theme.colorScheme.onSurface),
+                                      style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: theme.colorScheme.onSurface),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                   Text(
                                     '\$${p['price']}/mo',
-                                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.accent),
+                                    style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.accent),
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 8),
                               Text('ID: ${p['id']}',
-                                style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13)),
+                                  style: TextStyle(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                      fontSize: 13)),
                               Divider(height: 24, color: theme.dividerColor),
                               Expanded(
                                 child: SingleChildScrollView(
                                   child: Column(
                                     children: [
-                                      _LimitRow(icon: Icons.inventory_2_rounded, label: 'Products Limit',
-                                        value: p['maxProducts'] == -1 ? 'Unlimited' : '${p['maxProducts']}', theme: theme),
-                                      _LimitRow(icon: Icons.people_rounded, label: 'Users Limit',
-                                        value: p['maxUsers'] == -1 ? 'Unlimited' : '${p['maxUsers']}', theme: theme),
-                                      _LimitRow(icon: Icons.receipt_long_rounded, label: 'eTIMS Integr.',
-                                        value: p['etimsEnabled'] == true ? 'Yes' : 'No', theme: theme),
-                                      _LimitRow(icon: Icons.storefront_rounded, label: 'Storefront',
-                                        value: p['storefrontEnabled'] == true ? 'Yes' : 'No', theme: theme),
-                                      _LimitRow(icon: Icons.translate_rounded, label: 'Multi-Lang',
-                                        value: p['multiLanguageEnabled'] == true ? 'Yes' : 'No', theme: theme),
-                                      _LimitRow(icon: Icons.print_rounded, label: 'Receipt Printing',
-                                        value: p['receiptPrintingEnabled'] == true ? 'Yes' : 'No', theme: theme),
-                                      _LimitRow(icon: Icons.analytics_rounded, label: 'Adv. Analytics',
-                                        value: p['advancedAnalyticsEnabled'] == true ? 'Yes' : 'No', theme: theme),
-                                      _LimitRow(icon: Icons.auto_awesome_rounded, label: 'AI Assistance',
-                                        value: p['aiEnabled'] == true ? 'Yes' : 'No', theme: theme),
-                                      _LimitRow(icon: Icons.chat_rounded, label: 'WhatsApp Bot',
-                                        value: p['whatsappEnabled'] == true ? 'Yes' : 'No', theme: theme),
+                                      _LimitRow(
+                                          icon: Icons.inventory_2_rounded,
+                                          label: 'Products Limit',
+                                          value: p['maxProducts'] == -1
+                                              ? 'Unlimited'
+                                              : '${p['maxProducts']}',
+                                          theme: theme),
+                                      _LimitRow(
+                                          icon: Icons.people_rounded,
+                                          label: 'Users Limit',
+                                          value: p['maxUsers'] == -1
+                                              ? 'Unlimited'
+                                              : '${p['maxUsers']}',
+                                          theme: theme),
+                                      _LimitRow(
+                                          icon: Icons.receipt_long_rounded,
+                                          label: 'eTIMS Integr.',
+                                          value: p['etimsEnabled'] == true
+                                              ? 'Yes'
+                                              : 'No',
+                                          theme: theme),
+                                      _LimitRow(
+                                          icon: Icons.storefront_rounded,
+                                          label: 'Storefront',
+                                          value: p['storefrontEnabled'] == true
+                                              ? 'Yes'
+                                              : 'No',
+                                          theme: theme),
+                                      _LimitRow(
+                                          icon: Icons.translate_rounded,
+                                          label: 'Multi-Lang',
+                                          value:
+                                              p['multiLanguageEnabled'] == true
+                                                  ? 'Yes'
+                                                  : 'No',
+                                          theme: theme),
+                                      _LimitRow(
+                                          icon: Icons.print_rounded,
+                                          label: 'Receipt Printing',
+                                          value: p['receiptPrintingEnabled'] ==
+                                                  true
+                                              ? 'Yes'
+                                              : 'No',
+                                          theme: theme),
+                                      _LimitRow(
+                                          icon: Icons.analytics_rounded,
+                                          label: 'Adv. Analytics',
+                                          value:
+                                              p['advancedAnalyticsEnabled'] ==
+                                                      true
+                                                  ? 'Yes'
+                                                  : 'No',
+                                          theme: theme),
+                                      _LimitRow(
+                                          icon: Icons.auto_awesome_rounded,
+                                          label: 'AI Assistance',
+                                          value: p['aiEnabled'] == true
+                                              ? 'Yes'
+                                              : 'No',
+                                          theme: theme),
+                                      _LimitRow(
+                                          icon: Icons.chat_rounded,
+                                          label: 'WhatsApp Bot',
+                                          value: p['whatsappEnabled'] == true
+                                              ? 'Yes'
+                                              : 'No',
+                                          theme: theme),
                                     ],
                                   ),
                                 ),
@@ -341,13 +434,16 @@ class _AdminPlansScreenState extends State<AdminPlansScreen> {
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
                                   IconButton(
-                                    icon: Icon(Icons.edit_rounded, color: theme.colorScheme.onSurfaceVariant),
+                                    icon: Icon(Icons.edit_rounded,
+                                        color:
+                                            theme.colorScheme.onSurfaceVariant),
                                     onPressed: () => _savePlan(p),
                                     tooltip: 'Edit Plan',
                                   ),
                                   const SizedBox(width: 8),
                                   IconButton(
-                                    icon: const Icon(Icons.delete_rounded, color: AppColors.error),
+                                    icon: const Icon(Icons.delete_rounded,
+                                        color: AppColors.error),
                                     onPressed: () => _deletePlan(p['id']),
                                     tooltip: 'Delete Plan',
                                   ),
@@ -368,7 +464,11 @@ class _LimitRow extends StatelessWidget {
   final String value;
   final ThemeData theme;
 
-  const _LimitRow({required this.icon, required this.label, required this.value, required this.theme});
+  const _LimitRow(
+      {required this.icon,
+      required this.label,
+      required this.value,
+      required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -378,10 +478,15 @@ class _LimitRow extends StatelessWidget {
         children: [
           Icon(icon, size: 16, color: theme.colorScheme.onSurfaceVariant),
           const SizedBox(width: 8),
-          Text(label, style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13)),
+          Text(label,
+              style: TextStyle(
+                  color: theme.colorScheme.onSurfaceVariant, fontSize: 13)),
           const Spacer(),
-          Text(value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13,
-            color: theme.colorScheme.onSurface)),
+          Text(value,
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  color: theme.colorScheme.onSurface)),
         ],
       ),
     );

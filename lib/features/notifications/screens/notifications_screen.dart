@@ -62,7 +62,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Future<void> _load() async {
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final bizId = context.read<AuthProvider>().businessId!;
       final params = <String, dynamic>{'businessId': bizId, 'limit': 100};
@@ -74,14 +77,26 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       ]);
 
       final raw = (results[0]['notifications'] as List?) ?? [];
-      final notifs = raw.map((e) => NotificationItem.fromMap(Map<String, dynamic>.from(e as Map))).toList();
+      final notifs = raw
+          .map((e) =>
+              NotificationItem.fromMap(Map<String, dynamic>.from(e as Map)))
+          .toList();
       final settings = NotificationSettings.fromMap(
         Map<String, dynamic>.from((results[1]['settings'] as Map?) ?? {}),
       );
 
-      if (mounted) setState(() { _notifications = notifs; _settings = settings; _loading = false; });
+      if (mounted)
+        setState(() {
+          _notifications = notifs;
+          _settings = settings;
+          _loading = false;
+        });
     } on FunctionsException catch (e) {
-      if (mounted) setState(() { _error = e.message; _loading = false; });
+      if (mounted)
+        setState(() {
+          _error = e.message;
+          _loading = false;
+        });
     }
   }
 
@@ -95,14 +110,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       setState(() => _settings = s);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Settings saved')),
-      );
+          const SnackBar(content: Text('Settings saved')),
+        );
       }
     } on FunctionsException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
-      );
+          SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
+        );
       }
     }
   }
@@ -136,7 +151,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   ],
                 ),
                 const SizedBox(height: 16),
-
                 Expanded(
                   child: TabBarView(
                     children: [
@@ -157,25 +171,54 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return Column(
       children: [
         Row(children: [
-          _FilterChip(label: 'All', selected: _filterStatus == 'all', onTap: () { setState(() => _filterStatus = 'all'); _load(); }),
+          _FilterChip(
+              label: 'All',
+              selected: _filterStatus == 'all',
+              onTap: () {
+                setState(() => _filterStatus = 'all');
+                _load();
+              }),
           const SizedBox(width: 8),
-          _FilterChip(label: 'Sent', selected: _filterStatus == 'sent', onTap: () { setState(() => _filterStatus = 'sent'); _load(); }),
+          _FilterChip(
+              label: 'Sent',
+              selected: _filterStatus == 'sent',
+              onTap: () {
+                setState(() => _filterStatus = 'sent');
+                _load();
+              }),
           const SizedBox(width: 8),
-          _FilterChip(label: 'Pending', selected: _filterStatus == 'pending', onTap: () { setState(() => _filterStatus = 'pending'); _load(); }),
+          _FilterChip(
+              label: 'Pending',
+              selected: _filterStatus == 'pending',
+              onTap: () {
+                setState(() => _filterStatus = 'pending');
+                _load();
+              }),
           const SizedBox(width: 8),
-          _FilterChip(label: 'Failed', selected: _filterStatus == 'failed', onTap: () { setState(() => _filterStatus = 'failed'); _load(); }),
+          _FilterChip(
+              label: 'Failed',
+              selected: _filterStatus == 'failed',
+              onTap: () {
+                setState(() => _filterStatus = 'failed');
+                _load();
+              }),
         ]),
         const SizedBox(height: 16),
-        if (_error != null) _ErrorBar(message: _error!, onRetry: _load, theme: theme),
+        if (_error != null)
+          _ErrorBar(message: _error!, onRetry: _load, theme: theme),
         Expanded(
           child: _notifications.isEmpty && !_loading
-              ? const EmptyState(icon: Icons.notifications_none_rounded, title: 'No notifications', subtitle: 'Notifications will appear here.')
+              ? const EmptyState(
+                  icon: Icons.notifications_none_rounded,
+                  title: 'No notifications',
+                  subtitle: 'Notifications will appear here.')
               : RefreshIndicator(
                   onRefresh: _load,
                   child: ListView.separated(
                     itemCount: _notifications.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 6),
-                    itemBuilder: (_, i) => _NotifCard(notif: _notifications[i], theme: theme),
+                    itemBuilder: (_, i) =>
+                        _NotifCard(notif: _notifications[i], theme: theme),
                   ),
                 ),
         ),
@@ -243,18 +286,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           initialValue: _settings.provider,
           decoration: const InputDecoration(labelText: 'Messaging Provider'),
           items: const [
-            DropdownMenuItem(value: 'africas_talking', child: Text("Africa's Talking")),
-            DropdownMenuItem(value: 'meta_whatsapp', child: Text('Meta WhatsApp Business')),
+            DropdownMenuItem(
+                value: 'africas_talking', child: Text("Africa's Talking")),
+            DropdownMenuItem(
+                value: 'meta_whatsapp', child: Text('Meta WhatsApp Business')),
           ],
           onChanged: (v) {
             if (v != null) {
               _updateSettings(NotificationSettings(
-              debtReminders: _settings.debtReminders,
-              lowStockAlerts: _settings.lowStockAlerts,
-              paymentNotifications: _settings.paymentNotifications,
-              quotationNotifications: _settings.quotationNotifications,
-              provider: v,
-            ));
+                debtReminders: _settings.debtReminders,
+                lowStockAlerts: _settings.lowStockAlerts,
+                paymentNotifications: _settings.paymentNotifications,
+                quotationNotifications: _settings.quotationNotifications,
+                provider: v,
+              ));
             }
           },
         ),
@@ -262,16 +307,22 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         const SizedBox(height: 24),
         const Divider(),
         const SizedBox(height: 16),
-        Text('Daily End-of-Day (EOD) Summary Report', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+        Text('Daily End-of-Day (EOD) Summary Report',
+            style: theme.textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        Text('Automated business summary sent every day at 8:00 PM EAT covering revenue, profit, low stock, and outstanding debts.',
-          style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+        Text(
+          'Automated business summary sent every day at 8:00 PM EAT covering revenue, profit, low stock, and outstanding debts.',
+          style: TextStyle(
+              fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: 12),
         Card(
           color: theme.cardColor,
           elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: theme.dividerColor)),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: theme.dividerColor)),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -279,8 +330,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               children: [
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Enable Daily EOD Summary Report', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  subtitle: const Text('Delivered automatically at 8:00 PM EAT'),
+                  title: const Text('Enable Daily EOD Summary Report',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  subtitle:
+                      const Text('Delivered automatically at 8:00 PM EAT'),
                   value: _eodEnabled,
                   activeTrackColor: AppColors.accent,
                   onChanged: (v) => setState(() => _eodEnabled = v),
@@ -298,11 +352,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     initialValue: _eodChannel,
-                    decoration: const InputDecoration(labelText: 'Delivery Channel'),
+                    decoration:
+                        const InputDecoration(labelText: 'Delivery Channel'),
                     items: const [
-                      DropdownMenuItem(value: 'sms', child: Text('SMS (Africa\'s Talking)')),
-                      DropdownMenuItem(value: 'whatsapp', child: Text('WhatsApp (Pro Plan)')),
-                      DropdownMenuItem(value: 'both', child: Text('Both SMS & WhatsApp')),
+                      DropdownMenuItem(
+                          value: 'sms', child: Text('SMS (Africa\'s Talking)')),
+                      DropdownMenuItem(
+                          value: 'whatsapp',
+                          child: Text('WhatsApp (Pro Plan)')),
+                      DropdownMenuItem(
+                          value: 'both', child: Text('Both SMS & WhatsApp')),
                     ],
                     onChanged: (v) {
                       if (v != null) setState(() => _eodChannel = v);
@@ -329,7 +388,11 @@ class _SettingTile extends StatelessWidget {
   final String subtitle;
   final bool value;
   final ValueChanged<bool> onChanged;
-  const _SettingTile({required this.title, required this.subtitle, required this.value, required this.onChanged});
+  const _SettingTile(
+      {required this.title,
+      required this.subtitle,
+      required this.value,
+      required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -337,7 +400,8 @@ class _SettingTile extends StatelessWidget {
     return Card(
       color: theme.cardColor,
       child: SwitchListTile(
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+        title: Text(title,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
         subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
         value: value,
         activeTrackColor: AppColors.accent,
@@ -351,7 +415,8 @@ class _FilterChip extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
-  const _FilterChip({required this.label, required this.selected, required this.onTap});
+  const _FilterChip(
+      {required this.label, required this.selected, required this.onTap});
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -362,12 +427,15 @@ class _FilterChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected ? AppColors.accent : theme.cardColor,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: selected ? AppColors.accent : theme.dividerColor),
+          border: Border.all(
+              color: selected ? AppColors.accent : theme.dividerColor),
         ),
-        child: Text(label, style: TextStyle(
-          color: selected ? Colors.white : theme.colorScheme.onSurface,
-          fontSize: 12, fontWeight: FontWeight.w600,
-        )),
+        child: Text(label,
+            style: TextStyle(
+              color: selected ? Colors.white : theme.colorScheme.onSurface,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            )),
       ),
     );
   }
@@ -380,21 +448,31 @@ class _NotifCard extends StatelessWidget {
 
   IconData _typeIcon(String type) {
     switch (type) {
-      case 'debt_reminder': return Icons.account_balance_wallet_rounded;
-      case 'payment_received': return Icons.check_circle_rounded;
-      case 'quotation_ready': return Icons.description_rounded;
-      case 'low_stock': return Icons.inventory_2_rounded;
-      case 'transfer_approved': return Icons.swap_horiz_rounded;
-      default: return Icons.notifications_rounded;
+      case 'debt_reminder':
+        return Icons.account_balance_wallet_rounded;
+      case 'payment_received':
+        return Icons.check_circle_rounded;
+      case 'quotation_ready':
+        return Icons.description_rounded;
+      case 'low_stock':
+        return Icons.inventory_2_rounded;
+      case 'transfer_approved':
+        return Icons.swap_horiz_rounded;
+      default:
+        return Icons.notifications_rounded;
     }
   }
 
   Color _statusColor(String status) {
     switch (status) {
-      case 'sent': return AppColors.success;
-      case 'pending': return AppColors.warning;
-      case 'failed': return AppColors.error;
-      default: return theme.colorScheme.onSurfaceVariant;
+      case 'sent':
+        return AppColors.success;
+      case 'pending':
+        return AppColors.warning;
+      case 'failed':
+        return AppColors.error;
+      default:
+        return theme.colorScheme.onSurfaceVariant;
     }
   }
 
@@ -412,27 +490,41 @@ class _NotifCard extends StatelessWidget {
         ),
         child: Row(children: [
           Container(
-            width: 36, height: 36,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               color: AppColors.chartBlue.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(_typeIcon(notif.type), color: AppColors.chartBlue, size: 18),
+            child: Icon(_typeIcon(notif.type),
+                color: AppColors.chartBlue, size: 18),
           ),
           const SizedBox(width: 12),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(notif.type.replaceAll('_', ' ').toUpperCase(),
-              style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurfaceVariant)),
-            const SizedBox(height: 2),
-            Text(notif.message, style: const TextStyle(fontSize: 12), maxLines: 2, overflow: TextOverflow.ellipsis),
-            const SizedBox(height: 2),
-            Row(children: [
-              Text(notif.recipient, style: TextStyle(fontSize: 10, color: theme.hintColor)),
-              const SizedBox(width: 8),
-              Text(fmt.format(notif.createdAt), style: TextStyle(fontSize: 10, color: theme.hintColor)),
-            ]),
-          ])),
-          _Badge(label: notif.status.toUpperCase(), color: _statusColor(notif.status)),
+          Expanded(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                Text(notif.type.replaceAll('_', ' ').toUpperCase(),
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: theme.colorScheme.onSurfaceVariant)),
+                const SizedBox(height: 2),
+                Text(notif.message,
+                    style: const TextStyle(fontSize: 12),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis),
+                const SizedBox(height: 2),
+                Row(children: [
+                  Text(notif.recipient,
+                      style: TextStyle(fontSize: 10, color: theme.hintColor)),
+                  const SizedBox(width: 8),
+                  Text(fmt.format(notif.createdAt),
+                      style: TextStyle(fontSize: 10, color: theme.hintColor)),
+                ]),
+              ])),
+          _Badge(
+              label: notif.status.toUpperCase(),
+              color: _statusColor(notif.status)),
         ]),
       ),
     );
@@ -440,33 +532,43 @@ class _NotifCard extends StatelessWidget {
 }
 
 class _Badge extends StatelessWidget {
-  final String label; final Color color;
+  final String label;
+  final Color color;
   const _Badge({required this.label, required this.color});
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-    decoration: BoxDecoration(
-      color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
-    child: Text(label, style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.w600)),
-  );
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+        decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(4)),
+        child: Text(label,
+            style: TextStyle(
+                color: color, fontSize: 9, fontWeight: FontWeight.w600)),
+      );
 }
 
 class _ErrorBar extends StatelessWidget {
-  final String message; final VoidCallback onRetry;
+  final String message;
+  final VoidCallback onRetry;
   final ThemeData theme;
-  const _ErrorBar({required this.message, required this.onRetry, required this.theme});
+  const _ErrorBar(
+      {required this.message, required this.onRetry, required this.theme});
   @override
   Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.only(bottom: 12),
-    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-    decoration: BoxDecoration(
-      color: AppColors.error.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10),
-      border: Border.all(color: AppColors.error.withValues(alpha: 0.3))),
-    child: Row(children: [
-      const Icon(Icons.error_outline, color: AppColors.error, size: 16),
-      const SizedBox(width: 8),
-      Expanded(child: Text(message, style: const TextStyle(color: AppColors.error, fontSize: 12))),
-      TextButton(onPressed: onRetry, child: const Text('Retry')),
-    ]),
-  );
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+            color: AppColors.error.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppColors.error.withValues(alpha: 0.3))),
+        child: Row(children: [
+          const Icon(Icons.error_outline, color: AppColors.error, size: 16),
+          const SizedBox(width: 8),
+          Expanded(
+              child: Text(message,
+                  style:
+                      const TextStyle(color: AppColors.error, fontSize: 12))),
+          TextButton(onPressed: onRetry, child: const Text('Retry')),
+        ]),
+      );
 }

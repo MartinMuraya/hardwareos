@@ -11,7 +11,7 @@ enum ThermalPackage {
 class PrinterDevice {
   final String name;
   final String address;
-  
+
   PrinterDevice({required this.name, required this.address});
 }
 
@@ -21,7 +21,7 @@ class ThermalPrinterService {
 
   static ThermalPackage _currentPackage = ThermalPackage.blueThermalPrinter;
   static String? _connectedAddress;
-  
+
   static ThermalPackage get currentPackage => _currentPackage;
   static String? get connectedAddress => _connectedAddress;
 
@@ -48,10 +48,15 @@ class ThermalPrinterService {
     if (_currentPackage == ThermalPackage.blueThermalPrinter) {
       final blue = btp.BlueThermalPrinter.instance;
       final devices = await blue.getBondedDevices();
-      return devices.map((d) => PrinterDevice(name: d.name ?? 'Unknown', address: d.address ?? '')).toList();
+      return devices
+          .map((d) => PrinterDevice(
+              name: d.name ?? 'Unknown', address: d.address ?? ''))
+          .toList();
     } else {
       final devices = await pbt.PrintBluetoothThermal.pairedBluetooths;
-      return devices.map((d) => PrinterDevice(name: d.name, address: d.macAdress)).toList();
+      return devices
+          .map((d) => PrinterDevice(name: d.name, address: d.macAdress))
+          .toList();
     }
   }
 
@@ -63,33 +68,34 @@ class ThermalPrinterService {
         final device = devices.firstWhere((d) => d.address == macAddress);
         bool? connected = await blue.connect(device);
         if (connected == true) {
-           _connectedAddress = macAddress;
-           final prefs = await SharedPreferences.getInstance();
-           await prefs.setString(_prefAddress, macAddress);
-           return true;
+          _connectedAddress = macAddress;
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString(_prefAddress, macAddress);
+          return true;
         }
       } else {
-        bool connected = await pbt.PrintBluetoothThermal.connect(macPrinterAddress: macAddress);
+        bool connected = await pbt.PrintBluetoothThermal.connect(
+            macPrinterAddress: macAddress);
         if (connected) {
-           _connectedAddress = macAddress;
-           final prefs = await SharedPreferences.getInstance();
-           await prefs.setString(_prefAddress, macAddress);
-           return true;
+          _connectedAddress = macAddress;
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString(_prefAddress, macAddress);
+          return true;
         }
       }
     } catch (e) {
-    // Use debugPrint instead of print to respect production logging guidance
-    debugPrint("Printer connection error: $e");
+      // Use debugPrint instead of print to respect production logging guidance
+      debugPrint("Printer connection error: $e");
     }
     return false;
   }
-  
+
   static Future<void> disconnect() async {
     try {
       if (_currentPackage == ThermalPackage.blueThermalPrinter) {
-         await btp.BlueThermalPrinter.instance.disconnect();
+        await btp.BlueThermalPrinter.instance.disconnect();
       } else {
-         await pbt.PrintBluetoothThermal.disconnect;
+        await pbt.PrintBluetoothThermal.disconnect;
       }
     } catch (_) {}
     _connectedAddress = null;

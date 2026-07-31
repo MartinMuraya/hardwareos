@@ -14,20 +14,20 @@ class ReturnItem {
   });
 
   factory ReturnItem.fromMap(Map<String, dynamic> map) => ReturnItem(
-    productId:    map['productId'] as String,
-    name:         map['name'] as String,
-    quantity:     ((map['quantity'] ?? 0) as num).toInt(),
-    sellingPrice: ((map['sellingPrice'] ?? 0) as num).toDouble(),
-    costPrice:    ((map['costPrice'] ?? 0) as num).toDouble(),
-  );
+        productId: map['productId'] as String,
+        name: map['name'] as String,
+        quantity: ((map['quantity'] ?? 0) as num).toInt(),
+        sellingPrice: ((map['sellingPrice'] ?? 0) as num).toDouble(),
+        costPrice: ((map['costPrice'] ?? 0) as num).toDouble(),
+      );
 
   Map<String, dynamic> toMap() => {
-    'productId':    productId,
-    'name':         name,
-    'quantity':     quantity,
-    'sellingPrice': sellingPrice,
-    'costPrice':    costPrice,
-  };
+        'productId': productId,
+        'name': name,
+        'quantity': quantity,
+        'sellingPrice': sellingPrice,
+        'costPrice': costPrice,
+      };
 }
 
 class ReturnRecord {
@@ -69,14 +69,17 @@ class ReturnRecord {
       saleId: map['saleId'] as String? ?? '',
       customerId: map['customerId'] as String? ?? '',
       customerName: map['customerName'] as String? ?? '',
-      items: rawItems.map((i) => ReturnItem.fromMap(Map<String, dynamic>.from(i as Map))).toList(),
+      items: rawItems
+          .map((i) => ReturnItem.fromMap(Map<String, dynamic>.from(i as Map)))
+          .toList(),
       subtotal: ((map['subtotal'] ?? 0) as num).toDouble(),
       refundAmount: ((map['refundAmount'] ?? 0) as num).toDouble(),
       reason: map['reason'] as String? ?? '',
       notes: map['notes'] as String? ?? '',
       processedBy: map['processedBy'] as String,
       processedByName: map['processedByName'] as String? ?? '',
-      createdAt: DateTime.tryParse(map['createdAt']?.toString() ?? '') ?? DateTime.now(),
+      createdAt: DateTime.tryParse(map['createdAt']?.toString() ?? '') ??
+          DateTime.now(),
     );
   }
 }

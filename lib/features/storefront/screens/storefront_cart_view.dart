@@ -43,7 +43,8 @@ class _StorefrontCartViewState extends State<StorefrontCartView> {
                 Text('Order Placed'),
               ],
             ),
-            content: const Text('Your order has been queued/placed successfully. The merchant will contact you soon.'),
+            content: const Text(
+                'Your order has been queued/placed successfully. The merchant will contact you soon.'),
             actions: [
               TextButton(
                 onPressed: () {
@@ -59,7 +60,9 @@ class _StorefrontCartViewState extends State<StorefrontCartView> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to place order: $e'), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text('Failed to place order: $e'),
+              backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -76,9 +79,11 @@ class _StorefrontCartViewState extends State<StorefrontCartView> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.shopping_cart_outlined, size: 80, color: Colors.grey),
+            const Icon(Icons.shopping_cart_outlined,
+                size: 80, color: Colors.grey),
             const SizedBox(height: 16),
-            Text('Your cart is empty', style: Theme.of(context).textTheme.titleLarge),
+            Text('Your cart is empty',
+                style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: widget.onContinueShopping,
@@ -101,21 +106,33 @@ class _StorefrontCartViewState extends State<StorefrontCartView> {
           margin: const EdgeInsets.only(bottom: 12),
           child: ListTile(
             leading: item.product.images.isNotEmpty
-                ? Image.network(item.product.images.first, width: 50, height: 50, fit: BoxFit.cover, errorBuilder: (_,__,___) => const Icon(Icons.broken_image))
+                ? Image.network(item.product.images.first,
+                    width: 50,
+                    height: 50,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) =>
+                        const Icon(Icons.broken_image))
                 : const Icon(Icons.inventory_2, size: 50),
-            title: Text(item.product.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+            title: Text(item.product.name,
+                style: const TextStyle(fontWeight: FontWeight.bold)),
             subtitle: Text('\$${item.product.sellingPrice.toStringAsFixed(2)}'),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
                   icon: const Icon(Icons.remove_circle_outline),
-                  onPressed: () => provider.updateQuantity(item.product.id, item.quantity - 1),
+                  onPressed: () => provider.updateQuantity(
+                      item.product.id, item.quantity - 1),
                 ),
-                Text('${item.quantity}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text('${item.quantity}',
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold)),
                 IconButton(
                   icon: const Icon(Icons.add_circle_outline),
-                  onPressed: item.product.inStock ? () => provider.updateQuantity(item.product.id, item.quantity + 1) : null,
+                  onPressed: item.product.inStock
+                      ? () => provider.updateQuantity(
+                          item.product.id, item.quantity + 1)
+                      : null,
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete_outline, color: Colors.red),
@@ -136,13 +153,16 @@ class _StorefrontCartViewState extends State<StorefrontCartView> {
         child: ListView(
           shrinkWrap: !isDesktop,
           children: [
-            Text('Order Summary', style: Theme.of(context).textTheme.headlineSmall),
+            Text('Order Summary',
+                style: Theme.of(context).textTheme.headlineSmall),
             const Divider(height: 32),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('Total Items:', style: TextStyle(fontSize: 16)),
-                Text('${provider.cartItemCount}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text('${provider.cartItemCount}',
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold)),
               ],
             ),
             const SizedBox(height: 12),
@@ -150,7 +170,8 @@ class _StorefrontCartViewState extends State<StorefrontCartView> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('Subtotal:', style: TextStyle(fontSize: 16)),
-                Text('\$${provider.cartSubtotal.toStringAsFixed(2)}', style: const TextStyle(fontSize: 16)),
+                Text('\$${provider.cartSubtotal.toStringAsFixed(2)}',
+                    style: const TextStyle(fontSize: 16)),
               ],
             ),
             const SizedBox(height: 12),
@@ -159,82 +180,99 @@ class _StorefrontCartViewState extends State<StorefrontCartView> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text('Delivery Fee:', style: TextStyle(fontSize: 16)),
-                  Text('\$${provider.selectedZone!.fee.toStringAsFixed(2)}', style: const TextStyle(fontSize: 16)),
+                  Text('\$${provider.selectedZone!.fee.toStringAsFixed(2)}',
+                      style: const TextStyle(fontSize: 16)),
                 ],
               ),
             const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Total Price:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                Text('\$${provider.cartTotal.toStringAsFixed(2)}', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green)),
+                const Text('Total Price:',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text('\$${provider.cartTotal.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green)),
               ],
             ),
             const Divider(height: 32),
-            
-            Text('Checkout Details', style: Theme.of(context).textTheme.titleLarge),
+            Text('Checkout Details',
+                style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
-            
             TextFormField(
-              decoration: const InputDecoration(labelText: 'Full Name *', border: OutlineInputBorder()),
-              validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+              decoration: const InputDecoration(
+                  labelText: 'Full Name *', border: OutlineInputBorder()),
+              validator: (val) =>
+                  val == null || val.isEmpty ? 'Required' : null,
               onSaved: (val) => _customerName = val!,
             ),
             const SizedBox(height: 16),
-            
             TextFormField(
               decoration: const InputDecoration(
-                labelText: 'M-Pesa Phone Number *', 
-                border: OutlineInputBorder(),
-                helperText: 'Must be an active M-Pesa number (e.g. 254700000000)'
-              ),
+                  labelText: 'M-Pesa Phone Number *',
+                  border: OutlineInputBorder(),
+                  helperText:
+                      'Must be an active M-Pesa number (e.g. 254700000000)'),
               keyboardType: TextInputType.phone,
-              validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+              validator: (val) =>
+                  val == null || val.isEmpty ? 'Required' : null,
               onSaved: (val) => _customerPhone = val!,
             ),
             const SizedBox(height: 16),
-            
             if (provider.storeInfo?.deliveryZones.isNotEmpty == true)
               DropdownButtonFormField<String>(
-                decoration: const InputDecoration(labelText: 'Delivery Zone *', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                    labelText: 'Delivery Zone *', border: OutlineInputBorder()),
                 initialValue: provider.selectedZone?.id,
-                items: provider.storeInfo!.deliveryZones.map((z) => DropdownMenuItem(
-                  value: z.id,
-                  child: Text('${z.name} (+\$${z.fee.toStringAsFixed(2)})'),
-                )).toList(),
+                items: provider.storeInfo!.deliveryZones
+                    .map((z) => DropdownMenuItem(
+                          value: z.id,
+                          child: Text(
+                              '${z.name} (+\$${z.fee.toStringAsFixed(2)})'),
+                        ))
+                    .toList(),
                 onChanged: (val) {
                   if (val != null) {
-                    final zone = provider.storeInfo!.deliveryZones.firstWhere((z) => z.id == val);
+                    final zone = provider.storeInfo!.deliveryZones
+                        .firstWhere((z) => z.id == val);
                     provider.setDeliveryZone(zone);
                   }
                 },
-                validator: (val) => val == null ? 'Please select a delivery zone' : null,
+                validator: (val) =>
+                    val == null ? 'Please select a delivery zone' : null,
               ),
             const SizedBox(height: 16),
-
             TextFormField(
-              decoration: const InputDecoration(labelText: 'Delivery Address *', border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                  labelText: 'Delivery Address *',
+                  border: OutlineInputBorder()),
               maxLines: 3,
-              validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+              validator: (val) =>
+                  val == null || val.isEmpty ? 'Required' : null,
               onSaved: (val) => _address = val!,
             ),
             const SizedBox(height: 16),
-            
             TextFormField(
-              decoration: const InputDecoration(labelText: 'Order Notes (Optional)', border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                  labelText: 'Order Notes (Optional)',
+                  border: OutlineInputBorder()),
               maxLines: 2,
               onSaved: (val) => _note = val ?? '',
             ),
             const SizedBox(height: 24),
-            
             SizedBox(
               height: 50,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                onPressed: _isCheckingOut ? null : () => _handleCheckout(provider),
+                onPressed:
+                    _isCheckingOut ? null : () => _handleCheckout(provider),
                 child: _isCheckingOut
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Pay with M-Pesa & Place Order', style: TextStyle(fontSize: 16, color: Colors.white)),
+                    : const Text('Pay with M-Pesa & Place Order',
+                        style: TextStyle(fontSize: 16, color: Colors.white)),
               ),
             ),
           ],

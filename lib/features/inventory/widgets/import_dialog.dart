@@ -25,7 +25,14 @@ class _ImportDialogState extends State<ImportDialog> {
   int? _importedCount;
 
   static const _expectedColumns = [
-    'sku', 'name', 'category', 'buyPrice', 'sellPrice', 'quantity', 'reorderLevel', 'unit',
+    'sku',
+    'name',
+    'category',
+    'buyPrice',
+    'sellPrice',
+    'quantity',
+    'reorderLevel',
+    'unit',
   ];
 
   @override
@@ -44,20 +51,27 @@ class _ImportDialogState extends State<ImportDialog> {
               padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
               child: Row(children: [
                 Container(
-                  width: 40, height: 40,
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
                     color: AppColors.accent.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.upload_file_rounded, color: AppColors.accent, size: 22),
+                  child: const Icon(Icons.upload_file_rounded,
+                      color: AppColors.accent, size: 22),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('Import Products', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
-                    const SizedBox(height: 2),
-                    Text('CSV or Excel format', style: theme.textTheme.bodySmall),
-                  ]),
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Import Products',
+                            style: theme.textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.w700)),
+                        const SizedBox(height: 2),
+                        Text('CSV or Excel format',
+                            style: theme.textTheme.bodySmall),
+                      ]),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close),
@@ -70,10 +84,14 @@ class _ImportDialogState extends State<ImportDialog> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(children: [
-                  const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 48),
+                  const Icon(Icons.check_circle_rounded,
+                      color: AppColors.success, size: 48),
                   const SizedBox(height: 12),
                   Text('Successfully imported $_importedCount products!',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: theme.colorScheme.onSurface)),
+                      style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                          color: theme.colorScheme.onSurface)),
                   const SizedBox(height: 24),
                   FilledButton(
                     onPressed: () => Navigator.pop(context),
@@ -82,7 +100,10 @@ class _ImportDialogState extends State<ImportDialog> {
                 ]),
               )
             else ...[
-              if (_file == null) _buildFilePicker(theme) else _buildPreview(theme),
+              if (_file == null)
+                _buildFilePicker(theme)
+              else
+                _buildPreview(theme),
             ],
           ],
         ),
@@ -97,16 +118,22 @@ class _ImportDialogState extends State<ImportDialog> {
         Container(
           padding: const EdgeInsets.all(32),
           decoration: BoxDecoration(
-            border: Border.all(color: theme.dividerColor, width: 2, strokeAlign: BorderSide.strokeAlignInside),
+            border: Border.all(
+                color: theme.dividerColor,
+                width: 2,
+                strokeAlign: BorderSide.strokeAlignInside),
             borderRadius: BorderRadius.circular(16),
-            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+            color: theme.colorScheme.surfaceContainerHighest
+                .withValues(alpha: 0.3),
           ),
           child: Column(children: [
             Icon(Icons.cloud_upload_outlined, size: 48, color: theme.hintColor),
             const SizedBox(height: 12),
-            Text('Choose a file to import', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+            Text('Choose a file to import',
+                style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
             const SizedBox(height: 4),
-            Text('CSV (.csv) or Excel (.xlsx)', style: TextStyle(color: theme.hintColor, fontSize: 12)),
+            Text('CSV (.csv) or Excel (.xlsx)',
+                style: TextStyle(color: theme.hintColor, fontSize: 12)),
             const SizedBox(height: 16),
             FilledButton.icon(
               onPressed: _loading ? null : _pickFile,
@@ -133,7 +160,10 @@ class _ImportDialogState extends State<ImportDialog> {
             child: Row(children: [
               const Icon(Icons.error_outline, color: AppColors.error, size: 16),
               const SizedBox(width: 8),
-              Expanded(child: Text(_errorMessage!, style: const TextStyle(color: AppColors.error, fontSize: 13))),
+              Expanded(
+                  child: Text(_errorMessage!,
+                      style: const TextStyle(
+                          color: AppColors.error, fontSize: 13))),
             ]),
           ),
         const SizedBox(height: 24),
@@ -151,15 +181,28 @@ class _ImportDialogState extends State<ImportDialog> {
           children: [
             Row(children: [
               Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(_file!.name, style: TextStyle(fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface)),
-                  const SizedBox(height: 4),
-                  Text('${_parsedRows.length} total rows · $validRows valid · ${_errors.length} errors',
-                    style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
-                ]),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(_file!.name,
+                          style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: theme.colorScheme.onSurface)),
+                      const SizedBox(height: 4),
+                      Text(
+                          '${_parsedRows.length} total rows · $validRows valid · ${_errors.length} errors',
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: theme.colorScheme.onSurfaceVariant)),
+                    ]),
               ),
               TextButton(
-                onPressed: () => setState(() { _file = null; _parsedRows = []; _errors = []; _errorMessage = null; }),
+                onPressed: () => setState(() {
+                  _file = null;
+                  _parsedRows = [];
+                  _errors = [];
+                  _errorMessage = null;
+                }),
                 child: const Text('Change File'),
               ),
             ]),
@@ -170,21 +213,30 @@ class _ImportDialogState extends State<ImportDialog> {
                 decoration: BoxDecoration(
                   color: AppColors.error.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
+                  border:
+                      Border.all(color: AppColors.error.withValues(alpha: 0.2)),
                 ),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  const Text('Errors found — fix and re-upload, or ignore to import valid rows only',
-                    style: TextStyle(color: AppColors.error, fontSize: 12, fontWeight: FontWeight.w500)),
-                  const SizedBox(height: 8),
-                  ..._errors.take(5).map((e) => Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Text('Row ${e.row}: ${e.message}',
-                      style: const TextStyle(color: AppColors.error, fontSize: 11)),
-                  )),
-                  if (_errors.length > 5)
-                    Text('...and ${_errors.length - 5} more errors',
-                      style: TextStyle(color: theme.hintColor, fontSize: 11)),
-                ]),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                          'Errors found — fix and re-upload, or ignore to import valid rows only',
+                          style: TextStyle(
+                              color: AppColors.error,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500)),
+                      const SizedBox(height: 8),
+                      ..._errors.take(5).map((e) => Padding(
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: Text('Row ${e.row}: ${e.message}',
+                                style: const TextStyle(
+                                    color: AppColors.error, fontSize: 11)),
+                          )),
+                      if (_errors.length > 5)
+                        Text('...and ${_errors.length - 5} more errors',
+                            style: TextStyle(
+                                color: theme.hintColor, fontSize: 11)),
+                    ]),
               ),
               const SizedBox(height: 12),
             ],
@@ -200,38 +252,53 @@ class _ImportDialogState extends State<ImportDialog> {
                     final row = _parsedRows[i];
                     final hasError = _errors.any((e) => e.row == i + 2);
                     return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        border: Border(bottom: BorderSide(color: theme.dividerColor)),
-                        color: hasError ? AppColors.error.withValues(alpha: 0.05) : null,
+                        border: Border(
+                            bottom: BorderSide(color: theme.dividerColor)),
+                        color: hasError
+                            ? AppColors.error.withValues(alpha: 0.05)
+                            : null,
                       ),
                       child: Row(children: [
                         SizedBox(
                           width: 40,
                           child: Text('${i + 2}',
-                            style: TextStyle(color: theme.hintColor, fontSize: 11)),
+                              style: TextStyle(
+                                  color: theme.hintColor, fontSize: 11)),
                         ),
                         Expanded(
                           flex: 3,
                           child: Text(row['name']?.toString() ?? '-',
-                            style: TextStyle(fontSize: 13, color: hasError ? AppColors.error : theme.colorScheme.onSurface),
-                            overflow: TextOverflow.ellipsis),
+                              style: TextStyle(
+                                  fontSize: 13,
+                                  color: hasError
+                                      ? AppColors.error
+                                      : theme.colorScheme.onSurface),
+                              overflow: TextOverflow.ellipsis),
                         ),
                         Expanded(
                           flex: 2,
                           child: Text(row['sku']?.toString() ?? '-',
-                            style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  color: theme.colorScheme.onSurfaceVariant)),
                         ),
                         SizedBox(
                           width: 80,
                           child: Text('KES ${row['sellPrice'] ?? '-'}',
-                            textAlign: TextAlign.right,
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.accent)),
+                              textAlign: TextAlign.right,
+                              style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.accent)),
                         ),
                         if (hasError)
                           const Padding(
                             padding: EdgeInsets.only(left: 8),
-                            child: Icon(Icons.error, color: AppColors.error, size: 14),
+                            child: Icon(Icons.error,
+                                color: AppColors.error, size: 14),
                           ),
                       ]),
                     );
@@ -249,9 +316,14 @@ class _ImportDialogState extends State<ImportDialog> {
               FilledButton.icon(
                 onPressed: _importing ? null : _doImport,
                 icon: _importing
-                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Icon(Icons.upload_rounded, size: 18),
-                label: Text(_importing ? 'Importing...' : 'Import $validRows Products'),
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white))
+                    : const Icon(Icons.upload_rounded, size: 18),
+                label: Text(
+                    _importing ? 'Importing...' : 'Import $validRows Products'),
               ),
             ]),
             const SizedBox(height: 16),
@@ -262,7 +334,10 @@ class _ImportDialogState extends State<ImportDialog> {
   }
 
   Future<void> _pickFile() async {
-    setState(() { _loading = true; _errorMessage = null; });
+    setState(() {
+      _loading = true;
+      _errorMessage = null;
+    });
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -276,7 +351,10 @@ class _ImportDialogState extends State<ImportDialog> {
       _file = result.files.first;
       await _parseFile();
     } catch (e) {
-      setState(() { _errorMessage = 'Failed to read file: $e'; _loading = false; });
+      setState(() {
+        _errorMessage = 'Failed to read file: $e';
+        _loading = false;
+      });
     }
   }
 
@@ -284,7 +362,13 @@ class _ImportDialogState extends State<ImportDialog> {
     if (_file == null) return;
     try {
       final bytes = _file!.bytes;
-      if (bytes == null) { setState(() { _errorMessage = 'Empty file.'; _loading = false; }); return; }
+      if (bytes == null) {
+        setState(() {
+          _errorMessage = 'Empty file.';
+          _loading = false;
+        });
+        return;
+      }
 
       String content;
       if (_file!.name.endsWith('.csv')) {
@@ -294,32 +378,49 @@ class _ImportDialogState extends State<ImportDialog> {
       } else if (_file!.name.endsWith('.xlsx')) {
         final excel = Excel.decodeBytes(bytes);
         for (final sheet in excel.sheets.values) {
-          final rows = sheet.rows.map((r) => r.map((c) => c?.value?.toString() ?? '').toList()).toList();
+          final rows = sheet.rows
+              .map((r) => r.map((c) => c?.value?.toString() ?? '').toList())
+              .toList();
           _parseRows(rows);
           break;
         }
       } else {
-        setState(() { _errorMessage = 'Unsupported file format. Use .csv or .xlsx.'; _loading = false; });
+        setState(() {
+          _errorMessage = 'Unsupported file format. Use .csv or .xlsx.';
+          _loading = false;
+        });
         return;
       }
       setState(() => _loading = false);
     } catch (e) {
-      setState(() { _errorMessage = 'Failed to parse file: $e'; _loading = false; });
+      setState(() {
+        _errorMessage = 'Failed to parse file: $e';
+        _loading = false;
+      });
     }
   }
 
   void _parseRows(List<List<dynamic>> rows) {
     if (rows.length < 2) {
-      setState(() { _errorMessage = 'File must have a header row and at least one data row.'; _loading = false; });
+      setState(() {
+        _errorMessage =
+            'File must have a header row and at least one data row.';
+        _loading = false;
+      });
       return;
     }
 
-    final headers = rows[0].map((h) => h.toString().trim().toLowerCase()).toList();
+    final headers =
+        rows[0].map((h) => h.toString().trim().toLowerCase()).toList();
 
     for (final col in _expectedColumns) {
       if (col == 'unit') continue;
       if (!headers.contains(col)) {
-        setState(() { _errorMessage = 'Missing required column: "$col". Expected: ${_expectedColumns.join(", ")}'; _loading = false; });
+        setState(() {
+          _errorMessage =
+              'Missing required column: "$col". Expected: ${_expectedColumns.join(", ")}';
+          _loading = false;
+        });
         return;
       }
     }
@@ -330,7 +431,9 @@ class _ImportDialogState extends State<ImportDialog> {
 
     for (int i = 1; i < rows.length; i++) {
       final row = rows[i];
-      if (row.isEmpty || (row.length == 1 && (row[0]?.toString().trim() ?? '') == '')) continue;
+      if (row.isEmpty ||
+          (row.length == 1 && (row[0]?.toString().trim() ?? '') == ''))
+        continue;
 
       final Map<String, dynamic> parsed = {};
       for (int j = 0; j < headers.length && j < row.length; j++) {
@@ -341,7 +444,8 @@ class _ImportDialogState extends State<ImportDialog> {
 
       final name = parsed['name']?.toString().trim() ?? '';
       if (name.isEmpty) {
-        _errors.add(_RowError(row: rowNum + 1, message: 'Missing Product Name'));
+        _errors
+            .add(_RowError(row: rowNum + 1, message: 'Missing Product Name'));
         continue;
       }
 
@@ -363,7 +467,8 @@ class _ImportDialogState extends State<ImportDialog> {
 
       final sku = parsed['sku']?.toString().trim().toUpperCase() ?? '';
       if (sku.isNotEmpty && seenSkus.contains(sku)) {
-        _errors.add(_RowError(row: rowNum + 1, message: 'Duplicate SKU in upload'));
+        _errors.add(
+            _RowError(row: rowNum + 1, message: 'Duplicate SKU in upload'));
         continue;
       }
       if (sku.isNotEmpty) seenSkus.add(sku);
@@ -386,9 +491,10 @@ class _ImportDialogState extends State<ImportDialog> {
   }
 
   Future<void> _doImport() async {
-    final validRows = _parsedRows.where((r) => !_errors.any((e) =>
-      r['name'] == null || (r['name'] as String).isEmpty
-    )).toList();
+    final validRows = _parsedRows
+        .where((r) => !_errors
+            .any((e) => r['name'] == null || (r['name'] as String).isEmpty))
+        .toList();
 
     if (validRows.isEmpty) {
       setState(() => _errorMessage = 'No valid rows to import.');
@@ -407,7 +513,10 @@ class _ImportDialogState extends State<ImportDialog> {
         _importing = false;
       });
     } on FunctionsException catch (e) {
-      setState(() { _errorMessage = e.message; _importing = false; });
+      setState(() {
+        _errorMessage = e.message;
+        _importing = false;
+      });
     }
   }
 
@@ -415,9 +524,36 @@ class _ImportDialogState extends State<ImportDialog> {
     final csv = const ListToCsvConverter().convert([
       _expectedColumns,
       ['BRK-001', 'Nails 3-inch', 'Hardware', '50', '80', '500', '100', 'kg'],
-      ['BRK-002', 'Cement (50kg)', 'Building Materials', '550', '650', '200', '50', 'bag'],
-      ['BRK-003', 'Paint White 20L', 'Paint', '1200', '1800', '30', '10', 'litre'],
-      ['BRK-004', 'PVC Pipe 4-inch', 'Plumbing', '250', '400', '100', '20', 'piece'],
+      [
+        'BRK-002',
+        'Cement (50kg)',
+        'Building Materials',
+        '550',
+        '650',
+        '200',
+        '50',
+        'bag'
+      ],
+      [
+        'BRK-003',
+        'Paint White 20L',
+        'Paint',
+        '1200',
+        '1800',
+        '30',
+        '10',
+        'litre'
+      ],
+      [
+        'BRK-004',
+        'PVC Pipe 4-inch',
+        'Plumbing',
+        '250',
+        '400',
+        '100',
+        '20',
+        'piece'
+      ],
     ]);
     FilePicker.platform.saveFile(
       dialogTitle: 'Save sample template',

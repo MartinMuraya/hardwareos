@@ -11,7 +11,8 @@ class ConflictResolutionScreen extends StatefulWidget {
   const ConflictResolutionScreen({super.key});
 
   @override
-  State<ConflictResolutionScreen> createState() => _ConflictResolutionScreenState();
+  State<ConflictResolutionScreen> createState() =>
+      _ConflictResolutionScreenState();
 }
 
 class _ConflictResolutionScreenState extends State<ConflictResolutionScreen> {
@@ -22,9 +23,12 @@ class _ConflictResolutionScreenState extends State<ConflictResolutionScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Cancel Conflicted Sale'),
-        content: const Text('Are you sure you want to cancel and remove this offline sale? This action cannot be undone.'),
+        content: const Text(
+            'Are you sure you want to cancel and remove this offline sale? This action cannot be undone.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Keep')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Keep')),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () => Navigator.pop(ctx, true),
@@ -48,10 +52,14 @@ class _ConflictResolutionScreenState extends State<ConflictResolutionScreen> {
   Future<void> _handleAdjustAndRetry(ConflictedSale sale) async {
     final details = sale.conflictDetails;
     final String? productId = details?['productId'];
-    final double available = (details?['availableQty'] as num?)?.toDouble() ?? 0.0;
+    final double available =
+        (details?['availableQty'] as num?)?.toDouble() ?? 0.0;
 
     final updatedData = Map<String, dynamic>.from(sale.saleData);
-    final items = (updatedData['items'] as List?)?.map((e) => Map<String, dynamic>.from(e as Map)).toList() ?? [];
+    final items = (updatedData['items'] as List?)
+            ?.map((e) => Map<String, dynamic>.from(e as Map))
+            .toList() ??
+        [];
 
     if (productId != null) {
       for (final item in items) {
@@ -72,7 +80,8 @@ class _ConflictResolutionScreenState extends State<ConflictResolutionScreen> {
       await queue.removeConflictedSale(sale.id);
       if (mounted) {
         messenger.showSnackBar(
-          const SnackBar(content: Text('Sale updated and posted successfully!')),
+          const SnackBar(
+              content: Text('Sale updated and posted successfully!')),
         );
       }
     } catch (e) {
@@ -87,10 +96,13 @@ class _ConflictResolutionScreenState extends State<ConflictResolutionScreen> {
   }
 
   Future<void> _handleManagerOverride(ConflictedSale sale) async {
-    final isManager = ['owner', 'manager'].contains(context.read<AuthProvider>().userRole);
+    final isManager =
+        ['owner', 'manager'].contains(context.read<AuthProvider>().userRole);
     if (!isManager) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Manager or Owner permission required to override stock.')),
+        const SnackBar(
+            content: Text(
+                'Manager or Owner permission required to override stock.')),
       );
       return;
     }
@@ -107,7 +119,9 @@ class _ConflictResolutionScreenState extends State<ConflictResolutionScreen> {
       await queue.removeConflictedSale(sale.id);
       if (mounted) {
         messenger.showSnackBar(
-          const SnackBar(content: Text('Stock override approved! Sale posted successfully.')),
+          const SnackBar(
+              content:
+                  Text('Stock override approved! Sale posted successfully.')),
         );
       }
     } catch (e) {
@@ -130,7 +144,9 @@ class _ConflictResolutionScreenState extends State<ConflictResolutionScreen> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('Sync Conflicts Review', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+        title: Text('Sync Conflicts Review',
+            style: theme.textTheme.titleLarge
+                ?.copyWith(fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
@@ -145,7 +161,8 @@ class _ConflictResolutionScreenState extends State<ConflictResolutionScreen> {
               ? const EmptyState(
                   icon: Icons.check_circle_outline_rounded,
                   title: 'No Conflicts Found',
-                  subtitle: 'All offline sales synced cleanly without stock conflicts.',
+                  subtitle:
+                      'All offline sales synced cleanly without stock conflicts.',
                 )
               : ListView.separated(
                   padding: const EdgeInsets.all(24),
@@ -155,14 +172,16 @@ class _ConflictResolutionScreenState extends State<ConflictResolutionScreen> {
                     final sale = conflictedSales[i];
                     final items = (sale.saleData['items'] as List?) ?? [];
                     final details = sale.conflictDetails;
-                    final available = (details?['availableQty'] as num?)?.toDouble();
+                    final available =
+                        (details?['availableQty'] as num?)?.toDouble();
 
                     return Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: theme.cardColor,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                        border: Border.all(
+                            color: AppColors.error.withValues(alpha: 0.3)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,7 +194,8 @@ class _ConflictResolutionScreenState extends State<ConflictResolutionScreen> {
                                   color: AppColors.error.withValues(alpha: 0.1),
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 24),
+                                child: const Icon(Icons.warning_amber_rounded,
+                                    color: AppColors.error, size: 24),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -184,11 +204,17 @@ class _ConflictResolutionScreenState extends State<ConflictResolutionScreen> {
                                   children: [
                                     Text(
                                       'Conflicted Sale #${sale.id.substring(0, 8)}',
-                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: theme.colorScheme.onSurface),
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: theme.colorScheme.onSurface),
                                     ),
                                     Text(
                                       'Logged ${sale.conflictedAt.toLocal().toString().split('.')[0]}',
-                                      style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
+                                      style: TextStyle(
+                                          color: theme
+                                              .colorScheme.onSurfaceVariant,
+                                          fontSize: 12),
                                     ),
                                   ],
                                 ),
@@ -202,25 +228,45 @@ class _ConflictResolutionScreenState extends State<ConflictResolutionScreen> {
                             decoration: BoxDecoration(
                               color: AppColors.warning.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: AppColors.warning.withValues(alpha: 0.2)),
+                              border: Border.all(
+                                  color:
+                                      AppColors.warning.withValues(alpha: 0.2)),
                             ),
                             child: Text(
                               sale.conflictReason,
-                              style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 13, fontWeight: FontWeight.w500),
+                              style: TextStyle(
+                                  color: theme.colorScheme.onSurface,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500),
                             ),
                           ),
                           const SizedBox(height: 12),
-                          Text('Items in Sale (${items.length}):', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: theme.colorScheme.onSurface)),
+                          Text('Items in Sale (${items.length}):',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                  color: theme.colorScheme.onSurface)),
                           const SizedBox(height: 4),
                           ...items.map((it) {
-                            final itemMap = Map<String, dynamic>.from(it as Map);
+                            final itemMap =
+                                Map<String, dynamic>.from(it as Map);
                             return Padding(
                               padding: const EdgeInsets.symmetric(vertical: 2),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text('• ${itemMap['name'] ?? itemMap['productId']}', style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant)),
-                                  Text('Qty: ${itemMap['quantity']}', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)),
+                                  Text(
+                                      '• ${itemMap['name'] ?? itemMap['productId']}',
+                                      style: TextStyle(
+                                          fontSize: 13,
+                                          color: theme
+                                              .colorScheme.onSurfaceVariant)),
+                                  Text('Qty: ${itemMap['quantity']}',
+                                      style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          color: theme.colorScheme.onSurface)),
                                 ],
                               ),
                             );
@@ -231,20 +277,24 @@ class _ConflictResolutionScreenState extends State<ConflictResolutionScreen> {
                             runSpacing: 8,
                             children: [
                               OutlinedButton.icon(
-                                style: OutlinedButton.styleFrom(foregroundColor: AppColors.error),
+                                style: OutlinedButton.styleFrom(
+                                    foregroundColor: AppColors.error),
                                 onPressed: () => _handleCancel(sale),
                                 icon: const Icon(Icons.close_rounded, size: 18),
                                 label: const Text('Cancel Sale'),
                               ),
                               if (available != null && available > 0)
                                 FilledButton.icon(
-                                  style: FilledButton.styleFrom(backgroundColor: AppColors.info),
+                                  style: FilledButton.styleFrom(
+                                      backgroundColor: AppColors.info),
                                   onPressed: () => _handleAdjustAndRetry(sale),
-                                  icon: const Icon(Icons.tune_rounded, size: 18),
+                                  icon:
+                                      const Icon(Icons.tune_rounded, size: 18),
                                   label: Text('Adjust Qty to $available'),
                                 ),
                               FilledButton.icon(
-                                style: FilledButton.styleFrom(backgroundColor: AppColors.warning),
+                                style: FilledButton.styleFrom(
+                                    backgroundColor: AppColors.warning),
                                 onPressed: () => _handleManagerOverride(sale),
                                 icon: const Icon(Icons.bolt_rounded, size: 18),
                                 label: const Text('Manager Override'),

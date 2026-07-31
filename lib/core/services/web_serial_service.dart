@@ -1,4 +1,5 @@
-export 'web_serial_service_stub.dart' if (dart.library.html) 'web_serial_service_web.dart';
+export 'web_serial_service_stub.dart'
+    if (dart.library.html) 'web_serial_service_web.dart';
 
 abstract class WebSerialService {
   Future<bool> isSupported();

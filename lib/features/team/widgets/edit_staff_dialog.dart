@@ -7,8 +7,9 @@ import '../../../core/models/user.dart';
 class EditStaffDialog extends StatefulWidget {
   final User user;
   final VoidCallback onUserUpdated;
-  
-  const EditStaffDialog({super.key, required this.user, required this.onUserUpdated});
+
+  const EditStaffDialog(
+      {super.key, required this.user, required this.onUserUpdated});
 
   @override
   State<EditStaffDialog> createState() => _EditStaffDialogState();
@@ -24,7 +25,8 @@ class _EditStaffDialogState extends State<EditStaffDialog> {
   void initState() {
     super.initState();
     _role = widget.user.role;
-    _commissionCtrl = TextEditingController(text: ((widget.user.commissionRate ?? 0) * 100).toStringAsFixed(1));
+    _commissionCtrl = TextEditingController(
+        text: ((widget.user.commissionRate ?? 0) * 100).toStringAsFixed(1));
   }
 
   @override
@@ -36,7 +38,10 @@ class _EditStaffDialogState extends State<EditStaffDialog> {
   Future<void> _update() async {
     final commission = double.tryParse(_commissionCtrl.text.trim()) ?? 0.0;
 
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
 
     try {
       final bizId = context.read<AuthProvider>().businessId!;
@@ -52,18 +57,25 @@ class _EditStaffDialogState extends State<EditStaffDialog> {
         Navigator.of(context).pop();
       }
     } on FunctionsException catch (e) {
-      if (mounted) setState(() { _error = e.message; _loading = false; });
+      if (mounted)
+        setState(() {
+          _error = e.message;
+          _loading = false;
+        });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final canEditRole = widget.user.role != 'owner'; // Owners can't demote themselves here
+    final canEditRole =
+        widget.user.role != 'owner'; // Owners can't demote themselves here
 
     return AlertDialog(
       backgroundColor: theme.cardColor,
-      title: Text('Edit Staff: ${widget.user.displayName}', style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)),
+      title: Text('Edit Staff: ${widget.user.displayName}',
+          style: TextStyle(
+              fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -73,11 +85,15 @@ class _EditStaffDialogState extends State<EditStaffDialog> {
               Container(
                 margin: const EdgeInsets.only(bottom: 16),
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: Colors.red.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                decoration: BoxDecoration(
+                    color: Colors.red.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8)),
                 child: Text(_error!, style: const TextStyle(color: Colors.red)),
               ),
             if (canEditRole) ...[
-              Text('Role', style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13)),
+              Text('Role',
+                  style: TextStyle(
+                      color: theme.colorScheme.onSurfaceVariant, fontSize: 13)),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 initialValue: _role,
@@ -85,7 +101,8 @@ class _EditStaffDialogState extends State<EditStaffDialog> {
                 decoration: const InputDecoration(border: OutlineInputBorder()),
                 items: const [
                   DropdownMenuItem(value: 'manager', child: Text('Manager')),
-                  DropdownMenuItem(value: 'staff', child: Text('Staff (Cashier)')),
+                  DropdownMenuItem(
+                      value: 'staff', child: Text('Staff (Cashier)')),
                 ],
                 onChanged: (val) {
                   if (val != null) setState(() => _role = val);
@@ -95,7 +112,8 @@ class _EditStaffDialogState extends State<EditStaffDialog> {
             ],
             TextField(
               controller: _commissionCtrl,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(
                 labelText: 'Commission Rate (%)',
                 hintText: 'e.g. 2.5',
@@ -108,13 +126,18 @@ class _EditStaffDialogState extends State<EditStaffDialog> {
       actions: [
         TextButton(
           onPressed: _loading ? null : () => Navigator.pop(context),
-          child: Text('Cancel', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+          child: Text('Cancel',
+              style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
         ),
         FilledButton(
           onPressed: _loading ? null : _update,
-          child: _loading 
-            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-            : const Text('Save Changes'),
+          child: _loading
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white))
+              : const Text('Save Changes'),
         ),
       ],
     );

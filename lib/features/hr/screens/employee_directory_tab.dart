@@ -17,7 +17,8 @@ class EmployeeDirectoryTab extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Employee Directory', style: Theme.of(context).textTheme.headlineSmall),
+              Text('Employee Directory',
+                  style: Theme.of(context).textTheme.headlineSmall),
               ElevatedButton.icon(
                 onPressed: () => _showAddEmployeeDialog(context, provider),
                 icon: const Icon(Icons.person_add),
@@ -38,7 +39,9 @@ class EmployeeDirectoryTab extends StatelessWidget {
               }
               final employees = snapshot.data ?? [];
               if (employees.isEmpty) {
-                return const Center(child: Text('No employees found. Add one to start processing payroll.'));
+                return const Center(
+                    child: Text(
+                        'No employees found. Add one to start processing payroll.'));
               }
 
               return ListView.builder(
@@ -49,14 +52,23 @@ class EmployeeDirectoryTab extends StatelessWidget {
                   return Card(
                     child: ListTile(
                       leading: CircleAvatar(child: Text(emp.fullName[0])),
-                      title: Text(emp.fullName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      title: Text(emp.fullName,
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
                       subtitle: Text('${emp.role} • ${emp.employmentType}'),
                       trailing: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text('KES ${emp.baseSalary.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
-                          Text(emp.status, style: TextStyle(color: emp.status == 'Active' ? Colors.blue : Colors.red, fontSize: 12)),
+                          Text('KES ${emp.baseSalary.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green)),
+                          Text(emp.status,
+                              style: TextStyle(
+                                  color: emp.status == 'Active'
+                                      ? Colors.blue
+                                      : Colors.red,
+                                  fontSize: 12)),
                         ],
                       ),
                       onTap: () {
@@ -92,22 +104,28 @@ class EmployeeDirectoryTab extends StatelessWidget {
               children: [
                 TextFormField(
                   decoration: const InputDecoration(labelText: 'Full Name *'),
-                  validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+                  validator: (val) =>
+                      val == null || val.isEmpty ? 'Required' : null,
                   onSaved: (val) => fullName = val!,
                 ),
                 TextFormField(
-                  decoration: const InputDecoration(labelText: 'Role (e.g., Cashier, Manager) *'),
-                  validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+                  decoration: const InputDecoration(
+                      labelText: 'Role (e.g., Cashier, Manager) *'),
+                  validator: (val) =>
+                      val == null || val.isEmpty ? 'Required' : null,
                   onSaved: (val) => role = val!,
                 ),
                 TextFormField(
-                  decoration: const InputDecoration(labelText: 'Base Salary (Monthly) *'),
+                  decoration: const InputDecoration(
+                      labelText: 'Base Salary (Monthly) *'),
                   keyboardType: TextInputType.number,
-                  validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+                  validator: (val) =>
+                      val == null || val.isEmpty ? 'Required' : null,
                   onSaved: (val) => baseSalary = double.tryParse(val!) ?? 0,
                 ),
                 TextFormField(
-                  decoration: const InputDecoration(labelText: 'KRA PIN (Optional)'),
+                  decoration:
+                      const InputDecoration(labelText: 'KRA PIN (Optional)'),
                   onSaved: (val) => kraPin = val ?? '',
                 ),
               ],
@@ -115,7 +133,8 @@ class EmployeeDirectoryTab extends StatelessWidget {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
               if (!formKey.currentState!.validate()) return;
@@ -130,10 +149,13 @@ class EmployeeDirectoryTab extends StatelessWidget {
                 });
                 if (ctx.mounted) {
                   Navigator.pop(ctx);
-                  ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('Employee added!')));
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                      const SnackBar(content: Text('Employee added!')));
                 }
               } catch (e) {
-                if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('Error: $e')));
+                if (ctx.mounted)
+                  ScaffoldMessenger.of(ctx)
+                      .showSnackBar(SnackBar(content: Text('Error: $e')));
               }
             },
             child: const Text('Save'),

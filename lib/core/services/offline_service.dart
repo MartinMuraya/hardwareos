@@ -17,18 +17,18 @@ class PendingSale {
   });
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'saleData': saleData,
-    'createdAt': createdAt.toIso8601String(),
-    'retryCount': retryCount,
-  };
+        'id': id,
+        'saleData': saleData,
+        'createdAt': createdAt.toIso8601String(),
+        'retryCount': retryCount,
+      };
 
   factory PendingSale.fromJson(Map<String, dynamic> json) => PendingSale(
-    id: json['id'] as String,
-    saleData: Map<String, dynamic>.from(json['saleData'] as Map),
-    createdAt: DateTime.parse(json['createdAt'] as String),
-    retryCount: json['retryCount'] as int? ?? 0,
-  );
+        id: json['id'] as String,
+        saleData: Map<String, dynamic>.from(json['saleData'] as Map),
+        createdAt: DateTime.parse(json['createdAt'] as String),
+        retryCount: json['retryCount'] as int? ?? 0,
+      );
 }
 
 class PendingPayment {
@@ -45,18 +45,18 @@ class PendingPayment {
   });
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'paymentData': paymentData,
-    'createdAt': createdAt.toIso8601String(),
-    'retryCount': retryCount,
-  };
+        'id': id,
+        'paymentData': paymentData,
+        'createdAt': createdAt.toIso8601String(),
+        'retryCount': retryCount,
+      };
 
   factory PendingPayment.fromJson(Map<String, dynamic> json) => PendingPayment(
-    id: json['id'] as String,
-    paymentData: Map<String, dynamic>.from(json['paymentData'] as Map),
-    createdAt: DateTime.parse(json['createdAt'] as String),
-    retryCount: json['retryCount'] as int? ?? 0,
-  );
+        id: json['id'] as String,
+        paymentData: Map<String, dynamic>.from(json['paymentData'] as Map),
+        createdAt: DateTime.parse(json['createdAt'] as String),
+        retryCount: json['retryCount'] as int? ?? 0,
+      );
 }
 
 class PendingInventoryUpdate {
@@ -73,19 +73,19 @@ class PendingInventoryUpdate {
   });
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'updateData': updateData,
-    'createdAt': createdAt.toIso8601String(),
-    'retryCount': retryCount,
-  };
+        'id': id,
+        'updateData': updateData,
+        'createdAt': createdAt.toIso8601String(),
+        'retryCount': retryCount,
+      };
 
   factory PendingInventoryUpdate.fromJson(Map<String, dynamic> json) =>
-    PendingInventoryUpdate(
-      id: json['id'] as String,
-      updateData: Map<String, dynamic>.from(json['updateData'] as Map),
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      retryCount: json['retryCount'] as int? ?? 0,
-    );
+      PendingInventoryUpdate(
+        id: json['id'] as String,
+        updateData: Map<String, dynamic>.from(json['updateData'] as Map),
+        createdAt: DateTime.parse(json['createdAt'] as String),
+        retryCount: json['retryCount'] as int? ?? 0,
+      );
 }
 
 class PendingStorefrontOrder {
@@ -102,19 +102,19 @@ class PendingStorefrontOrder {
   });
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'orderData': orderData,
-    'createdAt': createdAt.toIso8601String(),
-    'retryCount': retryCount,
-  };
+        'id': id,
+        'orderData': orderData,
+        'createdAt': createdAt.toIso8601String(),
+        'retryCount': retryCount,
+      };
 
   factory PendingStorefrontOrder.fromJson(Map<String, dynamic> json) =>
-    PendingStorefrontOrder(
-      id: json['id'] as String,
-      orderData: Map<String, dynamic>.from(json['orderData'] as Map),
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      retryCount: json['retryCount'] as int? ?? 0,
-    );
+      PendingStorefrontOrder(
+        id: json['id'] as String,
+        orderData: Map<String, dynamic>.from(json['orderData'] as Map),
+        createdAt: DateTime.parse(json['createdAt'] as String),
+        retryCount: json['retryCount'] as int? ?? 0,
+      );
 }
 
 class ConflictedSale {
@@ -133,20 +133,22 @@ class ConflictedSale {
   });
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'saleData': saleData,
-    'conflictReason': conflictReason,
-    'conflictDetails': conflictDetails,
-    'conflictedAt': conflictedAt.toIso8601String(),
-  };
+        'id': id,
+        'saleData': saleData,
+        'conflictReason': conflictReason,
+        'conflictDetails': conflictDetails,
+        'conflictedAt': conflictedAt.toIso8601String(),
+      };
 
   factory ConflictedSale.fromJson(Map<String, dynamic> json) => ConflictedSale(
-    id: json['id'] as String,
-    saleData: Map<String, dynamic>.from(json['saleData'] as Map),
-    conflictReason: json['conflictReason'] as String,
-    conflictDetails: json['conflictDetails'] != null ? Map<String, dynamic>.from(json['conflictDetails'] as Map) : null,
-    conflictedAt: DateTime.parse(json['conflictedAt'] as String),
-  );
+        id: json['id'] as String,
+        saleData: Map<String, dynamic>.from(json['saleData'] as Map),
+        conflictReason: json['conflictReason'] as String,
+        conflictDetails: json['conflictDetails'] != null
+            ? Map<String, dynamic>.from(json['conflictDetails'] as Map)
+            : null,
+        conflictedAt: DateTime.parse(json['conflictedAt'] as String),
+      );
 }
 
 class OfflineService {
@@ -174,28 +176,30 @@ class OfflineService {
 
   static Future<void> init() async {
     const secureStorage = FlutterSecureStorage();
-    
+
     // 1. Obtain or generate encryption key
-    final containsEncryptionKey = await secureStorage.containsKey(key: 'hive_key');
+    final containsEncryptionKey =
+        await secureStorage.containsKey(key: 'hive_key');
     if (!containsEncryptionKey) {
       final key = Hive.generateSecureKey();
       await secureStorage.write(
-        key: 'hive_key', 
+        key: 'hive_key',
         value: base64UrlEncode(key),
       );
     }
-    
+
     final encryptionKeyString = await secureStorage.read(key: 'hive_key');
     final encryptionKeyUint8List = base64Url.decode(encryptionKeyString!);
     final cipher = HiveAesCipher(encryptionKeyUint8List);
 
-    // 2. Open boxes with encryption. If it fails (e.g., key lost, corrupted, or migrating from unencrypted), 
+    // 2. Open boxes with encryption. If it fails (e.g., key lost, corrupted, or migrating from unencrypted),
     // we delete the boxes and recreate them to prevent app crashes.
     Future<Box<String>> safeOpenBox(String boxName) async {
       try {
         return await Hive.openBox<String>(boxName, encryptionCipher: cipher);
       } catch (e) {
-        debugPrint('Failed to open Hive box $boxName with encryption. Wiping and retrying. Error: $e');
+        debugPrint(
+            'Failed to open Hive box $boxName with encryption. Wiping and retrying. Error: $e');
         await Hive.deleteBoxFromDisk(boxName);
         return await Hive.openBox<String>(boxName, encryptionCipher: cipher);
       }
@@ -245,7 +249,8 @@ class OfflineService {
 
   // ── Storefront Cart Persistence ──
 
-  static Future<void> saveStorefrontCart(String tenantSlug, List<Map<String, dynamic>> cartItems) async {
+  static Future<void> saveStorefrontCart(
+      String tenantSlug, List<Map<String, dynamic>> cartItems) async {
     await _storefrontCartBox.put(tenantSlug, jsonEncode(cartItems));
   }
 
@@ -262,14 +267,16 @@ class OfflineService {
 
   // ── Pending Storefront Orders Queue ──
 
-  static Future<void> enqueueStorefrontOrder(PendingStorefrontOrder order) async {
+  static Future<void> enqueueStorefrontOrder(
+      PendingStorefrontOrder order) async {
     await _storefrontOrdersBox.put(order.id, jsonEncode(order.toJson()));
   }
 
   static List<PendingStorefrontOrder> getPendingStorefrontOrders() {
-    return _storefrontOrdersBox.values.map((raw) =>
-      PendingStorefrontOrder.fromJson(Map<String, dynamic>.from(jsonDecode(raw) as Map))
-    ).toList();
+    return _storefrontOrdersBox.values
+        .map((raw) => PendingStorefrontOrder.fromJson(
+            Map<String, dynamic>.from(jsonDecode(raw) as Map)))
+        .toList();
   }
 
   static Future<void> removeStorefrontOrder(String id) async {
@@ -280,12 +287,15 @@ class OfflineService {
 
   // ── Draft Sale ──
 
-  static Future<void> saveDraftSale(String id, Map<String, dynamic> draft) async {
+  static Future<void> saveDraftSale(
+      String id, Map<String, dynamic> draft) async {
     await _draftBox.put(id, jsonEncode(draft));
   }
 
   static List<Map<String, dynamic>> getAllDrafts() {
-    return _draftBox.values.map((raw) => Map<String, dynamic>.from(jsonDecode(raw) as Map)).toList();
+    return _draftBox.values
+        .map((raw) => Map<String, dynamic>.from(jsonDecode(raw) as Map))
+        .toList();
   }
 
   static Future<void> deleteDraftSale(String id) async {
@@ -294,7 +304,8 @@ class OfflineService {
 
   // ── Customer Selection ──
 
-  static Future<void> saveSelectedCustomer(Map<String, dynamic> customer) async {
+  static Future<void> saveSelectedCustomer(
+      Map<String, dynamic> customer) async {
     await _customerBox.put('selected', jsonEncode(customer));
   }
 
@@ -315,9 +326,10 @@ class OfflineService {
   }
 
   static List<PendingSale> getPendingSales() {
-    return _salesBox.values.map((raw) =>
-      PendingSale.fromJson(Map<String, dynamic>.from(jsonDecode(raw) as Map))
-    ).toList();
+    return _salesBox.values
+        .map((raw) => PendingSale.fromJson(
+            Map<String, dynamic>.from(jsonDecode(raw) as Map)))
+        .toList();
   }
 
   static Future<void> removeSale(String id) async {
@@ -333,9 +345,10 @@ class OfflineService {
   }
 
   static List<PendingPayment> getPendingPayments() {
-    return _paymentsBox.values.map((raw) =>
-      PendingPayment.fromJson(Map<String, dynamic>.from(jsonDecode(raw) as Map))
-    ).toList();
+    return _paymentsBox.values
+        .map((raw) => PendingPayment.fromJson(
+            Map<String, dynamic>.from(jsonDecode(raw) as Map)))
+        .toList();
   }
 
   static Future<void> removePayment(String id) async {
@@ -346,14 +359,16 @@ class OfflineService {
 
   // ── Pending Inventory Updates Queue ──
 
-  static Future<void> enqueueInventoryUpdate(PendingInventoryUpdate update) async {
+  static Future<void> enqueueInventoryUpdate(
+      PendingInventoryUpdate update) async {
     await _inventoryBox.put(update.id, jsonEncode(update.toJson()));
   }
 
   static List<PendingInventoryUpdate> getPendingInventoryUpdates() {
-    return _inventoryBox.values.map((raw) =>
-      PendingInventoryUpdate.fromJson(Map<String, dynamic>.from(jsonDecode(raw) as Map))
-    ).toList();
+    return _inventoryBox.values
+        .map((raw) => PendingInventoryUpdate.fromJson(
+            Map<String, dynamic>.from(jsonDecode(raw) as Map)))
+        .toList();
   }
 
   static Future<void> removeInventoryUpdate(String id) async {
@@ -394,9 +409,10 @@ class OfflineService {
   }
 
   static List<ConflictedSale> getConflictedSales() {
-    return _conflictedSalesBox.values.map((raw) =>
-      ConflictedSale.fromJson(Map<String, dynamic>.from(jsonDecode(raw) as Map))
-    ).toList();
+    return _conflictedSalesBox.values
+        .map((raw) => ConflictedSale.fromJson(
+            Map<String, dynamic>.from(jsonDecode(raw) as Map)))
+        .toList();
   }
 
   static Future<void> removeConflictedSale(String id) async {

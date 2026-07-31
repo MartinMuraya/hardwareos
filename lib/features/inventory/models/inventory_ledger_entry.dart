@@ -40,8 +40,8 @@ class InventoryLedgerEntry {
       referenceId: map['referenceId'] ?? '',
       performedBy: map['performedBy'] ?? '',
       reason: map['reason'],
-      timestamp: map['timestamp'] != null 
-          ? DateTime.parse(map['timestamp']) 
+      timestamp: map['timestamp'] != null
+          ? DateTime.parse(map['timestamp'])
           : DateTime.now(),
     );
   }

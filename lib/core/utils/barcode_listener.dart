@@ -40,16 +40,17 @@ class _BarcodeListenerState extends State<BarcodeListener> {
     if (!widget.useKeyDownEvent && event is! KeyUpEvent) return false;
 
     // Handle Enter key as the terminator for a scan
-    if (event.logicalKey == LogicalKeyboardKey.enter || event.logicalKey == LogicalKeyboardKey.numpadEnter) {
+    if (event.logicalKey == LogicalKeyboardKey.enter ||
+        event.logicalKey == LogicalKeyboardKey.numpadEnter) {
       if (_buffer.isNotEmpty) {
         final barcode = _buffer.toString();
         _buffer.clear();
         _lastKeyPress = null;
-        
+
         // If it was typed very fast (e.g., > 3 chars and recent), treat as barcode
         if (barcode.length >= 3) {
-           widget.onBarcodeScanned(barcode);
-           return true; // handled
+          widget.onBarcodeScanned(barcode);
+          return true; // handled
         }
       }
       return false;
@@ -58,14 +59,15 @@ class _BarcodeListenerState extends State<BarcodeListener> {
     final char = event.character;
     if (char != null && char.isNotEmpty) {
       final now = DateTime.now();
-      if (_lastKeyPress != null && now.difference(_lastKeyPress!) > widget.bufferDuration) {
+      if (_lastKeyPress != null &&
+          now.difference(_lastKeyPress!) > widget.bufferDuration) {
         // Too much time passed since last key press, clear buffer (probably a human typing)
         _buffer.clear();
       }
       _buffer.write(char);
       _lastKeyPress = now;
     }
-    
+
     return false; // let the event bubble down to text fields just in case
   }
 

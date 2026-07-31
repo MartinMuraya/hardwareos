@@ -12,10 +12,11 @@ class ProductCacheService {
         'businessId': businessId,
         'limit': 1000, // Fetch up to 1000 products for offline caching
       });
-      
+
       final data = res.data as Map;
-      final productsList = List<Map<String, dynamic>>.from(data['products'] as List);
-      
+      final productsList =
+          List<Map<String, dynamic>>.from(data['products'] as List);
+
       await OfflineService.saveProducts(productsList);
     } catch (e) {
       // Failed to sync, we will rely on existing cache
@@ -33,7 +34,7 @@ class ProductCacheService {
   static bool isCacheStale() {
     final lastSync = OfflineService.lastProductSyncAt;
     if (lastSync == null) return true;
-    
+
     final difference = DateTime.now().difference(lastSync);
     return difference.inMinutes >= 15;
   }

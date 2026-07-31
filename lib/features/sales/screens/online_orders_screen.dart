@@ -23,7 +23,8 @@ class _OnlineOrdersScreenState extends State<OnlineOrdersScreen> {
         builder: (_) => const Center(child: CircularProgressIndicator()),
       );
 
-      final funcName = action == 'approve' ? 'approveOnlineOrder' : 'rejectOnlineOrder';
+      final funcName =
+          action == 'approve' ? 'approveOnlineOrder' : 'rejectOnlineOrder';
       await FunctionsService.call(funcName, {
         'businessId': auth.businessId,
         'orderId': orderId,
@@ -96,35 +97,57 @@ class _OnlineOrdersScreenState extends State<OnlineOrdersScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Order #${orderId.substring(0, 8).toUpperCase()}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          Text(
+                              'Order #${orderId.substring(0, 8).toUpperCase()}',
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 16)),
                           Chip(
-                            label: Text(status.toUpperCase(), style: const TextStyle(color: Colors.white, fontSize: 12)),
-                            backgroundColor: status == 'pending' ? Colors.orange : (status == 'approved' ? Colors.green : Colors.red),
+                            label: Text(status.toUpperCase(),
+                                style: const TextStyle(
+                                    color: Colors.white, fontSize: 12)),
+                            backgroundColor: status == 'pending'
+                                ? Colors.orange
+                                : (status == 'approved'
+                                    ? Colors.green
+                                    : Colors.red),
                           ),
                         ],
                       ),
                       const SizedBox(height: 8),
-                      Text('Customer: ${data['customerName']} (${data['customerPhone']})'),
+                      Text(
+                          'Customer: ${data['customerName']} (${data['customerPhone']})'),
                       Text('Address: ${data['address']}'),
-                      if (data['note'] != null && data['note'].toString().isNotEmpty)
-                        Text('Note: ${data['note']}', style: const TextStyle(fontStyle: FontStyle.italic)),
+                      if (data['note'] != null &&
+                          data['note'].toString().isNotEmpty)
+                        Text('Note: ${data['note']}',
+                            style:
+                                const TextStyle(fontStyle: FontStyle.italic)),
                       const Divider(),
                       ...items.map((item) => Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(child: Text('${item['quantity']}x ${item['name']}')),
-                            Text('\$${(item['sellingPrice'] * item['quantity']).toStringAsFixed(2)}'),
-                          ],
-                        ),
-                      )),
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                    child: Text(
+                                        '${item['quantity']}x ${item['name']}')),
+                                Text(
+                                    '\$${(item['sellingPrice'] * item['quantity']).toStringAsFixed(2)}'),
+                              ],
+                            ),
+                          )),
                       const Divider(),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Total:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                          Text('\$${(data['total'] ?? 0).toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.green)),
+                          const Text('Total:',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 16)),
+                          Text('\$${(data['total'] ?? 0).toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                  color: Colors.green)),
                         ],
                       ),
                       if (status == 'pending') ...[
@@ -134,12 +157,15 @@ class _OnlineOrdersScreenState extends State<OnlineOrdersScreen> {
                           children: [
                             TextButton(
                               onPressed: () => _handleAction(orderId, 'reject'),
-                              child: const Text('Reject', style: TextStyle(color: Colors.red)),
+                              child: const Text('Reject',
+                                  style: TextStyle(color: Colors.red)),
                             ),
                             const SizedBox(width: 16),
                             ElevatedButton(
-                              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                              onPressed: () => _handleAction(orderId, 'approve'),
+                              style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green),
+                              onPressed: () =>
+                                  _handleAction(orderId, 'approve'),
                               child: const Text('Approve & Create Sale'),
                             ),
                           ],

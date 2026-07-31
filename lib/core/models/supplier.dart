@@ -28,17 +28,18 @@ class Supplier {
   });
 
   factory Supplier.fromMap(Map<String, dynamic> map) => Supplier(
-    id: map['id'] as String,
-    businessId: map['businessId'] as String,
-    name: map['name'] as String,
-    phoneNumber: map['phoneNumber'] as String,
-    email: (map['email'] as String?) ?? '',
-    address: (map['address'] as String?) ?? '',
-    contactPerson: (map['contactPerson'] as String?) ?? '',
-    paymentTerms: (map['paymentTerms'] as String?) ?? '30 days',
-    currentBalance: ((map['currentBalance'] as num?) ?? 0).toDouble(),
-    totalPurchasesOnCredit: ((map['totalPurchasesOnCredit'] as num?) ?? 0).toDouble(),
-    createdAt: DateTime.parse(map['createdAt'] as String),
-    updatedAt: DateTime.parse(map['updatedAt'] as String),
-  );
+        id: map['id'] as String,
+        businessId: map['businessId'] as String,
+        name: map['name'] as String,
+        phoneNumber: map['phoneNumber'] as String,
+        email: (map['email'] as String?) ?? '',
+        address: (map['address'] as String?) ?? '',
+        contactPerson: (map['contactPerson'] as String?) ?? '',
+        paymentTerms: (map['paymentTerms'] as String?) ?? '30 days',
+        currentBalance: ((map['currentBalance'] as num?) ?? 0).toDouble(),
+        totalPurchasesOnCredit:
+            ((map['totalPurchasesOnCredit'] as num?) ?? 0).toDouble(),
+        createdAt: DateTime.parse(map['createdAt'] as String),
+        updatedAt: DateTime.parse(map['updatedAt'] as String),
+      );
 }

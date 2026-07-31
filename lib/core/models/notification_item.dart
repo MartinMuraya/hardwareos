@@ -29,8 +29,11 @@ class NotificationItem {
       recipient: map['recipient'] as String? ?? '',
       message: map['message'] as String? ?? '',
       status: map['status'] as String? ?? 'pending',
-      createdAt: DateTime.tryParse(map['createdAt']?.toString() ?? '') ?? DateTime.now(),
-      sentAt: map['sentAt'] != null ? DateTime.tryParse(map['sentAt'].toString()) : null,
+      createdAt: DateTime.tryParse(map['createdAt']?.toString() ?? '') ??
+          DateTime.now(),
+      sentAt: map['sentAt'] != null
+          ? DateTime.tryParse(map['sentAt'].toString())
+          : null,
       error: map['error'] as String?,
     );
   }
@@ -62,10 +65,10 @@ class NotificationSettings {
   }
 
   Map<String, dynamic> toMap() => {
-    'debtReminders': debtReminders,
-    'lowStockAlerts': lowStockAlerts,
-    'paymentNotifications': paymentNotifications,
-    'quotationNotifications': quotationNotifications,
-    'provider': provider,
-  };
+        'debtReminders': debtReminders,
+        'lowStockAlerts': lowStockAlerts,
+        'paymentNotifications': paymentNotifications,
+        'quotationNotifications': quotationNotifications,
+        'provider': provider,
+      };
 }

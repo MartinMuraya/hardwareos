@@ -12,7 +12,10 @@ class POStatusBadge extends StatelessWidget {
       'sent' => (AppColors.accent, Icons.send_rounded),
       'received' => (AppColors.success, Icons.check_circle_rounded),
       'cancelled' => (AppColors.error, Icons.cancel_rounded),
-      _ => (Theme.of(context).colorScheme.onSurfaceVariant, Icons.help_outline_rounded),
+      _ => (
+          Theme.of(context).colorScheme.onSurfaceVariant,
+          Icons.help_outline_rounded
+        ),
     };
 
     return Container(
@@ -25,18 +28,25 @@ class POStatusBadge extends StatelessWidget {
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Icon(icon, size: 12, color: color),
         const SizedBox(width: 4),
-        Text(_label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w700)),
+        Text(_label,
+            style: TextStyle(
+                color: color, fontSize: 11, fontWeight: FontWeight.w700)),
       ]),
     );
   }
 
   String get _label {
     switch (status) {
-      case 'draft': return 'Draft';
-      case 'sent': return 'Sent';
-      case 'received': return 'Received';
-      case 'cancelled': return 'Cancelled';
-      default: return status;
+      case 'draft':
+        return 'Draft';
+      case 'sent':
+        return 'Sent';
+      case 'received':
+        return 'Received';
+      case 'cancelled':
+        return 'Cancelled';
+      default:
+        return status;
     }
   }
 }

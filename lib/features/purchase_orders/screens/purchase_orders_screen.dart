@@ -28,18 +28,37 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
   static const _tabs = ['all', 'draft', 'sent', 'received', 'cancelled'];
 
   @override
-  void initState() { super.initState(); _load(); }
+  void initState() {
+    super.initState();
+    _load();
+  }
 
   Future<void> _load() async {
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final bizId = context.read<AuthProvider>().businessId!;
-      final data = await FunctionsService.call('getPurchaseOrders', {'businessId': bizId, 'limit': 100});
+      final data = await FunctionsService.call(
+          'getPurchaseOrders', {'businessId': bizId, 'limit': 100});
       final rawList = (data['purchaseOrders'] as List?) ?? [];
-      final items = rawList.map((e) => PurchaseOrder.fromMap(Map<String, dynamic>.from(e as Map))).toList();
-      if (mounted) setState(() { _orders = items; _filtered = items; _loading = false; });
+      final items = rawList
+          .map(
+              (e) => PurchaseOrder.fromMap(Map<String, dynamic>.from(e as Map)))
+          .toList();
+      if (mounted)
+        setState(() {
+          _orders = items;
+          _filtered = items;
+          _loading = false;
+        });
     } on FunctionsException catch (e) {
-      if (mounted) setState(() { _error = e.message; _loading = false; });
+      if (mounted)
+        setState(() {
+          _error = e.message;
+          _loading = false;
+        });
     }
   }
 
@@ -73,14 +92,19 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(padding),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Purchase Orders', style: theme.textTheme.displayMedium),
-                const SizedBox(height: 4),
-                Text('Order stock from suppliers',
-                  style: theme.textTheme.bodyMedium),
-              ])),
+              Expanded(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                    Text('Purchase Orders',
+                        style: theme.textTheme.displayMedium),
+                    const SizedBox(height: 4),
+                    Text('Order stock from suppliers',
+                        style: theme.textTheme.bodyMedium),
+                  ])),
               TextButton(
                 onPressed: () => context.go(RoutePaths.suppliers),
                 child: const Text('Suppliers'),
@@ -97,10 +121,15 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
                   final tab = _tabs[i];
                   final sel = _tabFilter == tab;
                   return FilterChip(
-                    label: Text(tab == 'all' ? 'All' : tab[0].toUpperCase() + tab.substring(1),
+                    label: Text(
+                      tab == 'all'
+                          ? 'All'
+                          : tab[0].toUpperCase() + tab.substring(1),
                       style: TextStyle(
                         fontSize: 12,
-                        color: sel ? AppColors.accent : theme.colorScheme.onSurfaceVariant,
+                        color: sel
+                            ? AppColors.accent
+                            : theme.colorScheme.onSurfaceVariant,
                         fontWeight: sel ? FontWeight.w700 : FontWeight.w400,
                       ),
                     ),
@@ -109,7 +138,8 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
                     visualDensity: VisualDensity.compact,
                     backgroundColor: theme.cardColor,
                     selectedColor: AppColors.accent.withValues(alpha: 0.12),
-                    side: BorderSide(color: sel ? AppColors.accent : theme.dividerColor),
+                    side: BorderSide(
+                        color: sel ? AppColors.accent : theme.dividerColor),
                   );
                 },
               ),
@@ -122,12 +152,17 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
                 decoration: BoxDecoration(
                   color: AppColors.error.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                  border:
+                      Border.all(color: AppColors.error.withValues(alpha: 0.3)),
                 ),
                 child: Row(children: [
-                  const Icon(Icons.error_outline, color: AppColors.error, size: 18),
+                  const Icon(Icons.error_outline,
+                      color: AppColors.error, size: 18),
                   const SizedBox(width: 10),
-                  Expanded(child: Text(_error!, style: const TextStyle(color: AppColors.error, fontSize: 13))),
+                  Expanded(
+                      child: Text(_error!,
+                          style: const TextStyle(
+                              color: AppColors.error, fontSize: 13))),
                 ]),
               ),
             Expanded(
@@ -136,13 +171,16 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
                   : _filtered.isEmpty
                       ? EmptyState(
                           icon: Icons.receipt_long_outlined,
-                          title: _tabFilter == 'all' ? 'No purchase orders yet' : 'No $_tabFilter orders',
+                          title: _tabFilter == 'all'
+                              ? 'No purchase orders yet'
+                              : 'No $_tabFilter orders',
                           subtitle: _tabFilter == 'all'
                               ? 'Create your first purchase order.'
                               : 'No orders match this status.',
                           actionLabel: 'New Purchase Order',
                           onAction: () async {
-                            final result = await context.push('/purchase-orders/add');
+                            final result =
+                                await context.push('/purchase-orders/add');
                             if (result == true) _load();
                           },
                         )
@@ -157,34 +195,58 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
                                 margin: const EdgeInsets.only(bottom: 8),
                                 child: InkWell(
                                   borderRadius: BorderRadius.circular(12),
-                                  onTap: () => context.push('/purchase-orders/${po.id}'),
+                                  onTap: () =>
+                                      context.push('/purchase-orders/${po.id}'),
                                   child: Padding(
                                     padding: const EdgeInsets.all(14),
                                     child: Row(children: [
                                       Container(
-                                        width: 44, height: 44,
+                                        width: 44,
+                                        height: 44,
                                         decoration: BoxDecoration(
-                                          color: AppColors.accent.withValues(alpha: 0.1),
-                                          borderRadius: BorderRadius.circular(10),
+                                          color: AppColors.accent
+                                              .withValues(alpha: 0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(10),
                                         ),
-                                        child: const Icon(Icons.receipt_rounded, color: AppColors.accent, size: 22),
+                                        child: const Icon(Icons.receipt_rounded,
+                                            color: AppColors.accent, size: 22),
                                       ),
                                       const SizedBox(width: 12),
-                                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                        Text(po.poNumber,
-                                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: theme.colorScheme.onSurface)),
-                                        const SizedBox(height: 3),
-                                        Text(po.supplierName,
-                                          style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ])),
-                                      Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                                        Text(_fmt.format(po.total),
-                                          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: theme.colorScheme.onSurface)),
-                                        const SizedBox(height: 4),
-                                        POStatusBadge(status: po.status),
-                                      ]),
+                                      Expanded(
+                                          child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                            Text(po.poNumber,
+                                                style: TextStyle(
+                                                    fontWeight: FontWeight.w700,
+                                                    fontSize: 14,
+                                                    color: theme.colorScheme
+                                                        .onSurface)),
+                                            const SizedBox(height: 3),
+                                            Text(
+                                              po.supplierName,
+                                              style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: theme.colorScheme
+                                                      .onSurfaceVariant),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ])),
+                                      Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.end,
+                                          children: [
+                                            Text(_fmt.format(po.total),
+                                                style: TextStyle(
+                                                    fontWeight: FontWeight.w800,
+                                                    fontSize: 14,
+                                                    color: theme.colorScheme
+                                                        .onSurface)),
+                                            const SizedBox(height: 4),
+                                            POStatusBadge(status: po.status),
+                                          ]),
                                     ]),
                                   ),
                                 ),

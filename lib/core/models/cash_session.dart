@@ -44,8 +44,11 @@ class CashSession {
       expectedCash: ((map['expectedCash'] ?? 0) as num).toDouble(),
       actualCash: ((map['actualCash'] ?? 0) as num).toDouble(),
       variance: ((map['variance'] ?? 0) as num).toDouble(),
-      openedAt: DateTime.tryParse(map['openedAt']?.toString() ?? '') ?? DateTime.now(),
-      closedAt: map['closedAt'] != null ? DateTime.tryParse(map['closedAt'].toString()) : null,
+      openedAt: DateTime.tryParse(map['openedAt']?.toString() ?? '') ??
+          DateTime.now(),
+      closedAt: map['closedAt'] != null
+          ? DateTime.tryParse(map['closedAt'].toString())
+          : null,
       status: map['status'] as String? ?? 'open',
     );
   }

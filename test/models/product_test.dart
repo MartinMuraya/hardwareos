@@ -60,9 +60,17 @@ void main() {
 
     test('Product.copyWith updates fields correctly', () {
       final product = Product(
-        id: '1', businessId: 'b', name: 'Item', sku: 'S', category: 'C',
-        quantity: 10, costPrice: 5, sellingPrice: 10, reorderLevel: 2,
-        createdAt: DateTime.now(), updatedAt: DateTime.now(),
+        id: '1',
+        businessId: 'b',
+        name: 'Item',
+        sku: 'S',
+        category: 'C',
+        quantity: 10,
+        costPrice: 5,
+        sellingPrice: 10,
+        reorderLevel: 2,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
       );
 
       final updated = product.copyWith(
