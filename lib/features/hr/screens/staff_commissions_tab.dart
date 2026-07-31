@@ -48,13 +48,15 @@ class _StaffCommissionsTabState extends State<StaffCommissionsTab> {
         'targetUserId': targetUserId,
         'amount': amount,
       });
-      if (mounted)
+      if (mounted) {
         messenger.showSnackBar(const SnackBar(
             content: Text('Payout successful! Expense recorded.')));
+      }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         messenger.showSnackBar(
             SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+      }
     } finally {
       if (mounted) setState(() => _isPayingOut = false);
     }
@@ -76,10 +78,12 @@ class _StaffCommissionsTabState extends State<StaffCommissionsTab> {
                 .where('commissionBalance', isGreaterThan: 0)
                 .snapshots(),
             builder: (context, snapshot) {
-              if (snapshot.hasError)
+              if (snapshot.hasError) {
                 return Center(child: Text('Error: ${snapshot.error}'));
-              if (snapshot.connectionState == ConnectionState.waiting)
+              }
+              if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
+              }
 
               final docs = snapshot.data?.docs ?? [];
               if (docs.isEmpty) {

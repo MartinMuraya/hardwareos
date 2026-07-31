@@ -129,12 +129,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                       Icon(Icons.email_outlined, size: 18),
                                 ),
                                 validator: (v) {
-                                  if (v == null || v.trim().isEmpty)
+                                  if (v == null || v.trim().isEmpty) {
                                     return 'Enter your email';
+                                  }
                                   final emailRegExp = RegExp(
                                       r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
-                                  if (!emailRegExp.hasMatch(v.trim()))
+                                  if (!emailRegExp.hasMatch(v.trim())) {
                                     return 'Enter a valid email address';
+                                  }
                                   return null;
                                 },
                               ),
@@ -205,8 +207,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                   onPressed: () async {
                                     setState(() => _isSubmitting = true);
                                     await auth.signInWithGoogle();
-                                    if (mounted)
+                                    if (mounted) {
                                       setState(() => _isSubmitting = false);
+                                    }
                                   },
                                   icon: SvgPicture.network(
                                     'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',

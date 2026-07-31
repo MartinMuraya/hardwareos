@@ -181,8 +181,9 @@ class _AdminPlanConfigsScreenState extends State<AdminPlanConfigsScreen> {
       },
     );
 
-    if (!mounted)
+    if (!mounted) {
       return; // Guard against using context after the dialog if the state was disposed
+    }
     final messenger = ScaffoldMessenger.of(context);
 
     if (result == true) {

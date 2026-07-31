@@ -265,11 +265,12 @@ class _AddPurchaseOrderScreenState extends State<AddPurchaseOrderScreen> {
         context.pop(true);
       }
     } on FunctionsException catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.message;
           _submitting = false;
         });
+      }
     }
   }
 
@@ -387,9 +388,10 @@ class _AddPurchaseOrderScreenState extends State<AddPurchaseOrderScreen> {
                                               labelText: 'Qty'),
                                           onChanged: (v) {
                                             final n = int.tryParse(v);
-                                            if (n != null && n > 0)
+                                            if (n != null && n > 0) {
                                               setState(
                                                   () => _lines[i].quantity = n);
+                                            }
                                           },
                                           validator: (v) {
                                             final n = int.tryParse(v ?? '');
@@ -410,9 +412,10 @@ class _AddPurchaseOrderScreenState extends State<AddPurchaseOrderScreen> {
                                               labelText: 'Unit Cost'),
                                           onChanged: (v) {
                                             final n = double.tryParse(v);
-                                            if (n != null && n > 0)
+                                            if (n != null && n > 0) {
                                               setState(
                                                   () => _lines[i].unitCost = n);
+                                            }
                                           },
                                           validator: (v) {
                                             final n = double.tryParse(v ?? '');

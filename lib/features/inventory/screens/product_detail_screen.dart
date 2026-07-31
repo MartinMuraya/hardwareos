@@ -51,17 +51,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           .map((e) => Product.fromMap(Map<String, dynamic>.from(e as Map)))
           .where((p) => p.id == widget.productId)
           .firstOrNull;
-      if (mounted)
+      if (mounted) {
         setState(() {
           _product = prod;
           _loading = false;
         });
+      }
     } on FunctionsException catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.message;
           _loading = false;
         });
+      }
     }
   }
 
@@ -85,10 +87,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         _load();
       }
     } on FunctionsException catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.message;
         });
+      }
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -191,9 +194,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   try {
                     await BarcodePrintService.printLabel(p, bizName);
                   } catch (e) {
-                    if (context.mounted)
+                    if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Print Error: $e')));
+                    }
                   }
                 },
               ),
@@ -355,9 +359,10 @@ class _StorefrontToggleState extends State<_StorefrontToggle> {
       });
       // The Product Cache/Listener will automatically refresh the UI when the document updates
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Failed to update visibility: $e')));
+      }
     } finally {
       if (mounted) setState(() => _updating = false);
     }

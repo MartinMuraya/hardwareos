@@ -45,18 +45,20 @@ class _QuotationsScreenState extends State<QuotationsScreen> {
       final items = rawList
           .map((e) => Quotation.fromMap(Map<String, dynamic>.from(e as Map)))
           .toList();
-      if (mounted)
+      if (mounted) {
         setState(() {
           _quotations = items;
           _filtered = items;
           _loading = false;
         });
+      }
     } on FunctionsException catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.message;
           _loading = false;
         });
+      }
     }
   }
 

@@ -45,17 +45,19 @@ class _QuotationDetailScreenState extends State<QuotationDetailScreen> {
       });
       final qt = Quotation.fromMap(
           Map<String, dynamic>.from(data['quotation'] as Map));
-      if (mounted)
+      if (mounted) {
         setState(() {
           _quotation = qt;
           _loading = false;
         });
+      }
     } on FunctionsException catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.message;
           _loading = false;
         });
+      }
     }
   }
 
@@ -73,11 +75,12 @@ class _QuotationDetailScreenState extends State<QuotationDetailScreen> {
       });
       if (mounted) _load();
     } on FunctionsException catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.message;
           _actionLoading = false;
         });
+      }
     }
   }
 
@@ -141,11 +144,12 @@ class _QuotationDetailScreenState extends State<QuotationDetailScreen> {
         _load();
       }
     } on FunctionsException catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.message;
           _actionLoading = false;
         });
+      }
     }
   }
 

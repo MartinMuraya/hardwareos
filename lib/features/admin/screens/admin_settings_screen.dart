@@ -187,8 +187,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                                     child: Text('Critical (Red)')),
                               ],
                               onChanged: (val) {
-                                if (val != null)
+                                if (val != null) {
                                   setState(() => _alertLevel = val);
+                                }
                               },
                             ),
                           ],
@@ -227,8 +228,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                                     child: Text('Monthly Auto Backup')),
                               ],
                               onChanged: (val) {
-                                if (val != null)
+                                if (val != null) {
                                   setState(() => _backupFrequency = val);
+                                }
                               },
                             ),
                             const SizedBox(height: 24),

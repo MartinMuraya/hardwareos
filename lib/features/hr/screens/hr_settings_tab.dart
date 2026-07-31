@@ -110,17 +110,19 @@ class _HrSettingsTabState extends State<HrSettingsTab> {
                           try {
                             await provider.saveSettings(
                                 _paye, _nhif, _nssf, _commissionBasis);
-                            if (context.mounted)
+                            if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                       content: Text(
                                           'Settings saved successfully!')));
+                            }
                           } catch (e) {
-                            if (context.mounted)
+                            if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                       content: Text('Error: $e'),
                                       backgroundColor: Colors.red));
+                            }
                           }
                         },
                   child: provider.isLoading

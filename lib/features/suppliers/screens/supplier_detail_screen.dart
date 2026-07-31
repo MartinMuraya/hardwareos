@@ -39,11 +39,12 @@ class _SupplierDetailScreenState extends State<SupplierDetailScreen> {
       });
       final s =
           Supplier.fromMap(Map<String, dynamic>.from(data['supplier'] as Map));
-      if (mounted)
+      if (mounted) {
         setState(() {
           _supplier = s;
           _loading = false;
         });
+      }
     } on FunctionsException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)

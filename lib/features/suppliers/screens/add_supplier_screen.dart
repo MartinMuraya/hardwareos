@@ -58,11 +58,12 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
         context.pop(true);
       }
     } on FunctionsException catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.message;
           _submitting = false;
         });
+      }
     }
   }
 

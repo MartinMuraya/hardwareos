@@ -35,17 +35,19 @@ class _AdjustmentScreenState extends State<AdjustmentScreen> {
       final data = await FunctionsService.call(
           'getStockAdjustments', {'businessId': bizId, 'limit': 100});
       final raw = (data['adjustments'] as List?) ?? [];
-      if (mounted)
+      if (mounted) {
         setState(() {
           _adjustments = raw.cast<Map<String, dynamic>>();
           _loading = false;
         });
+      }
     } on FunctionsException catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.message;
           _loading = false;
         });
+      }
     }
   }
 
@@ -333,17 +335,19 @@ class _AdjustStockDialogState extends State<AdjustStockDialog> {
           .map((e) => Product.fromMap(Map<String, dynamic>.from(e as Map)))
           .toList()
         ..sort((a, b) => a.name.compareTo(b.name));
-      if (mounted)
+      if (mounted) {
         setState(() {
           _products = prods;
           _filtered = prods;
           _loading = false;
         });
+      }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _loading = false;
         });
+      }
     }
   }
 

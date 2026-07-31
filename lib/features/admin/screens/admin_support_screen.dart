@@ -40,11 +40,12 @@ class _AdminSupportScreenState extends State<AdminSupportScreen> {
         });
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.toString();
           _loading = false;
         });
+      }
     }
   }
 
@@ -105,9 +106,10 @@ class _AdminSupportScreenState extends State<AdminSupportScreen> {
           'message': msgCtrl.text,
           'newStatus': newStatus,
         });
-        if (mounted)
+        if (mounted) {
           ScaffoldMessenger.of(context)
               .showSnackBar(const SnackBar(content: Text('Response sent')));
+        }
         _loadTickets();
       } catch (e) {
         if (mounted) {

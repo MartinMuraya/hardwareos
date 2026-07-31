@@ -134,8 +134,9 @@ class _StorefrontManagementScreenState
         _loadSettings(); // Reload to get fresh state
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() => _error = e.toString().replaceAll('Exception: ', ''));
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -301,8 +302,9 @@ class _StorefrontManagementScreenState
                                 },
                                 validator: (v) {
                                   if (v == null || v.isEmpty) return 'Required';
-                                  if (v.length < 3)
+                                  if (v.length < 3) {
                                     return 'Must be at least 3 characters';
+                                  }
                                   return null;
                                 },
                               ),

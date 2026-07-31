@@ -100,11 +100,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
       }
     } on FunctionsException catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.message;
           _loading = false;
         });
+      }
     }
   }
 

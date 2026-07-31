@@ -95,8 +95,9 @@ class AppRouter {
           return RoutePaths.authError;
         }
 
-        if (!isAuthenticated && !isAuthRoute && !isStorefrontRoute)
+        if (!isAuthenticated && !isAuthRoute && !isStorefrontRoute) {
           return RoutePaths.login;
+        }
 
         if (isAuthenticated) {
           if (!authProvider.isEmailVerified &&

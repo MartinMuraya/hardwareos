@@ -327,18 +327,20 @@ class _POSScreenState extends State<POSScreen> {
       // Filter out out-of-stock
       prods = prods.where((p) => !p.isOutOfStock).toList();
 
-      if (mounted)
+      if (mounted) {
         setState(() {
           _allProducts = prods;
           _filtered = prods;
           _loadingProducts = false;
         });
+      }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.toString();
           _loadingProducts = false;
         });
+      }
     }
   }
 
@@ -465,8 +467,9 @@ class _POSScreenState extends State<POSScreen> {
   Future<void> _checkout() async {
     if (_cart.isEmpty) return;
     if (_paymentMethod == 'credit' && _selectedCustomer == null) {
-      if (mounted)
+      if (mounted) {
         setState(() => _error = 'Please select a customer for credit sales.');
+      }
       return;
     }
     setState(() {
@@ -861,9 +864,10 @@ class _POSScreenState extends State<POSScreen> {
       await ReceiptService.sharePdf(_lastReceiptData!,
           isA4: true, qrData: qrUrl);
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('Error sharing PDF: $e')));
+      }
     }
   }
 
@@ -1900,22 +1904,25 @@ class _CartTile extends StatelessWidget {
     final service = getWebSerialService();
     final isSupported = await service.isSupported();
     if (!isSupported) {
-      if (context.mounted)
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text(
                 'Web Serial API not supported in this browser. Please use Chrome/Edge.')));
+      }
       return;
     }
 
     try {
-      if (context.mounted)
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text('Please select the weighing scale COM port...')));
+      }
       await service.requestPort();
 
-      if (context.mounted)
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text('Connected to scale. Reading weight...')));
+      }
 
       final stream = service.readData();
       String buffer = '';
@@ -1931,15 +1938,17 @@ class _CartTile extends StatelessWidget {
           if (weight != null && weight > 0) {
             onUpdate(entry.copyWith(qty: weight));
             service.closePort();
-            if (context.mounted)
+            if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text(
                       'Weight Captured: $weight ${entry.product.sellingUnit ?? 'Kg'}')));
+            }
           }
         }
-        if (buffer.length > 100)
+        if (buffer.length > 100) {
           buffer =
               buffer.substring(buffer.length - 50); // prevent buffer overflow
+        }
       });
 
       // Auto close after 10 seconds if no weight found
@@ -1947,9 +1956,10 @@ class _CartTile extends StatelessWidget {
         service.closePort();
       });
     } catch (e) {
-      if (context.mounted)
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text('Scale Error: $e'), backgroundColor: Colors.red));
+      }
     }
   }
 
@@ -2330,7 +2340,7 @@ class _HardwareCalculatorsDialogState
                     child: Text(m, style: const TextStyle(fontSize: 14))))
                 .toList(),
             onChanged: (v) {
-              if (v != null)
+              if (v != null) {
                 setState(() {
                   _mode = v;
                   _resultQty = null;
@@ -2338,6 +2348,7 @@ class _HardwareCalculatorsDialogState
                   _complexResult = null;
                   _calculate();
                 });
+              }
             },
           ),
         ],

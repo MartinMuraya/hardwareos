@@ -73,12 +73,13 @@ class _CustomersScreenState extends State<CustomersScreen> {
         });
       }
     } on FunctionsException catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.message;
           _loading = false;
           _loadingMore = false;
         });
+      }
     }
   }
 

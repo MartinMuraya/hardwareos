@@ -39,11 +39,12 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
         });
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.toString();
           _loading = false;
         });
+      }
     }
   }
 
@@ -120,9 +121,10 @@ class _AdminBusinessesScreenState extends State<AdminBusinessesScreen> {
     try {
       await FunctionsService.call(
           'adminDeleteBusiness', {'businessId': businessId});
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Business permanently deleted.')));
+      }
       _loadBusinesses();
     } catch (e) {
       if (mounted) {

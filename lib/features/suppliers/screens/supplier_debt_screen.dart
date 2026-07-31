@@ -116,8 +116,9 @@ class _SupplierDebtScreenState extends State<SupplierDebtScreen> {
                         DropdownMenuItem(value: 'cash', child: Text('Cash')),
                       ],
                       onChanged: (val) {
-                        if (val != null)
+                        if (val != null) {
                           setDialogState(() => paymentMethod = val);
+                        }
                       },
                     ),
                     const SizedBox(height: 16),

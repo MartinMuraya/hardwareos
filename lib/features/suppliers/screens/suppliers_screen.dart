@@ -48,18 +48,20 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
       final items = rawList
           .map((e) => Supplier.fromMap(Map<String, dynamic>.from(e as Map)))
           .toList();
-      if (mounted)
+      if (mounted) {
         setState(() {
           _suppliers = items;
           _filtered = items;
           _loading = false;
         });
+      }
     } on FunctionsException catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.message;
           _loading = false;
         });
+      }
     }
   }
 

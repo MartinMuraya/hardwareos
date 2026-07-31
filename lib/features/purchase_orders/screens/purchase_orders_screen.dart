@@ -47,18 +47,20 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
           .map(
               (e) => PurchaseOrder.fromMap(Map<String, dynamic>.from(e as Map)))
           .toList();
-      if (mounted)
+      if (mounted) {
         setState(() {
           _orders = items;
           _filtered = items;
           _loading = false;
         });
+      }
     } on FunctionsException catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.message;
           _loading = false;
         });
+      }
     }
   }
 

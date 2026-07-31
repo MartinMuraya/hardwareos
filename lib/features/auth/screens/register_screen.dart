@@ -35,11 +35,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final auth = context.read<AuthProvider>();
     auth.clearError();
     final ok = await auth.createAccount(_emailCtrl.text.trim(), _passCtrl.text);
-    if (mounted)
+    if (mounted) {
       setState(() {
         _isSubmitting = false;
         if (ok) _accountCreated = true;
       });
+    }
   }
 
   Future<void> _createBusiness() async {
@@ -186,8 +187,9 @@ class _AccountStep extends StatelessWidget {
           if (v == null || v.trim().isEmpty) return 'Enter your email';
           final emailRegExp =
               RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
-          if (!emailRegExp.hasMatch(v.trim()))
+          if (!emailRegExp.hasMatch(v.trim())) {
             return 'Enter a valid email address';
+          }
           return null;
         },
       ),

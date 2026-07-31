@@ -95,17 +95,19 @@ class _AuditLogsScreenState extends State<AuditLogsScreen> {
                   l.module.toLowerCase().contains(q))
               .toList();
 
-      if (mounted)
+      if (mounted) {
         setState(() {
           _logs = filtered;
           _loading = false;
         });
+      }
     } on FunctionsException catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.message;
           _loading = false;
         });
+      }
     }
   }
 
@@ -259,13 +261,19 @@ class _AuditCard extends StatelessWidget {
   Color _actionColor(String action) {
     if (action.contains('Create') ||
         action.contains('Receive') ||
-        action.contains('Payment')) return AppColors.success;
+        action.contains('Payment')) {
+      return AppColors.success;
+    }
     if (action.contains('Delete') ||
         action.contains('Cancel') ||
-        action.contains('Write-Off')) return AppColors.error;
+        action.contains('Write-Off')) {
+      return AppColors.error;
+    }
     if (action.contains('Update') ||
         action.contains('Edit') ||
-        action.contains('Adjust')) return AppColors.warning;
+        action.contains('Adjust')) {
+      return AppColors.warning;
+    }
     return AppColors.chartBlue;
   }
 

@@ -41,17 +41,19 @@ class _ReportsScreenState extends State<ReportsScreen> {
         'businessId': bizId,
         'period': _period.name,
       });
-      if (mounted)
+      if (mounted) {
         setState(() {
           _stats = data;
           _loading = false;
         });
+      }
     } on FunctionsException catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.message;
           _loading = false;
         });
+      }
     }
   }
 

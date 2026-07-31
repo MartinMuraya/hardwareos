@@ -91,8 +91,9 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
                         DropdownMenuItem(value: 'pro', child: Text('Pro')),
                       ],
                       onChanged: (val) {
-                        if (val != null)
+                        if (val != null) {
                           setDialogState(() => selectedPlan = val);
+                        }
                       },
                     ),
                     const SizedBox(height: 16),
@@ -111,8 +112,9 @@ class _AdminSubscriptionsScreenState extends State<AdminSubscriptionsScreen> {
                             value: 'expired', child: Text('Expired')),
                       ],
                       onChanged: (val) {
-                        if (val != null)
+                        if (val != null) {
                           setDialogState(() => selectedStatus = val);
+                        }
                       },
                     ),
                     const SizedBox(height: 16),

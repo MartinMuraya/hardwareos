@@ -119,8 +119,9 @@ class _LabelSettingsScreenState extends State<LabelSettingsScreen> {
                                           '80mm × 40mm (Large Product Tag)')),
                                 ],
                                 onChanged: (val) {
-                                  if (val != null)
+                                  if (val != null) {
                                     setState(() => _paperSize = val);
+                                  }
                                 },
                               ),
                               const SizedBox(height: 20),

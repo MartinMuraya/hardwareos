@@ -119,17 +119,19 @@ class PayrollTab extends StatelessWidget {
                                     : () async {
                                         try {
                                           await provider.processPayroll(pr.id);
-                                          if (context.mounted)
+                                          if (context.mounted) {
                                             ScaffoldMessenger.of(context)
                                                 .showSnackBar(const SnackBar(
                                                     content: Text(
                                                         'Payroll Processed & Ledger Updated!')));
+                                          }
                                         } catch (e) {
-                                          if (context.mounted)
+                                          if (context.mounted) {
                                             ScaffoldMessenger.of(context)
                                                 .showSnackBar(SnackBar(
                                                     content:
                                                         Text('Error: $e')));
+                                          }
                                         }
                                       },
                                 icon: const Icon(Icons.check_circle),
@@ -154,13 +156,15 @@ class PayrollTab extends StatelessWidget {
     final currentPeriod = DateFormat('MMMM yyyy').format(DateTime.now());
     try {
       await provider.generatePayroll(currentPeriod);
-      if (context.mounted)
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text('Draft Payroll for $currentPeriod generated!')));
+      }
     } catch (e) {
-      if (context.mounted)
+      if (context.mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     }
   }
 }

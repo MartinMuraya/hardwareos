@@ -64,11 +64,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
         });
       }
     } on FunctionsException catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.message;
           _loading = false;
         });
+      }
     }
   }
 

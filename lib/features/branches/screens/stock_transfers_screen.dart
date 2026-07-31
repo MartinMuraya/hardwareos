@@ -42,17 +42,19 @@ class _StockTransfersScreenState extends State<StockTransfersScreen> {
           .map(
               (e) => StockTransfer.fromMap(Map<String, dynamic>.from(e as Map)))
           .toList();
-      if (mounted)
+      if (mounted) {
         setState(() {
           _transfers = transfers;
           _loading = false;
         });
+      }
     } on FunctionsException catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.message;
           _loading = false;
         });
+      }
     }
   }
 

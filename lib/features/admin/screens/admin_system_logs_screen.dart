@@ -39,11 +39,12 @@ class _AdminSystemLogsScreenState extends State<AdminSystemLogsScreen> {
         });
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.toString();
           _loading = false;
         });
+      }
     }
   }
 

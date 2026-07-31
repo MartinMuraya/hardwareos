@@ -432,8 +432,9 @@ class _ImportDialogState extends State<ImportDialog> {
     for (int i = 1; i < rows.length; i++) {
       final row = rows[i];
       if (row.isEmpty ||
-          (row.length == 1 && (row[0]?.toString().trim() ?? '') == ''))
+          (row.length == 1 && (row[0]?.toString().trim() ?? '') == '')) {
         continue;
+      }
 
       final Map<String, dynamic> parsed = {};
       for (int j = 0; j < headers.length && j < row.length; j++) {

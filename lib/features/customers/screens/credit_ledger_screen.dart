@@ -55,11 +55,12 @@ class _CreditLedgerScreenState extends State<CreditLedgerScreen> {
         });
       }
     } on FunctionsException catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.message;
           _loading = false;
         });
+      }
     }
   }
 

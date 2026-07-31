@@ -47,9 +47,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     setState(() => _loading = true);
     try {
       await FunctionsService.call('adminGrantSuperAdmin', {'targetUid': uid});
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text('Granted Super Admin rights successfully.')));
+      }
       _loadUsers();
     } catch (e) {
       if (mounted) {
@@ -64,9 +65,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     setState(() => _loading = true);
     try {
       await FunctionsService.call('adminRevokeSuperAdmin', {'targetUid': uid});
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text('Revoked Super Admin rights successfully.')));
+      }
       _loadUsers();
     } catch (e) {
       if (mounted) {
@@ -344,10 +346,12 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                                     color: theme.colorScheme.onSurfaceVariant),
                                 onSelected: (value) {
                                   if (value == 'edit') _editUser(u);
-                                  if (value == 'grant_sa')
+                                  if (value == 'grant_sa') {
                                     _grantSuperAdmin(u['uid']);
-                                  if (value == 'revoke_sa')
+                                  }
+                                  if (value == 'revoke_sa') {
                                     _revokeSuperAdmin(u['uid']);
+                                  }
                                 },
                                 itemBuilder: (context) => [
                                   const PopupMenuItem(

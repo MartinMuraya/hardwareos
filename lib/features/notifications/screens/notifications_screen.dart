@@ -85,18 +85,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         Map<String, dynamic>.from((results[1]['settings'] as Map?) ?? {}),
       );
 
-      if (mounted)
+      if (mounted) {
         setState(() {
           _notifications = notifs;
           _settings = settings;
           _loading = false;
         });
+      }
     } on FunctionsException catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.message;
           _loading = false;
         });
+      }
     }
   }
 

@@ -83,16 +83,18 @@ class _BranchDetailScreenState extends State<BranchDetailScreen> {
         _branchProfitTotal = (bData['profit'] as num?)?.toDouble() ?? 0;
       } catch (_) {}
 
-      if (mounted)
+      if (mounted) {
         setState(() {
           _loading = false;
         });
+      }
     } on FunctionsException catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.message;
           _loading = false;
         });
+      }
     }
   }
 

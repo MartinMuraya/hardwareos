@@ -39,17 +39,19 @@ class _BranchesScreenState extends State<BranchesScreen> {
       final branches = raw
           .map((e) => Branch.fromMap(Map<String, dynamic>.from(e as Map)))
           .toList();
-      if (mounted)
+      if (mounted) {
         setState(() {
           _branches = branches;
           _loading = false;
         });
+      }
     } on FunctionsException catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.message;
           _loading = false;
         });
+      }
     }
   }
 
@@ -93,8 +95,9 @@ class _BranchesScreenState extends State<BranchesScreen> {
     );
     if (result != true) return;
 
-    if (!mounted)
+    if (!mounted) {
       return; // ensure state is still mounted before using context after async gap
+    }
     try {
       final bizId = context.read<AuthProvider>().businessId!;
       await FunctionsService.call('createBranch', {

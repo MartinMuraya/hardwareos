@@ -364,11 +364,12 @@ class _AdvancedAnalyticsScreenState extends State<AdvancedAnalyticsScreen> {
 
   Widget _buildForecastTable(
       List<Map<String, dynamic>> forecasts, ThemeData theme) {
-    if (forecasts.isEmpty)
+    if (forecasts.isEmpty) {
       return const Card(
           child: Padding(
               padding: EdgeInsets.all(16),
               child: Text('Not enough sales data to generate forecast.')));
+    }
 
     return Card(
       color: theme.cardColor,

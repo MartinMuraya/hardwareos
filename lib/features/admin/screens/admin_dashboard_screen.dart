@@ -58,11 +58,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         });
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.toString();
           _loadingStats = false;
         });
+      }
     }
   }
 
@@ -114,9 +115,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         'message': msgCtrl.text,
         'type': 'info',
       });
-      if (mounted)
+      if (mounted) {
         messenger.showSnackBar(
             const SnackBar(content: Text('Broadcast sent successfully')));
+      }
     } catch (e) {
       if (mounted) messenger.showSnackBar(SnackBar(content: Text('Error: $e')));
     }

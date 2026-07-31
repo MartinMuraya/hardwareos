@@ -37,17 +37,19 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
       final data = await FunctionsService.call(
           'getReturns', {'businessId': bizId, 'limit': 100});
       final raw = (data['returns'] as List?) ?? [];
-      if (mounted)
+      if (mounted) {
         setState(() {
           _returns = raw.cast<Map<String, dynamic>>();
           _loading = false;
         });
+      }
     } on FunctionsException catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.message;
           _loading = false;
         });
+      }
     }
   }
 
@@ -269,12 +271,13 @@ class _ProcessReturnDialogState extends State<ProcessReturnDialog> {
       final sales = raw
           .map((e) => Sale.fromMap(Map<String, dynamic>.from(e as Map)))
           .toList();
-      if (mounted)
+      if (mounted) {
         setState(() {
           _sales = sales;
           _filteredSales = sales;
           _loadingSales = false;
         });
+      }
     } catch (e) {
       if (mounted) setState(() => _loadingSales = false);
     }

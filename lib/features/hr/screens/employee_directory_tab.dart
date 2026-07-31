@@ -153,9 +153,10 @@ class EmployeeDirectoryTab extends StatelessWidget {
                       const SnackBar(content: Text('Employee added!')));
                 }
               } catch (e) {
-                if (ctx.mounted)
+                if (ctx.mounted) {
                   ScaffoldMessenger.of(ctx)
                       .showSnackBar(SnackBar(content: Text('Error: $e')));
+                }
               }
             },
             child: const Text('Save'),

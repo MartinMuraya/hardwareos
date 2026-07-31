@@ -28,17 +28,19 @@ class _AdminSecurityScreenState extends State<AdminSecurityScreen> {
     try {
       final fn = FirebaseFunctions.instance.httpsCallable('getSecurityMetrics');
       final result = await fn.call();
-      if (mounted)
+      if (mounted) {
         setState(() {
           _metrics = Map<String, dynamic>.from(result.data as Map);
           _isLoading = false;
         });
+      }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.toString();
           _isLoading = false;
         });
+      }
     }
   }
 

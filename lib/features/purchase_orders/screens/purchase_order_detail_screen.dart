@@ -44,17 +44,19 @@ class _PurchaseOrderDetailScreenState extends State<PurchaseOrderDetailScreen> {
       });
       final po = PurchaseOrder.fromMap(
           Map<String, dynamic>.from(data['purchaseOrder'] as Map));
-      if (mounted)
+      if (mounted) {
         setState(() {
           _po = po;
           _loading = false;
         });
+      }
     } on FunctionsException catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.message;
           _loading = false;
         });
+      }
     }
   }
 
@@ -73,11 +75,12 @@ class _PurchaseOrderDetailScreenState extends State<PurchaseOrderDetailScreen> {
       });
       if (mounted) _load();
     } on FunctionsException catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.message;
           _actionLoading = false;
         });
+      }
     }
   }
 
@@ -120,11 +123,12 @@ class _PurchaseOrderDetailScreenState extends State<PurchaseOrderDetailScreen> {
         _load();
       }
     } on FunctionsException catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = e.message;
           _actionLoading = false;
         });
+      }
     }
   }
 
