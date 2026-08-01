@@ -49,9 +49,10 @@ void main() async {
       await FirebaseAppCheck.instance.activate(
         androidProvider: AndroidProvider.debug,
         appleProvider: AppleProvider.debug,
-        // On Web, ReCaptchaV3Provider is required but the actual site key will be ignored 
+        // On Web, ReCaptchaV3Provider is required but the actual site key will be ignored
         // if self.FIREBASE_APPCHECK_DEBUG_TOKEN = true is set in index.html.
-        webProvider: ReCaptchaV3Provider(recaptchaKey.isNotEmpty ? recaptchaKey : 'debug-key'),
+        webProvider: ReCaptchaV3Provider(
+            recaptchaKey.isNotEmpty ? recaptchaKey : 'debug-key'),
       );
     }
   } catch (e) {
