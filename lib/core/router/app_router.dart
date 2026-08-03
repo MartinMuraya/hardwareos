@@ -62,6 +62,8 @@ import '../../features/auth/screens/auth_error_screen.dart';
 import '../../features/storefront/screens/storefront_app_screen.dart';
 import '../../features/storefront/screens/storefront_management_screen.dart';
 import '../../features/sales/screens/conflict_resolution_screen.dart';
+import '../../features/sales/screens/offline_queue_screen.dart';
+import '../../features/inventory/screens/product_ledger_screen.dart';
 import '../../features/settings/screens/label_settings_screen.dart';
 import '../../features/suppliers/screens/supplier_debt_screen.dart';
 import '../../features/accounting/screens/accounting_dashboard_screen.dart';
@@ -185,6 +187,7 @@ class AppRouter {
               final isStaffRoute =
                   state.matchedLocation.startsWith('/dashboard') ||
                       state.matchedLocation.startsWith('/sales') ||
+                      state.matchedLocation.startsWith('/inventory') ||
                       state.matchedLocation.startsWith('/customers') ||
                       state.matchedLocation.startsWith('/credit-ledger') ||
                       state.matchedLocation.startsWith('/quotations') ||
@@ -328,6 +331,19 @@ class AppRouter {
                   builder: (_, state) => ProductDetailScreen(
                     productId: state.pathParameters['productId']!,
                   ),
+                  routes: [
+                    GoRoute(
+                      path: 'ledger',
+                      builder: (_, state) {
+                        final authProv = Provider.of<AuthProvider>(context, listen: false);
+                        return ProductLedgerScreen(
+                          productId: state.pathParameters['productId']!,
+                          productName: 'Ledger',
+                          businessId: authProv.businessId ?? '',
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -346,6 +362,10 @@ class AppRouter {
                 GoRoute(
                   path: 'conflicts',
                   builder: (_, __) => const ConflictResolutionScreen(),
+                ),
+                GoRoute(
+                  path: 'offline-queue',
+                  builder: (_, __) => const OfflineQueueScreen(),
                 ),
               ],
             ),

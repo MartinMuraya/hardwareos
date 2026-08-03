@@ -1170,11 +1170,7 @@ class _POSScreenState extends State<POSScreen> {
                           ),
                           const SizedBox(width: 12),
                           TextButton(
-                            onPressed: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) =>
-                                        const OfflineQueueScreen())),
+                            onPressed: () => context.push('/sales/offline-queue'),
                             style: TextButton.styleFrom(
                               foregroundColor: Colors.black,
                               padding: const EdgeInsets.symmetric(

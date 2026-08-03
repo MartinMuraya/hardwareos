@@ -94,6 +94,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
     final width = MediaQuery.of(context).size.width;
     final isWide = width > 900;
     final padding = Responsive.padding(context);
+    
+    final authProv = context.watch<AuthProvider>();
+    final isManager = authProv.userRole == 'owner' || authProv.userRole == 'manager' || authProv.isSuperAdmin;
 
     return LoadingOverlay(
       isLoading: _loading,
@@ -117,26 +120,28 @@ class _InventoryScreenState extends State<InventoryScreen> {
                             style: theme.textTheme.bodyMedium),
                       ]),
                 ),
-                FilledButton.icon(
-                  onPressed: () async {
-                    await context.push('/inventory/add');
-                    _load();
-                  },
-                  icon: const Icon(Icons.add, size: 18),
-                  label: const Text('Add Product'),
-                ),
-                const SizedBox(width: 8),
-                OutlinedButton.icon(
-                  onPressed: () async {
-                    final result = await showDialog<bool>(
-                      context: context,
-                      builder: (_) => const ImportDialog(),
-                    );
-                    if (result == true) _load();
-                  },
-                  icon: const Icon(Icons.upload_file_rounded, size: 18),
-                  label: const Text('Import'),
-                ),
+                if (isManager) ...[
+                  FilledButton.icon(
+                    onPressed: () async {
+                      await context.push('/inventory/add');
+                      _load();
+                    },
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('Add Product'),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      final result = await showDialog<bool>(
+                        context: context,
+                        builder: (_) => const ImportDialog(),
+                      );
+                      if (result == true) _load();
+                    },
+                    icon: const Icon(Icons.upload_file_rounded, size: 18),
+                    label: const Text('Import'),
+                  ),
+                ],
               ]),
               const SizedBox(height: 20),
               Row(children: [
@@ -173,8 +178,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         subtitle: _all.isEmpty
                             ? 'Add your first product to start tracking inventory.'
                             : 'Try a different search or category.',
-                        actionLabel: _all.isEmpty ? 'Add Product' : null,
-                        onAction: _all.isEmpty
+                        actionLabel: _all.isEmpty && isManager ? 'Add Product' : null,
+                        onAction: _all.isEmpty && isManager
                             ? () => context.go('${RoutePaths.inventory}/add')
                             : null,
                       )

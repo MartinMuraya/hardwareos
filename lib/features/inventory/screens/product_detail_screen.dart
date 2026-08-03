@@ -7,7 +7,8 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/responsive.dart';
 import '../../../core/widgets/loading_overlay.dart';
 import '../../../core/services/barcode_print_service.dart';
-import 'product_ledger_screen.dart';
+import '../../../core/services/barcode_print_service.dart';
+import 'package:go_router/go_router.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final String productId;
@@ -153,6 +154,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final p = _product;
+    final authProv = context.watch<AuthProvider>();
+    final isManager = authProv.userRole == 'owner' || authProv.userRole == 'manager' || authProv.isSuperAdmin;
+
     return LoadingOverlay(
       isLoading: _loading,
       child: Scaffold(
@@ -169,16 +173,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       .read<AuthProvider>()
                       .userProfile?['businessId'] as String?;
                   if (bizId != null) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ProductLedgerScreen(
-                          productId: p.id,
-                          productName: p.name,
-                          businessId: bizId,
-                        ),
-                      ),
-                    );
+                    context.push('/inventory/${p.id}/ledger');
                   }
                 },
               ),
@@ -201,7 +196,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   }
                 },
               ),
-            if (p != null)
+            if (p != null && isManager)
               IconButton(
                 icon: const Icon(Icons.add_box_outlined),
                 tooltip: 'Add Stock',
@@ -240,12 +235,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 ),
                               _StockCard(product: p),
                               const SizedBox(height: 16),
-                              _DetailCard(product: p, theme: theme),
+                              _DetailCard(product: p, theme: theme, isManager: isManager),
                             ]),
                       ),
                     ),
                   ),
-        floatingActionButton: p != null
+        floatingActionButton: p != null && isManager
             ? FloatingActionButton.extended(
                 onPressed: _showAddStockSheet,
                 icon: const Icon(Icons.add),
@@ -307,7 +302,8 @@ class _StockCard extends StatelessWidget {
 class _DetailCard extends StatelessWidget {
   final Product product;
   final ThemeData theme;
-  const _DetailCard({required this.product, required this.theme});
+  final bool isManager;
+  const _DetailCard({required this.product, required this.theme, required this.isManager});
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(20),
@@ -329,8 +325,10 @@ class _DetailCard extends StatelessWidget {
               theme: theme),
           const _HDivider(),
           _Row('Margin', '${product.margin.toStringAsFixed(1)}%', theme: theme),
-          const _HDivider(),
-          _StorefrontToggle(product: product, theme: theme),
+          if (isManager) ...[
+            const _HDivider(),
+            _StorefrontToggle(product: product, theme: theme),
+          ],
         ]),
       );
 }
