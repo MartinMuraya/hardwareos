@@ -19,7 +19,6 @@ class FeatureAccessService {
       'suppliers',
       'storefront',
       'etims',
-      'ai_assistant',
     ],
     'pro': [
       'inventory',
