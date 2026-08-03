@@ -33,7 +33,7 @@ dependencies:
   printing: ^5.13.4
 
   # Utilities
-  intl: ^0.20.2
+  intl: any
   uuid: ^4.4.2
   shared_preferences: ^2.3.2
   cached_network_image: ^3.4.1
