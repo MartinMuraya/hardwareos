@@ -122,11 +122,8 @@ export const createSale = onCall(SECURE_FN_OPTS, async (request) => {
             { productId: item.productId, quantity: item.quantity },
           ]);
           if (convs.length > 0) {
-            const updatedSnap = await txn.get(productRefs[i]);
-            const updated = updatedSnap.data()!;
-            product.quantity = updated.quantity;
-            product.costPrice = updated.costPrice;
-            product.sellingPrice = updated.sellingPrice;
+            // BUG-003 FIX: Update local state without reading from txn again to prevent read-after-write errors
+            product.quantity += convs[0].childQtyGained;
           }
         }
         if (product.quantity < item.quantity) {
@@ -182,9 +179,8 @@ export const createSale = onCall(SECURE_FN_OPTS, async (request) => {
     let timsQrCode: string | null = null;
 
     if (taxSettings.eTimsEnabled) {
-      // Simulate calling the KRA OSC API
-      timsCuInvoiceNumber = `CU${Math.floor(Math.random() * 100000000).toString().padStart(8, '0')}`;
-      timsQrCode = `https://etims.kra.go.ke/verify/${timsCuInvoiceNumber}?amt=${total.toFixed(2)}`;
+      // TODO (BUG-006): Implement actual KRA OSC API integration using vendor credentials.
+      throw new HttpsError("unimplemented", "eTIMS integration is not yet implemented. Please disable eTIMS in settings to process sales without KRA compliance, or contact support to configure your middleware provider.");
     }
 
     // 2. Create sale document

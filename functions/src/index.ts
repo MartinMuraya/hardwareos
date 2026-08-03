@@ -62,10 +62,13 @@ lazyExport('./functions/purchase_orders', ['createPurchaseOrder', 'getPurchaseOr
 // Dashboard & Reports
 lazyExport('./functions/dashboard', ['getDashboardStats', 'getReportStats', 'seedDemoData']);
 
+// System Health
+lazyExport('./functions/health', ['healthCheck']);
+
 // Super Admin Operations & Plan Configs
 lazyExport('./functions/super_admin', ['getPlatformStats', 'adminGrantSuperAdmin', 'adminRevokeSuperAdmin']);
 lazyExport('./functions/admin_businesses', ['adminGetAllBusinesses', 'adminUpdateBusinessStatus', 'adminDeleteBusiness']);
-lazyExport('./functions/admin_operations', ['adminGetSubscriptions', 'adminUpdateSubscription', 'getMySubscriptionPayments', 'adminImpersonateTenant', 'createGlobalAnnouncement', 'adminGetSystemLogs', 'adminGetPlanConfigs', 'adminSavePlanConfig']);
+lazyExport('./functions/admin_operations', ['adminGetSubscriptions', 'adminUpdateSubscription', 'getMySubscriptionPayments', 'adminImpersonateTenant', 'createGlobalAnnouncement', 'adminGetSystemLogs', 'adminGetPlanConfigs', 'adminSavePlanConfig', 'adminGetPlans', 'adminCreatePlan', 'adminUpdatePlan', 'adminDeletePlan', 'adminGetUsers', 'adminUpdateUser', 'adminGetSettings', 'adminUpdateSettings']);
 
 // Support
 lazyExport('./functions/support', ['createSupportTicket', 'adminGetSupportTickets', 'adminRespondToTicket']);

@@ -88,6 +88,12 @@ class _HardwareOSAppState extends State<HardwareOSApp> {
   GoRouter? _router;
 
   @override
+  void dispose() {
+    _router?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [

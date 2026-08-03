@@ -286,15 +286,15 @@ class AuthProvider extends ChangeNotifier {
 
   Future<bool> uploadProfilePicture() async {
     if (_user == null) return false;
-    _state = AuthState.loading;
-    notifyListeners();
+    
+    // Do NOT set _state = AuthState.loading here, as it triggers a global 
+    // router redirect out of the authenticated area.
 
     final url =
         _repo == null ? null : await _repo!.uploadProfilePicture(_user!.uid);
     if (url != null) {
       await reloadUser();
-      _state = AuthState.authenticated;
-      notifyListeners();
+      // State remains AuthState.authenticated
       return true;
     } else {
       _errorMessage = 'Failed to upload profile picture.';

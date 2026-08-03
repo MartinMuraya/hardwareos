@@ -2,7 +2,7 @@ import '../models/plan.dart';
 
 class FeatureAccessService {
   static const Map<String, List<String>> _planFeatures = {
-    'trial': [
+    'free': [
       'inventory',
       'sales',
       'expenses',
@@ -17,6 +17,9 @@ class FeatureAccessService {
       'reports',
       'customers',
       'suppliers',
+      'storefront',
+      'etims',
+      'ai_assistant',
     ],
     'pro': [
       'inventory',
@@ -25,6 +28,8 @@ class FeatureAccessService {
       'reports',
       'customers',
       'suppliers',
+      'storefront',
+      'etims',
       'ai_assistant',
       'whatsapp_integration',
       'advanced_analytics',

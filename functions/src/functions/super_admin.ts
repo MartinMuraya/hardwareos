@@ -47,33 +47,30 @@ export const getPlatformStats = onCall(SECURE_FN_OPTS, async (request) => {
     db().collectionGroup("sales").count().get(),
   ]);
 
-  // Calculate real monthly revenue from completed subscription payments
+  const { AggregateField } = require('firebase-admin/firestore');
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const startOfMonthTimestamp = admin.firestore.Timestamp.fromDate(startOfMonth);
 
-  const [monthlySubsSnap, totalSubsSnap] = await Promise.all([
+  const [monthlySubsSnap, totalSubsSnap, totalCountSnap] = await Promise.all([
     db().collection("subscriptions")
       .where("transactionStatus", "==", "completed")
       .where("paidAt", ">=", startOfMonthTimestamp)
-      .orderBy("paidAt", "desc")
+      .aggregate({ totalRevenue: AggregateField.sum("amount") })
       .get(),
     db().collection("subscriptions")
       .where("transactionStatus", "==", "completed")
+      .aggregate({ totalRevenue: AggregateField.sum("amount") })
+      .get(),
+    db().collection("subscriptions")
+      .where("transactionStatus", "==", "completed")
+      .count()
       .get(),
   ]);
 
-  const monthlyRevenue = monthlySubsSnap.docs.reduce((sum, doc) => {
-    const data = doc.data();
-    return sum + (typeof data.amount === "number" ? data.amount : 0);
-  }, 0);
-
-  const totalRevenue = totalSubsSnap.docs.reduce((sum, doc) => {
-    const data = doc.data();
-    return sum + (typeof data.amount === "number" ? data.amount : 0);
-  }, 0);
-
-  const totalTransactions = totalSubsSnap.docs.length;
+  const monthlyRevenue = (monthlySubsSnap.data().totalRevenue as number) || 0;
+  const totalRevenue = (totalSubsSnap.data().totalRevenue as number) || 0;
+  const totalTransactions = totalCountSnap.data().count;
 
   return {
     totalBusinesses: totalBusinessesSnap.data().count,
@@ -145,5 +142,3 @@ export const adminRevokeSuperAdmin = onCall(SECURE_FN_OPTS, async (request) => {
 
   return { success: true };
 });
-
-

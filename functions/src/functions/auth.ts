@@ -12,6 +12,26 @@ import { assertCanManageRole } from "../middleware/securityMiddleware";
 
 const db = () => admin.firestore();
 
+async function checkRateLimit(ip: string, action: string, maxAttempts: number, windowMs: number) {
+  if (!ip) return; // Fallback if IP is unavailable
+  const ref = db().collection("rateLimits").doc(`${action}_${ip}`);
+  const snap = await ref.get();
+  const now = Date.now();
+  if (snap.exists) {
+    const data = snap.data()!;
+    if (now - data.timestamp < windowMs) {
+      if (data.attempts >= maxAttempts) {
+        throw new HttpsError("resource-exhausted", "Too many requests. Please try again later.");
+      }
+      await ref.update({ attempts: admin.firestore.FieldValue.increment(1) });
+    } else {
+      await ref.set({ attempts: 1, timestamp: now });
+    }
+  } else {
+    await ref.set({ attempts: 1, timestamp: now });
+  }
+}
+
 // -----------------------------------------------------------
 // createBusiness
 // Called once when a new owner registers their hardware store.
@@ -21,6 +41,10 @@ export const createBusiness = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "You must be logged in.");
   }
+
+  // Rate limit by IP: Max 3 business creations per IP per hour
+  const clientIp = request.rawRequest?.ip || "unknown";
+  await checkRateLimit(clientIp, "createBusiness", 3, 60 * 60 * 1000);
 
   const { businessName } = request.data as { businessName: string };
 

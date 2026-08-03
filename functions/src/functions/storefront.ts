@@ -76,6 +76,7 @@ export const getStorefrontCategories = onCall(PUBLIC_FN_OPTS, async (request) =>
   const snap = await db().collection("products")
     .where("businessId", "==", businessId)
     .where("isPublishedOnline", "==", true)
+    .select("category")
     .get();
 
   const categories = new Set<string>();

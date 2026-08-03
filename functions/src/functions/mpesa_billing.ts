@@ -34,8 +34,8 @@ export const createSubscriptionPayment = onCall({ ...SECURE_FN_OPTS, secrets: [m
     throw new HttpsError("invalid-argument", "businessId, planId, and phoneNumber are required");
   }
 
-  // Tenant isolation: caller must be a member of this business
-  await assertBusinessMember(request.auth.uid, businessId);
+  // Tenant isolation: caller must be an owner to manage billing
+  await assertBusinessMember(request.auth.uid, businessId, ["owner"]);
 
   // Validate phone format (e.g. 254712345678)
   const phoneRegex = /^254(7|1|3)\d{8}$/;
@@ -164,11 +164,17 @@ export const mpesaCallback = onRequest({ ...WEBHOOK_FN_OPTS, secrets: [mpesaCons
 
     // Verify Webhook Secret
     const token = req.query.token;
-    let expectedToken = "dummy_secret";
+    let expectedToken = "";
     try {
       expectedToken = mpesaWebhookSecret.value();
     } catch (e) {
       // Secret might not be set in dev
+    }
+
+    if (!expectedToken) {
+      console.error("Webhook secret is not configured. Rejecting request.");
+      res.status(500).send("Configuration Error");
+      return;
     }
 
     if (token !== expectedToken) {
@@ -213,7 +219,7 @@ export const mpesaCallback = onRequest({ ...WEBHOOK_FN_OPTS, secrets: [mpesaCons
       const orderData = orderDoc.data();
 
       // M-9: Idempotency check for online orders
-      if (orderData.status === "pending" || orderData.status === "payment_failed") {
+      if (orderData.status === "paid" || orderData.status === "completed") {
         res.status(200).send("OK");
         return;
       }

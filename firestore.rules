@@ -29,8 +29,9 @@ service cloud.firestore {
 
     // Is caller owner or manager?
     function isManager(businessId) {
-      return isMember(businessId) &&
-        (userDoc().role == 'owner' || userDoc().role == 'manager');
+      let user = userDoc();
+      return isAuth() && user.businessId == businessId &&
+        (user.role == 'owner' || user.role == 'manager');
     }
 
     // =========================================================
@@ -80,6 +81,34 @@ service cloud.firestore {
       allow read: if isAuth() &&
         isMember(resource.data.businessId);
       allow create, update, delete: if false;
+    }
+
+    // =========================================================
+    // HR & PAYROLL
+    // =========================================================
+    match /payroll/{payrollId} {
+      allow read: if isManager(resource.data.businessId) || (isAuth() && resource.data.userId == request.auth.uid);
+      allow write: if false;
+    }
+    match /timesheets/{timesheetId} {
+      allow read: if isManager(resource.data.businessId) || (isAuth() && resource.data.userId == request.auth.uid);
+      allow write: if false;
+    }
+    match /leaves/{leaveId} {
+      allow read: if isManager(resource.data.businessId) || (isAuth() && resource.data.userId == request.auth.uid);
+      allow write: if false;
+    }
+
+    // =========================================================
+    // BILLING & PAYMENTS
+    // =========================================================
+    match /mpesa_requests/{requestId} {
+      allow read: if isMember(resource.data.businessId);
+      allow write: if false;
+    }
+    match /payment_settings/{settingsId} {
+      allow read: if isManager(resource.data.businessId);
+      allow write: if false;
     }
 
     // =========================================================

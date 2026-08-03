@@ -1,3 +1,4 @@
+import * as admin from "firebase-admin";
 import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import {
@@ -8,6 +9,7 @@ import {
   recordPasswordResetRequest,
   writeAuditLog,
 } from "../middleware/securityMiddleware";
+import { rateLimitCheck } from "../middleware/rateLimiter";
 
 export const checkLoginLocked = onCall(SECURE_FN_OPTS, async (request) => {
   const { email } = request.data as { email: string };
@@ -20,6 +22,8 @@ export const checkLoginLocked = onCall(SECURE_FN_OPTS, async (request) => {
 export const reportFailedLogin = onCall(SECURE_FN_OPTS, async (request) => {
   const { email } = request.data as { email: string };
   if (!email) throw new HttpsError("invalid-argument", "Email is required.");
+  
+  await rateLimitCheck(request.rawRequest?.ip || "unknown", "reportFailedLogin", 10, 60);
 
   await recordFailedLogin(email);
 
@@ -44,6 +48,8 @@ export const reportFailedLogin = onCall(SECURE_FN_OPTS, async (request) => {
 export const reportSuccessfulLogin = onCall(SECURE_FN_OPTS, async (request) => {
   const { email } = request.data as { email: string };
   if (!email) throw new HttpsError("invalid-argument", "Email is required.");
+  
+  await rateLimitCheck(request.rawRequest?.ip || "unknown", "reportSuccessfulLogin", 20, 60);
 
   await clearLoginAttempts(email);
   return { recorded: true };
@@ -63,6 +69,19 @@ export const requestPasswordReset = onCall(SECURE_FN_OPTS, async (request) => {
     action: "PASSWORD_RESET_REQUESTED",
     metadata: { email: normalizedEmail },
   });
+
+  try {
+    const link = await admin.auth().generatePasswordResetLink(normalizedEmail);
+    // TODO (SEC-014): Integrate SendGrid or Postmark here to email `link` to the user.
+    // For now, we log it for debugging (or SMS it via Twilio if applicable).
+    console.log(`Password reset link generated for ${normalizedEmail}: ${link}`);
+  } catch (err: any) {
+    // If the user doesn't exist, admin.auth() will throw. We silently ignore it
+    // to prevent email enumeration attacks.
+    if (err.code !== 'auth/user-not-found') {
+      console.error("Error generating password reset link:", err);
+    }
+  }
 
   // Always return the same message regardless of whether the email exists
   return { message: "If an account exists for this email, a reset link has been sent." };

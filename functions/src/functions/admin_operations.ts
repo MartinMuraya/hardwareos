@@ -247,7 +247,7 @@ export const adminGetPlans = onCall(SECURE_FN_OPTS, async (request) => {
       {
         id: "starter",
         name: "Starter Plan",
-        price: 29,
+        price: 2600,
         maxProducts: 500,
         maxUsers: 5,
         reportsEnabled: true,
@@ -259,7 +259,7 @@ export const adminGetPlans = onCall(SECURE_FN_OPTS, async (request) => {
       {
         id: "pro",
         name: "Pro Plan",
-        price: 79,
+        price: 5200,
         maxProducts: -1,
         maxUsers: -1,
         reportsEnabled: true,
@@ -312,13 +312,26 @@ export const adminUpdatePlan = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
   await assertSuperAdmin(request.auth.uid);
 
-  const { id, ...updateFields } = request.data as { id: string;[key: string]: any };
+  const { id, name, price, maxProducts, maxUsers, reportsEnabled, aiEnabled, whatsappEnabled, maxDailySales, trialDays } = request.data as any;
 
   if (!id) {
     throw new HttpsError("invalid-argument", "Plan ID is required");
   }
 
-  await db().collection("plans").doc(id).update(updateFields);
+  const updateFields: any = {};
+  if (name !== undefined) updateFields.name = name;
+  if (price !== undefined) updateFields.price = price;
+  if (maxProducts !== undefined) updateFields.maxProducts = maxProducts;
+  if (maxUsers !== undefined) updateFields.maxUsers = maxUsers;
+  if (reportsEnabled !== undefined) updateFields.reportsEnabled = reportsEnabled;
+  if (aiEnabled !== undefined) updateFields.aiEnabled = aiEnabled;
+  if (whatsappEnabled !== undefined) updateFields.whatsappEnabled = whatsappEnabled;
+  if (maxDailySales !== undefined) updateFields.maxDailySales = maxDailySales;
+  if (trialDays !== undefined) updateFields.trialDays = trialDays;
+
+  if (Object.keys(updateFields).length > 0) {
+    await db().collection("plans").doc(id).update(updateFields);
+  }
 
   return { success: true };
 });

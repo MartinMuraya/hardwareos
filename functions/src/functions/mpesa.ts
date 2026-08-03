@@ -3,18 +3,20 @@
 // ============================================================
 
 import * as admin from "firebase-admin";
-import { SECURE_FN_OPTS } from "../config/functionOptions";
+import { SECURE_FN_OPTS, WEBHOOK_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { onRequest } from "firebase-functions/v2/https";
 
 const db = () => admin.firestore();
+import { mpesaEnvironment, mpesaCallbackUrl, mpesaWebhookSecret } from "../services/mpesaProvider";
 
 // -----------------------------------------------------------
 // Helper: Get Daraja Access Token
 // -----------------------------------------------------------
 async function getDarajaToken(consumerKey: string, consumerSecret: string): Promise<string> {
   const auth = Buffer.from(`${consumerKey}:${consumerSecret}`).toString("base64");
-  const response = await fetch("https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials", {
+  const baseUrl = mpesaEnvironment.value() === "production" ? "https://api.safaricom.co.ke" : "https://sandbox.safaricom.co.ke";
+  const response = await fetch(`${baseUrl}/oauth/v1/generate?grant_type=client_credentials`, {
     headers: { Authorization: `Basic ${auth}` },
   });
   if (!response.ok) {
@@ -62,8 +64,7 @@ export const initiateStkPush = onCall(SECURE_FN_OPTS, async (request) => {
     const timestamp = new Date().toISOString().replace(/[^0-9]/g, "").slice(0, 14);
     const password = Buffer.from(`${shortcode}${passkey}${timestamp}`).toString("base64");
 
-    // We will need a callback URL deployed. For now, we will construct it dynamically.
-    const callbackUrl = `https://${process.env.GCLOUD_PROJECT}.cloudfunctions.net/posMpesaCallback`;
+    const callbackUrl = `${mpesaCallbackUrl.value()}/posMpesaCallback?token=${mpesaWebhookSecret.value()}`;
 
     const payload = {
       BusinessShortCode: shortcode,
@@ -79,7 +80,8 @@ export const initiateStkPush = onCall(SECURE_FN_OPTS, async (request) => {
       TransactionDesc: description || "POS Payment",
     };
 
-    const response = await fetch("https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest", {
+    const baseUrl = mpesaEnvironment.value() === "production" ? "https://api.safaricom.co.ke" : "https://sandbox.safaricom.co.ke";
+    const response = await fetch(`${baseUrl}/mpesa/stkpush/v1/processrequest`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${token}`,
@@ -119,8 +121,15 @@ export const initiateStkPush = onCall(SECURE_FN_OPTS, async (request) => {
 // mpesaCallback
 // Safaricom calls this URL after the user enters their PIN.
 // -----------------------------------------------------------
-export const posMpesaCallback = onRequest(SECURE_FN_OPTS, async (req, res) => {
+export const posMpesaCallback = onRequest(WEBHOOK_FN_OPTS, async (req, res) => {
   try {
+    const token = req.query.token;
+    const expectedToken = mpesaWebhookSecret.value();
+    if (!expectedToken || token !== expectedToken) {
+      res.status(401).send("Unauthorized");
+      return;
+    }
+
     const callbackData = req.body.Body?.stkCallback;
     if (!callbackData) {
       res.status(400).send("Invalid payload");

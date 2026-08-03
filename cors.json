@@ -1,0 +1,7 @@
+[
+  {
+    "origin": ["https://hardwareos-saas.web.app", "https://hardwareos-saas.firebaseapp.com"],
+    "method": ["GET", "HEAD", "PUT", "POST", "DELETE", "OPTIONS"],
+    "maxAgeSeconds": 3600
+  }
+]

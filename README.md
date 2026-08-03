@@ -202,3 +202,8 @@ flutter run -d chrome
 
 ## 📝 License
 This project is proprietary software belonging to Martin Muraya. All rights reserved.
+
+---
+
+## 🔍 Audit Report
+An exhaustive engineering audit has been performed on this repository. See [HARDWAREOS_AUDIT_REPORT.md](./HARDWAREOS_AUDIT_REPORT.md) for detailed findings.

@@ -134,45 +134,45 @@ export async function computeSubscriptionStats(db: FirebaseFirestore.Firestore):
   monthlyRecurringRevenue: number;
   totalRevenue: number;
 }> {
-  const bizSnap = await db.collection("businesses").get();
+  const bizColl = db.collection("businesses");
+  
+  const [
+    totalBusinessesSnap,
+    activeSubscriptionsSnap,
+    trialAccountsSnap,
+    expiredSubscriptionsSnap,
+    gracePeriodAccountsSnap,
+    starterAccountsSnap,
+    proAccountsSnap,
+  ] = await Promise.all([
+    bizColl.count().get(),
+    bizColl.where("subscriptionStatus", "==", "active").count().get(),
+    bizColl.where("subscriptionStatus", "==", "trial").count().get(),
+    bizColl.where("subscriptionStatus", "==", "expired").count().get(),
+    bizColl.where("subscriptionStatus", "==", "grace_period").count().get(),
+    bizColl.where("plan", "==", "starter").count().get(),
+    bizColl.where("plan", "==", "pro").count().get(),
+  ]);
 
-  let totalBusinesses = 0;
-  let activeSubscriptions = 0;
-  let trialAccounts = 0;
-  let expiredSubscriptions = 0;
-  let gracePeriodAccounts = 0;
-  let starterAccounts = 0;
-  let proAccounts = 0;
-  let freeAccounts = 0;
-  let monthlyRecurringRevenue = 0;
+  const totalBusinesses = totalBusinessesSnap.data().count;
+  const activeSubscriptions = activeSubscriptionsSnap.data().count;
+  const trialAccounts = trialAccountsSnap.data().count;
+  const expiredSubscriptions = expiredSubscriptionsSnap.data().count;
+  const gracePeriodAccounts = gracePeriodAccountsSnap.data().count;
+  const starterAccounts = starterAccountsSnap.data().count;
+  const proAccounts = proAccountsSnap.data().count;
+  const freeAccounts = totalBusinesses - starterAccounts - proAccounts;
 
-  for (const doc of bizSnap.docs) {
-    const data = doc.data();
-    totalBusinesses++;
+  const monthlyRecurringRevenue = (starterAccounts * 2600) + (proAccounts * 5200);
 
-    const status = data.subscriptionStatus || "trial";
-    const plan = data.plan || "free";
-
-    if (status === "active") activeSubscriptions++;
-    if (status === "trial") trialAccounts++;
-    if (status === "expired") expiredSubscriptions++;
-    if (status === "grace_period") gracePeriodAccounts++;
-
-    if (plan === "starter") { starterAccounts++; monthlyRecurringRevenue += 2600; }
-    if (plan === "pro") { proAccounts++; monthlyRecurringRevenue += 5200; }
-    if (plan === "free" || plan === "trial") freeAccounts++;
-  }
-
-  // Total revenue from subscriptions collection
-  const subSnap = await db
-    .collection("subscriptions")
+  // Using AggregateField for sum (requires firebase-admin v11.10.0+)
+  const { AggregateField } = require('firebase-admin/firestore');
+  const revenueSnap = await db.collection("subscriptions")
     .where("transactionStatus", "==", "completed")
+    .aggregate({ totalRevenue: AggregateField.sum("amount") })
     .get();
 
-  let totalRevenue = 0;
-  for (const doc of subSnap.docs) {
-    totalRevenue += (doc.data().amount as number) || 0;
-  }
+  const totalRevenue = (revenueSnap.data().totalRevenue as number) || 0;
 
   return {
     totalBusinesses,
