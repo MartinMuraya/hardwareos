@@ -94,9 +94,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
     final width = MediaQuery.of(context).size.width;
     final isWide = width > 900;
     final padding = Responsive.padding(context);
-    
+
     final authProv = context.watch<AuthProvider>();
-    final isManager = authProv.userRole == 'owner' || authProv.userRole == 'manager' || authProv.isSuperAdmin;
+    final isManager = authProv.userRole == 'owner' ||
+        authProv.userRole == 'manager' ||
+        authProv.isSuperAdmin;
 
     return LoadingOverlay(
       isLoading: _loading,
@@ -178,7 +180,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         subtitle: _all.isEmpty
                             ? 'Add your first product to start tracking inventory.'
                             : 'Try a different search or category.',
-                        actionLabel: _all.isEmpty && isManager ? 'Add Product' : null,
+                        actionLabel:
+                            _all.isEmpty && isManager ? 'Add Product' : null,
                         onAction: _all.isEmpty && isManager
                             ? () => context.go('${RoutePaths.inventory}/add')
                             : null,

@@ -30,6 +30,14 @@ Hardware stores in East Africa typically rely on fragmented, legacy workflows: p
 - **Automated Daily End-of-Day (EOD) Reports:** Automated 8:00 PM EAT business summaries detailing Revenue, Profit, M-Pesa vs Cash totals, Low Stock alerts, and Overdue Debts delivered via SMS and WhatsApp.
 - **Server-Side Security & Feature Gating:** Zero direct client database writes. Strict Firestore security rules across 19+ collections and Cloud Function middleware enforcing plan boundaries.
 
+### Real-World Operational Readiness & Impact
+HardwareOS is architected to support **limited pilot deployments (10-50 stores)** with immediate, high-impact results for store owners:
+- **Resilience Against Connectivity Drops:** The Hive-based offline queuing ensures cashiers can continue ringing up sales and scanning barcodes uninterrupted during network outages, syncing transparently when back online.
+- **Enterprise-Grade Ledger Integrity:** By offloading all mutations to server-side Firestore Transactions, HardwareOS ensures true double-entry accounting. This effectively eliminates data drift and employee manipulation, a massive pain point in regional hardware retail.
+- **Tight Role-Based Security:** Strict boundaries prevent cashiers from manipulating stock quantities or bypassing pricing, while managers have full oversight over anomalies via the AI Analyst workflows.
+
+*Note: For a massive scale, market-wide rollout in East Africa, the integration of KRA eTIMS compliance (Kenyan Revenue Authority) and production SMS APIs (Africa's Talking/Twilio) must be finalized.*
+
 ---
 
 ## 📖 Deep System Overview & Architecture

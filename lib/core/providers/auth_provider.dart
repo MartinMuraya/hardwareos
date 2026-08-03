@@ -286,8 +286,8 @@ class AuthProvider extends ChangeNotifier {
 
   Future<bool> uploadProfilePicture() async {
     if (_user == null) return false;
-    
-    // Do NOT set _state = AuthState.loading here, as it triggers a global 
+
+    // Do NOT set _state = AuthState.loading here, as it triggers a global
     // router redirect out of the authenticated area.
 
     final url =

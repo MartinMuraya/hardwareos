@@ -335,7 +335,8 @@ class AppRouter {
                     GoRoute(
                       path: 'ledger',
                       builder: (_, state) {
-                        final authProv = Provider.of<AuthProvider>(context, listen: false);
+                        final authProv =
+                            Provider.of<AuthProvider>(context, listen: false);
                         return ProductLedgerScreen(
                           productId: state.pathParameters['productId']!,
                           productName: 'Ledger',

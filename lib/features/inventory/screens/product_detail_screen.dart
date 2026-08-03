@@ -155,7 +155,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     final theme = Theme.of(context);
     final p = _product;
     final authProv = context.watch<AuthProvider>();
-    final isManager = authProv.userRole == 'owner' || authProv.userRole == 'manager' || authProv.isSuperAdmin;
+    final isManager = authProv.userRole == 'owner' ||
+        authProv.userRole == 'manager' ||
+        authProv.isSuperAdmin;
 
     return LoadingOverlay(
       isLoading: _loading,
@@ -235,7 +237,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 ),
                               _StockCard(product: p),
                               const SizedBox(height: 16),
-                              _DetailCard(product: p, theme: theme, isManager: isManager),
+                              _DetailCard(
+                                  product: p,
+                                  theme: theme,
+                                  isManager: isManager),
                             ]),
                       ),
                     ),
@@ -303,7 +308,8 @@ class _DetailCard extends StatelessWidget {
   final Product product;
   final ThemeData theme;
   final bool isManager;
-  const _DetailCard({required this.product, required this.theme, required this.isManager});
+  const _DetailCard(
+      {required this.product, required this.theme, required this.isManager});
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.all(20),
