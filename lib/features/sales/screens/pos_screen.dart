@@ -18,7 +18,6 @@ import '../../../core/services/product_cache_service.dart';
 import '../services/offline_sales_queue.dart';
 import '../../../core/utils/barcode_listener.dart';
 import '../../../core/services/web_serial_service.dart';
-import 'offline_queue_screen.dart';
 import 'package:flutter/services.dart';
 
 class POSScreen extends StatefulWidget {

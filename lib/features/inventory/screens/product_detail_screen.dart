@@ -7,7 +7,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/responsive.dart';
 import '../../../core/widgets/loading_overlay.dart';
 import '../../../core/services/barcode_print_service.dart';
-import '../../../core/services/barcode_print_service.dart';
 import 'package:go_router/go_router.dart';
 
 class ProductDetailScreen extends StatefulWidget {
