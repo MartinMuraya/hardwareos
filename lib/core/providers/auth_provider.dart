@@ -92,7 +92,11 @@ class AuthProvider extends ChangeNotifier {
       _state = AuthState.loading;
       notifyListeners();
       // Ensure we have the latest emailVerified status
-      await user.reload();
+      try {
+        await user.reload();
+      } catch (e) {
+        debugPrint('Error reloading user: $e');
+      }
       _user = _auth?.currentUser;
       await _loadUserProfile();
     }
@@ -323,6 +327,12 @@ class AuthProvider extends ChangeNotifier {
     if (_repo != null) await _repo!.signOut();
     _user = null;
     _state = AuthState.unauthenticated;
+    _isRegistered = false;
+    _isSuperAdmin = false;
+    _businessStatus = null;
+    _userProfile = null;
+    _errorMessage = null;
+    _profileLoadError = null;
     notifyListeners();
   }
 

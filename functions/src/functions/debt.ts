@@ -6,6 +6,7 @@ import * as admin from "firebase-admin";
 import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
+import { sanitizeInput } from "../middleware/securityMiddleware";
 
 const db = () => admin.firestore();
 
@@ -124,9 +125,7 @@ export const createCreditSale = onCall(SECURE_FN_OPTS, async (request) => {
     let timsQrCode: string | null = null;
 
     if (taxSettings.eTimsEnabled) {
-      // Simulate calling the KRA OSC API
-      timsCuInvoiceNumber = `CU${Math.floor(Math.random() * 100000000).toString().padStart(8, '0')}`;
-      timsQrCode = `https://etims.kra.go.ke/verify/${timsCuInvoiceNumber}?amt=${total.toFixed(2)}`;
+      // Intentionally left null until real KRA OSC integration
     }
 
     // 3. Create sale document
@@ -143,7 +142,7 @@ export const createCreditSale = onCall(SECURE_FN_OPTS, async (request) => {
       paymentMethod: outstanding > 0 ? "credit" : "cash",
       amountPaid: Number(paid.toFixed(2)),
       outstanding: Number(outstanding.toFixed(2)),
-      note: note || "",
+      note: sanitizeInput(note),
       timsCuInvoiceNumber,
       timsQrCode,
       createdBy: request.auth!.uid,
@@ -152,7 +151,7 @@ export const createCreditSale = onCall(SECURE_FN_OPTS, async (request) => {
 
     let pointsEarned = 0;
     if (customer.isFundi) {
-      pointsEarned = total / 100;
+      pointsEarned = Number((total / 100).toFixed(2));
       Object.assign(salePayload, { pointsEarned, pointsRedeemed: pointsRedeemed || 0 });
     }
 
@@ -197,6 +196,16 @@ export const createCreditSale = onCall(SECURE_FN_OPTS, async (request) => {
     // 6. Create debt transaction
     const prevBalance = customer.currentBalance || 0;
     const newBalance = prevBalance + outstanding;
+    
+    // Check credit limit
+    const creditLimit = customer.creditLimit || 0;
+    if (creditLimit > 0 && newBalance > creditLimit) {
+      throw new HttpsError(
+        "failed-precondition", 
+        `This sale would exceed the customer's credit limit of KES ${creditLimit.toFixed(2)}.`
+      );
+    }
+    
     const txRef = db().collection("debtTransactions").doc();
     txn.set(txRef, {
       id: txRef.id,
@@ -221,13 +230,13 @@ export const createCreditSale = onCall(SECURE_FN_OPTS, async (request) => {
 
     const custUpdate: any = {
       currentBalance: Number(newBalance.toFixed(2)),
-      totalDebt: Number(newBalance.toFixed(2)),
+      totalDebt: admin.firestore.FieldValue.increment(Number(outstanding.toFixed(2))),
       paymentDueDate: dueDateTimestamp,
       updatedAt: now,
     };
 
     if (customer.isFundi) {
-      const newLoyaltyPoints = (customer.loyaltyPoints || 0) - (pointsRedeemed || 0) + (total / 100);
+      const newLoyaltyPoints = Number(((customer.loyaltyPoints || 0) - (pointsRedeemed || 0) + pointsEarned).toFixed(2));
       if (newLoyaltyPoints < 0) {
         throw new HttpsError("invalid-argument", "Not enough loyalty points.");
       }

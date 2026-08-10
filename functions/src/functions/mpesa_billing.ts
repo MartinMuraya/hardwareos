@@ -1,7 +1,7 @@
 import * as admin from "firebase-admin";
 import { SECURE_FN_OPTS, WEBHOOK_FN_OPTS } from "../config/functionOptions";
 import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
-import { MpesaProvider, mpesaConsumerKey, mpesaConsumerSecret, mpesaPasskey, mpesaWebhookSecret } from "../services/mpesaProvider";
+import { MpesaProvider, mpesaConsumerKey, mpesaConsumerSecret, mpesaPasskey, mpesaWebhookSecret, mpesaEnvironment } from "../services/mpesaProvider";
 import { assertBusinessMember } from "../middleware/checkPlanLimits";
 import { rateLimitCheck } from "../middleware/rateLimiter";
 
@@ -156,11 +156,13 @@ export const mpesaCallback = onRequest({ ...WEBHOOK_FN_OPTS, secrets: [mpesaCons
       return;
     }
 
-    // Optional: Basic IP Whitelisting for Safaricom (sandbox/prod ranges)
-    // 196.201.214.*, 196.201.213.* etc. In production, uncomment if strict isolation is needed.
-    // if (!clientIp.startsWith("196.201.") && clientIp !== "unknown") {
-    //   console.warn("M-Pesa callback from unrecognized IP:", clientIp);
-    // }
+    // M-Pesa IP Whitelisting (C-06)
+    // Safaricom IPs start with 196.201.
+    if (!clientIp.startsWith("196.201.") && clientIp !== "unknown" && mpesaEnvironment.value() === "production") {
+      console.warn("M-Pesa callback from unauthorized IP in production:", clientIp);
+      res.status(403).send("Forbidden");
+      return;
+    }
 
     // Verify Webhook Secret
     const token = req.query.token;
@@ -269,12 +271,23 @@ export const mpesaCallback = onRequest({ ...WEBHOOK_FN_OPTS, secrets: [mpesaCons
 
     // Process via MpesaProvider
     let mpesaReceipt = "";
+    let receivedAmount = 0;
     if (ResultCode === 0) {
       const metadataItems = stkCallback?.CallbackMetadata?.Item || [];
       for (const item of metadataItems) {
         if (item.Name === "MpesaReceiptNumber") {
           mpesaReceipt = item.Value;
         }
+        if (item.Name === "Amount") {
+          receivedAmount = Number(item.Value);
+        }
+      }
+      
+      // Amount Validation (C-07)
+      if (receivedAmount < subData.amount) {
+        console.error(`Amount mismatch: expected ${subData.amount}, received ${receivedAmount}`);
+        res.status(400).send("Amount mismatch");
+        return;
       }
     }
 

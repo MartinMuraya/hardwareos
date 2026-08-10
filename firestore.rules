@@ -329,6 +329,18 @@ service cloud.firestore {
       allow read: if isOwner(resource.data.businessId);
       allow create, update, delete: if false;
     }
+    match /journal_entries/{entryId} {
+      allow read: if isOwner(resource.data.businessId);
+      allow create, update, delete: if false;
+    }
+    match /journal_lines/{lineId} {
+      allow read: if isOwner(resource.data.businessId);
+      allow create, update, delete: if false;
+    }
+    match /eodReportsHistory/{reportId} {
+      allow read: if isOwner(resource.data.businessId);
+      allow create, update, delete: if false;
+    }
 
     // =========================================================
     // SUPPLIERS — Manager can read. No direct client writes.

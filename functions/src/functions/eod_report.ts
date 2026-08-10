@@ -3,6 +3,7 @@ import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember } from "../middleware/checkPlanLimits";
+import * as nodemailer from "nodemailer";
 
 const db = () => admin.firestore();
 
@@ -97,16 +98,49 @@ ${lowStockItems.slice(0, 3).map((item) => `  - ${item}`).join("\n") || "  None"}
 - HardwareOS POS
 `.trim();
 
-      // Save notification record to history
+    // Save notification record to history
       await db().collection("eodReportsHistory").add({
         businessId: bizId,
         reportText: reportMsg,
-        recipientPhone: phone,
-        channel: bizData.eodReportChannel || "sms",
+        recipientEmail: bizData.eodReportEmail || "owner",
+        channel: "email",
         sentAt: admin.firestore.FieldValue.serverTimestamp(),
       });
 
-      console.log(`EOD Report logged for ${bizData.name} (${phone})`);
+      // Send via Email (Free)
+      try {
+        const transporter = nodemailer.createTransport({
+          host: process.env.SMTP_HOST || "smtp.gmail.com",
+          port: parseInt(process.env.SMTP_PORT || "587"),
+          secure: process.env.SMTP_SECURE === "true",
+          auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
+          },
+        });
+
+        // Get owner email
+        let recipientEmail = bizData.eodReportEmail;
+        if (!recipientEmail) {
+          const ownerDoc = await db().collection("users").doc(bizData.ownerId).get();
+          recipientEmail = ownerDoc.data()?.email;
+        }
+
+        if (recipientEmail && process.env.SMTP_USER && process.env.SMTP_PASS) {
+          await transporter.sendMail({
+            from: `"HardwareOS System" <${process.env.SMTP_USER}>`,
+            to: recipientEmail,
+            subject: `[HardwareOS] Daily EOD Summary - ${now.toISOString().split("T")[0]}`,
+            text: reportMsg,
+          });
+          console.log(`EOD Email sent to ${bizData.name} (${recipientEmail})`);
+        } else {
+          console.warn(`Could not send EOD Email for ${bizData.name}: Missing email or SMTP config.`);
+        }
+      } catch (emailErr) {
+        console.error(`Failed sending EOD email to ${bizData.name}:`, emailErr);
+      }
+
     } catch (err) {
       console.error(`Failed generating EOD report for business ${bizId}:`, err);
     }
@@ -120,11 +154,10 @@ ${lowStockItems.slice(0, 3).map((item) => `  - ${item}`).join("\n") || "  None"}
 export const updateEodReportSettings = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
-  const { businessId, enabled, phone, channel } = request.data as {
+  const { businessId, enabled, email } = request.data as {
     businessId: string;
     enabled: boolean;
-    phone: string;
-    channel: "sms" | "whatsapp" | "both";
+    email?: string;
   };
 
   if (!businessId) throw new HttpsError("invalid-argument", "businessId required.");
@@ -133,8 +166,7 @@ export const updateEodReportSettings = onCall(SECURE_FN_OPTS, async (request) =>
 
   await db().collection("businesses").doc(businessId).update({
     eodReportEnabled: !!enabled,
-    eodReportPhone: phone || "",
-    eodReportChannel: channel || "sms",
+    eodReportEmail: email || "",
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 

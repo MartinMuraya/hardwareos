@@ -8,7 +8,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as nodemailer from "nodemailer";
 import { TRIAL_DAYS } from "../config/planLimits";
 import { assertBusinessMember, assertUserLimit } from "../middleware/checkPlanLimits";
-import { assertCanManageRole } from "../middleware/securityMiddleware";
+import { assertCanManageRole, sanitizeInput } from "../middleware/securityMiddleware";
 
 const db = () => admin.firestore();
 
@@ -54,49 +54,49 @@ export const createBusiness = onCall(SECURE_FN_OPTS, async (request) => {
 
   const uid = request.auth.uid;
 
-  // Check if user already belongs to a business
-  const existingUser = await db().collection("users").doc(uid).get();
-  if (existingUser.exists) {
-    throw new HttpsError("already-exists", "You are already registered to a business.");
+  const cleanBusinessName = sanitizeInput(businessName);
+  if (cleanBusinessName.length < 2) {
+    throw new HttpsError("invalid-argument", "Business name must be at least 2 characters.");
   }
 
   const trialEndsAt = new Date();
   trialEndsAt.setDate(trialEndsAt.getDate() + TRIAL_DAYS);
 
-  const batch = db().batch();
-
-  // Create business document
   const businessRef = db().collection("businesses").doc();
-  const baseSlug = businessName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const baseSlug = cleanBusinessName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   const tenantSlug = `${baseSlug}-${businessRef.id.substring(0, 6)}`;
-
-  batch.set(businessRef, {
-    id: businessRef.id,
-    name: businessName.trim(),
-    tenantSlug,
-    plan: "free",
-    status: "pending",
-    active: false,
-    subscriptionStatus: "trial",
-    trialEndsAt: admin.firestore.Timestamp.fromDate(trialEndsAt),
-    subscriptionEndsAt: null,
-    ownerId: uid,
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-  });
-
-  // Create owner user profile
   const userRef = db().collection("users").doc(uid);
-  batch.set(userRef, {
-    uid,
-    businessId: businessRef.id,
-    role: "owner",
-    displayName: request.auth.token.name || "",
-    email: request.auth.token.email || "",
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-  });
 
-  await batch.commit();
+  await db().runTransaction(async (txn) => {
+    const existingUser = await txn.get(userRef);
+    if (existingUser.exists) {
+      throw new HttpsError("already-exists", "You are already registered to a business.");
+    }
+
+    txn.set(businessRef, {
+      id: businessRef.id,
+      name: cleanBusinessName,
+      tenantSlug,
+      plan: "free",
+      status: "pending",
+      active: false,
+      subscriptionStatus: "trial",
+      trialEndsAt: admin.firestore.Timestamp.fromDate(trialEndsAt),
+      subscriptionEndsAt: null,
+      ownerId: uid,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    txn.set(userRef, {
+      uid,
+      businessId: businessRef.id,
+      role: "owner",
+      displayName: request.auth!.token.name || "",
+      email: request.auth!.token.email || "",
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  });
 
   try {
     const transporter = nodemailer.createTransport({
@@ -179,7 +179,7 @@ export const createBusiness = onCall(SECURE_FN_OPTS, async (request) => {
 
   return {
     businessId: businessRef.id,
-    businessName: businessName.trim(),
+    businessName: cleanBusinessName,
     plan: "free",
     status: "pending",
     subscriptionStatus: "trial",

@@ -12,7 +12,7 @@ export const mpesaConsumerSecret = defineSecret("MPESA_CONSUMER_SECRET");
 export const mpesaPasskey = defineSecret("MPESA_PASSKEY");
 export const mpesaShortcode = defineString("MPESA_SHORTCODE", { default: "174379" });
 export const mpesaCallbackUrl = defineString("MPESA_CALLBACK_URL", { default: "https://mpesacallback-us-central1.run.app" });
-export const mpesaEnvironment = defineString("MPESA_ENVIRONMENT", { default: "sandbox" });
+export const mpesaEnvironment = defineString("MPESA_ENVIRONMENT", { default: "production" });
 export const mpesaWebhookSecret = defineSecret("MPESA_WEBHOOK_SECRET");
 
 export class MpesaProvider implements PaymentProvider {

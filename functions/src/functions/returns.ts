@@ -58,8 +58,7 @@ export const processReturn = onCall(SECURE_FN_OPTS, async (request) => {
     }
 
     // 2. Validate return quantities against original sale
-    const saleItems: { productId: string; name: string; quantity: number; sellingPrice: number }[] = sale.items || [];
-    const subtotal = 0;
+    const saleItems: { productId: string; name: string; quantity: number; returnedQuantity?: number; sellingPrice: number }[] = sale.items || [];
     let refundAmount = 0;
     const validatedItems: any[] = [];
 
@@ -68,10 +67,12 @@ export const processReturn = onCall(SECURE_FN_OPTS, async (request) => {
       if (!origItem) {
         throw new HttpsError("not-found", `Item "${returnItem.name}" not found in original sale.`);
       }
-      if (returnItem.quantity <= 0 || returnItem.quantity > origItem.quantity) {
+      
+      const availableToReturn = origItem.quantity - (origItem.returnedQuantity || 0);
+      if (returnItem.quantity <= 0 || returnItem.quantity > availableToReturn) {
         throw new HttpsError(
           "invalid-argument",
-          `Invalid return quantity for "${origItem.name}". Sold: ${origItem.quantity}, Returning: ${returnItem.quantity}.`
+          `Invalid return quantity for "${origItem.name}". Available to return: ${availableToReturn}, Returning: ${returnItem.quantity}.`
         );
       }
       refundAmount += returnItem.sellingPrice * returnItem.quantity;
@@ -98,7 +99,6 @@ export const processReturn = onCall(SECURE_FN_OPTS, async (request) => {
       customerId,
       customerName,
       items: validatedItems,
-      subtotal: Number(subtotal.toFixed(2)),
       refundAmount: Number(refundAmount.toFixed(2)),
       reason,
       notes: notes?.trim() || "",
@@ -129,8 +129,20 @@ export const processReturn = onCall(SECURE_FN_OPTS, async (request) => {
       });
     }
 
-    // 5. Update sale — mark as having returns
+    // 5. Update sale — mark as having returns and track returned quantities
+    const updatedSaleItems = saleItems.map(si => {
+      const returned = validatedItems.find(vi => vi.productId === si.productId);
+      if (returned) {
+        return {
+          ...si,
+          returnedQuantity: (si.returnedQuantity || 0) + returned.quantity
+        };
+      }
+      return si;
+    });
+
     txn.update(db().collection("sales").doc(saleId), {
+      items: updatedSaleItems,
       totalReturned: admin.firestore.FieldValue.increment(refundAmount),
       updatedAt: now,
     });

@@ -11,6 +11,7 @@ import {
   assertActiveSubscription,
   assertProductLimit,
 } from "../middleware/checkPlanLimits";
+import { sanitizeInput } from "../middleware/securityMiddleware";
 
 const db = () => admin.firestore();
 
@@ -77,18 +78,18 @@ export const createProduct = onCall(SECURE_FN_OPTS, async (request) => {
   batch.set(productRef, {
     id: productRef.id,
     businessId,
-    name: name.trim(),
-    sku: sku?.trim() || "",
-    category: category?.trim() || "General",
+    name: sanitizeInput(name),
+    sku: sanitizeInput(sku) || "",
+    category: sanitizeInput(category) || "General",
     quantity: Number(quantity),
     costPrice: Number(costPrice),
     sellingPrice: Number(sellingPrice),
     reorderLevel: Number(reorderLevel) || 5,
     barcodes: request.data.barcodes || [],
-    branchId: request.data.branchId?.trim() || null,
+    branchId: sanitizeInput(request.data.branchId) || null,
     isPublishedOnline: !!isPublishedOnline,
     images: images || [],
-    description: description?.trim() || "",
+    description: sanitizeInput(description) || "",
     trackSerials: request.data.trackSerials || false,
     trackBatches: request.data.trackBatches || false,
     createdAt: now,
@@ -166,37 +167,45 @@ export const addStock = onCall(SECURE_FN_OPTS, async (request) => {
   await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager"]);
   await assertActiveSubscription(businessId);
 
-  // Verify product belongs to business
-  const productSnap = await db().collection("products").doc(productId).get();
-  if (!productSnap.exists || productSnap.data()!.businessId !== businessId) {
-    throw new HttpsError("not-found", "Product not found.");
-  }
+  let movementId = "";
 
-  const batch = db().batch();
-  const now = admin.firestore.FieldValue.serverTimestamp();
+  await db().runTransaction(async (txn) => {
+    const productRef = db().collection("products").doc(productId);
+    const productSnap = await txn.get(productRef);
+    
+    if (!productSnap.exists) {
+      throw new HttpsError("not-found", "Product not found.");
+    }
+    
+    if (productSnap.data()!.businessId !== businessId) {
+      throw new HttpsError("permission-denied", "Product does not belong to your business.");
+    }
 
-  // Increment stock
-  batch.update(db().collection("products").doc(productId), {
-    quantity: admin.firestore.FieldValue.increment(Number(quantity)),
-    updatedAt: now,
+    const now = admin.firestore.FieldValue.serverTimestamp();
+
+    // Increment stock
+    txn.update(productRef, {
+      quantity: admin.firestore.FieldValue.increment(Number(quantity)),
+      updatedAt: now,
+    });
+
+    // Log movement
+    const movRef = db().collection("stockMovements").doc();
+    movementId = movRef.id;
+    txn.set(movRef, {
+      id: movRef.id,
+      businessId,
+      productId,
+      type: "IN",
+      quantity: Number(quantity),
+      reason: sanitizeInput(reason) || "Stock addition",
+      referenceId: sanitizeInput(referenceId) || null,
+      branchId: sanitizeInput(branchId) || productSnap.data()!.branchId || null,
+      createdAt: now,
+    });
   });
 
-  // Log movement
-  const movRef = db().collection("stockMovements").doc();
-  batch.set(movRef, {
-    id: movRef.id,
-    businessId,
-    productId,
-    type: "IN",
-    quantity: Number(quantity),
-    reason: reason || "Stock addition",
-    referenceId: referenceId || null,
-    branchId: branchId?.trim() || productSnap.data()!.branchId || null,
-    createdAt: now,
-  });
-
-  await batch.commit();
-  return { success: true, movementId: movRef.id };
+  return { success: true, movementId };
 });
 
 // -----------------------------------------------------------

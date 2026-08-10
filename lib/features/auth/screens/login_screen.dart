@@ -85,7 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: theme.dividerColor),
                   ),
-                  child: _isSubmitting
+                  child: (_isSubmitting || auth.isLoading)
                       ? Padding(
                           padding: const EdgeInsets.symmetric(vertical: 48),
                           child: Column(

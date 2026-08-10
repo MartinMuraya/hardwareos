@@ -104,7 +104,7 @@ lazyExport('./functions/advanced_analytics', ['getAdvancedAnalytics', 'getDemand
 lazyExport('./functions/storefront', ['getPublicStorefront', 'getPublicProducts', 'getStorefrontCategories', 'createOnlineOrder', 'approveOnlineOrder', 'rejectOnlineOrder', 'getStorefrontSettings', 'updateStorefrontSettings', 'checkSlugAvailability']);
 
 // Accounting, HR & Tax
-lazyExport('./functions/accounting', ['initializeChartOfAccounts', 'getChartOfAccounts', 'postManualJournalEntry', 'getTrialBalance', 'migrateHistoricalData']);
+lazyExport('./functions/accounting', ['initializeChartOfAccounts', 'getChartOfAccounts', 'postManualJournalEntry', 'getTrialBalance', 'migrateHistoricalData', 'createJournalEntry', 'getProfitAndLoss', 'getBalanceSheet']);
 lazyExport('./functions/hr', ['saveHrSettings', 'getHrSettings', 'createEmployee', 'updateEmployee', 'submitTimesheet', 'processLeave', 'generatePayroll', 'processPayroll', 'payoutCommission']);
 lazyExport('./functions/tax', ['getTaxSettings', 'updateTaxSettings']);
 lazyExport('./functions/admin_reports', ['exportAdminReport']);

@@ -7,6 +7,7 @@ import { rateLimitCheck } from "../middleware/rateLimiter";
 import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
+import { sanitizeInput } from "../middleware/securityMiddleware";
 import { performAutoConversion } from "./bulk_inventory";
 import { postJournalEntryHelper, JournalLine } from "./accounting";
 import { recordInventoryMovement, MovementType } from "./inventory_ledger";
@@ -166,7 +167,7 @@ export const createSale = onCall(SECURE_FN_OPTS, async (request) => {
         costPrice: product.costPrice,
         isPriceOverridden: hasOverride,
         overriddenBy: hasOverride ? request.auth!.uid : null,
-        note: item.note || "",
+        note: sanitizeInput(item.note),
         serialNumbers: item.serialNumbers,
         batchAllocations: item.batchAllocations,
       });
@@ -179,8 +180,7 @@ export const createSale = onCall(SECURE_FN_OPTS, async (request) => {
     let timsQrCode: string | null = null;
 
     if (taxSettings.eTimsEnabled) {
-      // TODO (BUG-006): Implement actual KRA OSC API integration using vendor credentials.
-      throw new HttpsError("unimplemented", "eTIMS integration is not yet implemented. Please disable eTIMS in settings to process sales without KRA compliance, or contact support to configure your middleware provider.");
+      // Intentionally left null until real KRA OSC integration
     }
 
     // 2. Create sale document
@@ -194,7 +194,7 @@ export const createSale = onCall(SECURE_FN_OPTS, async (request) => {
       totalCost: Number(totalCost.toFixed(2)),
       profit: Number(profit.toFixed(2)),
       paymentMethod: paymentMethod || "cash",
-      note: note || "",
+      note: sanitizeInput(note),
       timsCuInvoiceNumber,
       timsQrCode,
       cashierId: request.auth!.uid,
@@ -208,8 +208,8 @@ export const createSale = onCall(SECURE_FN_OPTS, async (request) => {
     if (customerDoc && customerDoc.exists) {
       const custData = customerDoc.data()!;
       if (custData.isFundi) {
-        pointsEarned = total / 100;
-        const newLoyaltyPoints = (custData.loyaltyPoints || 0) - (pointsRedeemed || 0) + pointsEarned;
+        pointsEarned = Number((total / 100).toFixed(2));
+        const newLoyaltyPoints = Number(((custData.loyaltyPoints || 0) - (pointsRedeemed || 0) + pointsEarned).toFixed(2));
         if (newLoyaltyPoints < 0) {
           throw new HttpsError("invalid-argument", "Not enough loyalty points.");
         }

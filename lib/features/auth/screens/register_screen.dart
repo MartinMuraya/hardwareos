@@ -129,7 +129,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             emailCtrl: _emailCtrl,
                             passCtrl: _passCtrl,
                             obscure: _obscure,
-                            isSubmitting: _isSubmitting,
+                            isSubmitting: _isSubmitting || auth.isLoading,
                             error: auth.errorMessage,
                             onToggleObscure: () =>
                                 setState(() => _obscure = !_obscure),
@@ -138,7 +138,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           )
                         : _BusinessStep(
                             bizNameCtrl: _bizNameCtrl,
-                            isSubmitting: _isSubmitting,
+                            isSubmitting: _isSubmitting || auth.isLoading,
                             error: auth.errorMessage,
                             onSubmit: _createBusiness,
                           ),

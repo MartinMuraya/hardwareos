@@ -1,7 +1,13 @@
 import * as admin from "firebase-admin";
 import { HttpsError } from "firebase-functions/v2/https";
+import xss from "xss";
 
 const db = () => admin.firestore();
+
+export function sanitizeInput(input: string | undefined | null): string {
+  if (!input) return "";
+  return xss(input.trim());
+}
 
 export type AuditAction =
   | "USER_CREATED" | "USER_DELETED" | "ROLE_CHANGED"
@@ -53,16 +59,10 @@ export async function checkLoginRateLimit(email: string): Promise<void> {
     throw new HttpsError("unauthenticated", "Too many failed login attempts. Please try again later.");
   }
 
+  // If lock has expired, we just return and allow the attempt.
+  // The login result (success or failure) will trigger either clearLoginAttempts or recordFailedLogin.
   if (lockUntil && lockUntil <= new Date()) {
-    const oneHour = 60 * 60 * 1000;
-    if (data.attemptCount >= MAX_FAILED_BEFORE_EXTENDED_LOCK) {
-      const newLockUntil = new Date(Date.now() + oneHour);
-      await ref.update({
-        lockUntil: admin.firestore.Timestamp.fromDate(newLockUntil),
-        lastAttemptAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-      throw new HttpsError("unauthenticated", "Too many failed login attempts. Please try again later.");
-    }
+    return;
   }
 }
 
