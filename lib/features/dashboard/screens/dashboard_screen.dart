@@ -424,47 +424,53 @@ class _KpiGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    final cols = width > 900 ? 4 : (width > 600 ? 2 : 1);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final cols = width > 900 ? 4 : (width > 550 ? 2 : 1);
+        final ratio =
+            width > 900 ? 1.5 : (width > 550 ? 1.6 : (width < 380 ? 2.0 : 2.5));
 
-    return GridView.count(
-      crossAxisCount: cols,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      childAspectRatio: cols == 1 ? 2.2 : 1.6,
-      children: [
-        KpiCard(
-          label: 'Revenue',
-          value: fmt.format(kpis['todayRevenue'] ?? 0),
-          icon: Icons.trending_up_rounded,
-          iconColor: AppColors.chartGreen,
-          trend: null,
-        ),
-        KpiCard(
-          label: 'Gross Profit',
-          value: fmt.format(kpis['todayProfit'] ?? 0),
-          icon: Icons.account_balance_wallet_rounded,
-          iconColor: AppColors.accent,
-          trend: null,
-        ),
-        KpiCard(
-          label: 'Expenses',
-          value: fmt.format(kpis['todayExpenses'] ?? 0),
-          icon: Icons.receipt_rounded,
-          iconColor: AppColors.chartRed,
-          trend: null,
-        ),
-        KpiCard(
-          label: 'Net Profit',
-          value: fmt.format(kpis['netProfit'] ?? 0),
-          icon: Icons.savings_rounded,
-          iconColor: AppColors.chartBlue,
-          isHighlighted: (kpis['netProfit'] ?? 0) > 0,
-          trend: null,
-        ),
-      ],
+        return GridView.count(
+          crossAxisCount: cols,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: ratio,
+          children: [
+            KpiCard(
+              label: 'Revenue',
+              value: fmt.format(kpis['todayRevenue'] ?? 0),
+              icon: Icons.trending_up_rounded,
+              iconColor: AppColors.chartGreen,
+              trend: null,
+            ),
+            KpiCard(
+              label: 'Gross Profit',
+              value: fmt.format(kpis['todayProfit'] ?? 0),
+              icon: Icons.account_balance_wallet_rounded,
+              iconColor: AppColors.accent,
+              trend: null,
+            ),
+            KpiCard(
+              label: 'Expenses',
+              value: fmt.format(kpis['todayExpenses'] ?? 0),
+              icon: Icons.receipt_rounded,
+              iconColor: AppColors.chartRed,
+              trend: null,
+            ),
+            KpiCard(
+              label: 'Net Profit',
+              value: fmt.format(kpis['netProfit'] ?? 0),
+              icon: Icons.savings_rounded,
+              iconColor: AppColors.chartBlue,
+              isHighlighted: (kpis['netProfit'] ?? 0) > 0,
+              trend: null,
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -472,36 +478,46 @@ class _KpiGrid extends StatelessWidget {
 class _QuickActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final isMobile = Responsive.isMobile(context);
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: [
-        _ActionButton(
-          icon: Icons.point_of_sale_rounded,
-          label: 'New Sale',
-          color: AppColors.accent,
-          onTap: () => context.go(RoutePaths.sales),
-        ),
-        _ActionButton(
-          icon: Icons.add_box_rounded,
-          label: 'Add Product',
-          color: AppColors.chartBlue,
-          onTap: () => context.go('${RoutePaths.inventory}/add'),
-        ),
-        _ActionButton(
-          icon: Icons.receipt_long_rounded,
-          label: 'Add Expense',
-          color: AppColors.chartRed,
-          onTap: () => context.go('${RoutePaths.expenses}/add'),
-        ),
-      ]
-          .map((btn) => isMobile
-              ? SizedBox(
-                  width: (MediaQuery.of(context).size.width - 24 - 24 - 24) / 3,
-                  child: btn)
-              : SizedBox(width: 160, child: btn))
-          .toList(),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final isMobile = width < 600;
+        final itemWidth = isMobile ? (width - 24) / 3 : 160.0;
+
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            SizedBox(
+              width: itemWidth,
+              child: _ActionButton(
+                icon: Icons.point_of_sale_rounded,
+                label: 'New Sale',
+                color: AppColors.accent,
+                onTap: () => context.go(RoutePaths.sales),
+              ),
+            ),
+            SizedBox(
+              width: itemWidth,
+              child: _ActionButton(
+                icon: Icons.add_box_rounded,
+                label: 'Add Product',
+                color: AppColors.chartBlue,
+                onTap: () => context.go('${RoutePaths.inventory}/add'),
+              ),
+            ),
+            SizedBox(
+              width: itemWidth,
+              child: _ActionButton(
+                icon: Icons.receipt_long_rounded,
+                label: 'Add Expense',
+                color: AppColors.chartRed,
+                onTap: () => context.go('${RoutePaths.expenses}/add'),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -532,11 +548,14 @@ class _ActionButton extends StatelessWidget {
             border: Border.all(color: color.withValues(alpha: 0.25)),
           ),
           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Icon(icon, color: color, size: 26),
-            const SizedBox(height: 8),
-            Text(label,
-                style: TextStyle(
-                    color: color, fontSize: 12, fontWeight: FontWeight.w600)),
+            Icon(icon, color: color, size: 24),
+            const SizedBox(height: 6),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(label,
+                  style: TextStyle(
+                      color: color, fontSize: 12, fontWeight: FontWeight.w600)),
+            ),
           ]),
         ),
       ),
@@ -554,37 +573,69 @@ class _InventoryReturnsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final width = MediaQuery.of(context).size.width;
-    final isCompact = width < 600;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 600;
 
-    return Row(children: [
-      if (adjStats != null) ...[
-        Expanded(
-          child: _MiniCard(
-            icon: Icons.balance_rounded,
-            iconColor: AppColors.warning,
-            value: '${adjStats!['totalAdjustmentsToday'] ?? 0}',
-            label: 'Adjustments',
-            subtitle: fmt.format(adjStats!['totalAdjustmentValueToday'] ?? 0),
-            theme: theme,
-          ),
-        ),
-        if (!isCompact) const SizedBox(width: 12),
-      ],
-      if (returnStats != null) ...[
-        if (isCompact && adjStats != null) const SizedBox(height: 12),
-        Expanded(
-          child: _MiniCard(
-            icon: Icons.replay_rounded,
-            iconColor: AppColors.chartRed,
-            value: '${returnStats!['returnsToday'] ?? 0}',
-            label: 'Returns',
-            subtitle: fmt.format(returnStats!['refundAmountToday'] ?? 0),
-            theme: theme,
-          ),
-        ),
-      ],
-    ]);
+        if (isCompact) {
+          return Column(
+            children: [
+              if (adjStats != null)
+                _MiniCard(
+                  icon: Icons.balance_rounded,
+                  iconColor: AppColors.warning,
+                  value: '${adjStats!['totalAdjustmentsToday'] ?? 0}',
+                  label: 'Adjustments',
+                  subtitle:
+                      fmt.format(adjStats!['totalAdjustmentValueToday'] ?? 0),
+                  theme: theme,
+                ),
+              if (adjStats != null && returnStats != null)
+                const SizedBox(height: 12),
+              if (returnStats != null)
+                _MiniCard(
+                  icon: Icons.replay_rounded,
+                  iconColor: AppColors.chartRed,
+                  value: '${returnStats!['returnsToday'] ?? 0}',
+                  label: 'Returns',
+                  subtitle: fmt.format(returnStats!['refundAmountToday'] ?? 0),
+                  theme: theme,
+                ),
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            if (adjStats != null)
+              Expanded(
+                child: _MiniCard(
+                  icon: Icons.balance_rounded,
+                  iconColor: AppColors.warning,
+                  value: '${adjStats!['totalAdjustmentsToday'] ?? 0}',
+                  label: 'Adjustments',
+                  subtitle:
+                      fmt.format(adjStats!['totalAdjustmentValueToday'] ?? 0),
+                  theme: theme,
+                ),
+              ),
+            if (adjStats != null && returnStats != null)
+              const SizedBox(width: 12),
+            if (returnStats != null)
+              Expanded(
+                child: _MiniCard(
+                  icon: Icons.replay_rounded,
+                  iconColor: AppColors.chartRed,
+                  value: '${returnStats!['returnsToday'] ?? 0}',
+                  label: 'Returns',
+                  subtitle: fmt.format(returnStats!['refundAmountToday'] ?? 0),
+                  theme: theme,
+                ),
+              ),
+          ],
+        );
+      },
+    );
   }
 }
 

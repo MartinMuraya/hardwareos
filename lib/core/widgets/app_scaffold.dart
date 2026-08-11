@@ -422,52 +422,39 @@ class _AppScaffoldState extends State<AppScaffold> {
                   onSignOut: () => auth.signOut(),
                 ),
               if (Responsive.isTablet(context))
-                NavigationRail(
-                  extended: false,
-                  selectedIndex: selectedIdx,
-                  onDestinationSelected: (i) =>
-                      context.go(_getNavItems(context)[i].route),
-                  leading: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24),
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: AppColors.accent,
-                        borderRadius: BorderRadius.circular(10),
+                SizedBox(
+                  width: 72,
+                  child: SingleChildScrollView(
+                    child: IntrinsicHeight(
+                      child: NavigationRail(
+                        extended: false,
+                        selectedIndex: selectedIdx,
+                        onDestinationSelected: (i) =>
+                            context.go(_getNavItems(context)[i].route),
+                        leading: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 24),
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: AppColors.accent,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(Icons.hardware_rounded,
+                                color: Colors.white, size: 20),
+                          ),
+                        ),
+                        destinations: _getNavItems(context)
+                            .map((item) => NavigationRailDestination(
+                                  icon: Icon(item.icon),
+                                  selectedIcon:
+                                      Icon(item.icon, color: AppColors.accent),
+                                  label: Text(item.label),
+                                ))
+                            .toList(),
                       ),
-                      child: const Icon(Icons.hardware_rounded,
-                          color: Colors.white, size: 20),
                     ),
                   ),
-                  trailing: Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        IconButton(
-                          icon: Icon(themeProvider.isDarkMode
-                              ? Icons.light_mode_rounded
-                              : Icons.dark_mode_rounded),
-                          onPressed: () => themeProvider
-                              .toggleTheme(!themeProvider.isDarkMode),
-                        ),
-                        const SizedBox(height: 12),
-                        IconButton(
-                          icon: const Icon(Icons.logout_rounded),
-                          onPressed: () => auth.signOut(),
-                        ),
-                        const SizedBox(height: 24),
-                      ],
-                    ),
-                  ),
-                  destinations: _getNavItems(context)
-                      .map((item) => NavigationRailDestination(
-                            icon: Icon(item.icon),
-                            selectedIcon:
-                                Icon(item.icon, color: AppColors.accent),
-                            label: Text(item.label),
-                          ))
-                      .toList(),
                 ),
               if (isDesktop || Responsive.isTablet(context))
                 const VerticalDivider(width: 1),
