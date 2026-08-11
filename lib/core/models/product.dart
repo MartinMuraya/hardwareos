@@ -94,9 +94,12 @@ class Product {
         map['imageUrl'] as String? ?? (images.isNotEmpty ? images.first : null);
 
     return Product(
-      id: map['id'] as String,
-      businessId: map['businessId'] as String,
-      name: map['name'] as String,
+      id: map['id'] as String? ??
+          map['docId'] as String? ??
+          map['uid'] as String? ??
+          '',
+      businessId: map['businessId'] as String? ?? '',
+      name: map['name'] as String? ?? 'Unnamed Product',
       sku: map['sku'] as String? ?? '',
       category: map['category'] as String? ?? 'General',
       quantity: ((map['quantity'] ?? 0) as num).toDouble(),

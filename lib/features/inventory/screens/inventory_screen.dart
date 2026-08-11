@@ -110,63 +110,131 @@ class _InventoryScreenState extends State<InventoryScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(children: [
-                Expanded(
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Inventory', style: theme.textTheme.displayMedium),
-                        const SizedBox(height: 4),
-                        Text(
-                            '${_all.length} products${lowCount > 0 ? ' · $lowCount low stock' : ''}',
-                            style: theme.textTheme.bodyMedium),
-                      ]),
-                ),
-                if (isManager) ...[
-                  FilledButton.icon(
-                    onPressed: () async {
-                      await context.push('/inventory/add');
-                      _load();
-                    },
-                    icon: const Icon(Icons.add, size: 18),
-                    label: const Text('Add Product'),
-                  ),
-                  const SizedBox(width: 8),
-                  OutlinedButton.icon(
-                    onPressed: () async {
-                      final result = await showDialog<bool>(
-                        context: context,
-                        builder: (_) => const ImportDialog(),
-                      );
-                      if (result == true) _load();
-                    },
-                    icon: const Icon(Icons.upload_file_rounded, size: 18),
-                    label: const Text('Import'),
-                  ),
-                ],
-              ]),
-              const SizedBox(height: 20),
-              Row(children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchCtrl,
-                    decoration: const InputDecoration(
-                      hintText: 'Search by name or SKU...',
-                      prefixIcon: Icon(Icons.search, size: 18),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                _CategoryFilter(
-                  categories: _categories,
-                  selected: _selectedCategory,
-                  onChanged: (c) {
-                    setState(() => _selectedCategory = c);
-                    _filter();
-                  },
-                  theme: theme,
-                ),
-              ]),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isCompact = constraints.maxWidth < 600;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Inventory',
+                                    style: theme.textTheme.displayMedium),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '${_all.length} products${lowCount > 0 ? ' · $lowCount low stock' : ''}',
+                                  style: theme.textTheme.bodyMedium,
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (isManager && !isCompact) ...[
+                            FilledButton.icon(
+                              onPressed: () async {
+                                await context.push('/inventory/add');
+                                _load();
+                              },
+                              icon: const Icon(Icons.add, size: 18),
+                              label: const Text('Add Product'),
+                            ),
+                            const SizedBox(width: 8),
+                            OutlinedButton.icon(
+                              onPressed: () async {
+                                final result = await showDialog<bool>(
+                                  context: context,
+                                  builder: (_) => const ImportDialog(),
+                                );
+                                if (result == true) _load();
+                              },
+                              icon: const Icon(Icons.upload_file_rounded,
+                                  size: 18),
+                              label: const Text('Import'),
+                            ),
+                          ],
+                        ],
+                      ),
+                      if (isManager && isCompact) ...[
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: FilledButton.icon(
+                                onPressed: () async {
+                                  await context.push('/inventory/add');
+                                  _load();
+                                },
+                                icon: const Icon(Icons.add, size: 18),
+                                label: const Text('Add Product'),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            OutlinedButton.icon(
+                              onPressed: () async {
+                                final result = await showDialog<bool>(
+                                  context: context,
+                                  builder: (_) => const ImportDialog(),
+                                );
+                                if (result == true) _load();
+                              },
+                              icon: const Icon(Icons.upload_file_rounded,
+                                  size: 18),
+                              label: const Text('Import'),
+                            ),
+                          ],
+                        ),
+                      ],
+                      const SizedBox(height: 16),
+                      if (isCompact) ...[
+                        TextField(
+                          controller: _searchCtrl,
+                          decoration: const InputDecoration(
+                            hintText: 'Search by name or SKU...',
+                            prefixIcon: Icon(Icons.search, size: 18),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        _CategoryFilter(
+                          categories: _categories,
+                          selected: _selectedCategory,
+                          onChanged: (c) {
+                            setState(() => _selectedCategory = c);
+                            _filter();
+                          },
+                          theme: theme,
+                        ),
+                      ] else ...[
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _searchCtrl,
+                                decoration: const InputDecoration(
+                                  hintText: 'Search by name or SKU...',
+                                  prefixIcon: Icon(Icons.search, size: 18),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            _CategoryFilter(
+                              categories: _categories,
+                              selected: _selectedCategory,
+                              onChanged: (c) {
+                                setState(() => _selectedCategory = c);
+                                _filter();
+                              },
+                              theme: theme,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  );
+                },
+              ),
               const SizedBox(height: 16),
               if (_error != null)
                 _ErrorBar(message: _error!, onRetry: _load, theme: theme),
@@ -307,26 +375,27 @@ class _ProductCard extends StatelessWidget {
                             color: theme.colorScheme.onSurface),
                         overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 4),
-                    Row(children: [
-                      _Chip(
-                          label: product.category, color: AppColors.chartBlue),
-                      if (product.sku.isNotEmpty) ...[
-                        const SizedBox(width: 6),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
                         _Chip(
-                            label: product.sku,
-                            color: theme.colorScheme.onSurfaceVariant
-                                .withValues(alpha: 0.5)),
+                            label: product.category,
+                            color: AppColors.chartBlue),
+                        if (product.sku.isNotEmpty)
+                          _Chip(
+                              label: product.sku,
+                              color: theme.colorScheme.onSurfaceVariant
+                                  .withValues(alpha: 0.5)),
+                        if (product.isBulkParent || product.isBulkChild)
+                          _Chip(
+                            label: product.isBulkParent ? 'BULK' : 'Sub-unit',
+                            color: product.isBulkParent
+                                ? AppColors.chartPurple
+                                : AppColors.warning,
+                          ),
                       ],
-                      if (product.isBulkParent || product.isBulkChild) ...[
-                        const SizedBox(width: 6),
-                        _Chip(
-                          label: product.isBulkParent ? 'BULK' : 'Sub-unit',
-                          color: product.isBulkParent
-                              ? AppColors.chartPurple
-                              : AppColors.warning,
-                        ),
-                      ],
-                    ]),
+                    ),
                   ]),
             ),
             const SizedBox(width: 12),

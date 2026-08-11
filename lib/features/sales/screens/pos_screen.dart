@@ -473,6 +473,7 @@ class _POSScreenState extends State<POSScreen> {
     if (_paymentMethod == 'credit' && _selectedCustomer == null) {
       if (mounted) {
         setState(() => _error = 'Please select a customer for credit sales.');
+        _modalSetState?.call(() {});
       }
       return;
     }
@@ -480,6 +481,7 @@ class _POSScreenState extends State<POSScreen> {
       _processingCheckout = true;
       _error = null;
     });
+    _modalSetState?.call(() {});
     try {
       final auth = context.read<AuthProvider>();
       final bizId = auth.businessId;
@@ -506,6 +508,7 @@ class _POSScreenState extends State<POSScreen> {
               _error = 'M-Pesa phone number required';
               _processingCheckout = false;
             });
+            _modalSetState?.call(() {});
             return;
           }
 
@@ -574,6 +577,9 @@ class _POSScreenState extends State<POSScreen> {
         }
 
         if (mounted) {
+          if (_modalSetState != null) {
+            Navigator.of(context).pop();
+          }
           final saleTotal = (result['total'] as num?)?.toDouble() ?? total;
           final saleProfit = (result['profit'] as num?)?.toDouble() ?? profit;
           final outstanding = (result['outstanding'] as num?)?.toDouble();
@@ -632,6 +638,9 @@ class _POSScreenState extends State<POSScreen> {
         await queue.enqueueOfflineSale(saleData);
 
         if (mounted) {
+          if (_modalSetState != null) {
+            Navigator.of(context).pop();
+          }
           _lastReceiptData = ReceiptData(
             storeName: auth.userProfile?['businessName'] as String? ??
                 'Hardware Store',
@@ -670,7 +679,16 @@ class _POSScreenState extends State<POSScreen> {
             _error = e.message;
             _processingCheckout = false;
           });
+          _modalSetState?.call(() {});
         }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _processingCheckout = false;
+        });
+        _modalSetState?.call(() {});
       }
     }
   }
@@ -1313,6 +1331,41 @@ class _POSScreenState extends State<POSScreen> {
       color: theme.colorScheme.surface,
       padding: const EdgeInsets.all(20),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        if (_error != null) ...[
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.error.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.error_outline_rounded,
+                    color: AppColors.error, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    _error!,
+                    style: const TextStyle(
+                        color: AppColors.error,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 16),
+                  color: AppColors.error,
+                  onPressed: () {
+                    setState(() => _error = null);
+                    _modalSetState?.call(() {});
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
         Row(children: [
           const Icon(Icons.shopping_cart_rounded,
               color: AppColors.accent, size: 20),
@@ -2028,7 +2081,10 @@ class _CartTile extends StatelessWidget {
                         color: theme.colorScheme.onSurface),
                     overflow: TextOverflow.ellipsis),
                 const SizedBox(height: 4),
-                Row(
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     GestureDetector(
                       onTap: () => _showEditPriceDialog(context),
@@ -2044,15 +2100,12 @@ class _CartTile extends StatelessWidget {
                       ),
                     ),
                     if (entry.overridePrice != null &&
-                        entry.overridePrice != entry.product.sellingPrice) ...[
-                      const SizedBox(width: 6),
+                        entry.overridePrice != entry.product.sellingPrice)
                       Text(fmt.format(entry.product.sellingPrice),
                           style: TextStyle(
                               color: theme.hintColor,
                               fontSize: 10,
                               decoration: TextDecoration.lineThrough)),
-                    ],
-                    const SizedBox(width: 12),
                     GestureDetector(
                       onTap: () => _showNoteDialog(context),
                       child: Icon(Icons.note_add_rounded,
@@ -2061,8 +2114,7 @@ class _CartTile extends StatelessWidget {
                               ? AppColors.accent
                               : theme.hintColor),
                     ),
-                    if (entry.product.uomConfig != null) ...[
-                      const SizedBox(width: 12),
+                    if (entry.product.uomConfig != null)
                       Container(
                         height: 24,
                         padding: const EdgeInsets.symmetric(horizontal: 6),
@@ -2104,7 +2156,6 @@ class _CartTile extends StatelessWidget {
                           ),
                         ),
                       ),
-                    ],
                   ],
                 ),
                 if (entry.note != null && entry.note!.isNotEmpty) ...[
