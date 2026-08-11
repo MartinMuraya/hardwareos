@@ -44,6 +44,14 @@ jobs:
         run: flutter build web --release
 
       - name: Deploy to Firebase (Hosting & Functions)
-        run: firebase deploy --only hosting,functions
+        run: |
+          n=0
+          until [ "$n" -ge 3 ]
+          do
+             firebase deploy --only hosting,functions --non-interactive --force && break
+             n=$((n+1))
+             echo "::warning::Firebase deploy hit GCP quota limit or failed. Retrying in 15s (Attempt $n/3)..."
+             sleep 15
+          done
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}

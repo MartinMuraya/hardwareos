@@ -153,10 +153,20 @@ jobs:
 
       - name: Deploy to Firebase (Hosting, Functions, Firestore Rules)
         run: |
-          if [ -n "$GOOGLE_APPLICATION_CREDENTIALS" ]; then
-            echo "Deploying using service account credentials..."
-            firebase deploy --non-interactive --force
-          else
-            echo "Deploying using FIREBASE_TOKEN."
-            firebase deploy --token ${{ secrets.FIREBASE_TOKEN }} --non-interactive --force
-          fi
+          deploy_cmd() {
+            if [ -n "$GOOGLE_APPLICATION_CREDENTIALS" ]; then
+              echo "Deploying using service account credentials..."
+              firebase deploy --non-interactive --force
+            else
+              echo "Deploying using FIREBASE_TOKEN."
+              firebase deploy --token ${{ secrets.FIREBASE_TOKEN }} --non-interactive --force
+            fi
+          }
+          n=0
+          until [ "$n" -ge 3 ]
+          do
+             deploy_cmd && break
+             n=$((n+1))
+             echo "::warning::Firebase deploy hit GCP quota limit or failed. Retrying in 15s (Attempt $n/3)..."
+             sleep 15
+          done
