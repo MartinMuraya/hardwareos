@@ -1336,23 +1336,33 @@ class _POSScreenState extends State<POSScreen> {
                       child: Text('No products found.',
                           style: TextStyle(
                               color: theme.colorScheme.onSurfaceVariant)))
-                  : GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 220,
-                        mainAxisSpacing: 12,
-                        crossAxisSpacing: 12,
-                        childAspectRatio: 1.35,
-                      ),
-                      itemCount: _filtered.length,
-                      itemBuilder: (_, i) {
-                        final p = _filtered[i];
-                        final inCart = _cart.any((e) => e.product.id == p.id);
-                        return _ProductTile(
-                            product: p,
-                            inCart: inCart,
-                            onTap: () => _addToCart(p),
-                            theme: theme);
+                  : LayoutBuilder(
+                      builder: (context, constraints) {
+                        final w = constraints.maxWidth;
+                        final maxExtent =
+                            w < 420 ? 170.0 : (w < 700 ? 210.0 : 250.0);
+                        final aspectRatio =
+                            w < 420 ? 1.15 : (w < 700 ? 1.28 : 1.38);
+                        return GridView.builder(
+                          gridDelegate:
+                              SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: maxExtent,
+                            mainAxisSpacing: 10,
+                            crossAxisSpacing: 10,
+                            childAspectRatio: aspectRatio,
+                          ),
+                          itemCount: _filtered.length,
+                          itemBuilder: (_, i) {
+                            final p = _filtered[i];
+                            final inCart =
+                                _cart.any((e) => e.product.id == p.id);
+                            return _ProductTile(
+                                product: p,
+                                inCart: inCart,
+                                onTap: () => _addToCart(p),
+                                theme: theme);
+                          },
+                        );
                       },
                     ),
         ),
@@ -2199,17 +2209,18 @@ class _CartTile extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
+  Widget build(BuildContext context) => LayoutBuilder(
+        builder: (context, constraints) {
+          final isCompact = constraints.maxWidth < 360;
+          if (isCompact) {
+            return Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                    color: theme.dividerColor.withValues(alpha: 0.5)),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -2226,18 +2237,17 @@ class _CartTile extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        fmt.format(entry.lineTotal),
-                        style: TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 13,
-                          color: theme.colorScheme.onSurface,
-                        ),
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline_rounded,
+                            color: AppColors.error, size: 18),
+                        onPressed: onRemove,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        tooltip: 'Remove',
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Wrap(
                     spacing: 8,
                     runSpacing: 4,
@@ -2365,51 +2375,282 @@ class _CartTile extends StatelessWidget {
                       ),
                     ),
                   ],
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          _QtyBtn(
+                            icon: Icons.remove,
+                            onTap: () =>
+                                onUpdate(entry.copyWith(qty: entry.qty - 1)),
+                            theme: theme,
+                          ),
+                          GestureDetector(
+                            onTap: () => _showEditQtyDialog(context),
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8),
+                              child: Text(
+                                entry.qty.toStringAsFixed(
+                                    entry.qty.truncateToDouble() == entry.qty
+                                        ? 0
+                                        : 2),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 14,
+                                  color: theme.colorScheme.onSurface,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                          ),
+                          _QtyBtn(
+                            icon: Icons.add,
+                            onTap: () =>
+                                onUpdate(entry.copyWith(qty: entry.qty + 1)),
+                            theme: theme,
+                          ),
+                        ],
+                      ),
+                      Text(
+                        fmt.format(entry.lineTotal),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
+            );
+          }
+
+          return Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(10),
+              border:
+                  Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
             ),
-            const SizedBox(width: 8),
-            Row(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                _QtyBtn(
-                  icon: Icons.remove,
-                  onTap: () => onUpdate(entry.copyWith(qty: entry.qty - 1)),
-                  theme: theme,
-                ),
-                GestureDetector(
-                  onTap: () => _showEditQtyDialog(context),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Text(
-                      entry.qty.toStringAsFixed(
-                          entry.qty.truncateToDouble() == entry.qty ? 0 : 2),
-                      style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 14,
-                        color: theme.colorScheme.onSurface,
-                        decoration: TextDecoration.underline,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              entry.product.name,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                                color: theme.colorScheme.onSurface,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            fmt.format(entry.lineTotal),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 13,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          GestureDetector(
+                            onTap: () => _showEditPriceDialog(context),
+                            child: Text(
+                              '${fmt.format(entry.appliedPrice)} / unit',
+                              style: const TextStyle(
+                                color: AppColors.accent,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                decoration: TextDecoration.underline,
+                                decorationColor: AppColors.accent,
+                                decorationStyle: TextDecorationStyle.dashed,
+                              ),
+                            ),
+                          ),
+                          if (entry.overridePrice != null &&
+                              entry.overridePrice != entry.product.sellingPrice)
+                            Text(
+                              fmt.format(entry.product.sellingPrice),
+                              style: TextStyle(
+                                color: theme.hintColor,
+                                fontSize: 10,
+                                decoration: TextDecoration.lineThrough,
+                              ),
+                            ),
+                          GestureDetector(
+                            onTap: () => _showNoteDialog(context),
+                            child: Icon(
+                              Icons.note_add_rounded,
+                              size: 14,
+                              color:
+                                  entry.note != null && entry.note!.isNotEmpty
+                                      ? AppColors.accent
+                                      : theme.hintColor,
+                            ),
+                          ),
+                          if (entry.product.uomConfig != null)
+                            Container(
+                              height: 22,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 4),
+                              decoration: BoxDecoration(
+                                color:
+                                    theme.colorScheme.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: entry.selectedUom ??
+                                      entry.product.sellingUnit,
+                                  isDense: true,
+                                  iconSize: 12,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: theme.colorScheme.onSurface,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  items: [
+                                    if (entry.product.sellingUnit != null)
+                                      DropdownMenuItem(
+                                          value: entry.product.sellingUnit,
+                                          child:
+                                              Text(entry.product.sellingUnit!)),
+                                    DropdownMenuItem(
+                                        value: entry
+                                            .product.uomConfig!.purchaseUnit,
+                                        child: Text(entry
+                                            .product.uomConfig!.purchaseUnit)),
+                                  ],
+                                  onChanged: (val) {
+                                    if (val != null) {
+                                      final mult = val ==
+                                              entry.product.uomConfig!
+                                                  .purchaseUnit
+                                          ? entry.product.uomConfig!
+                                              .conversionMultiplier
+                                          : 1.0;
+                                      onUpdate(entry.copyWith(
+                                          selectedUom: val,
+                                          uomMultiplier: mult));
+                                    }
+                                  },
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      if (entry.note != null && entry.note!.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          'Note: ${entry.note!}',
+                          style: TextStyle(
+                            color: theme.hintColor,
+                            fontSize: 10,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                      if (entry.product.isWeighed) ...[
+                        const SizedBox(height: 4),
+                        GestureDetector(
+                          onTap: () => _readScale(context),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.accent.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(color: AppColors.accent),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.scale_rounded,
+                                    size: 12, color: AppColors.accent),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Read Scale',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: AppColors.accent,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-                _QtyBtn(
-                  icon: Icons.add,
-                  onTap: () => onUpdate(entry.copyWith(qty: entry.qty + 1)),
-                  theme: theme,
+                const SizedBox(width: 8),
+                Row(
+                  children: [
+                    _QtyBtn(
+                      icon: Icons.remove,
+                      onTap: () => onUpdate(entry.copyWith(qty: entry.qty - 1)),
+                      theme: theme,
+                    ),
+                    GestureDetector(
+                      onTap: () => _showEditQtyDialog(context),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Text(
+                          entry.qty.toStringAsFixed(
+                              entry.qty.truncateToDouble() == entry.qty
+                                  ? 0
+                                  : 2),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                            color: theme.colorScheme.onSurface,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                    ),
+                    _QtyBtn(
+                      icon: Icons.add,
+                      onTap: () => onUpdate(entry.copyWith(qty: entry.qty + 1)),
+                      theme: theme,
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline_rounded,
+                      color: AppColors.error, size: 18),
+                  onPressed: onRemove,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  tooltip: 'Remove',
                 ),
               ],
             ),
-            const SizedBox(width: 8),
-            IconButton(
-              icon: const Icon(Icons.delete_outline_rounded,
-                  color: AppColors.error, size: 18),
-              onPressed: onRemove,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-              tooltip: 'Remove',
-            ),
-          ],
-        ),
+          );
+        },
       );
 }
 
@@ -2453,7 +2694,7 @@ class _PayBtn extends StatelessWidget {
       child: GestureDetector(
         onTap: () => onTap(value),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
           decoration: BoxDecoration(
               color: sel
                   ? AppColors.accent.withValues(alpha: 0.15)
@@ -2466,19 +2707,23 @@ class _PayBtn extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(iconData,
-                  size: 16,
+                  size: 15,
                   color: sel
                       ? AppColors.accent
                       : theme.colorScheme.onSurfaceVariant),
-              const SizedBox(width: 6),
-              Text(label,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      color: sel
-                          ? AppColors.accent
-                          : theme.colorScheme.onSurfaceVariant,
-                      fontSize: 12,
-                      fontWeight: sel ? FontWeight.w800 : FontWeight.w500)),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(label,
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    style: TextStyle(
+                        color: sel
+                            ? AppColors.accent
+                            : theme.colorScheme.onSurfaceVariant,
+                        fontSize: 11,
+                        fontWeight: sel ? FontWeight.w800 : FontWeight.w500)),
+              ),
             ],
           ),
         ),
