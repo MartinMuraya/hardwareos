@@ -33,30 +33,19 @@ void main() async {
       defaultValue: '',
     );
 
-    if (kReleaseMode) {
-      if (recaptchaKey.isEmpty) {
-        throw FlutterError(
-            'RECAPTCHA_SITE_KEY must be provided in production for App Check to be enabled.');
-      }
+    if (recaptchaKey.isNotEmpty) {
       await FirebaseAppCheck.instance.activate(
-        androidProvider: AndroidProvider.playIntegrity,
-        appleProvider: AppleProvider.appAttest,
+        androidProvider: kReleaseMode
+            ? AndroidProvider.playIntegrity
+            : AndroidProvider.debug,
+        appleProvider:
+            kReleaseMode ? AppleProvider.appAttest : AppleProvider.debug,
         webProvider: ReCaptchaV3Provider(recaptchaKey),
       );
+      debugPrint('Firebase App Check successfully initialized.');
     } else {
-      // Non-release (dev/test) - skip AppCheck on Web if key is empty to prevent 403 throttling loop
-      if (!kIsWeb || recaptchaKey.isNotEmpty) {
-        await FirebaseAppCheck.instance.activate(
-          androidProvider: AndroidProvider.debug,
-          appleProvider: AppleProvider.debug,
-          webProvider: recaptchaKey.isNotEmpty
-              ? ReCaptchaV3Provider(recaptchaKey)
-              : null,
-        );
-      } else {
-        debugPrint(
-            'Skipping App Check on Web debug because RECAPTCHA_SITE_KEY is empty.');
-      }
+      debugPrint(
+          'RECAPTCHA_SITE_KEY not supplied via --dart-define. Skipping Web App Check activation.');
     }
   } catch (e) {
     debugPrint('App Check initialization warning: $e');

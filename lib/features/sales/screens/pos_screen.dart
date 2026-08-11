@@ -1236,28 +1236,64 @@ class _POSScreenState extends State<POSScreen> {
     return Padding(
       padding: EdgeInsets.all(Responsive.padding(context)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Expanded(
-              child:
-                  Text('POS — New Sale', style: theme.textTheme.displayMedium)),
-          TextButton.icon(
-            onPressed: () => _showHardwareCalculators(),
-            icon: const Icon(Icons.calculate_rounded, size: 16),
-            label: const Text('Calculators'),
-          ),
-          const SizedBox(width: 8),
-          TextButton.icon(
-            onPressed: () => _showHeldCarts(),
-            icon: const Icon(Icons.inventory_2_rounded, size: 16),
-            label: const Text('Held Carts'),
-          ),
-          const SizedBox(width: 8),
-          TextButton.icon(
-            onPressed: () => context.go('${RoutePaths.sales}/history'),
-            icon: const Icon(Icons.history_rounded, size: 16),
-            label: const Text('History'),
-          ),
-        ]),
+        Wrap(
+          crossAxisAlignment: WrapCrossAlignment.center,
+          alignment: WrapAlignment.spaceBetween,
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.accent.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text('POS',
+                      style: TextStyle(
+                          color: AppColors.accent,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 12)),
+                ),
+                const SizedBox(width: 8),
+                Text('New Sale', style: theme.textTheme.headlineMedium),
+              ],
+            ),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () => _showHardwareCalculators(),
+                  icon: const Icon(Icons.calculate_rounded, size: 16),
+                  label: const Text('Calculators'),
+                  style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6)),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () => _showHeldCarts(),
+                  icon: const Icon(Icons.inventory_2_rounded, size: 16),
+                  label: const Text('Held Carts'),
+                  style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6)),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () => context.go('${RoutePaths.sales}/history'),
+                  icon: const Icon(Icons.history_rounded, size: 16),
+                  label: const Text('History'),
+                  style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6)),
+                ),
+              ],
+            ),
+          ],
+        ),
         const SizedBox(height: 16),
         TextField(
           controller: _searchCtrl,
@@ -1304,9 +1340,9 @@ class _POSScreenState extends State<POSScreen> {
                       gridDelegate:
                           const SliverGridDelegateWithMaxCrossAxisExtent(
                         maxCrossAxisExtent: 220,
-                        mainAxisSpacing: 10,
-                        crossAxisSpacing: 10,
-                        childAspectRatio: 1.6,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        childAspectRatio: 1.35,
                       ),
                       itemCount: _filtered.length,
                       itemBuilder: (_, i) {
@@ -1488,9 +1524,22 @@ class _POSScreenState extends State<POSScreen> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
                 color: theme.colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: theme.dividerColor)),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                    color: _selectedCustomer != null
+                        ? AppColors.accent.withValues(alpha: 0.5)
+                        : theme.dividerColor)),
             child: Row(children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.accent.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.person_rounded,
+                    color: AppColors.accent, size: 18),
+              ),
+              const SizedBox(width: 10),
               Expanded(
                 child: _selectedCustomer != null
                     ? Column(
@@ -1502,22 +1551,25 @@ class _POSScreenState extends State<POSScreen> {
                                     color: theme.colorScheme.onSurfaceVariant)),
                             Text(_selectedCustomer!.fullName,
                                 style: const TextStyle(
-                                    fontWeight: FontWeight.w600, fontSize: 14)),
+                                    fontWeight: FontWeight.w700, fontSize: 14)),
                             if (_selectedCustomer!.isFundi)
                               Text(
-                                  '${_selectedCustomer!.loyaltyPoints.toInt()} pts available',
+                                  '★ ${_selectedCustomer!.loyaltyPoints.toInt()} pts available',
                                   style: const TextStyle(
                                       color: AppColors.accent,
-                                      fontSize: 12,
+                                      fontSize: 11,
                                       fontWeight: FontWeight.w600)),
                           ])
                     : Text('Select Customer (Optional)',
-                        style: TextStyle(color: theme.hintColor, fontSize: 13)),
+                        style: TextStyle(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500)),
               ),
-              const Icon(Icons.arrow_drop_down_rounded, size: 20),
+              const Icon(Icons.keyboard_arrow_down_rounded, size: 20),
               if (_selectedCustomer != null)
                 IconButton(
-                  icon: const Icon(Icons.close, size: 16),
+                  icon: const Icon(Icons.close_rounded, size: 16),
                   onPressed: () => setState(() {
                     _selectedCustomer = null;
                     _pointsDiscount = 0;
@@ -1828,56 +1880,136 @@ class _ProductTile extends StatelessWidget {
       required this.theme});
 
   @override
-  Widget build(BuildContext context) => Material(
-        color:
-            inCart ? AppColors.accent.withValues(alpha: 0.1) : theme.cardColor,
+  Widget build(BuildContext context) {
+    final isLowStock =
+        product.quantity <= product.reorderLevel && product.quantity > 0;
+    final isOutOfStock = product.quantity <= 0;
+
+    return Material(
+      color:
+          inCart ? AppColors.accent.withValues(alpha: 0.12) : theme.cardColor,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                    color: inCart ? AppColors.accent : theme.dividerColor,
-                    width: inCart ? 1.5 : 1)),
-            child: Column(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: inCart
+                  ? AppColors.accent
+                  : theme.dividerColor.withValues(alpha: 0.6),
+              width: inCart ? 1.5 : 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Expanded(
-                        child: Text(product.name,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13,
-                                height: 1.2),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis)),
-                    if (inCart)
-                      const Icon(Icons.check_circle_rounded,
-                          color: AppColors.accent, size: 16),
-                  ]),
-                  Column(
+                  Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                          'KES ${product.sellingPrice.toStringAsFixed(0)}${product.sellingUnit != null ? ' / ${product.sellingUnit}' : ''}',
-                          style: const TextStyle(
-                              color: AppColors.accent,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14)),
-                      Text(
-                          'Stock: ${product.quantity}${product.sellingUnit != null ? ' ${product.sellingUnit}' : ''}',
-                          style:
-                              TextStyle(color: theme.hintColor, fontSize: 11)),
+                      Expanded(
+                        child: Text(
+                          product.name,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                            height: 1.2,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (inCart)
+                        const Padding(
+                          padding: EdgeInsets.only(left: 4),
+                          child: Icon(Icons.check_circle_rounded,
+                              color: AppColors.accent, size: 16),
+                        ),
                     ],
                   ),
-                ]),
+                  const SizedBox(height: 4),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      product.category,
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'KES ${product.sellingPrice.toStringAsFixed(0)}${product.sellingUnit != null ? ' / ${product.sellingUnit}' : ''}',
+                    style: const TextStyle(
+                      color: AppColors.accent,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Icon(
+                        isOutOfStock
+                            ? Icons.cancel_outlined
+                            : isLowStock
+                                ? Icons.warning_amber_rounded
+                                : Icons.inventory_2_outlined,
+                        size: 11,
+                        color: isOutOfStock
+                            ? AppColors.error
+                            : isLowStock
+                                ? AppColors.warning
+                                : theme.hintColor,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          isOutOfStock
+                              ? 'Out of Stock'
+                              : 'Stock: ${product.quantity}${product.sellingUnit != null ? ' ${product.sellingUnit}' : ''}',
+                          style: TextStyle(
+                            color: isOutOfStock
+                                ? AppColors.error
+                                : isLowStock
+                                    ? AppColors.warning
+                                    : theme.hintColor,
+                            fontSize: 10,
+                            fontWeight: (isOutOfStock || isLowStock)
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
-      );
+      ),
+    );
+  }
 }
 
 class _CartTile extends StatelessWidget {
@@ -2067,163 +2199,217 @@ class _CartTile extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        child: Row(children: [
-          Expanded(
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
               child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                Text(entry.product.name,
-                    style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 13,
-                        color: theme.colorScheme.onSurface),
-                    overflow: TextOverflow.ellipsis),
-                const SizedBox(height: 4),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    GestureDetector(
-                      onTap: () => _showEditPriceDialog(context),
-                      child: Text(
-                        fmt.format(entry.appliedPrice),
-                        style: const TextStyle(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          entry.product.name,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        fmt.format(entry.lineTotal),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 13,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      GestureDetector(
+                        onTap: () => _showEditPriceDialog(context),
+                        child: Text(
+                          '${fmt.format(entry.appliedPrice)} / unit',
+                          style: const TextStyle(
                             color: AppColors.accent,
-                            fontSize: 12,
+                            fontSize: 11,
                             fontWeight: FontWeight.w600,
                             decoration: TextDecoration.underline,
                             decorationColor: AppColors.accent,
-                            decorationStyle: TextDecorationStyle.dashed),
-                      ),
-                    ),
-                    if (entry.overridePrice != null &&
-                        entry.overridePrice != entry.product.sellingPrice)
-                      Text(fmt.format(entry.product.sellingPrice),
-                          style: TextStyle(
-                              color: theme.hintColor,
-                              fontSize: 10,
-                              decoration: TextDecoration.lineThrough)),
-                    GestureDetector(
-                      onTap: () => _showNoteDialog(context),
-                      child: Icon(Icons.note_add_rounded,
-                          size: 14,
-                          color: entry.note != null && entry.note!.isNotEmpty
-                              ? AppColors.accent
-                              : theme.hintColor),
-                    ),
-                    if (entry.product.uomConfig != null)
-                      Container(
-                        height: 24,
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value:
-                                entry.selectedUom ?? entry.product.sellingUnit,
-                            isDense: true,
-                            iconSize: 14,
-                            style: TextStyle(
-                                fontSize: 10,
-                                color: theme.colorScheme.onSurface,
-                                fontWeight: FontWeight.w600),
-                            items: [
-                              if (entry.product.sellingUnit != null)
-                                DropdownMenuItem(
-                                    value: entry.product.sellingUnit,
-                                    child: Text(entry.product.sellingUnit!)),
-                              DropdownMenuItem(
-                                  value: entry.product.uomConfig!.purchaseUnit,
-                                  child: Text(
-                                      entry.product.uomConfig!.purchaseUnit)),
-                            ],
-                            onChanged: (val) {
-                              if (val != null) {
-                                final mult =
-                                    val == entry.product.uomConfig!.purchaseUnit
-                                        ? entry.product.uomConfig!
-                                            .conversionMultiplier
-                                        : 1.0;
-                                onUpdate(entry.copyWith(
-                                    selectedUom: val, uomMultiplier: mult));
-                              }
-                            },
+                            decorationStyle: TextDecorationStyle.dashed,
                           ),
                         ),
                       ),
-                  ],
-                ),
-                if (entry.note != null && entry.note!.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(entry.note!,
+                      if (entry.overridePrice != null &&
+                          entry.overridePrice != entry.product.sellingPrice)
+                        Text(
+                          fmt.format(entry.product.sellingPrice),
+                          style: TextStyle(
+                            color: theme.hintColor,
+                            fontSize: 10,
+                            decoration: TextDecoration.lineThrough,
+                          ),
+                        ),
+                      GestureDetector(
+                        onTap: () => _showNoteDialog(context),
+                        child: Icon(
+                          Icons.note_add_rounded,
+                          size: 14,
+                          color: entry.note != null && entry.note!.isNotEmpty
+                              ? AppColors.accent
+                              : theme.hintColor,
+                        ),
+                      ),
+                      if (entry.product.uomConfig != null)
+                        Container(
+                          height: 22,
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: entry.selectedUom ??
+                                  entry.product.sellingUnit,
+                              isDense: true,
+                              iconSize: 12,
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: theme.colorScheme.onSurface,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              items: [
+                                if (entry.product.sellingUnit != null)
+                                  DropdownMenuItem(
+                                      value: entry.product.sellingUnit,
+                                      child: Text(entry.product.sellingUnit!)),
+                                DropdownMenuItem(
+                                    value:
+                                        entry.product.uomConfig!.purchaseUnit,
+                                    child: Text(
+                                        entry.product.uomConfig!.purchaseUnit)),
+                              ],
+                              onChanged: (val) {
+                                if (val != null) {
+                                  final mult = val ==
+                                          entry.product.uomConfig!.purchaseUnit
+                                      ? entry.product.uomConfig!
+                                          .conversionMultiplier
+                                      : 1.0;
+                                  onUpdate(entry.copyWith(
+                                      selectedUom: val, uomMultiplier: mult));
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  if (entry.note != null && entry.note!.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      'Note: ${entry.note!}',
                       style: TextStyle(
-                          color: theme.hintColor,
-                          fontSize: 10,
-                          fontStyle: FontStyle.italic)),
-                ],
-                if (entry.product.isWeighed) ...[
-                  const SizedBox(height: 4),
-                  GestureDetector(
-                    onTap: () => _readScale(context),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
+                        color: theme.hintColor,
+                        fontSize: 10,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                  if (entry.product.isWeighed) ...[
+                    const SizedBox(height: 4),
+                    GestureDetector(
+                      onTap: () => _readScale(context),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
                           color: AppColors.accent.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: AppColors.accent)),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.scale_rounded,
-                              size: 12, color: AppColors.accent),
-                          SizedBox(width: 4),
-                          Text('Read Scale',
+                          border: Border.all(color: AppColors.accent),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.scale_rounded,
+                                size: 12, color: AppColors.accent),
+                            SizedBox(width: 4),
+                            Text(
+                              'Read Scale',
                               style: TextStyle(
-                                  fontSize: 10,
-                                  color: AppColors.accent,
-                                  fontWeight: FontWeight.w600)),
-                        ],
+                                fontSize: 10,
+                                color: AppColors.accent,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Row(
+              children: [
+                _QtyBtn(
+                  icon: Icons.remove,
+                  onTap: () => onUpdate(entry.copyWith(qty: entry.qty - 1)),
+                  theme: theme,
+                ),
+                GestureDetector(
+                  onTap: () => _showEditQtyDialog(context),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Text(
+                      entry.qty.toStringAsFixed(
+                          entry.qty.truncateToDouble() == entry.qty ? 0 : 2),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                        color: theme.colorScheme.onSurface,
+                        decoration: TextDecoration.underline,
                       ),
                     ),
                   ),
-                ],
-              ])),
-          Row(children: [
-            _QtyBtn(
-                icon: Icons.remove,
-                onTap: () => onUpdate(entry.copyWith(qty: entry.qty - 1)),
-                theme: theme),
-            GestureDetector(
-              onTap: () => _showEditQtyDialog(context),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Text(
-                    entry.qty.toStringAsFixed(
-                        entry.qty.truncateToDouble() == entry.qty ? 0 : 2),
-                    style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
-                        color: theme.colorScheme.onSurface,
-                        decoration: TextDecoration.underline)),
-              ),
+                ),
+                _QtyBtn(
+                  icon: Icons.add,
+                  onTap: () => onUpdate(entry.copyWith(qty: entry.qty + 1)),
+                  theme: theme,
+                ),
+              ],
             ),
-            _QtyBtn(
-                icon: Icons.add,
-                onTap: () => onUpdate(entry.copyWith(qty: entry.qty + 1)),
-                theme: theme),
-          ]),
-          const SizedBox(width: 6),
-          GestureDetector(
-              onTap: onRemove,
-              child: Icon(Icons.delete_outline_rounded,
-                  color: AppColors.error.withValues(alpha: 0.8), size: 20)),
-        ]),
+            const SizedBox(width: 8),
+            IconButton(
+              icon: const Icon(Icons.delete_outline_rounded,
+                  color: AppColors.error, size: 18),
+              onPressed: onRemove,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              tooltip: 'Remove',
+            ),
+          ],
+        ),
       );
 }
 
@@ -2259,26 +2445,42 @@ class _PayBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final sel = value == selected;
+    IconData iconData = Icons.payments_rounded;
+    if (value == 'mpesa') iconData = Icons.phone_android_rounded;
+    if (value == 'credit') iconData = Icons.credit_score_rounded;
+
     return Expanded(
       child: GestureDetector(
         onTap: () => onTap(value),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
           decoration: BoxDecoration(
               color: sel
-                  ? AppColors.accent.withValues(alpha: 0.12)
+                  ? AppColors.accent.withValues(alpha: 0.15)
                   : theme.colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                  color: sel ? AppColors.accent : theme.dividerColor)),
-          child: Text(label,
-              textAlign: TextAlign.center,
-              style: TextStyle(
+                  color: sel ? AppColors.accent : theme.dividerColor,
+                  width: sel ? 1.5 : 1)),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(iconData,
+                  size: 16,
                   color: sel
                       ? AppColors.accent
-                      : theme.colorScheme.onSurfaceVariant,
-                  fontSize: 11,
-                  fontWeight: sel ? FontWeight.w700 : FontWeight.w400)),
+                      : theme.colorScheme.onSurfaceVariant),
+              const SizedBox(width: 6),
+              Text(label,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      color: sel
+                          ? AppColors.accent
+                          : theme.colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                      fontWeight: sel ? FontWeight.w800 : FontWeight.w500)),
+            ],
+          ),
         ),
       ),
     );

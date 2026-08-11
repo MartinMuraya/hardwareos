@@ -71,8 +71,15 @@ class AuthProvider extends ChangeNotifier {
         (profileFetcher == null ? FirebaseFunctions.instance : null);
     _repo = repo ?? (attachAuthState ? AuthRepository() : null);
     if (attachAuthState && _auth != null) {
-      _authStateSubscription =
-          _auth!.authStateChanges().listen(_onAuthStateChanged);
+      _authStateSubscription = _auth!.authStateChanges().listen(
+        _onAuthStateChanged,
+        onError: (error) {
+          debugPrint('Auth state listener error: $error');
+          _state = AuthState.unauthenticated;
+          _errorMessage = 'Authentication error. Please try signing in again.';
+          notifyListeners();
+        },
+      );
     }
   }
 
@@ -83,24 +90,31 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> _onAuthStateChanged(User? user) async {
-    _user = user;
-    if (user == null) {
-      _state = AuthState.unauthenticated;
-      _isRegistered = false;
-      _userProfile = null;
-    } else {
-      _state = AuthState.loading;
-      notifyListeners();
-      // Ensure we have the latest emailVerified status
-      try {
-        await user.reload();
-      } catch (e) {
-        debugPrint('Error reloading user: $e');
+    try {
+      _user = user;
+      if (user == null) {
+        _state = AuthState.unauthenticated;
+        _isRegistered = false;
+        _userProfile = null;
+      } else {
+        _state = AuthState.loading;
+        notifyListeners();
+        // Ensure we have the latest emailVerified status
+        try {
+          await user.reload();
+        } catch (e) {
+          debugPrint('Error reloading user: $e');
+        }
+        _user = _auth?.currentUser;
+        await _loadUserProfile();
       }
-      _user = _auth?.currentUser;
-      await _loadUserProfile();
+    } catch (e) {
+      debugPrint('Uncaught error in auth state changed listener: $e');
+      _state = AuthState.unauthenticated;
+      _errorMessage = 'Failed to process authentication. Please sign in again.';
+    } finally {
+      notifyListeners();
     }
-    notifyListeners();
   }
 
   Future<void> _loadUserProfile() async {

@@ -98,6 +98,9 @@ export const createSale = onCall(SECURE_FN_OPTS, async (request) => {
       }
     }
 
+    // Fetch Chart of Accounts inside txn (MUST be read BEFORE any writes)
+    const accountsSnap = await txn.get(db().collection("chart_of_accounts").where("businessId", "==", businessId));
+
     let total = 0;
     let totalCost = 0;
     const validatedItems: SaleItem[] = [];
@@ -297,8 +300,7 @@ export const createSale = onCall(SECURE_FN_OPTS, async (request) => {
       }
     }
 
-    // 4. Double-Entry Accounting Integration
-    const accountsSnap = await txn.get(db().collection("chart_of_accounts").where("businessId", "==", businessId));
+    // 4. Double-Entry Accounting Integration (accountsSnap was read at top of transaction)
     if (!accountsSnap.empty) {
       const accounts = accountsSnap.docs.map(d => d.data());
       const getAcc = (name: string) => accounts.find(a => a.name === name)?.id;
