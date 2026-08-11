@@ -5,10 +5,8 @@
 import * as admin from "firebase-admin";
 import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { defineSecret } from "firebase-functions/params";
 import { assertBusinessMember, assertActiveSubscription, assertFeatureEnabled } from "../middleware/checkPlanLimits";
 
-const geminiApiKeySecret = defineSecret("GEMINI_API_KEY");
 const db = () => admin.firestore();
 
 // Internal helper to get business context
@@ -129,7 +127,7 @@ export const getAIInsights = onCall(SECURE_FN_OPTS, async (request) => {
 // -----------------------------------------------------------
 // getAIQuickInsights
 // -----------------------------------------------------------
-export const getAIQuickInsights = onCall({ ...SECURE_FN_OPTS, secrets: [geminiApiKeySecret] }, async (request) => {
+export const getAIQuickInsights = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, type } = request.data as { businessId: string; type: "inventory_optimization" | "sales_trends" | "profit_analysis" | "reorder_suggestions" };

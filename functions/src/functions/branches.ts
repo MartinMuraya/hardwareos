@@ -341,25 +341,51 @@ export const getStockTransfers = onCall(SECURE_FN_OPTS, async (request) => {
 
   await assertBusinessMember(request.auth.uid, businessId);
 
-  let query: admin.firestore.Query = db()
-    .collection("stockTransfers")
-    .where("businessId", "==", businessId);
+  try {
+    let query: admin.firestore.Query = db()
+      .collection("stockTransfers")
+      .where("businessId", "==", businessId);
 
-  if (status) query = query.where("status", "==", status);
+    if (status) query = query.where("status", "==", status);
 
-  query = query.orderBy("createdAt", "desc").limit(Math.min(pageLimit, 100));
-  const snap = await query.get();
+    query = query.orderBy("createdAt", "desc").limit(Math.min(pageLimit, 100));
+    const snap = await query.get();
 
-  return {
-    transfers: snap.docs.map((d) => {
-      const data = d.data();
+    return {
+      transfers: snap.docs.map((d) => {
+        const data = d.data();
+        return {
+          ...data,
+          createdAt: safeToIsoString(data.createdAt),
+          completedAt: data.completedAt ? safeToIsoString(data.completedAt) : null,
+        };
+      }),
+    };
+  } catch (err: any) {
+    console.error("getStockTransfers query error:", err);
+    // Fallback un-ordered query if index is building
+    try {
+      let fallbackQuery: admin.firestore.Query = db()
+        .collection("stockTransfers")
+        .where("businessId", "==", businessId);
+
+      if (status) fallbackQuery = fallbackQuery.where("status", "==", status);
+      const snap = await fallbackQuery.limit(Math.min(pageLimit, 100)).get();
+
       return {
-        ...data,
-        createdAt: (data.createdAt as admin.firestore.Timestamp).toDate().toISOString(),
-        completedAt: data.completedAt ? (data.completedAt as admin.firestore.Timestamp).toDate().toISOString() : null,
+        transfers: snap.docs.map((d) => {
+          const data = d.data();
+          return {
+            ...data,
+            createdAt: safeToIsoString(data.createdAt),
+            completedAt: data.completedAt ? safeToIsoString(data.completedAt) : null,
+          };
+        }),
       };
-    }),
-  };
+    } catch (innerErr) {
+      return { transfers: [] };
+    }
+  }
 });
 
 // -----------------------------------------------------------

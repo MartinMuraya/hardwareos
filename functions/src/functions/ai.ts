@@ -3,16 +3,13 @@ import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { assertBusinessMember, assertActiveSubscription } from "../middleware/checkPlanLimits";
 import { GoogleGenAI } from "@google/genai";
-import { defineSecret } from "firebase-functions/params";
-
 const db = () => admin.firestore();
-const geminiApiKey = defineSecret("GEMINI_API_KEY");
 
 // -----------------------------------------------------------
 // analyzeInventoryHealth
 // -----------------------------------------------------------
 export const analyzeInventoryHealth = onCall(
-  { ...SECURE_FN_OPTS, secrets: [geminiApiKey], timeoutSeconds: 300 },
+  { ...SECURE_FN_OPTS, timeoutSeconds: 300 },
   async (request) => {
     if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
@@ -66,7 +63,8 @@ export const analyzeInventoryHealth = onCall(
     });
 
     // 2. Initialize Gemini
-    const ai = new GoogleGenAI({ apiKey: geminiApiKey.value() });
+    const apiKey = process.env.GEMINI_API_KEY || "";
+    const ai = new GoogleGenAI({ apiKey });
 
     const systemInstruction = `
 You are a Senior Supply Chain Analyst for an Enterprise ERP system (HardwareOS).
