@@ -5,10 +5,8 @@
 import * as admin from "firebase-admin";
 import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { defineSecret } from "firebase-functions/params";
 import { assertBusinessMember, assertActiveSubscription, assertFeatureEnabled } from "../middleware/checkPlanLimits";
 
-const geminiApiKeySecret = defineSecret("GEMINI_API_KEY");
 const db = () => admin.firestore();
 
 export type AnalystQueryType =
@@ -246,7 +244,7 @@ Rules for response:
 // runAIBusinessAnalyst
 // Main endpoint for executive business queries
 // -----------------------------------------------------------
-export const runAIBusinessAnalyst = onCall({ ...SECURE_FN_OPTS, secrets: [geminiApiKeySecret] }, async (request) => {
+export const runAIBusinessAnalyst = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, queryType, customPrompt } = request.data as {

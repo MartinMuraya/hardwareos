@@ -10,6 +10,24 @@ import { recordInventoryMovement, MovementType } from "./inventory_ledger";
 
 const db = () => admin.firestore();
 
+function safeToIsoString(val: any): string {
+  if (!val) return new Date().toISOString();
+  if (typeof val.toDate === "function") {
+    try {
+      return val.toDate().toISOString();
+    } catch {
+      return new Date().toISOString();
+    }
+  }
+  if (val instanceof Date) return val.toISOString();
+  if (typeof val === "string") return val;
+  try {
+    return new Date(val).toISOString();
+  } catch {
+    return new Date().toISOString();
+  }
+}
+
 // -----------------------------------------------------------
 // createBranch
 // Only owner can create branches.
@@ -362,8 +380,8 @@ export const getBranchInventory = onCall(SECURE_FN_OPTS, async (request) => {
   return {
     inventory: snap.docs.map((d) => ({
       ...d.data(),
-      createdAt: (d.data().createdAt as admin.firestore.Timestamp).toDate().toISOString(),
-      updatedAt: (d.data().updatedAt as admin.firestore.Timestamp)?.toDate()?.toISOString() || null,
+      createdAt: safeToIsoString(d.data().createdAt),
+      updatedAt: d.data().updatedAt ? safeToIsoString(d.data().updatedAt) : null,
     })),
   };
 });

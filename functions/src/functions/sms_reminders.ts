@@ -1,9 +1,5 @@
 import * as admin from "firebase-admin";
 import { onSchedule } from "firebase-functions/v2/scheduler";
-import { defineSecret } from "firebase-functions/params";
-
-const atApiKeySecret = defineSecret("AT_API_KEY");
-const atUsernameSecret = defineSecret("AT_USERNAME");
 
 const db = () => admin.firestore();
 
@@ -11,14 +7,15 @@ export const sendDebtReminders = onSchedule(
   {
     schedule: "0 8 * * *", // 8 AM every day
     timeZone: "Africa/Nairobi",
-    secrets: [atApiKeySecret, atUsernameSecret],
   },
   async () => {
-    // Import Africa's Talking lazily to ensure environment variables are loaded
-    const credentials = {
-      apiKey: atApiKeySecret.value(),
-      username: atUsernameSecret.value(),
-    };
+    const apiKey = process.env.AT_API_KEY;
+    const username = process.env.AT_USERNAME || "sandbox";
+    if (!apiKey) {
+      console.log("AT_API_KEY not configured, skipping SMS debt reminders.");
+      return;
+    }
+    const credentials = { apiKey, username };
     const AfricasTalking = require("africastalking")(credentials);
     const sms = AfricasTalking.SMS;
 

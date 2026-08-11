@@ -7,20 +7,10 @@ import * as admin from "firebase-admin";
 import { SECURE_FN_OPTS } from "../config/functionOptions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { onDocumentWritten } from "firebase-functions/v2/firestore";
-import { defineSecret } from "firebase-functions/params";
 import { assertBusinessMember, assertActiveSubscription, assertFeatureEnabled } from "../middleware/checkPlanLimits";
-
-const atApiKeySecret = defineSecret("AT_API_KEY");
-const atUsernameSecret = defineSecret("AT_USERNAME");
-const atSenderIdSecret = defineSecret("AT_SENDER_ID");
-const metaWaTokenSecret = defineSecret("META_WA_TOKEN");
-const metaWaPhoneNumberIdSecret = defineSecret("META_WA_PHONE_NUMBER_ID");
 
 const db = () => admin.firestore();
 
-// -----------------------------------------------------------
-// Message Templates — Reusable engine with placeholders
-// -----------------------------------------------------------
 const TEMPLATES: Record<string, string> = {
   debt_reminder: "Dear {{customerName}}, your outstanding balance of KES {{balance}} is due. Please pay at your earliest convenience. - HardwareOS",
   payment_received: "Dear {{customerName}}, we have received your payment of KES {{amount}}. Thank you! - HardwareOS",
@@ -39,9 +29,6 @@ function fillTemplate(template: string, vars: Record<string, string>): string {
   return msg;
 }
 
-// -----------------------------------------------------------
-// enqueueNotification
-// Called by other Cloud Functions to queue a message.
 // -----------------------------------------------------------
 export const enqueueNotification = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
@@ -207,7 +194,6 @@ export const getNotificationStats = onCall(SECURE_FN_OPTS, async (request) => {
 export const processNotificationQueue = onDocumentWritten(
   {
     document: "notificationQueue/{notifId}",
-    secrets: [atApiKeySecret, atUsernameSecret, atSenderIdSecret, metaWaTokenSecret, metaWaPhoneNumberIdSecret],
   },
   async (event) => {
     const snap = event.data?.after;

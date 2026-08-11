@@ -91,7 +91,7 @@ async function callGeminiAPI(prompt: string, apiKey: string): Promise<string> {
 // -----------------------------------------------------------
 // getAIInsights
 // -----------------------------------------------------------
-export const getAIInsights = onCall({ ...SECURE_FN_OPTS, secrets: [geminiApiKeySecret] }, async (request) => {
+export const getAIInsights = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
 
   const { businessId, prompt } = request.data as { businessId: string; prompt?: string };
