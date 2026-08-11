@@ -26,13 +26,13 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-    // App Check: require proper configuration in release builds.
+  // App Check: require proper configuration in release builds.
   try {
     const recaptchaKey = String.fromEnvironment(
       'RECAPTCHA_SITE_KEY',
       defaultValue: '',
     );
-    
+
     if (kReleaseMode) {
       if (recaptchaKey.isEmpty) {
         throw FlutterError(
@@ -49,12 +49,13 @@ void main() async {
         await FirebaseAppCheck.instance.activate(
           androidProvider: AndroidProvider.debug,
           appleProvider: AppleProvider.debug,
-          webProvider: recaptchaKey.isNotEmpty 
-              ? ReCaptchaV3Provider(recaptchaKey) 
+          webProvider: recaptchaKey.isNotEmpty
+              ? ReCaptchaV3Provider(recaptchaKey)
               : null,
         );
       } else {
-        debugPrint('Skipping App Check on Web debug because RECAPTCHA_SITE_KEY is empty.');
+        debugPrint(
+            'Skipping App Check on Web debug because RECAPTCHA_SITE_KEY is empty.');
       }
     }
   } catch (e) {

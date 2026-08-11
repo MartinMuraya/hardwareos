@@ -133,7 +133,8 @@ class AuthProvider extends ChangeNotifier {
       } else {
         _userProfile = null;
         _businessStatus = null;
-        _state = AuthState.authenticated; // Must remain authenticated so the router can direct to /register
+        _state = AuthState
+            .authenticated; // Must remain authenticated so the router can direct to /register
       }
     } on FirebaseFunctionsException catch (e) {
       // On profile load errors, do NOT treat the user as authenticated.
@@ -170,8 +171,11 @@ class AuthProvider extends ChangeNotifier {
       // Check login abuse rate limit before attempting auth
       await fn('checkLoginLocked').call({'email': email});
     } on FirebaseFunctionsException catch (e) {
-      if (e.code == 'resource-exhausted' || e.code == 'unauthenticated' || e.message?.toLowerCase().contains('too many') == true) {
-        _errorMessage = 'Too many failed login attempts. Please try again later.';
+      if (e.code == 'resource-exhausted' ||
+          e.code == 'unauthenticated' ||
+          e.message?.toLowerCase().contains('too many') == true) {
+        _errorMessage =
+            'Too many failed login attempts. Please try again later.';
         _state = AuthState.unauthenticated;
         notifyListeners();
         return false;

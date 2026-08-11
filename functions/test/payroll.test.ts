@@ -6,7 +6,8 @@ describe('Payroll Logic Math', () => {
     const settings = {
       payeRate: 30, // 30%
       nhifRate: 2.75, // 2.75%
-      nssfRate: 6 // 6%
+      nssfRate: 6, // 6%
+      housingLevyRate: 1.5 // 1.5%
     };
 
     const result = calculatePayslip(gross, settings);
@@ -14,9 +15,10 @@ describe('Payroll Logic Math', () => {
     expect(result.paye).toBe(30000);
     expect(result.nhif).toBe(2750);
     expect(result.nssf).toBe(6000);
+    expect(result.ahl).toBe(1500);
     
-    expect(result.deductions).toBe(38750); // 30000 + 2750 + 6000
-    expect(result.netPay).toBe(61250); // 100000 - 38750
+    expect(result.deductions).toBe(40250); // 30000 + 2750 + 6000 + 1500
+    expect(result.netPay).toBe(59750); // 100000 - 40250
   });
 
   it('handles zero base salary gracefully', () => {

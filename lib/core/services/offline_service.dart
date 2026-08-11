@@ -280,16 +280,18 @@ class OfflineService {
 
   static List<PendingStorefrontOrder> getPendingStorefrontOrders() {
     return _storefrontOrdersBox?.values
-        .map((raw) => PendingStorefrontOrder.fromJson(
-            Map<String, dynamic>.from(jsonDecode(raw) as Map)))
-        .toList() ?? [];
+            .map((raw) => PendingStorefrontOrder.fromJson(
+                Map<String, dynamic>.from(jsonDecode(raw) as Map)))
+            .toList() ??
+        [];
   }
 
   static Future<void> removeStorefrontOrder(String id) async {
     await _storefrontOrdersBox?.delete(id);
   }
 
-  static int get pendingStorefrontOrderCount => _storefrontOrdersBox?.length ?? 0;
+  static int get pendingStorefrontOrderCount =>
+      _storefrontOrdersBox?.length ?? 0;
 
   // ── Draft Sale ──
 
@@ -300,8 +302,9 @@ class OfflineService {
 
   static List<Map<String, dynamic>> getAllDrafts() {
     return _draftBox?.values
-        .map((raw) => Map<String, dynamic>.from(jsonDecode(raw) as Map))
-        .toList() ?? [];
+            .map((raw) => Map<String, dynamic>.from(jsonDecode(raw) as Map))
+            .toList() ??
+        [];
   }
 
   static Future<void> deleteDraftSale(String id) async {
@@ -333,9 +336,10 @@ class OfflineService {
 
   static List<PendingSale> getPendingSales() {
     return _salesBox?.values
-        .map((raw) => PendingSale.fromJson(
-            Map<String, dynamic>.from(jsonDecode(raw) as Map)))
-        .toList() ?? [];
+            .map((raw) => PendingSale.fromJson(
+                Map<String, dynamic>.from(jsonDecode(raw) as Map)))
+            .toList() ??
+        [];
   }
 
   static Future<void> removeSale(String id) async {
@@ -352,9 +356,10 @@ class OfflineService {
 
   static List<PendingPayment> getPendingPayments() {
     return _paymentsBox?.values
-        .map((raw) => PendingPayment.fromJson(
-            Map<String, dynamic>.from(jsonDecode(raw) as Map)))
-        .toList() ?? [];
+            .map((raw) => PendingPayment.fromJson(
+                Map<String, dynamic>.from(jsonDecode(raw) as Map)))
+            .toList() ??
+        [];
   }
 
   static Future<void> removePayment(String id) async {
@@ -372,9 +377,10 @@ class OfflineService {
 
   static List<PendingInventoryUpdate> getPendingInventoryUpdates() {
     return _inventoryBox?.values
-        .map((raw) => PendingInventoryUpdate.fromJson(
-            Map<String, dynamic>.from(jsonDecode(raw) as Map)))
-        .toList() ?? [];
+            .map((raw) => PendingInventoryUpdate.fromJson(
+                Map<String, dynamic>.from(jsonDecode(raw) as Map)))
+            .toList() ??
+        [];
   }
 
   static Future<void> removeInventoryUpdate(String id) async {
@@ -416,9 +422,10 @@ class OfflineService {
 
   static List<ConflictedSale> getConflictedSales() {
     return _conflictedSalesBox?.values
-        .map((raw) => ConflictedSale.fromJson(
-            Map<String, dynamic>.from(jsonDecode(raw) as Map)))
-        .toList() ?? [];
+            .map((raw) => ConflictedSale.fromJson(
+                Map<String, dynamic>.from(jsonDecode(raw) as Map)))
+            .toList() ??
+        [];
   }
 
   static Future<void> removeConflictedSale(String id) async {

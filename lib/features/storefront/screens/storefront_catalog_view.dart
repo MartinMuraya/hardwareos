@@ -102,76 +102,89 @@ class _StorefrontCatalogViewState extends State<StorefrontCatalogView> {
                                   final cartItem = provider.cart
                                       .where((e) => e.product.id == p.id)
                                       .firstOrNull;
-                                  
+
                                   return SizedBox(
-                                  width: double.infinity,
-                                  child: cartItem != null
-                                      ? Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            IconButton(
-                                              style: IconButton.styleFrom(
-                                                  backgroundColor: Colors.red.withValues(alpha: 0.1),
-                                                  foregroundColor: Colors.red),
-                                              icon: const Icon(Icons.remove),
-                                              onPressed: () =>
-                                                  provider.updateQuantity(
-                                                      p.id, cartItem.quantity - 1),
+                                    width: double.infinity,
+                                    child: cartItem != null
+                                        ? Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              IconButton(
+                                                style: IconButton.styleFrom(
+                                                    backgroundColor: Colors.red
+                                                        .withValues(alpha: 0.1),
+                                                    foregroundColor:
+                                                        Colors.red),
+                                                icon: const Icon(Icons.remove),
+                                                onPressed: () =>
+                                                    provider.updateQuantity(
+                                                        p.id,
+                                                        cartItem.quantity - 1),
+                                              ),
+                                              Text(
+                                                '${cartItem.quantity}',
+                                                style: const TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                              ),
+                                              IconButton(
+                                                style: IconButton.styleFrom(
+                                                    backgroundColor: Colors
+                                                        .green
+                                                        .withValues(alpha: 0.1),
+                                                    foregroundColor:
+                                                        Colors.green),
+                                                icon: const Icon(Icons.add),
+                                                onPressed: p.inStock
+                                                    ? () =>
+                                                        provider.updateQuantity(
+                                                            p.id,
+                                                            cartItem.quantity +
+                                                                1)
+                                                    : null,
+                                              ),
+                                            ],
+                                          )
+                                        : ElevatedButton.icon(
+                                            style: ElevatedButton.styleFrom(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      vertical: 12),
                                             ),
-                                            Text(
-                                              '${cartItem.quantity}',
-                                              style: const TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold),
-                                            ),
-                                            IconButton(
-                                              style: IconButton.styleFrom(
-                                                  backgroundColor: Colors.green.withValues(alpha: 0.1),
-                                                  foregroundColor: Colors.green),
-                                              icon: const Icon(Icons.add),
-                                              onPressed: p.inStock
-                                                  ? () => provider.updateQuantity(
-                                                      p.id, cartItem.quantity + 1)
-                                                  : null,
-                                            ),
-                                          ],
-                                        )
-                                      : ElevatedButton.icon(
-                                          style: ElevatedButton.styleFrom(
-                                            padding: const EdgeInsets.symmetric(
-                                                vertical: 12),
-                                          ),
-                                          onPressed: p.inStock
-                                              ? () {
-                                                  provider.addToCart(p);
-                                                  ScaffoldMessenger.of(context)
-                                                      .showSnackBar(
-                                                    SnackBar(
-                                                      content: Text(
-                                                          '${p.name} added to cart'),
-                                                      duration: const Duration(
-                                                          seconds: 1),
-                                                      action: SnackBarAction(
-                                                        label: 'VIEW CART',
-                                                        onPressed:
-                                                            widget.onViewCart,
+                                            onPressed: p.inStock
+                                                ? () {
+                                                    provider.addToCart(p);
+                                                    ScaffoldMessenger.of(
+                                                            context)
+                                                        .showSnackBar(
+                                                      SnackBar(
+                                                        content: Text(
+                                                            '${p.name} added to cart'),
+                                                        duration:
+                                                            const Duration(
+                                                                seconds: 1),
+                                                        action: SnackBarAction(
+                                                          label: 'VIEW CART',
+                                                          onPressed:
+                                                              widget.onViewCart,
+                                                        ),
                                                       ),
-                                                    ),
-                                                  );
-                                                }
-                                              : null,
-                                          icon: const Icon(
-                                              Icons.add_shopping_cart,
-                                              size: 18),
-                                          label: Text(p.inStock
-                                              ? 'Add to Cart'
-                                              : 'Out of Stock'),
-                                        ),
+                                                    );
+                                                  }
+                                                : null,
+                                            icon: const Icon(
+                                                Icons.add_shopping_cart,
+                                                size: 18),
+                                            label: Text(p.inStock
+                                                ? 'Add to Cart'
+                                                : 'Out of Stock'),
+                                          ),
                                   );
                                 })(),
-                            ],
-                          ),
+                              ],
+                            ),
                           ),
                         ],
                       ),

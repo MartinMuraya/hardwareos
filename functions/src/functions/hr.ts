@@ -127,11 +127,11 @@ export const processLeave = onCall(SECURE_FN_OPTS, async (request) => {
   return { success: true };
 });
 
-function calculatePayslip(gross: number, settings: any) {
-  const paye = (gross * (settings.payeRate || 30)) / 100;
-  const nhif = (gross * (settings.nhifRate || 2.75)) / 100;
-  const nssf = (gross * (settings.nssfRate || 6)) / 100;
-  const ahl = (gross * (settings.housingLevyRate || 1.5)) / 100;
+export function calculatePayslip(gross: number, settings: any) {
+  const paye = (gross * (settings.payeRate ?? 30)) / 100;
+  const nhif = (gross * (settings.nhifRate ?? 2.75)) / 100;
+  const nssf = (gross * (settings.nssfRate ?? 6)) / 100;
+  const ahl = (gross * (settings.housingLevyRate ?? 1.5)) / 100;
 
   const deductions = paye + nhif + nssf + ahl;
   const netPay = gross - deductions;

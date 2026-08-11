@@ -517,21 +517,25 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
   Widget _buildComputedAt(ThemeData theme) {
     final computedAtRaw = _stats?['computedAt'];
     if (computedAtRaw == null) return const SizedBox.shrink();
-    
+
     String dateString = '';
     if (computedAtRaw is String) {
-      dateString = DateTime.tryParse(computedAtRaw)?.toLocal().toString() ?? computedAtRaw;
+      dateString = DateTime.tryParse(computedAtRaw)?.toLocal().toString() ??
+          computedAtRaw;
     } else if (computedAtRaw is Map) {
       // Handle Firestore Timestamp map structure usually returned by callables
-      final seconds = computedAtRaw['_seconds'] ?? computedAtRaw['seconds'] ?? 0;
-      dateString = DateTime.fromMillisecondsSinceEpoch((seconds as num).toInt() * 1000).toLocal().toString();
+      final seconds =
+          computedAtRaw['_seconds'] ?? computedAtRaw['seconds'] ?? 0;
+      dateString =
+          DateTime.fromMillisecondsSinceEpoch((seconds as num).toInt() * 1000)
+              .toLocal()
+              .toString();
     } else {
       dateString = computedAtRaw.toString();
     }
 
     return Center(
-      child: Text(
-          'Last updated: $dateString',
+      child: Text('Last updated: $dateString',
           style: theme.textTheme.bodySmall
               ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
     );

@@ -315,9 +315,8 @@ class _ImportDialogState extends State<ImportDialog> {
               ),
               const Spacer(),
               FilledButton.icon(
-                onPressed: (_importing || _parsedRows.isEmpty)
-                    ? null
-                    : _doImport,
+                onPressed:
+                    (_importing || _parsedRows.isEmpty) ? null : _doImport,
                 icon: _importing
                     ? const SizedBox(
                         width: 16,
@@ -516,20 +515,25 @@ class _ImportDialogState extends State<ImportDialog> {
         'businessId': bizId,
         'products': validRows,
       });
-      
+
       final bool success = result['success'] == true;
       final int imported = result['imported'] as int? ?? 0;
       final List dynamicErrors = result['errors'] as List? ?? [];
 
       setState(() {
         if (!success && imported == 0) {
-          final errorText = dynamicErrors.map((e) => "Row ${e['row']}: ${e['message']}").join("\n");
+          final errorText = dynamicErrors
+              .map((e) => "Row ${e['row']}: ${e['message']}")
+              .join("\n");
           _errorMessage = 'Import failed. Errors:\n$errorText';
         } else {
           _importedCount = imported;
           if (dynamicErrors.isNotEmpty) {
-            final errorText = dynamicErrors.map((e) => "Row ${e['row']}: ${e['message']}").join("\n");
-            _errorMessage = 'Imported $imported products. Some rows failed:\n$errorText';
+            final errorText = dynamicErrors
+                .map((e) => "Row ${e['row']}: ${e['message']}")
+                .join("\n");
+            _errorMessage =
+                'Imported $imported products. Some rows failed:\n$errorText';
           }
         }
         _importing = false;

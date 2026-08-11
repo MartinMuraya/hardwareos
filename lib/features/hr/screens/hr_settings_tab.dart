@@ -76,9 +76,11 @@ class _HrSettingsTabState extends State<HrSettingsTab> {
               ),
               const SizedBox(height: 16),
               TextFormField(
-                initialValue: settings?.housingLevyRate.toString() ?? _ahl.toString(),
+                initialValue:
+                    settings?.housingLevyRate.toString() ?? _ahl.toString(),
                 decoration: const InputDecoration(
-                    labelText: 'Affordable Housing Levy (AHL) Rate (%)', border: OutlineInputBorder()),
+                    labelText: 'Affordable Housing Levy (AHL) Rate (%)',
+                    border: OutlineInputBorder()),
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
                 validator: (val) =>

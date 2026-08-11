@@ -1306,7 +1306,8 @@ class _POSScreenState extends State<POSScreen> {
     );
   }
 
-  Widget _cartPanel({ScrollController? scrollController, bool isMobile = false}) {
+  Widget _cartPanel(
+      {ScrollController? scrollController, bool isMobile = false}) {
     final theme = Theme.of(context);
     return Container(
       color: theme.colorScheme.surface,
@@ -1368,8 +1369,8 @@ class _POSScreenState extends State<POSScreen> {
                                 color: theme.colorScheme.onSurfaceVariant)),
                         const SizedBox(height: 6),
                         Text('Tap a product to add it.',
-                            style:
-                                TextStyle(color: theme.hintColor, fontSize: 12)),
+                            style: TextStyle(
+                                color: theme.hintColor, fontSize: 12)),
                       ])))
               : Column(
                   children: _cart.asMap().entries.map((entry) {
@@ -1406,8 +1407,8 @@ class _POSScreenState extends State<POSScreen> {
                                 color: theme.colorScheme.onSurfaceVariant)),
                         const SizedBox(height: 6),
                         Text('Tap a product to add it.',
-                            style:
-                                TextStyle(color: theme.hintColor, fontSize: 12)),
+                            style: TextStyle(
+                                color: theme.hintColor, fontSize: 12)),
                       ]))
                 : ListView.separated(
                     controller: scrollController,
@@ -1670,28 +1671,29 @@ class _POSScreenState extends State<POSScreen> {
                   return Container(
                     width: double.infinity,
                     height: MediaQuery.of(ctx).size.height * 0.9,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                ),
-                child: Column(
-                  children: [
-                    Container(
-                      margin: const EdgeInsets.symmetric(vertical: 12),
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                          color: theme.dividerColor,
-                          borderRadius: BorderRadius.circular(2)),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(20)),
                     ),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: _cartPanel(isMobile: true),
-                      ),
+                    child: Column(
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.symmetric(vertical: 12),
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                              color: theme.dividerColor,
+                              borderRadius: BorderRadius.circular(2)),
+                        ),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            child: _cartPanel(isMobile: true),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              );
+                  );
                 },
               ),
             ).whenComplete(() => _modalSetState = null);

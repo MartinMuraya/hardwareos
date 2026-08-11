@@ -375,7 +375,8 @@ class _Sidebar extends StatelessWidget {
                   CircleAvatar(
                     radius: 18,
                     backgroundColor: theme.colorScheme.primaryContainer,
-                    backgroundImage: context.read<AuthProvider>().photoUrl != null
+                    backgroundImage: context.read<AuthProvider>().photoUrl !=
+                            null
                         ? NetworkImage(context.read<AuthProvider>().photoUrl!)
                         : null,
                     child: context.read<AuthProvider>().photoUrl == null
