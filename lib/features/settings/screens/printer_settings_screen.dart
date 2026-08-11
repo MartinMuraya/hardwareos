@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/services/thermal_printer_service.dart';
@@ -26,12 +27,10 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
     setState(() => _isLoading = true);
     try {
       final devices = await ThermalPrinterService.getPairedDevices();
-      setState(() => _devices = devices);
+      if (mounted) setState(() => _devices = devices);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Error loading devices: $e')));
-      }
+      debugPrint('Error loading bluetooth devices: $e');
+      if (mounted) setState(() => _devices = []);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -130,6 +129,36 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
+                if (kIsWeb ||
+                    (defaultTargetPlatform != TargetPlatform.android &&
+                        defaultTargetPlatform != TargetPlatform.iOS))
+                  Container(
+                    margin: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer
+                          .withValues(alpha: 0.25),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                          color:
+                              theme.colorScheme.primary.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.info_outline,
+                            color: theme.colorScheme.primary, size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Bluetooth thermal printing is supported on Android & iOS mobile devices. On Web/Desktop browsers, standard browser printing (PDF & Thermal Web Print) is enabled automatically at checkout.',
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: theme.colorScheme.onSurface),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ListTile(
                   title: const Text('Bluetooth Package'),
                   subtitle: const Text(

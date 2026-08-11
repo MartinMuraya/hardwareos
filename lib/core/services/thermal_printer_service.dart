@@ -45,22 +45,39 @@ class ThermalPrinterService {
   }
 
   static Future<List<PrinterDevice>> getPairedDevices() async {
-    if (_currentPackage == ThermalPackage.blueThermalPrinter) {
-      final blue = btp.BlueThermalPrinter.instance;
-      final devices = await blue.getBondedDevices();
-      return devices
-          .map((d) => PrinterDevice(
-              name: d.name ?? 'Unknown', address: d.address ?? ''))
-          .toList();
-    } else {
-      final devices = await pbt.PrintBluetoothThermal.pairedBluetooths;
-      return devices
-          .map((d) => PrinterDevice(name: d.name, address: d.macAdress))
-          .toList();
+    if (kIsWeb ||
+        (defaultTargetPlatform != TargetPlatform.android &&
+            defaultTargetPlatform != TargetPlatform.iOS)) {
+      debugPrint(
+          "Thermal printer Bluetooth plugin is only supported on mobile platforms.");
+      return [];
+    }
+    try {
+      if (_currentPackage == ThermalPackage.blueThermalPrinter) {
+        final blue = btp.BlueThermalPrinter.instance;
+        final devices = await blue.getBondedDevices();
+        return devices
+            .map((d) => PrinterDevice(
+                name: d.name ?? 'Unknown', address: d.address ?? ''))
+            .toList();
+      } else {
+        final devices = await pbt.PrintBluetoothThermal.pairedBluetooths;
+        return devices
+            .map((d) => PrinterDevice(name: d.name, address: d.macAdress))
+            .toList();
+      }
+    } catch (e) {
+      debugPrint("Error fetching paired Bluetooth devices: $e");
+      return [];
     }
   }
 
   static Future<bool> connect(String macAddress) async {
+    if (kIsWeb ||
+        (defaultTargetPlatform != TargetPlatform.android &&
+            defaultTargetPlatform != TargetPlatform.iOS)) {
+      return false;
+    }
     try {
       if (_currentPackage == ThermalPackage.blueThermalPrinter) {
         final blue = btp.BlueThermalPrinter.instance;
@@ -91,41 +108,68 @@ class ThermalPrinterService {
   }
 
   static Future<void> disconnect() async {
+    if (kIsWeb ||
+        (defaultTargetPlatform != TargetPlatform.android &&
+            defaultTargetPlatform != TargetPlatform.iOS)) {
+      return;
+    }
     try {
       if (_currentPackage == ThermalPackage.blueThermalPrinter) {
         await btp.BlueThermalPrinter.instance.disconnect();
       } else {
         await pbt.PrintBluetoothThermal.disconnect;
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint("Printer disconnect error: $e");
+    }
     _connectedAddress = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_prefAddress);
   }
 
   static Future<bool> isConnected() async {
-    if (_currentPackage == ThermalPackage.blueThermalPrinter) {
-      return (await btp.BlueThermalPrinter.instance.isConnected) ?? false;
-    } else {
-      return await pbt.PrintBluetoothThermal.connectionStatus;
+    if (kIsWeb ||
+        (defaultTargetPlatform != TargetPlatform.android &&
+            defaultTargetPlatform != TargetPlatform.iOS)) {
+      return false;
+    }
+    try {
+      if (_currentPackage == ThermalPackage.blueThermalPrinter) {
+        return (await btp.BlueThermalPrinter.instance.isConnected) ?? false;
+      } else {
+        return await pbt.PrintBluetoothThermal.connectionStatus;
+      }
+    } catch (e) {
+      debugPrint("Printer isConnected check error: $e");
+      return false;
     }
   }
 
-  static Future<void> printReceipt(List<int> bytes) async {
-    if (!await isConnected()) {
-      if (_connectedAddress != null) {
-        bool reconnected = await connect(_connectedAddress!);
-        if (!reconnected) return;
+  static Future<bool> printReceipt(List<int> bytes) async {
+    if (kIsWeb ||
+        (defaultTargetPlatform != TargetPlatform.android &&
+            defaultTargetPlatform != TargetPlatform.iOS)) {
+      debugPrint(
+          "Bluetooth thermal printing unavailable on non-mobile platform.");
+      return false;
+    }
+    try {
+      if (_currentPackage == ThermalPackage.blueThermalPrinter) {
+        final blue = btp.BlueThermalPrinter.instance;
+        if ((await blue.isConnected) == true) {
+          await blue.writeBytes(Uint8List.fromList(bytes));
+          return true;
+        }
       } else {
-        return;
+        final connected = await pbt.PrintBluetoothThermal.connectionStatus;
+        if (connected) {
+          await pbt.PrintBluetoothThermal.writeBytes(bytes);
+          return true;
+        }
       }
+    } catch (e) {
+      debugPrint("Print receipt error: $e");
     }
-
-    if (_currentPackage == ThermalPackage.blueThermalPrinter) {
-      final blue = btp.BlueThermalPrinter.instance;
-      await blue.writeBytes(Uint8List.fromList(bytes));
-    } else {
-      await pbt.PrintBluetoothThermal.writeBytes(bytes);
-    }
+    return false;
   }
 }
