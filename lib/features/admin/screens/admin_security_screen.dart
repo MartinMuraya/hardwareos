@@ -173,8 +173,8 @@ class _AdminSecurityScreenState extends State<AdminSecurityScreen> {
   }
 
   Widget _buildEventRow(Map e, ThemeData theme) {
-    final action = e['action'] as String? ?? 'UNKNOWN';
-    final ts = e['timestamp'] as String?;
+    final action = e['action']?.toString() ?? 'Unknown';
+    final ts = e['timestamp']?.toString();
     String? displayTime;
     if (ts != null) {
       try {
@@ -194,11 +194,11 @@ class _AdminSecurityScreenState extends State<AdminSecurityScreen> {
         title: Text(action,
             style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
         subtitle: Text(
-          '${displayTime ?? ''}${e['businessId'] != null ? ' | ${e['businessId']}' : ''}',
+          '${displayTime ?? ''}${e['businessId'] != null ? ' | ${e['businessId'].toString()}' : ''}',
           style: const TextStyle(fontSize: 11),
         ),
         trailing: e['userId'] != null
-            ? Text(e['userId']!.toString().substring(0, 8),
+            ? Text(e['userId'].toString().substring(0, 8),
                 style: const TextStyle(fontSize: 10, fontFamily: 'monospace'))
             : null,
       ),

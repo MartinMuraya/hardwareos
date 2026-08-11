@@ -1,6 +1,22 @@
 {
   "indexes": [
     {
+      "collectionGroup": "payrolls",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "businessId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "online_orders",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "businessId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "sales",
       "queryScope": "COLLECTION",
       "fields": [
@@ -96,6 +112,14 @@
       "fields": [
         { "fieldPath": "businessId", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "businessId", "order": "ASCENDING" },
+        { "fieldPath": "commissionBalance", "order": "ASCENDING" }
       ]
     },
     {
@@ -382,6 +406,14 @@
       ]
     },
     {
+      "collectionGroup": "auditLogs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "action", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "notificationQueue",
       "queryScope": "COLLECTION",
       "fields": [
@@ -406,6 +438,47 @@
         { "fieldPath": "businessId", "order": "ASCENDING" },
         { "fieldPath": "credit", "order": "ASCENDING" },
         { "fieldPath": "debit", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "subscriptions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "transactionStatus", "order": "ASCENDING" },
+        { "fieldPath": "amount", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "online_orders",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "businessId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "supplierDebts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "businessId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "subscriptions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "transactionStatus", "order": "ASCENDING" },
+        { "fieldPath": "paidAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "subscriptions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "transactionStatus", "order": "ASCENDING" },
+        { "fieldPath": "paidAt", "order": "ASCENDING" },
+        { "fieldPath": "amount", "order": "ASCENDING" }
       ]
     }
   ],

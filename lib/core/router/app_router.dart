@@ -291,6 +291,11 @@ class AppRouter {
               pageBuilder: (context, state) =>
                   const NoTransitionPage(child: AdminSupportScreen()),
             ),
+            GoRoute(
+              path: '/admin/profile',
+              pageBuilder: (context, state) =>
+                  const NoTransitionPage(child: ProfileScreen()),
+            ),
           ],
         ),
 

@@ -86,7 +86,7 @@ service cloud.firestore {
     // =========================================================
     // HR & PAYROLL
     // =========================================================
-    match /payroll/{payrollId} {
+    match /payrolls/{payrollId} {
       allow read: if isManager(resource.data.businessId) || (isAuth() && resource.data.userId == request.auth.uid);
       allow write: if false;
     }

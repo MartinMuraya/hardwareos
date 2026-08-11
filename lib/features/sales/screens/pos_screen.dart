@@ -44,6 +44,7 @@ class FocusSearchIntent extends Intent {
 class _POSScreenState extends State<POSScreen> {
   final List<_CartEntry> _cart = [];
   String _paymentMethod = 'cash';
+  StateSetter? _modalSetState;
 
   // Customer & Credit state
   Customer? _selectedCustomer;
@@ -421,11 +422,13 @@ class _POSScreenState extends State<POSScreen> {
       }
     });
     _saveCart();
+    _modalSetState?.call(() {});
   }
 
   void _removeFromCart(String productId) {
     setState(() => _cart.removeWhere((e) => e.product.id == productId));
     _saveCart();
+    _modalSetState?.call(() {});
   }
 
   void _updateCartEntry(String productId, _CartEntry updated) {
@@ -443,6 +446,7 @@ class _POSScreenState extends State<POSScreen> {
       }
     });
     _saveCart();
+    _modalSetState?.call(() {});
   }
 
   void _clearCart() {
@@ -456,6 +460,7 @@ class _POSScreenState extends State<POSScreen> {
       _mpesaPhoneCtrl.clear();
     });
     _saveCart();
+    _modalSetState?.call(() {});
   }
 
   double get _cartTotal =>
@@ -1301,7 +1306,7 @@ class _POSScreenState extends State<POSScreen> {
     );
   }
 
-  Widget _cartPanel() {
+  Widget _cartPanel({ScrollController? scrollController, bool isMobile = false}) {
     final theme = Theme.of(context);
     return Container(
       color: theme.colorScheme.surface,
@@ -1347,40 +1352,81 @@ class _POSScreenState extends State<POSScreen> {
             ]),
         ]),
         const SizedBox(height: 16),
-        Expanded(
-          child: _cart.isEmpty
-              ? Center(
-                  child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+        if (isMobile)
+          _cart.isEmpty
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  child: Center(
+                      child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                        Icon(Icons.shopping_cart_outlined,
+                            color: theme.hintColor, size: 48),
+                        const SizedBox(height: 12),
+                        Text('Cart is empty',
+                            style: TextStyle(
+                                color: theme.colorScheme.onSurfaceVariant)),
+                        const SizedBox(height: 6),
+                        Text('Tap a product to add it.',
+                            style:
+                                TextStyle(color: theme.hintColor, fontSize: 12)),
+                      ])))
+              : Column(
+                  children: _cart.asMap().entries.map((entry) {
+                    final i = entry.key;
+                    final e = entry.value;
+                    return Column(
                       children: [
-                      Icon(Icons.shopping_cart_outlined,
-                          color: theme.hintColor, size: 48),
-                      const SizedBox(height: 12),
-                      Text('Cart is empty',
-                          style: TextStyle(
-                              color: theme.colorScheme.onSurfaceVariant)),
-                      const SizedBox(height: 6),
-                      Text('Tap a product to add it.',
-                          style:
-                              TextStyle(color: theme.hintColor, fontSize: 12)),
-                    ]))
-              : ListView.separated(
-                  itemCount: _cart.length,
-                  separatorBuilder: (_, __) =>
-                      Divider(height: 1, color: theme.dividerColor),
-                  itemBuilder: (_, i) {
-                    final e = _cart[i];
-                    return _CartTile(
-                      entry: e,
-                      fmt: _fmt,
-                      theme: theme,
-                      onRemove: () => _removeFromCart(e.product.id),
-                      onUpdate: (updated) =>
-                          _updateCartEntry(e.product.id, updated),
+                        _CartTile(
+                          entry: e,
+                          fmt: _fmt,
+                          theme: theme,
+                          onRemove: () => _removeFromCart(e.product.id),
+                          onUpdate: (updated) =>
+                              _updateCartEntry(e.product.id, updated),
+                        ),
+                        if (i < _cart.length - 1)
+                          Divider(height: 1, color: theme.dividerColor),
+                      ],
                     );
-                  },
-                ),
-        ),
+                  }).toList(),
+                )
+        else
+          Expanded(
+            child: _cart.isEmpty
+                ? Center(
+                    child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                        Icon(Icons.shopping_cart_outlined,
+                            color: theme.hintColor, size: 48),
+                        const SizedBox(height: 12),
+                        Text('Cart is empty',
+                            style: TextStyle(
+                                color: theme.colorScheme.onSurfaceVariant)),
+                        const SizedBox(height: 6),
+                        Text('Tap a product to add it.',
+                            style:
+                                TextStyle(color: theme.hintColor, fontSize: 12)),
+                      ]))
+                : ListView.separated(
+                    controller: scrollController,
+                    itemCount: _cart.length,
+                    separatorBuilder: (_, __) =>
+                        Divider(height: 1, color: theme.dividerColor),
+                    itemBuilder: (_, i) {
+                      final e = _cart[i];
+                      return _CartTile(
+                        entry: e,
+                        fmt: _fmt,
+                        theme: theme,
+                        onRemove: () => _removeFromCart(e.product.id),
+                        onUpdate: (updated) =>
+                            _updateCartEntry(e.product.id, updated),
+                      );
+                    },
+                  ),
+          ),
         Divider(height: 20, color: theme.dividerColor),
         GestureDetector(
           onTap: _showCustomerPicker,
@@ -1618,12 +1664,17 @@ class _POSScreenState extends State<POSScreen> {
               shape: const RoundedRectangleBorder(
                   borderRadius:
                       BorderRadius.vertical(top: Radius.circular(20))),
-              builder: (ctx) => DraggableScrollableSheet(
-                initialChildSize: 0.9,
-                minChildSize: 0.5,
-                maxChildSize: 0.95,
-                expand: false,
-                builder: (_, scrollController) => Column(
+              builder: (ctx) => StatefulBuilder(
+                builder: (context, setModalState) {
+                  _modalSetState = setModalState;
+                  return Container(
+                    width: double.infinity,
+                    height: MediaQuery.of(ctx).size.height * 0.9,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                child: Column(
                   children: [
                     Container(
                       margin: const EdgeInsets.symmetric(vertical: 12),
@@ -1635,14 +1686,15 @@ class _POSScreenState extends State<POSScreen> {
                     ),
                     Expanded(
                       child: SingleChildScrollView(
-                        controller: scrollController,
-                        child: _cartPanel(),
+                        child: _cartPanel(isMobile: true),
                       ),
                     ),
                   ],
                 ),
+              );
+                },
               ),
-            );
+            ).whenComplete(() => _modalSetState = null);
           },
           child: const Text('View Cart'),
         ),

@@ -20,59 +20,67 @@ export const EXPENSE_CATEGORIES = [
 // createExpense
 // -----------------------------------------------------------
 export const createExpense = onCall(SECURE_FN_OPTS, async (request) => {
-  if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
-  await rateLimitCheck(request.rawRequest?.ip || request.auth.uid, "createExpense", 60, 1);
+  try {
+    if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
+    await rateLimitCheck(request.rawRequest?.ip || request.auth.uid, "createExpense", 60, 1);
 
-  const { businessId, branchId, category, amount, note } = request.data as {
-    businessId: string;
-    branchId?: string;
-    category: string;
-    amount: number;
-    note?: string;
-  };
+    const { businessId, branchId, category, amount, note } = request.data as {
+      businessId: string;
+      branchId?: string;
+      category: string;
+      amount: number;
+      note?: string;
+    };
 
-  if (!category || !amount || amount <= 0) {
-    throw new HttpsError("invalid-argument", "Category and a positive amount are required.");
-  }
+    if (!category || !amount || amount <= 0) {
+      throw new HttpsError("invalid-argument", "Category and a positive amount are required.");
+    }
 
-  await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager"]);
-  await assertActiveSubscription(businessId);
+    await assertBusinessMember(request.auth.uid, businessId, ["owner", "manager"]);
+    await assertActiveSubscription(businessId);
 
-  const now = admin.firestore.FieldValue.serverTimestamp();
-  
-  await db().runTransaction(async (txn) => {
-    const expRef = db().collection("expenses").doc();
-    txn.set(expRef, {
-      id: expRef.id,
-      businessId,
-      branchId: branchId || null,
-      category: category.trim(),
-      amount: Number(amount.toFixed(2)),
-      note: note?.trim() || "",
-      createdBy: request.auth!.uid,
-      createdAt: now,
+    const now = admin.firestore.FieldValue.serverTimestamp();
+    
+    await db().runTransaction(async (txn) => {
+      // READS MUST COME BEFORE WRITES IN FIRESTORE TRANSACTIONS
+      const accountsSnap = await txn.get(db().collection("chart_of_accounts").where("businessId", "==", businessId));
+
+      const expRef = db().collection("expenses").doc();
+      txn.set(expRef, {
+        id: expRef.id,
+        businessId,
+        branchId: branchId || null,
+        category: category.trim(),
+        amount: Number(amount.toFixed(2)),
+        note: note?.trim() || "",
+        createdBy: request.auth!.uid,
+        createdAt: now,
+      });
+
+      if (!accountsSnap.empty) {
+        const accounts = accountsSnap.docs.map(d => d.data());
+        const getAcc = (name: string) => accounts.find(a => a.name === name)?.id;
+        
+        const cashAcc = getAcc("Cash in Hand");
+        const genExpAcc = getAcc("General Expenses");
+        const catAcc = getAcc(`${category.trim()} Expense`) || genExpAcc;
+
+        if (cashAcc && catAcc) {
+          const lines: JournalLine[] = [
+            { accountId: catAcc, debit: Number(amount.toFixed(2)), credit: 0 },
+            { accountId: cashAcc, debit: 0, credit: Number(amount.toFixed(2)) }
+          ];
+          postJournalEntryHelper(txn, businessId, expRef.id, `Expense: ${category}`, lines);
+        }
+      }
     });
 
-    const accountsSnap = await txn.get(db().collection("chart_of_accounts").where("businessId", "==", businessId));
-    if (!accountsSnap.empty) {
-      const accounts = accountsSnap.docs.map(d => d.data());
-      const getAcc = (name: string) => accounts.find(a => a.name === name)?.id;
-      
-      const cashAcc = getAcc("Cash in Hand");
-      const genExpAcc = getAcc("General Expenses");
-      const catAcc = getAcc(`${category.trim()} Expense`) || genExpAcc;
-
-      if (cashAcc && catAcc) {
-        const lines: JournalLine[] = [
-          { accountId: catAcc, debit: Number(amount.toFixed(2)), credit: 0 },
-          { accountId: cashAcc, debit: 0, credit: Number(amount.toFixed(2)) }
-        ];
-        postJournalEntryHelper(txn, businessId, expRef.id, `Expense: ${category}`, lines);
-      }
-    }
-  });
-
-  return { success: true };
+    return { success: true };
+  } catch (err: any) {
+    if (err instanceof HttpsError) throw err;
+    console.error("CREATE EXPENSE ERROR:", err.message);
+    throw new HttpsError("internal", err.message);
+  }
 });
 
 // -----------------------------------------------------------

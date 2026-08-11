@@ -23,68 +23,75 @@ async function assertSuperAdmin(uid: string) {
 // -----------------------------------------------------------
 export const getPlatformStats = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Not logged in");
-  await assertSuperAdmin(request.auth.uid);
+  
+  try {
+    await assertSuperAdmin(request.auth.uid);
 
-  const businessesQuery = db().collection("businesses");
+    const businessesQuery = db().collection("businesses");
 
-  const [
-    totalBusinessesSnap,
-    activeBusinessesSnap,
-    pendingBusinessesSnap,
-    suspendedBusinessesSnap,
-    trialAccountsSnap,
-    expiredSubscriptionsSnap,
-    totalUsersSnap,
-    totalSalesSnap,
-  ] = await Promise.all([
-    businessesQuery.count().get(),
-    businessesQuery.where("active", "==", true).count().get(),
-    businessesQuery.where("status", "==", "pending").count().get(),
-    businessesQuery.where("status", "==", "suspended").count().get(),
-    businessesQuery.where("subscriptionStatus", "==", "trial").count().get(),
-    businessesQuery.where("subscriptionStatus", "==", "expired").count().get(),
-    db().collection("users").count().get(),
-    db().collectionGroup("sales").count().get(),
-  ]);
+    const [
+      totalBusinessesSnap,
+      activeBusinessesSnap,
+      pendingBusinessesSnap,
+      suspendedBusinessesSnap,
+      trialAccountsSnap,
+      expiredSubscriptionsSnap,
+      totalUsersSnap,
+      totalSalesSnap,
+    ] = await Promise.all([
+      businessesQuery.count().get(),
+      businessesQuery.where("active", "==", true).count().get(),
+      businessesQuery.where("status", "==", "pending").count().get(),
+      businessesQuery.where("status", "==", "suspended").count().get(),
+      businessesQuery.where("subscriptionStatus", "==", "trial").count().get(),
+      businessesQuery.where("subscriptionStatus", "==", "expired").count().get(),
+      db().collection("users").count().get(),
+      db().collectionGroup("sales").count().get(),
+    ]);
 
-  const { AggregateField } = require('firebase-admin/firestore');
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const startOfMonthTimestamp = admin.firestore.Timestamp.fromDate(startOfMonth);
+    const { AggregateField } = require('firebase-admin/firestore');
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfMonthTimestamp = admin.firestore.Timestamp.fromDate(startOfMonth);
 
-  const [monthlySubsSnap, totalSubsSnap, totalCountSnap] = await Promise.all([
-    db().collection("subscriptions")
-      .where("transactionStatus", "==", "completed")
-      .where("paidAt", ">=", startOfMonthTimestamp)
-      .aggregate({ totalRevenue: AggregateField.sum("amount") })
-      .get(),
-    db().collection("subscriptions")
-      .where("transactionStatus", "==", "completed")
-      .aggregate({ totalRevenue: AggregateField.sum("amount") })
-      .get(),
-    db().collection("subscriptions")
-      .where("transactionStatus", "==", "completed")
-      .count()
-      .get(),
-  ]);
+    let monthlySubsSnap: any, totalSubsSnap: any, totalCountSnap: any;
+    [monthlySubsSnap, totalSubsSnap, totalCountSnap] = await Promise.all([
+      db().collection("subscriptions")
+        .where("transactionStatus", "==", "completed")
+        .where("paidAt", ">=", startOfMonthTimestamp)
+        .aggregate({ totalRevenue: AggregateField.sum("amount") })
+        .get(),
+      db().collection("subscriptions")
+        .where("transactionStatus", "==", "completed")
+        .aggregate({ totalRevenue: AggregateField.sum("amount") })
+        .get(),
+      db().collection("subscriptions")
+        .where("transactionStatus", "==", "completed")
+        .count()
+        .get(),
+    ]);
 
-  const monthlyRevenue = (monthlySubsSnap.data().totalRevenue as number) || 0;
-  const totalRevenue = (totalSubsSnap.data().totalRevenue as number) || 0;
-  const totalTransactions = totalCountSnap.data().count;
+    const monthlyRevenue = (monthlySubsSnap.data().totalRevenue as number) || 0;
+    const totalRevenue = (totalSubsSnap.data().totalRevenue as number) || 0;
+    const totalTransactions = totalCountSnap.data().count;
 
-  return {
-    totalBusinesses: totalBusinessesSnap.data().count,
-    activeBusinesses: activeBusinessesSnap.data().count,
-    pendingBusinesses: pendingBusinessesSnap.data().count,
-    suspendedBusinesses: suspendedBusinessesSnap.data().count,
-    trialAccounts: trialAccountsSnap.data().count,
-    expiredSubscriptions: expiredSubscriptionsSnap.data().count,
-    totalUsers: totalUsersSnap.data().count,
-    totalSales: totalSalesSnap.data().count,
-    monthlyRevenue,
-    totalRevenue,
-    totalTransactions,
-  };
+    return {
+      totalBusinesses: totalBusinessesSnap.data().count,
+      activeBusinesses: activeBusinessesSnap.data().count,
+      pendingBusinesses: pendingBusinessesSnap.data().count,
+      suspendedBusinesses: suspendedBusinessesSnap.data().count,
+      trialAccounts: trialAccountsSnap.data().count,
+      expiredSubscriptions: expiredSubscriptionsSnap.data().count,
+      totalUsers: totalUsersSnap.data().count,
+      totalSales: totalSalesSnap.data().count,
+      monthlyRevenue,
+      totalRevenue,
+      totalTransactions,
+    };
+  } catch (err: any) {
+    console.error("GET PLATFORM STATS FAILED EXACT ERROR:", err.message);
+    throw new HttpsError("internal", err.message);
+  }
 });
 
 // -----------------------------------------------------------

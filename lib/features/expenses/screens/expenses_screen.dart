@@ -66,7 +66,12 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       if (mounted) {
         setState(() {
           if (newExpenses.isNotEmpty) {
-            _expenses.addAll(newExpenses);
+            // Prevent duplicates by checking IDs
+            for (var exp in newExpenses) {
+              if (!_expenses.any((e) => e.id == exp.id)) {
+                _expenses.add(exp);
+              }
+            }
             _lastDocId = newExpenses.last.id;
           }
           _hasMore = newExpenses.length == 30;

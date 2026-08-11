@@ -18,86 +18,72 @@ export const getSecurityMetrics = onCall(SECURE_FN_OPTS, async (request) => {
   const oneDayAgo = admin.firestore.Timestamp.fromMillis(Date.now() - 24 * 60 * 60 * 1000);
   const sevenDaysAgo = admin.firestore.Timestamp.fromMillis(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-  const [
-    loginAttemptsHour,
-    loginAttemptsDay,
-    loginAttemptsAll,
-    lockedAccounts,
-    resetRequestsHour,
-    resetRequestsDay,
-    roleChanges,
-    functionErrors,
-    recentEventsSnap,
-    crossTenantLogs,
-  ] = await Promise.all([
-    db().collection("auditLogs")
-      .where("action", "==", "LOGIN_FAILED")
-      .where("timestamp", ">=", oneHourAgo)
-      .count().get(),
-    db().collection("auditLogs")
-      .where("action", "==", "LOGIN_FAILED")
-      .where("timestamp", ">=", oneDayAgo)
-      .count().get(),
-    db().collection("auditLogs")
-      .where("action", "==", "LOGIN_FAILED")
-      .count().get(),
-    db().collection("loginAttempts")
-      .where("lockUntil", "!=", null)
-      .count().get(),
-    db().collection("auditLogs")
-      .where("action", "==", "PASSWORD_RESET_REQUESTED")
-      .where("timestamp", ">=", oneHourAgo)
-      .count().get(),
-    db().collection("auditLogs")
-      .where("action", "==", "PASSWORD_RESET_REQUESTED")
-      .where("timestamp", ">=", oneDayAgo)
-      .count().get(),
-    db().collection("auditLogs")
-      .where("action", "==", "ROLE_CHANGED")
-      .where("timestamp", ">=", sevenDaysAgo)
-      .count().get(),
-    db().collection("auditLogs")
-      .where("action", "==", "FUNCTION_ERROR")
-      .where("timestamp", ">=", oneDayAgo)
-      .count().get(),
-    db().collection("auditLogs")
-      .orderBy("timestamp", "desc")
-      .limit(20)
-      .get(),
-    db().collection("auditLogs")
-      .where("action", "==", "CROSS_TENANT_VIOLATION")
-      .where("timestamp", ">=", sevenDaysAgo)
-      .count().get(),
-  ]);
+  try {
+    const [
+      loginAttemptsHour,
+      loginAttemptsDay,
+      loginAttemptsAll,
+      lockedAccounts,
+      resetRequestsHour,
+      resetRequestsDay,
+      roleChanges,
+      functionErrors,
+      recentEventsSnap,
+      crossTenantLogs,
+    ] = await Promise.all([
+      db().collection("auditLogs").where("action", "==", "LOGIN_FAILED").where("timestamp", ">=", oneHourAgo).count().get(),
+      db().collection("auditLogs").where("action", "==", "LOGIN_FAILED").where("timestamp", ">=", oneDayAgo).count().get(),
+      db().collection("auditLogs").where("action", "==", "LOGIN_FAILED").count().get(),
+      db().collection("loginAttempts").where("lockUntil", "!=", null).count().get(),
+      db().collection("auditLogs").where("action", "==", "PASSWORD_RESET_REQUESTED").where("timestamp", ">=", oneHourAgo).count().get(),
+      db().collection("auditLogs").where("action", "==", "PASSWORD_RESET_REQUESTED").where("timestamp", ">=", oneDayAgo).count().get(),
+      db().collection("auditLogs").where("action", "==", "ROLE_CHANGED").where("timestamp", ">=", sevenDaysAgo).count().get(),
+      db().collection("auditLogs").where("action", "==", "FUNCTION_ERROR").where("timestamp", ">=", oneDayAgo).count().get(),
+      db().collection("auditLogs").orderBy("timestamp", "desc").limit(20).get(),
+      db().collection("auditLogs").where("action", "==", "CROSS_TENANT_VIOLATION").where("timestamp", ">=", sevenDaysAgo).count().get(),
+    ]);
 
-  const recentEvents = recentEventsSnap.docs.map((doc) => {
-    const d = doc.data();
+    const recentEvents = recentEventsSnap.docs.map((doc) => {
+      const d = doc.data();
+      return {
+        id: doc.id,
+        action: d.action,
+        userId: d.userId || null,
+        businessId: d.businessId || null,
+        metadata: d.metadata || null,
+        timestamp: (d.timestamp as admin.firestore.Timestamp)?.toDate()?.toISOString() || null,
+      };
+    });
+
     return {
-      id: doc.id,
-      action: d.action,
-      userId: d.userId || null,
-      businessId: d.businessId || null,
-      metadata: d.metadata || null,
-      timestamp: (d.timestamp as admin.firestore.Timestamp)?.toDate()?.toISOString() || null,
+      failedLogins: {
+        lastHour: loginAttemptsHour.data().count,
+        lastDay: loginAttemptsDay.data().count,
+        total: loginAttemptsAll.data().count,
+      },
+      lockedAccounts: lockedAccounts.data().count,
+      passwordResets: {
+        lastHour: resetRequestsHour.data().count,
+        lastDay: resetRequestsDay.data().count,
+      },
+      roleChanges7Days: roleChanges.data().count,
+      crossTenantViolations7Days: crossTenantLogs.data().count,
+      functionErrors24h: functionErrors.data().count,
+      recentEvents,
     };
-  });
-
-  return {
-    failedLogins: {
-      lastHour: loginAttemptsHour.data().count,
-      lastDay: loginAttemptsDay.data().count,
-      total: loginAttemptsAll.data().count,
-    },
-    lockedAccounts: lockedAccounts.data().count,
-    passwordResets: {
-      lastHour: resetRequestsHour.data().count,
-      lastDay: resetRequestsDay.data().count,
-    },
-    roleChanges7Days: roleChanges.data().count,
-    crossTenantViolations7Days: crossTenantLogs.data().count,
-    functionErrors24h: functionErrors.data().count,
-    recentEvents,
-  };
+  } catch (error: any) {
+    console.error("Error fetching security metrics (indexes may be building):", error);
+    // Return empty placeholder data so the dashboard doesn't crash while indexes build
+    return {
+      failedLogins: { lastHour: 0, lastDay: 0, total: 0 },
+      lockedAccounts: 0,
+      passwordResets: { lastHour: 0, lastDay: 0 },
+      roleChanges7Days: 0,
+      crossTenantViolations7Days: 0,
+      functionErrors24h: 0,
+      recentEvents: [],
+    };
+  }
 });
 
 export const getSecurityEvents = onCall(SECURE_FN_OPTS, async (request) => {

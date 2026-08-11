@@ -7,11 +7,11 @@ class BusinessProvider extends ChangeNotifier {
 
   Map<String, dynamic>? get businessData => _businessData;
   bool get isLoading => _isLoading;
-  String? get businessId => _businessData?['id'] as String?;
-  String? get businessName => _businessData?['name'] as String?;
-  String? get plan => _businessData?['plan'] as String?;
+  String? get businessId => _businessData?['id']?.toString();
+  String? get businessName => _businessData?['name']?.toString();
+  String? get plan => _businessData?['plan']?.toString();
   String? get subscriptionStatus =>
-      _businessData?['subscriptionStatus'] as String?;
+      _businessData?['subscriptionStatus']?.toString();
 
   bool get isOnTrial => subscriptionStatus == 'trial';
   bool get isExpired => subscriptionStatus == 'expired';

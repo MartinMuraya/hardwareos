@@ -14,6 +14,7 @@ class _HrSettingsTabState extends State<HrSettingsTab> {
   double _paye = 30.0;
   double _nhif = 2.75;
   double _nssf = 6.0;
+  double _ahl = 1.5;
   String _commissionBasis = 'revenue';
 
   @override
@@ -73,6 +74,17 @@ class _HrSettingsTabState extends State<HrSettingsTab> {
                     val == null || val.isEmpty ? 'Required' : null,
                 onSaved: (val) => _nssf = double.tryParse(val!) ?? 6.0,
               ),
+              const SizedBox(height: 16),
+              TextFormField(
+                initialValue: settings?.housingLevyRate.toString() ?? _ahl.toString(),
+                decoration: const InputDecoration(
+                    labelText: 'Affordable Housing Levy (AHL) Rate (%)', border: OutlineInputBorder()),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                validator: (val) =>
+                    val == null || val.isEmpty ? 'Required' : null,
+                onSaved: (val) => _ahl = double.tryParse(val!) ?? 1.5,
+              ),
               const SizedBox(height: 24),
               Text('Sales Commissions',
                   style: Theme.of(context).textTheme.titleLarge),
@@ -109,7 +121,7 @@ class _HrSettingsTabState extends State<HrSettingsTab> {
                           _formKey.currentState!.save();
                           try {
                             await provider.saveSettings(
-                                _paye, _nhif, _nssf, _commissionBasis);
+                                _paye, _nhif, _nssf, _ahl, _commissionBasis);
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(

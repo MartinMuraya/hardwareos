@@ -26,16 +26,15 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // App Check: require proper configuration in release builds. Allow debug providers only in non-release.
+    // App Check: require proper configuration in release builds.
   try {
     const recaptchaKey = String.fromEnvironment(
       'RECAPTCHA_SITE_KEY',
       defaultValue: '',
     );
-    // In release mode require a valid recaptcha key and fail fast if missing so production cannot run without App Check
+    
     if (kReleaseMode) {
       if (recaptchaKey.isEmpty) {
-        // Fail startup in production to avoid running without App Check
         throw FlutterError(
             'RECAPTCHA_SITE_KEY must be provided in production for App Check to be enabled.');
       }
@@ -45,18 +44,20 @@ void main() async {
         webProvider: ReCaptchaV3Provider(recaptchaKey),
       );
     } else {
-      // Non-release (dev/test) - use debug providers to avoid developer friction
-      await FirebaseAppCheck.instance.activate(
-        androidProvider: AndroidProvider.debug,
-        appleProvider: AppleProvider.debug,
-        // On Web, ReCaptchaV3Provider is required but the actual site key will be ignored
-        // if self.FIREBASE_APPCHECK_DEBUG_TOKEN = true is set in index.html.
-        webProvider: ReCaptchaV3Provider(
-            recaptchaKey.isNotEmpty ? recaptchaKey : 'debug-key'),
-      );
+      // Non-release (dev/test) - skip AppCheck on Web if key is empty to prevent 403 throttling loop
+      if (!kIsWeb || recaptchaKey.isNotEmpty) {
+        await FirebaseAppCheck.instance.activate(
+          androidProvider: AndroidProvider.debug,
+          appleProvider: AppleProvider.debug,
+          webProvider: recaptchaKey.isNotEmpty 
+              ? ReCaptchaV3Provider(recaptchaKey) 
+              : null,
+        );
+      } else {
+        debugPrint('Skipping App Check on Web debug because RECAPTCHA_SITE_KEY is empty.');
+      }
     }
   } catch (e) {
-    // In non-release builds, warn but continue. In release builds the above throws and prevents startup.
     debugPrint('App Check initialization warning: $e');
   }
 

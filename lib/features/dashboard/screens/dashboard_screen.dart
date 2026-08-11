@@ -649,8 +649,8 @@ class _RecentActivityList extends StatelessWidget {
     final theme = Theme.of(context);
     return Column(
       children: logs.take(5).map((log) {
-        final module = log['module'] as String? ?? '';
-        final action = log['action'] as String? ?? '';
+        final module = log['module']?.toString() ?? '';
+        final action = log['action']?.toString() ?? '';
 
         Color color;
         switch (module) {
@@ -693,7 +693,7 @@ class _RecentActivityList extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      log['entityName'] as String? ?? '',
+                      log['entityName']?.toString() ?? '',
                       style: TextStyle(
                           fontSize: 11,
                           color: theme.colorScheme.onSurfaceVariant),
@@ -701,7 +701,7 @@ class _RecentActivityList extends StatelessWidget {
                     ),
                   ]),
             ),
-            Text(log['userName'] as String? ?? '',
+            Text(log['userName']?.toString() ?? '',
                 style: TextStyle(fontSize: 10, color: theme.hintColor)),
           ]),
         );

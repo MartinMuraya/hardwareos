@@ -44,7 +44,7 @@ class AdminScaffold extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 GestureDetector(
-                  onTap: () => context.go(RoutePaths.profile),
+                  onTap: () => context.go('/admin/profile'),
                   child: CircleAvatar(
                     radius: 16,
                     backgroundColor: theme.colorScheme.primaryContainer,
@@ -363,34 +363,57 @@ class _Sidebar extends StatelessWidget {
             ),
           ),
           const Divider(height: 1),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                const CircleAvatar(
-                  radius: 18,
-                  backgroundColor: AppColors.accent,
-                  child:
-                      Icon(Icons.shield_rounded, size: 18, color: Colors.white),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Super Admin', style: theme.textTheme.labelLarge),
-                      Text('Platform Control',
-                          style: theme.textTheme.bodySmall),
-                    ],
+          GestureDetector(
+            onTap: () {
+              if (isDrawer) Navigator.pop(context);
+              context.go('/admin/profile');
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: theme.colorScheme.primaryContainer,
+                    backgroundImage: context.read<AuthProvider>().photoUrl != null
+                        ? NetworkImage(context.read<AuthProvider>().photoUrl!)
+                        : null,
+                    child: context.read<AuthProvider>().photoUrl == null
+                        ? Text(
+                            context
+                                    .read<AuthProvider>()
+                                    .user
+                                    ?.displayName
+                                    ?.substring(0, 1)
+                                    .toUpperCase() ??
+                                'U',
+                            style: TextStyle(
+                              color: theme.colorScheme.onPrimaryContainer,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          )
+                        : null,
                   ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.logout_rounded,
-                      size: 20, color: theme.colorScheme.onSurfaceVariant),
-                  onPressed: () => context.read<AuthProvider>().signOut(),
-                  tooltip: 'Sign Out',
-                ),
-              ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Super Admin', style: theme.textTheme.labelLarge),
+                        Text('Platform Control',
+                            style: theme.textTheme.bodySmall),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.logout_rounded,
+                        size: 20, color: theme.colorScheme.onSurfaceVariant),
+                    onPressed: () => context.read<AuthProvider>().signOut(),
+                    tooltip: 'Sign Out',
+                  ),
+                ],
+              ),
             ),
           ),
         ],

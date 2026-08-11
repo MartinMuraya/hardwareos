@@ -12,6 +12,21 @@ class FunctionsService {
   //   _functions.useFunctionsEmulator('localhost', 5001);
   // }
 
+  /// Recursively converts platform-internal Map/List types returned by
+  /// Firebase callable functions into standard Dart Map<String, dynamic> / List.
+  /// Without this, nested structures (e.g. Timestamps serialized as Maps,
+  /// Lists of Maps) retain internal types and throw cast errors at runtime.
+  static dynamic _deepConvert(dynamic value) {
+    if (value is Map) {
+      return value.map<String, dynamic>(
+        (key, val) => MapEntry(key.toString(), _deepConvert(val)),
+      );
+    } else if (value is List) {
+      return value.map((item) => _deepConvert(item)).toList();
+    }
+    return value;
+  }
+
   static Future<Map<String, dynamic>> call(
     String functionName,
     Map<String, dynamic> data,
@@ -22,7 +37,7 @@ class FunctionsService {
         options: HttpsCallableOptions(timeout: const Duration(seconds: 30)),
       );
       final result = await fn.call(data);
-      return Map<String, dynamic>.from(result.data as Map);
+      return _deepConvert(result.data) as Map<String, dynamic>;
     } on FirebaseFunctionsException catch (e) {
       String msg = e.message ?? 'An error occurred.';
       if (e.code == 'internal' || msg.toLowerCase().contains('internal')) {

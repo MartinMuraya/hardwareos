@@ -11,11 +11,12 @@ const db = () => admin.firestore();
 // -----------------------------------------------------------
 export const saveHrSettings = onCall(SECURE_FN_OPTS, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Login required.");
-  const { businessId, payeRate, nhifRate, nssfRate } = request.data as {
+  const { businessId, payeRate, nhifRate, nssfRate, housingLevyRate } = request.data as {
     businessId: string;
     payeRate: number;
     nhifRate: number;
     nssfRate: number;
+    housingLevyRate: number;
     commissionBasis: "revenue" | "profit";
   };
   await assertBusinessMember(request.auth.uid, businessId, ["owner"]);
@@ -24,6 +25,7 @@ export const saveHrSettings = onCall(SECURE_FN_OPTS, async (request) => {
     payeRate: Number(payeRate) || 0,
     nhifRate: Number(nhifRate) || 0,
     nssfRate: Number(nssfRate) || 0,
+    housingLevyRate: Number(housingLevyRate) || 0,
     commissionBasis: request.data.commissionBasis === "profit" ? "profit" : "revenue",
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
   });
@@ -125,13 +127,16 @@ export const processLeave = onCall(SECURE_FN_OPTS, async (request) => {
   return { success: true };
 });
 
-export function calculatePayslip(gross: number, rates: { payeRate: number, nhifRate: number, nssfRate: number }) {
-  const paye = gross * (rates.payeRate / 100);
-  const nhif = gross * (rates.nhifRate / 100);
-  const nssf = gross * (rates.nssfRate / 100);
-  const deds = paye + nhif + nssf;
-  const net = gross - deds;
-  return { paye, nhif, nssf, deductions: deds, netPay: net };
+function calculatePayslip(gross: number, settings: any) {
+  const paye = (gross * (settings.payeRate || 30)) / 100;
+  const nhif = (gross * (settings.nhifRate || 2.75)) / 100;
+  const nssf = (gross * (settings.nssfRate || 6)) / 100;
+  const ahl = (gross * (settings.housingLevyRate || 1.5)) / 100;
+
+  const deductions = paye + nhif + nssf + ahl;
+  const netPay = gross - deductions;
+
+  return { paye, nhif, nssf, ahl, deductions, netPay };
 }
 
 // -----------------------------------------------------------

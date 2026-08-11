@@ -9,8 +9,8 @@ class PlanStatusBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final plan = subscription['plan'] as String? ?? 'free';
-    final status = subscription['status'] as String? ?? 'trial';
+    final plan = subscription['plan']?.toString() ?? 'free';
+    final status = subscription['status']?.toString() ?? 'trial';
     final trialDaysLeft = subscription['trialDaysLeft'] as int?;
     final isExpired = subscription['isExpired'] == true;
 

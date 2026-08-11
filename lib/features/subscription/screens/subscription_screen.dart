@@ -110,9 +110,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         businessData = {
           'id': businessId,
           'name': 'My Business', // will be updated once businessProvider loads
-          'plan': userProfile['plan'] as String? ?? 'trial',
+          'plan': userProfile['plan']?.toString() ?? 'trial',
           'subscriptionStatus':
-              userProfile['subscriptionStatus'] as String? ?? 'trial',
+              userProfile['subscriptionStatus']?.toString() ?? 'trial',
           'trialEndsAt': userProfile['trialEndsAt'],
           'subscriptionStartsAt': userProfile['subscriptionStartsAt'],
           'subscriptionEndsAt': userProfile['subscriptionEndsAt'],
@@ -141,12 +141,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
     // Safely build Business model, ensuring no null required fields
     final safeData = Map<String, dynamic>.from(businessData);
-    safeData['id'] = (safeData['id'] as String?) ?? '';
-    safeData['name'] = (safeData['name'] as String?) ?? 'My Business';
-    safeData['plan'] = (safeData['plan'] as String?) ?? 'trial';
+    safeData['id'] = (safeData['id']?.toString()) ?? '';
+    safeData['name'] = (safeData['name']?.toString()) ?? 'My Business';
+    safeData['plan'] = (safeData['plan']?.toString()) ?? 'trial';
     safeData['subscriptionStatus'] =
-        (safeData['subscriptionStatus'] as String?) ?? 'trial';
-    safeData['ownerId'] = (safeData['ownerId'] as String?) ?? '';
+        (safeData['subscriptionStatus']?.toString()) ?? 'trial';
+    safeData['ownerId'] = (safeData['ownerId']?.toString()) ?? '';
 
     final business = Business.fromMap(safeData);
     final isExpired = business.isExpired;
@@ -744,10 +744,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
   Widget _buildSubscriptionHistoryItem(Map<String, dynamic> event) {
     final theme = Theme.of(context);
-    final eventType = event['eventType'] as String? ?? '';
-    final description = event['description'] as String? ?? '';
-    final timestamp = event['timestamp'] as String?;
-    final newStatus = event['newStatus'] as String?;
+    final eventType = event['eventType']?.toString() ?? '';
+    final description = event['description']?.toString() ?? '';
+    final timestamp = event['timestamp']?.toString();
+    final newStatus = event['newStatus']?.toString();
 
     IconData icon;
     Color color;

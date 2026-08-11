@@ -99,6 +99,8 @@ class _StorefrontCartViewState extends State<StorefrontCartView> {
 
     final cartList = ListView.builder(
       padding: const EdgeInsets.all(16),
+      shrinkWrap: !isDesktop,
+      physics: !isDesktop ? const NeverScrollableScrollPhysics() : null,
       itemCount: provider.cart.length,
       itemBuilder: (context, index) {
         final item = provider.cart[index];
@@ -152,6 +154,7 @@ class _StorefrontCartViewState extends State<StorefrontCartView> {
         key: _formKey,
         child: ListView(
           shrinkWrap: !isDesktop,
+          physics: !isDesktop ? const NeverScrollableScrollPhysics() : null,
           children: [
             Text('Order Summary',
                 style: Theme.of(context).textTheme.headlineSmall),
@@ -289,9 +292,9 @@ class _StorefrontCartViewState extends State<StorefrontCartView> {
         ],
       );
     } else {
-      return Column(
+      return ListView(
         children: [
-          Expanded(child: cartList),
+          cartList,
           checkoutForm,
         ],
       );

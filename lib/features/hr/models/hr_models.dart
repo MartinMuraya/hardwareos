@@ -2,12 +2,14 @@ class HrSettings {
   final double payeRate;
   final double nhifRate;
   final double nssfRate;
+  final double housingLevyRate;
   final String commissionBasis;
 
   HrSettings({
     this.payeRate = 30.0,
     this.nhifRate = 2.75,
     this.nssfRate = 6.0,
+    this.housingLevyRate = 1.5,
     this.commissionBasis = 'revenue',
   });
 
@@ -16,6 +18,7 @@ class HrSettings {
       payeRate: (map['payeRate'] ?? 30.0).toDouble(),
       nhifRate: (map['nhifRate'] ?? 2.75).toDouble(),
       nssfRate: (map['nssfRate'] ?? 6.0).toDouble(),
+      housingLevyRate: (map['housingLevyRate'] ?? 1.5).toDouble(),
       commissionBasis: map['commissionBasis'] ?? 'revenue',
     );
   }

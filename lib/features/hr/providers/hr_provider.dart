@@ -37,7 +37,7 @@ class HrProvider extends ChangeNotifier {
   }
 
   Future<void> saveSettings(
-      double paye, double nhif, double nssf, String commissionBasis) async {
+      double paye, double nhif, double nssf, double ahl, String commissionBasis) async {
     _setLoading(true);
     try {
       await FunctionsService.call('saveHrSettings', {
@@ -45,6 +45,7 @@ class HrProvider extends ChangeNotifier {
         'payeRate': paye,
         'nhifRate': nhif,
         'nssfRate': nssf,
+        'housingLevyRate': ahl,
         'commissionBasis': commissionBasis,
       });
       await fetchSettings();

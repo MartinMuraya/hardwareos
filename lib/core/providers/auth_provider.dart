@@ -34,12 +34,12 @@ class AuthProvider extends ChangeNotifier {
   Map<String, dynamic>? get userProfile => _userProfile;
   String? get errorMessage => _errorMessage;
   String? get profileLoadError => _profileLoadError;
-  String? get businessId => _userProfile?['businessId'] as String?;
-  String? get userRole => _userProfile?['role'] as String?;
+  String? get businessId => _userProfile?['businessId']?.toString();
+  String? get userRole => _userProfile?['role']?.toString();
   String? get subscriptionStatus =>
-      _userProfile?['subscriptionStatus'] as String?;
+      _userProfile?['subscriptionStatus']?.toString();
   String? get photoUrl =>
-      _user?.photoURL ?? _userProfile?['photoUrl'] as String?;
+      _user?.photoURL ?? _userProfile?['photoUrl']?.toString();
 
   DateTime? get subscriptionEndsAt {
     final val = _userProfile?['subscriptionEndsAt'];

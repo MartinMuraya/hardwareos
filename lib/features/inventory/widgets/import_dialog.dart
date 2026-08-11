@@ -250,7 +250,8 @@ class _ImportDialogState extends State<ImportDialog> {
                   itemCount: _parsedRows.length.clamp(0, 100),
                   itemBuilder: (_, i) {
                     final row = _parsedRows[i];
-                    final hasError = _errors.any((e) => e.row == i + 2);
+                    final originalRow = row['_originalRow'] as int? ?? (i + 2);
+                    final hasError = _errors.any((e) => e.row == originalRow);
                     return Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 8),
@@ -314,7 +315,9 @@ class _ImportDialogState extends State<ImportDialog> {
               ),
               const Spacer(),
               FilledButton.icon(
-                onPressed: _importing ? null : _doImport,
+                onPressed: (_importing || _parsedRows.isEmpty)
+                    ? null
+                    : _doImport,
                 icon: _importing
                     ? const SizedBox(
                         width: 16,
@@ -410,15 +413,17 @@ class _ImportDialogState extends State<ImportDialog> {
       return;
     }
 
-    final headers =
-        rows[0].map((h) => h.toString().trim().toLowerCase()).toList();
+    final headers = rows[0].map((h) {
+      var s = h.toString().trim().toLowerCase();
+      if (s.startsWith('\ufeff')) s = s.substring(1); // Remove BOM
+      return s;
+    }).toList();
 
-    for (final col in _expectedColumns) {
-      if (col == 'unit') continue;
+    for (final col in ['name', 'sellprice']) {
       if (!headers.contains(col)) {
         setState(() {
           _errorMessage =
-              'Missing required column: "$col". Expected: ${_expectedColumns.join(", ")}';
+              'Missing required column: "$col". Required: name, sellPrice.';
           _loading = false;
         });
         return;
@@ -447,30 +452,27 @@ class _ImportDialogState extends State<ImportDialog> {
       if (name.isEmpty) {
         _errors
             .add(_RowError(row: rowNum + 1, message: 'Missing Product Name'));
-        continue;
       }
 
-      final sellPriceStr = parsed['sellPrice']?.toString().trim() ?? '';
+      final sellPriceStr = parsed['sellprice']?.toString().trim() ?? '';
       final sellPrice = double.tryParse(sellPriceStr);
       if (sellPrice == null || sellPrice <= 0) {
         _errors.add(_RowError(row: rowNum + 1, message: 'Invalid Sell Price'));
-        continue;
       }
 
-      final buyPriceStr = parsed['buyPrice']?.toString().trim() ?? '';
+      final buyPriceStr = parsed['buyprice']?.toString().trim() ?? '';
       final buyPrice = double.tryParse(buyPriceStr);
 
       final qtyStr = parsed['quantity']?.toString().trim() ?? '';
       final qty = int.tryParse(qtyStr);
 
-      final reorderStr = parsed['reorderLevel']?.toString().trim() ?? '';
+      final reorderStr = parsed['reorderlevel']?.toString().trim() ?? '';
       final reorder = int.tryParse(reorderStr);
 
       final sku = parsed['sku']?.toString().trim().toUpperCase() ?? '';
       if (sku.isNotEmpty && seenSkus.contains(sku)) {
         _errors.add(
             _RowError(row: rowNum + 1, message: 'Duplicate SKU in upload'));
-        continue;
       }
       if (sku.isNotEmpty) seenSkus.add(sku);
 
@@ -479,10 +481,11 @@ class _ImportDialogState extends State<ImportDialog> {
         'name': name,
         'category': parsed['category']?.toString().trim() ?? 'General',
         'buyPrice': buyPrice ?? 0,
-        'sellPrice': sellPrice,
+        'sellPrice': sellPrice ?? 0,
         'quantity': qty ?? 0,
         'reorderLevel': reorder ?? 5,
         'unit': parsed['unit']?.toString().trim() ?? 'pcs',
+        '_originalRow': rowNum + 1,
       });
     }
 
@@ -492,10 +495,14 @@ class _ImportDialogState extends State<ImportDialog> {
   }
 
   Future<void> _doImport() async {
-    final validRows = _parsedRows
-        .where((r) => !_errors
-            .any((e) => r['name'] == null || (r['name'] as String).isEmpty))
-        .toList();
+    final validRows = _parsedRows.where((r) {
+      final originalRow = r['_originalRow'] as int? ?? -1;
+      return !_errors.any((e) => e.row == originalRow);
+    }).map((r) {
+      final m = Map<String, dynamic>.from(r);
+      m.remove('_originalRow');
+      return m;
+    }).toList();
 
     if (validRows.isEmpty) {
       setState(() => _errorMessage = 'No valid rows to import.');
@@ -509,13 +516,32 @@ class _ImportDialogState extends State<ImportDialog> {
         'businessId': bizId,
         'products': validRows,
       });
+      
+      final bool success = result['success'] == true;
+      final int imported = result['imported'] as int? ?? 0;
+      final List dynamicErrors = result['errors'] as List? ?? [];
+
       setState(() {
-        _importedCount = result['imported'] as int? ?? 0;
+        if (!success && imported == 0) {
+          final errorText = dynamicErrors.map((e) => "Row ${e['row']}: ${e['message']}").join("\n");
+          _errorMessage = 'Import failed. Errors:\n$errorText';
+        } else {
+          _importedCount = imported;
+          if (dynamicErrors.isNotEmpty) {
+            final errorText = dynamicErrors.map((e) => "Row ${e['row']}: ${e['message']}").join("\n");
+            _errorMessage = 'Imported $imported products. Some rows failed:\n$errorText';
+          }
+        }
         _importing = false;
       });
     } on FunctionsException catch (e) {
       setState(() {
         _errorMessage = e.message;
+        _importing = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'An unexpected error occurred: $e';
         _importing = false;
       });
     }
