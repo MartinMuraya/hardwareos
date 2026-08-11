@@ -14,7 +14,6 @@ import '../widgets/plan_status_banner.dart';
 import '../widgets/low_stock_list.dart';
 import '../widgets/recent_sales_list.dart';
 import '../widgets/pending_sync_card.dart';
-import '../../inventory/screens/ai_intelligence_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
