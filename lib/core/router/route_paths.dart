@@ -52,4 +52,5 @@ class RoutePaths {
   static const labelSettings = '/label-settings';
   static const supplierDebt = '/supplier-debt';
   static const aiAssistant = '/ai-assistant';
+  static const aiIntelligence = '/inventory/intelligence';
 }

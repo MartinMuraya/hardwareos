@@ -98,6 +98,11 @@ export const createBusiness = onCall(SECURE_FN_OPTS, async (request) => {
     });
   });
 
+  await admin.auth().setCustomUserClaims(uid, {
+    businessId: businessRef.id,
+    role: "owner",
+  }).catch((err) => console.warn("Failed to set custom claims in createBusiness:", err));
+
   try {
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || "smtp.gmail.com",
@@ -243,6 +248,11 @@ export const inviteUser = onCall(SECURE_FN_OPTS, async (request) => {
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 
+  await admin.auth().setCustomUserClaims(targetUid, {
+    businessId,
+    role,
+  }).catch((err) => console.warn("Failed to set custom claims in inviteUser:", err));
+
   return { success: true, message: `User added as ${role}.` };
 });
 
@@ -280,6 +290,11 @@ export const updateStaff = onCall(SECURE_FN_OPTS, async (request) => {
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 
+  await admin.auth().setCustomUserClaims(targetUid, {
+    businessId,
+    role,
+  }).catch((err) => console.warn("Failed to set custom claims in updateStaff:", err));
+
   return { success: true, message: "Staff updated successfully." };
 });
 
@@ -310,6 +325,19 @@ export const getMyProfile = onCall(SECURE_FN_OPTS, async (request) => {
 
   const userData = userSnap.data()!;
   const bizSnap = await db().collection("businesses").doc(userData.businessId).get();
+
+  // Set/refresh Auth Custom Claims if missing or mismatched
+  if (
+    request.auth.token.businessId !== userData.businessId ||
+    request.auth.token.role !== userData.role ||
+    request.auth.token.isSuperAdmin !== isSuperAdmin
+  ) {
+    await admin.auth().setCustomUserClaims(uid, {
+      businessId: userData.businessId,
+      role: userData.role,
+      isSuperAdmin: !!isSuperAdmin,
+    }).catch((err) => console.warn("Failed setting custom claims in getMyProfile:", err));
+  }
 
   return {
     registered: true,

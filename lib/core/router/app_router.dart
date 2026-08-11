@@ -7,6 +7,7 @@ import '../../features/subscription/screens/subscription_screen.dart';
 import '../../features/dashboard/screens/dashboard_screen.dart';
 import '../../features/inventory/screens/inventory_screen.dart';
 import '../../features/inventory/screens/add_product_screen.dart';
+import '../../features/inventory/screens/ai_intelligence_screen.dart';
 import '../../features/inventory/screens/product_detail_screen.dart';
 import '../../features/sales/screens/pos_screen.dart';
 import '../../features/sales/screens/sales_history_screen.dart';
@@ -330,6 +331,10 @@ class AppRouter {
                 GoRoute(
                   path: 'add',
                   builder: (_, __) => const AddProductScreen(),
+                ),
+                GoRoute(
+                  path: 'intelligence',
+                  builder: (_, __) => const AIIntelligenceScreen(),
                 ),
                 GoRoute(
                   path: ':productId',

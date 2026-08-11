@@ -17,21 +17,28 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
 
-    // Does caller belong to this business?
+    // Does caller belong to this business? (Checks Custom Claims first to eliminate userDoc read overhead)
     function isMember(businessId) {
-      return isAuth() && userDoc().businessId == businessId;
+      return isAuth() && (
+        request.auth.token.businessId == businessId ||
+        userDoc().businessId == businessId
+      );
     }
 
     // Is caller the owner of this business?
     function isOwner(businessId) {
-      return isMember(businessId) && userDoc().role == 'owner';
+      return isAuth() && (
+        (request.auth.token.businessId == businessId && request.auth.token.role == 'owner') ||
+        (userDoc().businessId == businessId && userDoc().role == 'owner')
+      );
     }
 
     // Is caller owner or manager?
     function isManager(businessId) {
-      let user = userDoc();
-      return isAuth() && user.businessId == businessId &&
-        (user.role == 'owner' || user.role == 'manager');
+      return isAuth() && (
+        (request.auth.token.businessId == businessId && (request.auth.token.role == 'owner' || request.auth.token.role == 'manager')) ||
+        (userDoc().businessId == businessId && (userDoc().role == 'owner' || userDoc().role == 'manager'))
+      );
     }
 
     // =========================================================

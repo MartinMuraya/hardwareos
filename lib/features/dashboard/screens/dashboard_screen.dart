@@ -149,12 +149,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.auto_awesome, color: Colors.purple),
-                  onPressed: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const AIIntelligenceScreen()));
-                  },
+                  onPressed: () => context.push(RoutePaths.aiIntelligence),
                   tooltip: 'AI Inventory Intelligence',
                 ),
                 IconButton(
