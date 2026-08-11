@@ -215,7 +215,7 @@ Format for json_actions:
 \`\`\`
 
 Rules for response:
-- Be concise, numerical, and highly authoritative.
+- Provide exhaustive, deeply detailed, numerical analysis (in KES and percentage velocity metrics).
 - Highlight risk alerts clearly using standard markdown tags or bullet points.
 - Do not make generic recommendations. Rely strictly on the numbers provided in the context.
 `.trim();
@@ -226,7 +226,7 @@ Rules for response:
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
       systemInstruction: { parts: [{ text: systemInstruction }] },
-      generationConfig: { temperature: 0.2, maxOutputTokens: 1200 },
+      generationConfig: { temperature: 0.2, maxOutputTokens: 3072 },
     }),
   });
 

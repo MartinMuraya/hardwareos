@@ -92,13 +92,14 @@ Structure your response strictly as follows:
 
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.5-flash",
         contents: [
           { role: "user", parts: [{ text: `Analyze the following business data: ${payload}` }] }
         ],
         config: {
           systemInstruction: systemInstruction,
           temperature: 0.2, // Keep it analytical and precise
+          maxOutputTokens: 2048,
         }
       });
 

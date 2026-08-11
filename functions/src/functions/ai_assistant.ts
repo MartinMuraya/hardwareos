@@ -67,11 +67,11 @@ async function callGeminiAPI(prompt: string, apiKey: string): Promise<string> {
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
       systemInstruction: {
-        parts: [{ text: "You are an expert AI business advisor for a hardware store in East Africa. Provide concise, highly actionable, and numerical insights based on the provided data. Do not use generic platitudes. Focus on cash flow, inventory optimization, and sales strategy." }]
+        parts: [{ text: "You are a Senior AI Business Advisor & Supply Chain Strategist for a hardware and building materials store in East Africa. Provide extremely thorough, mathematically sound, comprehensive, and highly actionable analysis based on the provided metrics. Structure your answers with clear markdown headers, exact numerical references (in KES), and strategic step-by-step recommendations." }]
       },
       generationConfig: {
         temperature: 0.2,
-        maxOutputTokens: 500,
+        maxOutputTokens: 2048,
       }
     })
   });
