@@ -12,12 +12,12 @@ admin.initializeApp();
 admin.firestore().settings({ ignoreUndefinedProperties: true });
 
 // Auth
-const functionName = process.env.FUNCTION_TARGET || process.env.K_SERVICE;
 function lazyExport(modulePath: string, exportsList: string[]) {
   exportsList.forEach((name) => {
-    if (!functionName || functionName === name) {
-      exports[name] = require(modulePath)[name];
-    }
+    Object.defineProperty(exports, name, {
+      enumerable: true,
+      get: () => require(modulePath)[name],
+    });
   });
 }
 

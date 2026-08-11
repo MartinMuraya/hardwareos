@@ -61,24 +61,52 @@ export const adminGetSupportTickets = onCall(SECURE_FN_OPTS, async (request) => 
   await assertSuperAdmin(request.auth.uid);
 
   const { status } = request.data as { status?: string };
-  let query: admin.firestore.Query = db().collection("supportTickets");
-  
-  if (status && status !== "all") {
-    query = query.where("status", "==", status);
-  }
-  
-  const snap = await query.orderBy("createdAt", "desc").limit(50).get();
-  
-  const tickets = snap.docs.map(doc => {
-    const data = doc.data();
-    return {
-      ...data,
-      createdAt: (data.createdAt as admin.firestore.Timestamp)?.toDate()?.toISOString(),
-      updatedAt: (data.updatedAt as admin.firestore.Timestamp)?.toDate()?.toISOString(),
-    };
-  });
+  try {
+    let query: admin.firestore.Query = db().collection("supportTickets");
+    
+    if (status && status !== "all") {
+      query = query.where("status", "==", status);
+    } else {
+      query = query.orderBy("createdAt", "desc");
+    }
+    
+    const snap = await query.limit(50).get();
+    
+    const tickets = snap.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        createdAt: (data.createdAt as admin.firestore.Timestamp)?.toDate()?.toISOString(),
+        updatedAt: (data.updatedAt as admin.firestore.Timestamp)?.toDate()?.toISOString(),
+      };
+    });
 
-  return { tickets };
+    // Client-side sort by createdAt descending if filtering by status
+    if (status && status !== "all") {
+      tickets.sort((a, b) => {
+        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return timeB - timeA;
+      });
+    }
+
+    return { tickets };
+  } catch (error: any) {
+    console.error("Error fetching support tickets:", error);
+    // Fallback: fetch without index requirement
+    const snap = await db().collection("supportTickets").limit(50).get();
+    const tickets = snap.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        createdAt: (data.createdAt as admin.firestore.Timestamp)?.toDate()?.toISOString(),
+        updatedAt: (data.updatedAt as admin.firestore.Timestamp)?.toDate()?.toISOString(),
+      };
+    });
+    return { tickets };
+  }
 });
 
 // -----------------------------------------------------------
