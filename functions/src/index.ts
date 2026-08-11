@@ -9,6 +9,7 @@ setGlobalOptions({ maxInstances: 100 });
 
 // Initialize Firebase Admin SDK (once)
 admin.initializeApp();
+admin.firestore().settings({ ignoreUndefinedProperties: true });
 
 // Auth
 const functionName = process.env.FUNCTION_TARGET || process.env.K_SERVICE;
